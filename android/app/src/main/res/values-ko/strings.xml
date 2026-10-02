@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
-    <string name="app_name">오늘 성경</string>
+    <string name="app_name">하루의 성경</string>
     <string name="page_library">서재</string>
     <string name="page_copy">필사</string>
     <string name="page_record">기록</string>
