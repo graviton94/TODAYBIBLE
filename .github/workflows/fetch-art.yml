@@ -1,0 +1,31 @@
+name: Fetch art
+# art/sources.tsv 의 공개 도메인 명화를 내려받아 art/raw/ 에 올린다 (이 환경에서는 그림 사이트에 직접 닿지 않아 Actions 로)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["art/sources.tsv", ".github/workflows/fetch-art.yml"]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download
+        run: |
+          mkdir -p art/raw
+          UA="LookCloser/0.1 (https://github.com/graviton94/LOOKCLOSER)"
+          grep -v '^#' art/sources.tsv | while IFS=$'\t' read -r name file; do
+            [ -z "$name" ] && continue
+            out="art/raw/$name.jpg"; [ -s "$out" ] && continue
+            for w in 4000 3840 2560; do
+              curl -sfL -A "$UA" -o "$out" "https://commons.wikimedia.org/wiki/Special:FilePath/$file?width=$w" && break
+              sleep 3
+            done
+            ls -la "$out"; file "$out"
+          done
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art/raw && (git diff --cached --quiet || (git commit -m "Art: fetch originals" && git push))
