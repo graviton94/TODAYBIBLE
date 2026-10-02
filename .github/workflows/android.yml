@@ -1,0 +1,45 @@
+name: Android
+
+on:
+  push:
+    branches: [main]
+    paths: ["android/**", "design/**", "data/**", "scripts/generate.py", "scripts/build_fonts.py", ".github/workflows/android.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generated files and fonts are up to date
+        run: |
+          python3 scripts/generate.py --check
+          pip install -q fonttools
+          python3 scripts/build_fonts.py --check
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Test and build APK
+        working-directory: android
+        run: |
+          set -o pipefail
+          ./gradlew :core:test :app:assembleDebug 2>&1 | tee build.log
+      - name: Show compile errors
+        if: failure()
+        working-directory: android
+        run: grep -E "^e: |error:|What went wrong" -A2 build.log | head -120 || true
+      - name: Rename APK
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk "out/TodayBible-${{ github.run_number }}.apk"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: TodayBible-apk
+          path: out/*.apk

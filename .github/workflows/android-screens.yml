@@ -1,0 +1,62 @@
+name: Android screenshots
+
+# 에뮬레이터에서 디버그 APK 를 실행해 장면별 화면을 캡처하고 screenshots-android 브랜치에 올린다.
+# 필요할 때만 돈다: 커밋 메시지에 [shots] 가 있을 때, 또는 직접 실행.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["android/**", "design/**", "scripts/android_shots.sh", ".github/workflows/android-screens.yml"]
+
+concurrency:
+  group: android-screens
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  shots:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[shots]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android/sdk/ndk /opt/ghc /usr/local/.ghcup /opt/hostedtoolcache/CodeQL /usr/local/share/boost /usr/share/swift
+          df -h /
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew :app:assembleDebug
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Run on emulator and capture
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disk-size: 4096M
+          cores: 2
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: adb install -r android/app/build/outputs/apk/debug/app-debug.apk && bash scripts/android_shots.sh shots
+      - name: Push to screenshots-android branch
+        if: always()
+        run: |
+          mkdir -p shots && cd shots
+          git init -q -b screenshots-android
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          echo "source: ${GITHUB_SHA}" > SOURCE.txt
+          git add -A && git commit -qm "android screenshots for ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" screenshots-android
