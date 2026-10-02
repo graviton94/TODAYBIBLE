@@ -55,8 +55,8 @@ fun SettingsPage(s: AppState) {
             }
             Group(stringResource(R.string.translation)) {
                 Column {
-                    ChoiceRow(stringResource(R.string.tr_krv), s.translation == Translation.KRV) { s.setTranslation(Translation.KRV) }
-                    ChoiceRow(stringResource(R.string.tr_kjv), s.translation == Translation.KJV) { s.setTranslation(Translation.KJV) }
+                    ChoiceRow(stringResource(R.string.tr_krv), s.translation == Translation.KRV) { s.chooseTranslation(Translation.KRV) }
+                    ChoiceRow(stringResource(R.string.tr_kjv), s.translation == Translation.KJV) { s.chooseTranslation(Translation.KJV) }
                 }
             }
             Group(stringResource(R.string.text_size)) {

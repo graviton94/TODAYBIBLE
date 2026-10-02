@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
      */
     private fun debugSetup(s: AppState, i: Intent) {
         i.getStringExtra("tb.today")?.let { s.fixedToday = LocalDate.parse(it) }
-        i.getStringExtra("tb.tr")?.let { s.setTranslation(Translation.valueOf(it)) }
+        i.getStringExtra("tb.tr")?.let { s.chooseTranslation(Translation.valueOf(it)) }
         i.getStringExtra("tb.theme")?.let { s.setThemeChoice(ThemeChoice.valueOf(it)) }
         if (i.hasExtra("tb.scale")) s.setTextScale(i.getFloatExtra("tb.scale", 1f))
         i.getStringExtra("tb.stamp")?.let { s.setStampMark(it) }

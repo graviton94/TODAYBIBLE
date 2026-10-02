@@ -42,7 +42,7 @@ class AppState(val store: Store) {
     fun locked(b: Int) = false // 평생권 연결 전까지 모두 열림 (Canon.free 로 나눌 예정)
 
     fun open(b: Int, ch: Int) { book = b; chapter = ch; store.setBookmark(translation, b, ch); page = 1 }
-    fun setTranslation(t: Translation) { translation = t; store.translation = t; val bm = store.bookmark(t); book = bm.first; chapter = bm.second }
+    fun chooseTranslation(t: Translation) { translation = t; store.translation = t; val bm = store.bookmark(t); book = bm.first; chapter = bm.second }
     fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t }
     fun setTextScale(s: Float) { scale = s; store.textScale = s }
     fun setStampMark(s: String) { stamp = s; store.stamp = s }
