@@ -168,9 +168,9 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
             contentAlignment = Alignment.Center,
         ) {
             if (img != null) Image(img, if (k) p.ko else p.en, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-            if (n == 0) Canvas(Modifier.size(22.dp)) { stamp(STAMP_CROSS, c.hair) }
+            if (n == 0) Canvas(Modifier.size(22.dp)) { stamp(STAMP_CROSS, c.unwritten.copy(alpha = 0.5f)) }
         }
-        Text(if (k) p.ko else p.en, style = Theme.label(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(if (k) p.ko else p.en, style = Theme.label(), minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(if (k) "${s.bookName(p.book)} ${p.chapter}장" else "${s.bookName(p.book)} ${p.chapter}", style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             Text("$n/${Pieces.COUNT}", style = Theme.small().copy(color = if (n == Pieces.COUNT) c.giltText else c.inkSoft), maxLines = 1)

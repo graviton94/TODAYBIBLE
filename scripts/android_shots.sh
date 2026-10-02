@@ -25,14 +25,14 @@ open --ei tb.page 1;                                               shot k05_copy
 adb shell input tap 540 1650; adb shell input text "taecho";       shot k06_copy_typing 3
 open --ei tb.page 1; adb shell input tap 540 520;                  shot k07_copy_paper 3
 open --ei tb.page 1; adb shell input tap 900 520;                  shot k08_copy_aloud 3
-adb shell input tap 540 1350;                                      shot k09_copy_aloud_reading 6
+adb shell input tap 540 1150;                                      shot k09_copy_aloud_reading 6
 open --ei tb.page 2;                                               shot k10_record 5
 swipe_up;                                                          shot k11_record_plates 2
 swipe_up; swipe_up;                                                shot k12_record_milestones 2
 open --ez tb.settings true;                                        shot k13_settings 4
 swipe_up;                                                          shot k14_settings_more 2
 open --es tb.finished 1:7;                                         shot k15_finished_veil 5
-adb shell input tap 540 1900;                                      shot k16_finished_lifting 1
+adb shell input tap 540 1810;                                      shot k16_finished_lifting 1
                                                                    shot k17_finished_plate 3
 open --es tb.finished 41:2;                                        shot k18_finished_plain 4
 open --es tb.award OLIVE;                                          shot k19_award 4

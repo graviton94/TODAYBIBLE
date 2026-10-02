@@ -101,7 +101,7 @@ private fun ChapterDoneNote(s: AppState) {
 
 /** 말씀 한 절: 붉은 블랙레터 절 번호 + 본문. KJV 첨가어는 이탤릭, LORD 는 스몰캡. lit = 밝아진 글자 수 (낭독), null = 전부. */
 @Composable
-fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null) {
+fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null, marks: List<TypeJudge.Mark>? = null) {
     val c = Theme.c; val k = s.korean
     val body: AnnotatedString = buildAnnotatedString {
         withStyle(SpanStyle(fontFamily = Fonts.black, color = c.rubric, fontSize = 1.25.em)) { append("$number ") }
@@ -109,9 +109,21 @@ fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null) {
         var i = 0
         Markup.spans(text).forEach { sp ->
             val style = SpanStyle(fontStyle = if (sp.italic) FontStyle.Italic else FontStyle.Normal, fontFeatureSettings = if (sp.smallCaps) "smcp" else null)
-            val cut = if (lit == null) sp.text.length else (lit - i).coerceIn(0, sp.text.length)
-            withStyle(style.copy(color = c.ink)) { append(sp.text.substring(0, cut)) }
-            if (cut < sp.text.length) withStyle(style.copy(color = c.unwritten)) { append(sp.text.substring(cut)) }
+            if (marks != null) {
+                // 옮겨 쓴 만큼: 맞은 글자는 먹, 틀린 글자는 붉은 밑줄, 아직은 흐린 먹
+                sp.text.forEachIndexed { j, ch ->
+                    val st = when (marks.getOrNull(i + j)) {
+                        TypeJudge.Mark.OK -> style.copy(color = c.ink)
+                        TypeJudge.Mark.WRONG -> style.copy(color = c.rubric, textDecoration = TextDecoration.Underline)
+                        else -> style.copy(color = c.unwritten)
+                    }
+                    withStyle(st) { append(ch) }
+                }
+            } else {
+                val cut = if (lit == null) sp.text.length else (lit - i).coerceIn(0, sp.text.length)
+                withStyle(style.copy(color = c.ink)) { append(sp.text.substring(0, cut)) }
+                if (cut < sp.text.length) withStyle(style.copy(color = c.unwritten)) { append(sp.text.substring(cut)) }
+            }
             i += sp.text.length
         }
     }
@@ -131,20 +143,7 @@ private fun TypeTab(s: AppState, verse: Int) {
         val prev = s.text().verse(s.chapter, verse - 1)
         if (prev.isNotBlank()) Text(Markup.plain(prev), style = Theme.small(), maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
-    VerseText(s, verse, source)
-    // 옮겨 쓴 만큼: 맞은 글자는 먹, 틀린 글자는 붉은 밑줄, 아직은 흐린 먹
-    val shown = buildAnnotatedString {
-        Markup.plain(source).forEachIndexed { i, ch ->
-            when (marks[i]) {
-                TypeJudge.Mark.OK -> withStyle(SpanStyle(color = c.ink)) { append(ch) }
-                TypeJudge.Mark.WRONG -> withStyle(SpanStyle(color = c.rubric, textDecoration = TextDecoration.Underline)) { append(ch) }
-                TypeJudge.Mark.PENDING -> withStyle(SpanStyle(color = c.unwritten)) { append(ch) }
-            }
-        }
-    }
-    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.button)).background(c.paper).padding(Tokens.Space.s3)) {
-        Text(shown, style = Theme.verse(k).copy(fontSize = Theme.verse(k).fontSize * 0.86f))
-    }
+    VerseText(s, verse, source, marks = marks)
     BasicTextField(
         value = value,
         onValueChange = { nv ->

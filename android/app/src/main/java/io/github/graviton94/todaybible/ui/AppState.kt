@@ -86,12 +86,14 @@ class AppState(val store: Store) {
         val keys = plan.flatMap { (b, chs) -> val t = store.book(tr, b); chs.flatMap { (ch, f) -> val v = t.fillable(ch); v.take((v.size * f).toInt()).map { VerseKey(b, ch, it) } } }
         // 쓴 날: 41일 전부터, 주일 몇 번 · 평일 사흘은 쉼
         val days = (40 downTo 0).map { end.minusDays(it.toLong()) }.filterIndexed { i, d -> !(d.dayOfWeek == java.time.DayOfWeek.SUNDAY && i % 3 != 0) && i !in setOf(5, 17, 26) }
-        val per = (keys.size + days.size - 1) / days.size
         val modes = listOf(Mode.TYPE, Mode.TYPE, Mode.ALOUD, Mode.PAPER)
-        val new = keys.chunked(per).zip(days).flatMapIndexed { i, (ks, d) ->
+        // 날마다 고르게 나눔 (마지막 날 = 오늘까지)
+        val already = progress.filled(tr)
+        val new = keys.mapIndexed { n, key ->
+            val i = (n.toLong() * days.size / keys.size).toInt(); val d = days[i]
             val at = d.atTime(6 + i % 3, 30).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
-            ks.map { Fill(tr, it, modes[i % modes.size], d.toEpochDay(), at) }
-        }.filter { it.key.raw !in progress.filled(tr) }
+            Fill(tr, key, modes[i % modes.size], d.toEpochDay(), at)
+        }.filter { it.key.raw !in already }
         if (new.isEmpty()) return
         if (store.startDay < 0) store.startDay = days.first().toEpochDay()
         store.append(new); fills.addAll(new)

@@ -57,7 +57,7 @@ fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = fal
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = Theme.label().copy(color = if (quiet) c.ink else c.leatherInk, textAlign = TextAlign.Center), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text, style = Theme.label().copy(color = if (quiet) c.ink else if (enabled) c.leatherInk else c.inkSoft, textAlign = TextAlign.Center), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -91,7 +91,7 @@ fun RowScope.Spacer1() = Box(Modifier.weight(1f))
 // ── 발자취 메달: 무광 가죽 원 + 금박 테 한 줄 + 금박 선 문양 하나 (SVG 경로, 64×64 기준) ──
 private val ICONS: Map<String, List<String>> = mapOf(
     "light" to listOf("M26 32a6 6 0 1 0 12 0a6 6 0 1 0 -12 0", "M32 18v-4M32 50v-4M18 32h-4M50 32h-4M22 22l-3-3M45 45l-3-3M22 42l-3 3M42 22l3-3"),
-    "seven" to listOf("M22 24v16M28 24v16M33 24l4 16l4 -16M45 24v16"),
+    "seven" to listOf("M19 24l5 16l5-16M35 24v16M43 24v16M17 22h30M17 42h30"),
     "dawn" to listOf("M14 40h36", "M22 40a10 10 0 0 1 20 0", "M32 24v-5M22 28l-3-3M42 28l3-3"),
     "crook" to listOf("M34 48V25a6 6 0 1 0 -11 0"),
     "forty" to listOf("M14 44l11-14l7 8l6-9l12 15z"),
