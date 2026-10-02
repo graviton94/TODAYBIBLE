@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["art/sources.tsv", ".github/workflows/fetch-art.yml"]
+    paths: ["art/sources.tsv", "art/search.tsv", ".github/workflows/fetch-art.yml"]
 permissions:
   contents: write
 jobs:
@@ -25,6 +25,32 @@ jobs:
             done
             ls -la "$out"; file "$out"
           done
+      - name: Search and download
+        run: |
+          python3 - <<'PY'
+          import json, os, time, urllib.parse, urllib.request
+          UA={"User-Agent":"LookCloser/0.1 (https://github.com/graviton94/LOOKCLOSER)"}
+          def get(u):
+              return json.load(urllib.request.urlopen(urllib.request.Request(u,headers=UA),timeout=60))
+          os.makedirs("art/raw",exist_ok=True)
+          man=open("art/raw/manifest.tsv","a")
+          for line in open("art/search.tsv"):
+              if line.startswith("#") or not line.strip(): continue
+              key,q=line.rstrip("\n").split("\t")
+              out=f"art/raw/{key}.jpg"
+              if os.path.exists(out): continue
+              r=get("https://commons.wikimedia.org/w/api.php?"+urllib.parse.urlencode({"action":"query","format":"json","generator":"search","gsrnamespace":6,"gsrsearch":q,"gsrlimit":5,"prop":"imageinfo","iiprop":"url|extmetadata|mime","iiurlwidth":1600}))
+              pages=sorted(r.get("query",{}).get("pages",{}).values(),key=lambda p:p.get("index",99))
+              pages=[p for p in pages if p.get("imageinfo") and p["imageinfo"][0].get("mime")=="image/jpeg"]
+              if not pages: print("none",key); continue
+              ii=pages[0]["imageinfo"][0]; md=ii.get("extmetadata",{})
+              urllib.request.urlretrieve if False else None
+              data=urllib.request.urlopen(urllib.request.Request(ii["thumburl"],headers=UA),timeout=120).read()
+              open(out,"wb").write(data)
+              lic=md.get("LicenseShortName",{}).get("value",""); art=md.get("Artist",{}).get("value","")
+              man.write("\t".join([key,pages[0]["title"],lic,art.replace("\t"," ").replace("\n"," ")[:200],ii["descriptionurl"]])+"\n")
+              print(key,pages[0]["title"],lic); time.sleep(2)
+          PY
       - name: Commit
         run: |
           git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
