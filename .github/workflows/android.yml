@@ -34,8 +34,11 @@ jobs:
       - name: Show compile errors
         if: failure()
         working-directory: android
+        # 로그를 못 여는 곳에서도 보이게: 오류를 주석(annotation)으로 (한 줄에 여러 개를 묶어 10개 제한 안에)
         run: |
           grep -E "^e: |error:|What went wrong" -A2 build.log | head -120 || true
+          grep -E "^e: |What went wrong|error:" -A1 build.log | sed 's#.*/src/main/java/io/github/graviton94/todaybible/##' | head -100 \
+            | awk '{ printf "%s%%0A", $0 } NR % 10 == 0 { print "" }' | while read -r chunk; do echo "::error::$chunk"; done
       - name: Rename APK
         run: |
           mkdir -p out
