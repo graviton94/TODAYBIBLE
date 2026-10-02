@@ -34,7 +34,8 @@ jobs:
       - name: Show compile errors
         if: failure()
         working-directory: android
-        run: grep -E "^e: |error:|What went wrong" -A2 build.log | head -120 || true
+        run: |
+          grep -E "^e: |error:|What went wrong" -A2 build.log | head -120 || true
       - name: Rename APK
         run: |
           mkdir -p out

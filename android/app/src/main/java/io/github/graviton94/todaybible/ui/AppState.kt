@@ -99,9 +99,9 @@ class AppState(val store: Store) {
         open(40, 3); page = 0
     }
 
-    fun nextChapter(): Pair<Int, Int> {
-        val t = text()
-        return if (chapter < t.chapterCount) book to chapter + 1 else if (book < 65) book + 1 to 1 else book to chapter
+    fun nextChapter(b: Int = book, ch: Int = chapter): Pair<Int, Int> {
+        val t = text(b)
+        return if (ch < t.chapterCount) b to ch + 1 else if (b < 65) b + 1 to 1 else b to ch
     }
     fun bookName(b: Int = book) = if (korean) Canon.books[b].ko else Canon.books[b].en
 }

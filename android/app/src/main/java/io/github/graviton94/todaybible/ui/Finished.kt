@@ -76,7 +76,7 @@ fun FinishedPage(s: AppState, book: Int, chapter: Int, lifted: Boolean = false) 
         } else {
             Box(Modifier.padding(vertical = Tokens.Space.s5).size(64.dp)) { StampMark(STAMP_CROSS, c.gilt, Modifier.fillMaxSize()) }
         }
-        val (nb, nc) = remember(book, chapter) { s.nextChapter() }
+        val (nb, nc) = remember(book, chapter) { s.nextChapter(book, chapter) }
         if (plate != null && veil.value < 1f) {
             BookButton(stringResource(R.string.lift_veil), Modifier.fillMaxWidth(), enabled = !veil.isRunning) {
                 scope.launch { veil.animateTo(1f, tween(Tokens.Motion.veilMs, easing = FastOutSlowInEasing)) }
