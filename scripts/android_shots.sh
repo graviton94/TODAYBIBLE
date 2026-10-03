@@ -56,6 +56,24 @@ open --ei tb.page 1 --ei tb.copyTab 2;                             shot p07_hand
 for st in "180 1000 300 1000" "240 960 240 1040" "200 1060 290 1080" "340 990 420 990" "380 990 370 1090" "370 1040 430 1050" "470 980 470 1100" "520 1000 620 1000" "570 960 560 1100" "520 1060 610 1060"; do adb shell input swipe $st 180; done
 shot p08_hand_written 2
 open --ez tb.voice false
+# 낭독 세 갈래 · 원고지 · 형광펜 · 한 해 · 밤 · 아주 크게
+open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 0;         shot q01_aloud_responsive 6
+open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 1;         shot q02_aloud_listen 4
+open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 2;         shot q03_aloud_alone_big 4
+open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 2 --ez tb.aloudBig false; shot q04_aloud_alone_small 4
+open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 0 --ez tb.aloudBig true
+open --ei tb.page 1 --ei tb.copyTab 1 --ei tb.typeView 2;          shot k04_copy_grid 4
+open --ei tb.page 1 --ei tb.copyTab 1 --ei tb.typeView 0 --es tb.mark "1,2"; shot k05_marked 4
+open --ei tb.page 3 --es tb.mark "1,2";                            shot r05_record_marks 4
+swipe_up; swipe_up;                                                shot r06_record_marks_more 2
+open --ei tb.page 3 --ez tb.year true;                             shot r07_year_card 4
+open --ez tb.settings true; swipe_up; swipe_up; swipe_up;          shot s03_settings_more 2
+swipe_up; swipe_up;                                                shot s04_settings_end 2
+swipe_up; swipe_up;                                                shot s05_settings_feedback 2
+open --ez tb.night true;                                           shot n01_night_today 4
+open --ez tb.night true --ei tb.page 1 --ei tb.copyTab 0;          shot n02_night_aloud 4
+open --ef tb.scale 1.6 --ez tb.contrast true --ei tb.page 1 --ei tb.copyTab 0; shot x05_huge_contrast 4
+open --ef tb.scale 1.0 --ez tb.contrast false
 open --ei tb.page 3;                                               shot r00_record_stats 5
 open --ei tb.page 0 --ei tb.toast 5;                               shot t01_toast 1.5
 open --ez tb.cardShots true

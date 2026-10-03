@@ -295,6 +295,8 @@ class AppState(val store: Store) {
         if (store.startDay < 0) store.startDay = days.first().toEpochDay()
         store.append(new); fills.addAll(new)
         checkMilestones(); award = null
+        // 소리 내어 읽은 시간: 지난 이레
+        aloudLog = (0..6).associate { end.minusDays(it.toLong()).toEpochDay() to listOf(720, 0, 1260, 540, 960, 300, 840)[it] }.filterValues { it > 0 }; store.saveAloud(aloudLog)
         onboarded = true; store.onboarded = true; opening = false
         open(40, 3); page = 0
     }

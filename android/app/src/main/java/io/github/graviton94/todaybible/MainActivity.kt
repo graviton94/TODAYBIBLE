@@ -102,6 +102,10 @@ class MainActivity : ComponentActivity() {
         i.getStringExtra("tb.today")?.let { s.fixedToday = LocalDate.parse(it) }
         if (i.extras?.keySet()?.any { it.startsWith("tb.") } == true) { s.nightOverride = i.getBooleanExtra("tb.night", false); s.checkNight() }
         i.getStringExtra("tb.mark")?.let { r -> r.split(',').forEach { v -> s.toggleMark(io.github.graviton94.todaybible.core.VerseKey(s.book, s.chapter, v.trim().toInt())) } }
+        if (i.hasExtra("tb.aloudMode")) s.chooseAloudMode(i.getIntExtra("tb.aloudMode", 0))
+        if (i.hasExtra("tb.aloudBig")) { if (s.aloudBig != i.getBooleanExtra("tb.aloudBig", true)) s.flipAloudBig() }
+        if (i.hasExtra("tb.typeView")) s.chooseTypeView(i.getIntExtra("tb.typeView", 0))
+        if (i.hasExtra("tb.contrast")) { if (s.contrast != i.getBooleanExtra("tb.contrast", false)) s.flipContrast() }
         if (i.hasExtra("tb.year")) s.forceYear = i.getBooleanExtra("tb.year", false)
         if (i.hasExtra("tb.pen")) s.pen = i.getIntExtra("tb.pen", 0)
         if (i.hasExtra("tb.guide")) s.handGuide = i.getBooleanExtra("tb.guide", true)
