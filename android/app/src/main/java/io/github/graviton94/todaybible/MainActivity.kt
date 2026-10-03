@@ -94,7 +94,7 @@ class MainActivity : ComponentActivity() {
         s.plateView = i.getStringExtra("tb.plate")?.let { id -> s.store.plates.firstOrNull { it.id == id } }
         s.peekBook = i.getIntExtra("tb.peek", 0).takeIf { it > 0 }?.minus(1)?.also { s.purchaseOpen = true }
         i.getStringExtra("tb.plan")?.let { s.choosePlan(it); s.store.planStart = s.today().toEpochDay() - 2 }
-        i.getStringExtra("tb.cover")?.let { s.setCover(it) }
+        i.getStringExtra("tb.cover")?.let { s.chooseCover(it) }
         i.getStringExtra("tb.owner")?.let { s.setOwner(it) }
         if (i.getBooleanExtra("tb.planSheet", false)) s.planOpen = true
         if (i.hasExtra("tb.welcomeStep")) s.welcomeStep = i.getIntExtra("tb.welcomeStep", 0)

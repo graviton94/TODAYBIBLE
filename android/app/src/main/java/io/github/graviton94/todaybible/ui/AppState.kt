@@ -133,7 +133,7 @@ class AppState(val store: Store) {
         val left = (pl.days - planDay() + 1).coerceAtLeast(1)
         return io.github.graviton94.todaybible.core.Plans.perDay(total, doneBefore, left).coerceAtLeast(1)
     }
-    fun setCover(c: String) { cover = c; store.cover = c }
+    fun chooseCover(c: String) { cover = c; store.cover = c }
     fun setOwner(n: String) { ownerName = n; store.ownerName = n }
     fun coverColor() = when (cover) { "navy" -> io.github.graviton94.todaybible.design.Tokens.Covers.navy; "olive" -> io.github.graviton94.todaybible.design.Tokens.Covers.olive; "ebony" -> io.github.graviton94.todaybible.design.Tokens.Covers.ebony; else -> io.github.graviton94.todaybible.design.Tokens.Covers.burgundy }
 

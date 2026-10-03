@@ -157,7 +157,7 @@ private fun CoverPicker(s: AppState) {
         covers.forEach { (id, name) ->
             val on = s.cover == id
             val col = when (id) { "navy" -> Tokens.Covers.navy; "olive" -> Tokens.Covers.olive; "ebony" -> Tokens.Covers.ebony; else -> Tokens.Covers.burgundy }
-            Column(Modifier.weight(1f).clickable(role = Role.RadioButton) { if (gated && id != "burgundy") s.purchaseOpen = true else s.setCover(id) },
+            Column(Modifier.weight(1f).clickable(role = Role.RadioButton) { if (gated && id != "burgundy") s.purchaseOpen = true else s.chooseCover(id) },
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                 Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.chip)).background(col)
                     .drawBehind {
