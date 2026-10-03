@@ -126,13 +126,16 @@ object Cards {
             val bmp = runCatching { ctx.assets.open("plates/$plateId.jpg").use { BitmapFactory.decodeStream(it) } }.getOrNull()?.asImageBitmap()
             val pad = Tokens.Size.cardPad.toPx(); val width = size.width - 2 * pad
             if (bmp != null) {
-                val h = width / Tokens.Ratio.plateAspect
-                val dh = minOf(h, size.height * Tokens.Px.cardPlate); val dw = dh * Tokens.Ratio.plateAspect
-                drawImage(bmp, dstOffset = androidx.compose.ui.unit.IntOffset(((size.width - dw) / 2).toInt(), (pad).toInt()), dstSize = androidx.compose.ui.unit.IntSize(dw.toInt(), dh.toInt()))
-                val y = pad + dh + Tokens.Size.cardGap.toPx()
+                // 제목 · 장 · 바닥글 자리를 먼저 재고 남는 높이에 판화를 맞춤 (겹치지 않게)
+                val gap = Tokens.Size.cardGap.toPx()
                 val t = m.measure(title, TextStyle(fontFamily = if (korean) Fonts.titleKr else Fonts.garamond, fontSize = Tokens.Text.title, color = c.ink, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width.toInt()), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                drawText(t, topLeft = Offset(pad, y))
                 val r = m.measure(reference, TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.fell, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.cardRef, color = c.rubric, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width.toInt()))
+                val foot = Tokens.Size.cardPad.toPx() + Tokens.Text.cardFoot.toPx() * 2
+                val avail = size.height - pad - foot - gap * 2 - t.size.height - r.size.height - Tokens.Space.s2.toPx()
+                val dh = minOf(width / Tokens.Ratio.plateAspect, avail); val dw = dh * Tokens.Ratio.plateAspect
+                drawImage(bmp, dstOffset = androidx.compose.ui.unit.IntOffset(((size.width - dw) / 2).toInt(), pad.toInt()), dstSize = androidx.compose.ui.unit.IntSize(dw.toInt(), dh.toInt()))
+                val y = pad + dh + gap
+                drawText(t, topLeft = Offset(pad, y))
                 drawText(r, topLeft = Offset(pad, y + t.size.height + Tokens.Space.s2.toPx()))
             }
             footer(m, c, korean, now)

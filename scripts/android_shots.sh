@@ -69,7 +69,7 @@ swipe_up; swipe_up; swipe_up;                                      shot e05_mile
 open --ez tb.settings true;                                        shot e06_settings 4
 open --es tb.finished 42:15;                                       shot e07_finished 4
 open --es tb.award LAMP;                                           shot e08_award 4
-open --ez tb.purchase true --es tb.price \$29.99;                   shot e09_purchase 4
+open --ez tb.purchase true --es tb.price "'\$29.99'";                 shot e09_purchase 4
 open --ez tb.cardShots true; sleep 12; mkdir -p "$OUT/cards_en"; adb pull /sdcard/Android/data/$P/files/cards/. "$OUT/cards_en/" >/dev/null 2>&1
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 open --es tb.tr KRV --es tb.scale 1.3 --ei tb.page 1;              shot x01_large_copy 5
