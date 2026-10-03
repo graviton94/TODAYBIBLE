@@ -30,12 +30,12 @@ class MainActivity : ComponentActivity() {
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; s.opening = false }
         if (store.reminderHour >= 0) io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
         setContent {
-            val dark = when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK -> true }
+            val dark = s.night || when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK -> true }
             LaunchedEffect(dark) {
                 val bar = if (dark) SystemBarStyle.dark(android.graphics.Color.TRANSPARENT) else SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
                 enableEdgeToEdge(bar, bar)
             }
-            TodayTheme(s.theme, s.scale) { Root(s) }
+            TodayTheme(s.theme, s.scale, s.night) { Root(s) }
             androidx.compose.runtime.LaunchedEffect(s.opening) { if (!s.opening) s.store.openedDay = s.today().toEpochDay() }
         }
     }
@@ -51,6 +51,7 @@ class MainActivity : ComponentActivity() {
             save("widget_goal", io.github.graviton94.todaybible.widget.GoalWidget().draw(this, 110, 110, false))
             save("widget_run", io.github.graviton94.todaybible.widget.RunWidget().draw(this, 110, 110, false))
             save("widget_goal_dark", io.github.graviton94.todaybible.widget.GoalWidget().draw(this, 110, 110, true))
+            save("widget_hand", io.github.graviton94.todaybible.widget.HandWidget.bitmap(this, 360, 170, false, day))
             val k = s.korean; val now = day.atTime(7, 12)
             val ref = if (k) "${s.bookName(0)} 1:1" else "${s.bookName(0)} 1:1"
             save("card_verse", io.github.graviton94.todaybible.ui.Cards.verse(this, k, ref, s.store.book(s.translation, 0).verse(1, 1), "noah", now))
@@ -65,6 +66,11 @@ class MainActivity : ComponentActivity() {
     }
 
     // 알림을 눌러 다시 열 때: 필사 장으로
+    override fun onResume() {
+        super.onResume()
+        state?.checkNight()
+    }
+
     override fun onStop() {
         super.onStop()
         io.github.graviton94.todaybible.data.Backup.auto(this)
@@ -81,6 +87,12 @@ class MainActivity : ComponentActivity() {
      */
     private fun debugSetup(s: AppState, i: Intent) {
         i.getStringExtra("tb.today")?.let { s.fixedToday = LocalDate.parse(it) }
+        if (i.extras?.keySet()?.any { it.startsWith("tb.") } == true) { s.nightOverride = i.getBooleanExtra("tb.night", false); s.checkNight() }
+        i.getStringExtra("tb.mark")?.let { r -> r.split(',').forEach { v -> s.toggleMark(io.github.graviton94.todaybible.core.VerseKey(s.book, s.chapter, v.trim().toInt())) } }
+        if (i.hasExtra("tb.year")) s.forceYear = i.getBooleanExtra("tb.year", false)
+        if (i.hasExtra("tb.pen")) s.pen = i.getIntExtra("tb.pen", 0)
+        if (i.hasExtra("tb.guide")) s.handGuide = i.getBooleanExtra("tb.guide", true)
+        if (i.hasExtra("tb.handBook")) s.handBook = i.getIntExtra("tb.handBook", 0)
         i.getStringExtra("tb.tr")?.let { s.chooseTranslation(Translation.valueOf(it)) }
         i.getStringExtra("tb.theme")?.let { s.setThemeChoice(ThemeChoice.valueOf(it)) }
         if (i.hasExtra("tb.scale")) s.setTextScale(i.getFloatExtra("tb.scale", 1f))

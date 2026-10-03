@@ -6,11 +6,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** 한 테마의 재료 색. */
-data class Palette(val paper: Color, val leaf: Color, val ink: Color, val inkSoft: Color, val unwritten: Color, val hair: Color, val rubric: Color, val gilt: Color, val giltText: Color, val leather: Color, val leatherDeep: Color, val leatherInk: Color, val shade: Color, val scrim: Color, val penInk: Color, val noteLine: Color)
+data class Palette(val paper: Color, val leaf: Color, val ink: Color, val inkSoft: Color, val unwritten: Color, val hair: Color, val rubric: Color, val gilt: Color, val giltText: Color, val leather: Color, val leatherDeep: Color, val leatherInk: Color, val shade: Color, val scrim: Color, val penInk: Color, val noteLine: Color, val mark: Color, val graphite: Color)
 
 object Tokens {
-    val light = Palette(paper = Color(0xFFECE2CC), leaf = Color(0xFFF7F1E3), ink = Color(0xFF2A2119), inkSoft = Color(0xFF5C4E3E), unwritten = Color(0xFF76674F), hair = Color(0x2E2A2119), rubric = Color(0xFF8C2117), gilt = Color(0xFFA07B36), giltText = Color(0xFF7A5C24), leather = Color(0xFF4A1913), leatherDeep = Color(0xFF3A120E), leatherInk = Color(0xFFEBDAB1), shade = Color(0x242A2119), scrim = Color(0x661A120C), penInk = Color(0xFF1F2A44), noteLine = Color(0x291F2A44))
-    val dark = Palette(paper = Color(0xFF15110D), leaf = Color(0xFF201A14), ink = Color(0xFFEEE4D0), inkSoft = Color(0xFFBFB09A), unwritten = Color(0xFF9A8D78), hair = Color(0x2EEEE4D0), rubric = Color(0xFFD46B5C), gilt = Color(0xFFC7A35D), giltText = Color(0xFFD6B672), leather = Color(0xFF5A1F18), leatherDeep = Color(0xFF46170F), leatherInk = Color(0xFFEEDDB4), shade = Color(0x66000000), scrim = Color(0xA0000000), penInk = Color(0xFFC9D3EE), noteLine = Color(0x29C9D3EE))
+    val light = Palette(paper = Color(0xFFECE2CC), leaf = Color(0xFFF7F1E3), ink = Color(0xFF2A2119), inkSoft = Color(0xFF5C4E3E), unwritten = Color(0xFF76674F), hair = Color(0x2E2A2119), rubric = Color(0xFF8C2117), gilt = Color(0xFFA07B36), giltText = Color(0xFF7A5C24), leather = Color(0xFF4A1913), leatherDeep = Color(0xFF3A120E), leatherInk = Color(0xFFEBDAB1), shade = Color(0x242A2119), scrim = Color(0x661A120C), penInk = Color(0xFF1F2A44), noteLine = Color(0x291F2A44), mark = Color(0x70F2D25C), graphite = Color(0xFF5E5A55))
+    val dark = Palette(paper = Color(0xFF15110D), leaf = Color(0xFF201A14), ink = Color(0xFFEEE4D0), inkSoft = Color(0xFFBFB09A), unwritten = Color(0xFF9A8D78), hair = Color(0x2EEEE4D0), rubric = Color(0xFFD46B5C), gilt = Color(0xFFC7A35D), giltText = Color(0xFFD6B672), leather = Color(0xFF5A1F18), leatherDeep = Color(0xFF46170F), leatherInk = Color(0xFFEEDDB4), shade = Color(0x66000000), scrim = Color(0xA0000000), penInk = Color(0xFFC9D3EE), noteLine = Color(0x29C9D3EE), mark = Color(0x55C9A43A), graphite = Color(0xFFA9A39A))
+    val candle = Palette(paper = Color(0xFF17100A), leaf = Color(0xFF1E150D), ink = Color(0xFFEBD9B4), inkSoft = Color(0xFFB8A07A), unwritten = Color(0xFF8E7A5A), hair = Color(0x2EEBD9B4), rubric = Color(0xFFD9774F), gilt = Color(0xFFE0B467), giltText = Color(0xFFE9C57A), leather = Color(0xFF3A2A1C), leatherDeep = Color(0xFF2C1F14), leatherInk = Color(0xFFE9C57A), shade = Color(0x66000000), scrim = Color(0xA0000000), penInk = Color(0xFFE9D6AE), noteLine = Color(0x26E9C57A), mark = Color(0x40E9C57A), graphite = Color(0xFFA89A86))
     object Space {
         val s1 = 4.dp
         val s2 = 8.dp
@@ -69,12 +70,13 @@ object Tokens {
         val cardMedal = 120.dp
         val cardGap = 24.dp
         val noteMargin = 44.dp
-        val handLine = 56.dp
+        val handLine = 72.dp
         val handModel = 168.dp
         val initialBox = 56.dp
         val initialHome = 44.dp
         val hiddenField = 1.dp
         val widgetRing = 64.dp
+        val grain = 14.dp
     }
     object Text {
         val verse = 21.sp
@@ -99,6 +101,8 @@ object Tokens {
         val penLine = 34.sp
         val initialBox = 30.sp
         val gridInitial = 20.sp
+        val guide = 40.sp
+        val hint = 20.sp
     }
     /** 표지 가죽 (나의 성경 꾸미기). */
     object Covers {
@@ -128,6 +132,7 @@ object Tokens {
         const val openHoldMs = 900
         const val openAngle = 100.0f
         const val openCamera = 14.0f
+        const val bookTilt = 14.0f
     }
     object Ratio {
         const val plateAspect = 0.766f
@@ -155,6 +160,7 @@ object Tokens {
         const val peek = 0.93f
         const val veilPiece = 0.86f
         const val handGuide = 0.35f
+        const val guide = 0.22f
     }
     object Leading {
         const val verse = 1.8f

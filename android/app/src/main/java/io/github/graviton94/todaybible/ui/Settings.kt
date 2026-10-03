@@ -109,6 +109,12 @@ fun SettingsPage(s: AppState) {
                 Text(stringResource(R.string.owner_note), style = Theme.small())
             }
             Group(stringResource(R.string.my_cover)) { CoverPicker(s) }
+            Group(stringResource(R.string.hand_settings)) {
+                ChoiceRow(stringResource(R.string.guide_setting), s.handGuide) { s.flipGuide() }
+                ChoiceRow(stringResource(R.string.pen_sound), s.penSound) { s.flipPenSound() }
+                ChoiceRow(stringResource(R.string.paper_haptic), s.paperHaptic) { s.flipPaperHaptic() }
+                ChoiceRow(stringResource(R.string.candle_setting), s.candle) { s.flipCandle() }
+            }
             Group(stringResource(R.string.voice_keep)) {
                 ChoiceRow(stringResource(R.string.voice_keep_hint), s.voiceOn) { s.toggleVoice() }
                 val ctx = androidx.compose.ui.platform.LocalContext.current

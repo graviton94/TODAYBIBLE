@@ -56,7 +56,7 @@ object Theme {
 }
 
 @Composable
-fun TodayTheme(choice: ThemeChoice, scale: Float, content: @Composable () -> Unit) {
+fun TodayTheme(choice: ThemeChoice, scale: Float, night: Boolean = false, content: @Composable () -> Unit) {
     val dark = when (choice) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK -> true }
-    CompositionLocalProvider(LocalPalette provides if (dark) Tokens.dark else Tokens.light, LocalScale provides scale, content = content)
+    CompositionLocalProvider(LocalPalette provides if (night) Tokens.candle else if (dark) Tokens.dark else Tokens.light, LocalScale provides scale, content = content)
 }

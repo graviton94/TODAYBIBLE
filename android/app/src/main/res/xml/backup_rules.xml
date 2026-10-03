@@ -3,6 +3,7 @@
 <full-backup-content>
     <include domain="file" path="fills.tsv" />
     <include domain="file" path="earned.tsv" />
+    <include domain="file" path="marks.tsv" />
     <include domain="file" path="ink/" />
     <include domain="sharedpref" path="." />
 </full-backup-content>

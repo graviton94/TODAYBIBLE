@@ -160,6 +160,25 @@ object Cards {
         }
     }
 
+    /** 올해의 필사 (R1): 이름 · 큰 숫자 · 몇 줄. */
+    fun year(ctx: Context, korean: Boolean, title: String, big: String, lines: List<String>, now: LocalDateTime = LocalDateTime.now()): Bitmap {
+        val c = Tokens.light
+        return render(ctx, Tokens.Px.shareW.toInt(), (Tokens.Px.shareW).toInt(), shareDensity()) { tm ->
+            paperFrame(c)
+            val pad = Tokens.Size.cardPad.toPx(); val width = (size.width - 2 * pad).toInt()
+            var y = size.height * Tokens.Px.medalTop
+            val t = tm.measure(title, TextStyle(fontFamily = if (korean) Fonts.titleKr else Fonts.garamond, fontSize = Tokens.Text.cardName, color = c.giltText, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            drawText(t, topLeft = Offset(pad, y)); y += t.size.height + Tokens.Size.cardGap.toPx()
+            val b = tm.measure(big, TextStyle(fontFamily = if (korean) Fonts.titleKr else Fonts.garamond, fontSize = Tokens.Text.display * 2, color = c.rubric, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1)
+            drawText(b, topLeft = Offset(pad, y)); y += b.size.height + Tokens.Size.cardGap.toPx()
+            for (l in lines) {
+                val r = tm.measure(l, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardRef, color = c.inkSoft, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                drawText(r, topLeft = Offset(pad, y)); y += r.size.height + Tokens.Space.s2.toPx()
+            }
+            footer(tm, c, korean, now)
+        }
+    }
+
     /** 그림을 저장해 나누기 창 열기 (FileProvider, 캐시 폴더). */
     fun share(ctx: Context, bmp: Bitmap, name: String) {
         val dir = File(ctx.cacheDir, "share").apply { mkdirs() }

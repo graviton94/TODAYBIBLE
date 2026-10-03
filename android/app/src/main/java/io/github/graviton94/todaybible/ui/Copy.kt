@@ -41,6 +41,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -196,8 +197,9 @@ private fun WritePage(s: AppState, verse: Int?) {
 
 /** 책 보기: 이 장 전체가 한 페이지. 쓴 절은 먹, 쓰는 절은 표시, 남은 절은 흐린 먹. */
 @Composable
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 private fun BookView(s: AppState, current: Int?, marks: List<TypeJudge.Mark>, sealed: Int?, onWrite: () -> Unit) {
-    val c = Theme.c; val k = s.korean
+    val c = Theme.c; val k = s.korean; val ctx = LocalContext.current; val haptic = LocalHapticFeedback.current
     val t = s.text(); val p = s.progress
     val fillable = t.fillable(s.chapter)
     val list = rememberLazyListState()
@@ -208,14 +210,20 @@ private fun BookView(s: AppState, current: Int?, marks: List<TypeJudge.Mark>, se
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
         item { ChapterInitial(s.chapter, chapterDone, Modifier.padding(bottom = Tokens.Space.s1)) }
         items(fillable, key = { it }) { v ->
-            val filled = p.isFilled(s.translation, VerseKey(s.book, s.chapter, v))
+            val key = VerseKey(s.book, s.chapter, v)
+            val filled = p.isFilled(s.translation, key)
             val text = t.verse(s.chapter, v)
-            when {
-                v == current -> VerseText(s, v, text, marks = marks)
-                filled -> Column(Modifier.clickable(role = Role.Button) { s.shareVerse = v }) {
-                    VerseText(s, v, text, sealed = v == sealed)
+            val on = s.isMarked(key)
+            // 길게 누르면 형광펜 (긋기 · 지우기)
+            Box(Modifier.combinedClickable(role = Role.Button, onLongClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.LongPress); s.toggleMark(key)
+                s.toast = ctx.getString(if (on) R.string.mark_removed else R.string.mark_added)
+            }) { when { v == current -> onWrite(); filled -> s.shareVerse = v; else -> s.target = v } }) {
+                when {
+                    v == current -> VerseText(s, v, text, marks = marks, marked = on)
+                    filled -> VerseText(s, v, text, sealed = v == sealed, marked = on)
+                    else -> VerseText(s, v, text, faint = true, marked = on)
                 }
-                else -> Box(Modifier.clickable(role = Role.Button) { s.target = v }) { VerseText(s, v, text, faint = true) }
             }
         }
         if (chapterDone) item { ChapterDoneNote(s) }
@@ -293,7 +301,7 @@ private fun HandNoteLine(date: String, verse: Int, ink: io.github.graviton94.tod
             Text(date, style = Theme.small().copy(color = c.inkSoft), maxLines = 1)
             Text("$verse", style = Theme.small().copy(color = c.rubric), maxLines = 1)
         }
-        Box(Modifier.weight(1f).padding(start = Tokens.Space.s5)) { InkSheets(ink, c.penInk, c.noteLine) }
+        Box(Modifier.weight(1f).padding(start = Tokens.Space.s5)) { InkSheets(ink, c.penInk, c.noteLine, c.graphite) }
     }
 }
 
@@ -313,14 +321,16 @@ private fun ChapterDoneNote(s: AppState) {
  * faint = 아직 안 쓴 절. sealed = 방금 마침 (끝에 도장 · 아래 금선).
  */
 @Composable
-fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null, marks: List<TypeJudge.Mark>? = null, faint: Boolean = false, sealed: Boolean = false) {
+fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null, marks: List<TypeJudge.Mark>? = null, faint: Boolean = false, sealed: Boolean = false, marked: Boolean = false) {
     val c = Theme.c; val k = s.korean
     val nibAt = marks?.indexOfFirst { it == TypeJudge.Mark.PENDING } ?: -1
     val body: AnnotatedString = buildAnnotatedString {
         withStyle(SpanStyle(fontFamily = Fonts.black, color = if (faint) c.unwritten else c.rubric, fontSize = Tokens.Leading.verseNumber.em)) { append("$number ") }
         var i = 0
         Markup.spans(text).forEach { sp ->
-            val style = SpanStyle(fontStyle = if (sp.italic) FontStyle.Italic else FontStyle.Normal, fontFeatureSettings = if (sp.smallCaps) "smcp" else null)
+            // 형광펜: 그은 절은 글자 뒤에 옅은 노랑
+            val style = SpanStyle(fontStyle = if (sp.italic) FontStyle.Italic else FontStyle.Normal, fontFeatureSettings = if (sp.smallCaps) "smcp" else null,
+                background = if (marked) c.mark else androidx.compose.ui.graphics.Color.Unspecified)
             if (marks != null) {
                 sp.text.forEachIndexed { j, ch ->
                     val st = when (marks.getOrNull(i + j)) {
@@ -485,7 +495,8 @@ fun ShareVerseSheet(s: AppState, v: Int) {
     BookSheet({ s.shareVerse = null }) {
         Image(bmp.asImageBitmap(), ref, Modifier.fillMaxWidth(Tokens.Ratio.plateWidth).aspectRatio(Tokens.Px.shareW / Tokens.Px.shareH).clip(RoundedCornerShape(Tokens.Radius.chip)))
         Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            BookButton(stringResource(R.string.close), Modifier.weight(1f), quiet = true) { s.shareVerse = null }
+            val key = VerseKey(s.book, s.chapter, v)
+            BookButton(stringResource(if (s.isMarked(key)) R.string.mark_off else R.string.mark_on), Modifier.weight(1f), quiet = true) { s.toggleMark(key) }
             BookButton(stringResource(R.string.share), Modifier.weight(1f)) { Cards.share(ctx, bmp, "verse"); s.shareVerse = null }
         }
     }

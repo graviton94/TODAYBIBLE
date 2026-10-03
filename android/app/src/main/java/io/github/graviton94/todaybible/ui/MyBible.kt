@@ -149,7 +149,7 @@ object MyBible {
                         cv.drawText("$v", M.toFloat(), y + line * 0.6f, num)
                         firstDay[VerseKey(b, ch, v).raw]?.let { d -> cv.drawText(LocalDate.ofEpochDay(d).format(md), M.toFloat(), y + line * 0.6f + 11f, head) }
                     }
-                    io.github.graviton94.todaybible.data.Ink.draw(cv, sheet, left, y, w, c.penInk.toArgb())
+                    io.github.graviton94.todaybible.data.Ink.draw(cv, sheet, left, y, w, (if (ink.pen == io.github.graviton94.todaybible.data.Ink.PENCIL) c.graphite else c.penInk).toArgb(), ink.pen)
                     y += hgt
                 }
                 y += 6f

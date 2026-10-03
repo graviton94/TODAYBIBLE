@@ -115,5 +115,37 @@ class Store(val context: Context) {
         get() = prefs.getLong("start", -1)
         set(v) = prefs.edit().putLong("start", v).apply()
 
+    /** 손글씨: 펜 (만년필 · 붓펜 · 연필) · 밑글씨 · 펜 소리 · 종이 결 진동. */
+    var pen: Int
+        get() = prefs.getInt("pen", 0)
+        set(v) = prefs.edit().putInt("pen", v).apply()
+    var handGuide: Boolean
+        get() = prefs.getBoolean("hand_guide", true)
+        set(v) = prefs.edit().putBoolean("hand_guide", v).apply()
+    var penSound: Boolean
+        get() = prefs.getBoolean("pen_sound", true)
+        set(v) = prefs.edit().putBoolean("pen_sound", v).apply()
+    var paperHaptic: Boolean
+        get() = prefs.getBoolean("paper_haptic", true)
+        set(v) = prefs.edit().putBoolean("paper_haptic", v).apply()
+    /** 밤 필사: 밤 9시 ~ 새벽 5시에 촛불빛 화면. */
+    var candle: Boolean
+        get() = prefs.getBoolean("candle", true)
+        set(v) = prefs.edit().putBoolean("candle", v).apply()
+
+    /** 형광펜 밑줄 (번역 · 절 · 그은 날). 파일 하나에 통째로. */
+    data class Mark(val translation: Translation, val key: io.github.graviton94.todaybible.core.VerseKey, val epochDay: Long)
+    private val marksFile get() = java.io.File(context.filesDir, "marks.tsv")
+    fun loadMarks(): List<Mark> = runCatching {
+        marksFile.takeIf { it.exists() }?.readLines()?.mapNotNull { l ->
+            val p = l.split('\t'); if (p.size < 3) null
+            else runCatching { Mark(Translation.valueOf(p[0]), io.github.graviton94.todaybible.core.VerseKey(p[1].toInt()), p[2].toLong()) }.getOrNull()
+        }.orEmpty()
+    }.getOrDefault(emptyList())
+    fun saveMarks(marks: List<Mark>) {
+        val tmp = java.io.File(marksFile.path + ".tmp")
+        tmp.writeText(marks.joinToString("") { "${it.translation.name}\t${it.key.raw}\t${it.epochDay}\n" }); tmp.renameTo(marksFile)
+    }
+
     private fun defaultTranslation() = if (java.util.Locale.getDefault().language == "ko") Translation.KRV else Translation.KJV
 }

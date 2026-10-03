@@ -21,6 +21,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,9 +60,14 @@ fun RecordPage(s: AppState) {
     val days = s.progress.days()
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
         RunningHead(stringResource(R.string.page_record), stringResource(R.string.presence_n, Presence.total(days)), k)
+        yearShown(s)?.let { YearCard(s, it) }
         Stats(s)
         YearStamps(s)
         PresenceMonth(s, days)
+        if (s.marks.isNotEmpty()) {
+            Section(stringResource(R.string.marks), "${s.marks.count { it.translation == s.translation }}", k)
+            MarkList(s)
+        }
         Section(stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size}", k)
         PlateGallery(s)
         Section(stringResource(R.string.milestones), "${s.earned.size} / ${Milestone.entries.size}", k)
@@ -279,6 +287,72 @@ private fun YearStamps(s: AppState) {
                 val col = when { day.isAfter(today) -> c.hair.copy(alpha = Tokens.Alpha.faint); n == 0 -> c.hair; n < 5 -> c.rubric.copy(alpha = Tokens.Alpha.faint); else -> c.rubric }
                 drawRect(col, Offset(w * cell, d * cell), Size(cell - gap, cell - gap))
             }
+        }
+    }
+}
+
+private const val MARKS_SHOWN = 5
+
+/** 형광펜 그은 절 (N): 최근 것부터. 누르면 그 절로. */
+@Composable
+private fun MarkList(s: AppState) {
+    val c = Theme.c; val k = s.korean
+    var all by remember { mutableStateOf(false) }
+    val list = s.marks.filter { it.translation == s.translation }.sortedByDescending { it.epochDay }
+    val fmt = java.time.format.DateTimeFormatter.ofPattern(if (k) "M월 d일" else "d MMM")
+    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        (if (all) list else list.take(MARKS_SHOWN)).forEach { m ->
+            val v = m.key
+            Column(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { s.open(v.book, v.chapter); s.target = v.verse; s.page = 1 }
+                .padding(vertical = Tokens.Space.s1), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                Text(io.github.graviton94.todaybible.core.Markup.plain(s.store.book(s.translation, v.book).verse(v.chapter, v.verse)),
+                    style = Theme.body().copy(background = c.mark), maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                Text("${s.bookName(v.book)} ${v.chapter}:${v.verse} · ${java.time.LocalDate.ofEpochDay(m.epochDay).format(fmt)}", style = Theme.small(), maxLines = 1)
+            }
+        }
+        if (!all && list.size > MARKS_SHOWN) BookButton(stringResource(R.string.see_all, list.size), Modifier.fillMaxWidth(), quiet = true) { all = true }
+    }
+}
+
+/** 올해의 필사 (R1)를 보여 줄 해: 12월 15일부터 이듬해 1월 7일까지. */
+private fun yearShown(s: AppState): Int? {
+    val d = s.today()
+    return when {
+        s.forceYear -> d.year
+        d.monthValue == 12 && d.dayOfMonth >= 15 -> d.year
+        d.monthValue == 1 && d.dayOfMonth <= 7 -> d.year - 1
+        else -> null
+    }
+}
+
+/** 올해의 필사 (R1): 가죽 카드 한 장 · 카드로 보내기. */
+@Composable
+private fun YearCard(s: AppState, year: Int) {
+    val c = Theme.c; val k = s.korean; val ctx = androidx.compose.ui.platform.LocalContext.current
+    val from = java.time.LocalDate.of(year, 1, 1).toEpochDay(); val to = java.time.LocalDate.of(year, 12, 31).toEpochDay()
+    val inYear = s.fills.filter { it.epochDay in from..to }
+    if (inYear.isEmpty()) return
+    val verses = inYear.distinctBy { it.translation to it.key }.size
+    val days = inYear.map { it.epochDay }.toSet()
+    val topBook = inYear.groupingBy { it.key.book }.eachCount().maxByOrNull { it.value }?.key ?: 0
+    val first = inYear.minBy { it.atMillis }
+    val fmt = java.time.format.DateTimeFormatter.ofPattern(if (k) "M월 d일" else "d MMM")
+    val plates = s.store.plates.count { s.plateFraction(it) >= 1f }
+    val title = if (s.ownerName.isNotBlank()) stringResource(R.string.year_title_named, s.ownerName, year) else stringResource(R.string.year_title, year)
+    val big = stringResource(R.string.year_big, "%,d".format(verses))
+    val lines = listOf(
+        stringResource(R.string.year_top, s.bookName(topBook)),
+        stringResource(R.string.year_first, "${s.bookName(first.key.book)} ${first.key.chapter}:${first.key.verse}", java.time.LocalDate.ofEpochDay(first.epochDay).format(fmt)),
+        stringResource(R.string.year_days, days.size, Presence.longestStreak(days)),
+        stringResource(R.string.year_plates, plates),
+    )
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leather).drawBehind { giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = false) }
+        .padding(Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Text(title, style = Theme.title(k).copy(color = c.gilt), maxLines = 1)
+        Text(big, style = Theme.title(k, Tokens.Text.display).copy(color = c.leatherInk), maxLines = 1)
+        lines.forEach { Text(it, style = Theme.small().copy(color = c.leatherInk), maxLines = 1) }
+        BookButton(stringResource(R.string.year_share), Modifier.fillMaxWidth().padding(top = Tokens.Space.s2), quiet = true) {
+            Cards.share(ctx, Cards.year(ctx, k, title, big, lines), "year_$year")
         }
     }
 }

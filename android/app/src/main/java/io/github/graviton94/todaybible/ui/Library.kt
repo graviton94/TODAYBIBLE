@@ -147,7 +147,10 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
         Text(stringResource(R.string.choose_chapter), style = Theme.small())
         if (p.bookDone(s.translation, t)) BookButton(stringResource(R.string.my_bible_pdf), Modifier.fillMaxWidth(), quiet = true) { s.requestPdf(b) }
         val ctx = androidx.compose.ui.platform.LocalContext.current
-        if (io.github.graviton94.todaybible.data.Ink.chapters(ctx, s.translation.id, b).isNotEmpty()) BookButton(stringResource(R.string.notes_pdf), Modifier.fillMaxWidth(), quiet = true) { s.requestNotes(b) }
+        if (io.github.graviton94.todaybible.data.Ink.chapters(ctx, s.translation.id, b).isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            BookButton(stringResource(R.string.hand_book_open), Modifier.weight(1f), quiet = true) { s.picker = null; s.handBook = b }
+            BookButton(stringResource(R.string.notes_pdf), Modifier.weight(1f), quiet = true) { s.requestNotes(b) }
+        }
         Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             (1..t.chapterCount).chunked(6).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {

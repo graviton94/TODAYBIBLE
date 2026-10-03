@@ -71,7 +71,7 @@ fun Root(s: AppState) {
     fun turnTo(i: Int) { scope.launch { breath = true; try { pager.animateScrollToPage(i, animationSpec = androidx.compose.animation.core.tween(Tokens.Motion.pageMs)) } finally { breath = false } } }
     LaunchedEffect(s.page) { if (pager.currentPage != s.page && !pager.isScrollInProgress) turnTo(s.page) }
     LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect { s.page = it } }
-    BackHandler(enabled = pager.currentPage != 0 && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && !s.purchaseOpen && s.onboarded && !s.opening) { turnTo(0) }
+    BackHandler(enabled = pager.currentPage != 0 && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null && !s.purchaseOpen && s.onboarded && !s.opening) { turnTo(0) }
     // 옮겨 쓰는 동안 (키보드가 떠 있으면) 옆으로 넘어가지 않게
     val typing = WindowInsets.isImeVisible && pager.currentPage == 1
 
@@ -98,6 +98,7 @@ fun Root(s: AppState) {
         s.finished?.let { (b, ch) -> FinishedPage(s, b, ch) }
         if (s.purchaseOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PurchasePage(s) }
         s.shareVerse?.let { v -> ShareVerseSheet(s, v) }
+        s.handBook?.let { b -> HandBookView(s, b) }
         s.plateView?.let { pl -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PlatePage(s, pl) } }
         // 나의 성경 PDF: 만들어서 나누기 창으로
         val ctx = androidx.compose.ui.platform.LocalContext.current

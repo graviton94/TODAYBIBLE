@@ -29,7 +29,7 @@ def tokens():
          "/** 한 테마의 재료 색. */",
          "data class Palette(" + ", ".join(f"val {k}: Color" for k in t["color"]["light"]) + ")", "",
          "object Tokens {"]
-    for mode in ("light", "dark"):
+    for mode in t["color"]:
         c = t["color"][mode]
         L.append(f"    val {mode} = Palette(" + ", ".join(f"{k} = {kt_color(v)}" for k, v in c.items()) + ")")
     for group, unit in (("space", "dp"), ("radius", "dp"), ("stroke", "dp"), ("size", "dp"), ("text", "sp")):

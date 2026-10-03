@@ -107,6 +107,7 @@ private fun Compare(s: AppState) {
         Triple(stringResource(R.string.my_bible_pdf), "–", "✓"),
         Triple(stringResource(R.string.cmp_voice), "–", "✓"),
         Triple(stringResource(R.string.cmp_notes), "–", "✓"),
+        Triple(stringResource(R.string.cmp_pens), stringResource(R.string.pen_fountain), stringResource(R.string.cmp_pens_all)),
         Triple(stringResource(R.string.cmp_ads), stringResource(R.string.cmp_none), stringResource(R.string.cmp_none)),
     )
     Column(Modifier.fillMaxWidth()) {

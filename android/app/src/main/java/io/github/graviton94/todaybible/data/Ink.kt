@@ -13,13 +13,16 @@ import java.io.File
  */
 object Ink {
     private const val MAGIC = 0x494E4B31 // "INK1"
+    private const val MAGIC2 = 0x494E4B32 // "INK2": 줄 간격 뒤에 펜 한 바이트
+    /** 펜: 만년필 · 붓펜 · 연필. */
+    const val FOUNTAIN = 0; const val BRUSH = 1; const val PENCIL = 2
     private const val Y_RANGE = 4f
 
     /** 획 하나: [x0, y0, w0, x1, y1, w1, …] (너비 = 1 기준). */
     class Stroke(val pts: FloatArray) { val size get() = pts.size / 3 }
 
     /** 한 절의 손글씨: 장마다 획들 · 줄 간격 (너비 = 1 기준). */
-    class Page(val sheets: List<List<Stroke>>, val line: Float) {
+    class Page(val sheets: List<List<Stroke>>, val line: Float, val pen: Int = FOUNTAIN) {
         fun height(sheet: Int): Float = sheets.getOrNull(sheet)?.maxOfOrNull { s -> (0 until s.size).maxOf { s.pts[it * 3 + 1] } } ?: 0f
     }
 
@@ -44,7 +47,7 @@ object Ink {
     fun save(f: File, page: Page) {
         val tmp = File(f.path + ".tmp")
         DataOutputStream(tmp.outputStream().buffered()).use { o ->
-            o.writeInt(MAGIC); o.writeFloat(page.line); o.writeShort(page.sheets.size)
+            o.writeInt(MAGIC2); o.writeFloat(page.line); o.writeByte(page.pen); o.writeShort(page.sheets.size)
             for (sheet in page.sheets) {
                 o.writeShort(sheet.size)
                 for (s in sheet) {
@@ -61,8 +64,10 @@ object Ink {
 
     fun load(f: File): Page? = runCatching {
         DataInputStream(f.inputStream().buffered()).use { i ->
-            if (i.readInt() != MAGIC) return null
+            val magic = i.readInt()
+            if (magic != MAGIC && magic != MAGIC2) return null
             val line = i.readFloat()
+            val pen = if (magic == MAGIC2) i.readUnsignedByte() else FOUNTAIN
             val sheets = List(i.readUnsignedShort()) {
                 List(i.readUnsignedShort()) {
                     val n = i.readUnsignedShort()
@@ -75,19 +80,21 @@ object Ink {
                     Stroke(pts)
                 }
             }
-            Page(sheets, line)
+            Page(sheets, line, pen)
         }
     }.getOrNull()
 
     private fun q(v: Float, range: Float) = (v / range * 65535f).toInt().coerceIn(0, 65535)
 
     /** 안드로이드 캔버스(PDF · 그림)에 한 장을 그려요. 너비 w 픽셀, (x, y) 에서 시작. */
-    fun draw(cv: android.graphics.Canvas, sheet: List<Stroke>, x: Float, y: Float, w: Float, color: Int) {
+    fun draw(cv: android.graphics.Canvas, sheet: List<Stroke>, x: Float, y: Float, w: Float, color: Int, pen: Int = FOUNTAIN) {
         val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
-            this.color = color; style = android.graphics.Paint.Style.STROKE; strokeCap = android.graphics.Paint.Cap.ROUND; strokeJoin = android.graphics.Paint.Join.ROUND
+            this.color = color; if (pen == PENCIL) alpha = 215; style = android.graphics.Paint.Style.STROKE; strokeCap = android.graphics.Paint.Cap.ROUND; strokeJoin = android.graphics.Paint.Join.ROUND
         }
         for (s in sheet) {
             if (s.size == 1) { p.style = android.graphics.Paint.Style.FILL; cv.drawCircle(x + s.pts[0] * w, y + s.pts[1] * w, s.pts[2] * w / 2, p); p.style = android.graphics.Paint.Style.STROKE; continue }
+            // 만년필: 획이 시작하는 곳에 잉크가 살짝 고임
+            if (pen == FOUNTAIN) { p.style = android.graphics.Paint.Style.FILL; cv.drawCircle(x + s.pts[0] * w, y + s.pts[1] * w, s.pts[2] * w * 0.62f, p); p.style = android.graphics.Paint.Style.STROKE }
             for (j in 1 until s.size) {
                 p.strokeWidth = (s.pts[j * 3 - 1] + s.pts[j * 3 + 2]) / 2 * w
                 cv.drawLine(x + s.pts[j * 3 - 3] * w, y + s.pts[j * 3 - 2] * w, x + s.pts[j * 3] * w, y + s.pts[j * 3 + 1] * w, p)

@@ -67,6 +67,35 @@ class AppState(val store: Store) {
     /** 짧은 알림 한 줄. */
     var toast by mutableStateOf<String?>(null)
     var earned by mutableStateOf(store.loadEarned())
+    /** 형광펜 밑줄 (N). */
+    var marks by mutableStateOf(store.loadMarks())
+    /** 손글씨 펜 · 밑글씨 · 쓰는 감각 · 밤 필사. */
+    var pen by mutableStateOf(store.pen)
+    var handGuide by mutableStateOf(store.handGuide)
+    var penSound by mutableStateOf(store.penSound)
+    var paperHaptic by mutableStateOf(store.paperHaptic)
+    var candle by mutableStateOf(store.candle)
+    /** 지금 촛불빛인지 (앱으로 돌아올 때마다 다시 봄). */
+    var night by mutableStateOf(false)
+    /** 손글씨로 넘겨 보는 권. */
+    var handBook by mutableStateOf<Int?>(null)
+
+    fun isMarked(k: io.github.graviton94.todaybible.core.VerseKey) = marks.any { it.translation == translation && it.key == k }
+    fun toggleMark(k: io.github.graviton94.todaybible.core.VerseKey) {
+        marks = if (isMarked(k)) marks.filterNot { it.translation == translation && it.key == k }
+        else marks + io.github.graviton94.todaybible.data.Store.Mark(translation, k, today().toEpochDay())
+        store.saveMarks(marks)
+    }
+    fun choosePen(p: Int) { if (p != io.github.graviton94.todaybible.data.Ink.FOUNTAIN && gated()) { purchaseOpen = true; return }; pen = p; store.pen = p }
+    fun flipGuide() { handGuide = !handGuide; store.handGuide = handGuide }
+    fun flipPenSound() { penSound = !penSound; store.penSound = penSound }
+    fun flipPaperHaptic() { paperHaptic = !paperHaptic; store.paperHaptic = paperHaptic }
+    fun flipCandle() { candle = !candle; store.candle = candle; checkNight() }
+    /** 캡처용: 올해의 필사 카드를 언제든. */
+    var forceYear = false
+    /** 캡처용: 밤 필사 고정. */
+    var nightOverride: Boolean? = null
+    fun checkNight() { val h = java.time.LocalTime.now().hour; night = nightOverride ?: (candle && (h >= 21 || h < 5)) }
     /** 캡처용 고정 날짜 (개발자 도구). */
     var fixedToday: LocalDate? = null
 
@@ -85,7 +114,7 @@ class AppState(val store: Store) {
     fun locked(b: Int) = b !in Canon.free && !lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)
     private fun widgets() {
         val ctx = store.context; runCatching { store.lastGoal = effectiveGoal() }
-        Thread { runCatching { io.github.graviton94.todaybible.widget.VerseWidget.refresh(ctx) }; runCatching { io.github.graviton94.todaybible.widget.SmallWidget.refreshAll(ctx) } }.start()
+        Thread { runCatching { io.github.graviton94.todaybible.widget.VerseWidget.refresh(ctx) }; runCatching { io.github.graviton94.todaybible.widget.SmallWidget.refreshAll(ctx) }; runCatching { io.github.graviton94.todaybible.widget.HandWidget.refresh(ctx) } }.start()
     }
 
     fun open(b: Int, ch: Int) {
