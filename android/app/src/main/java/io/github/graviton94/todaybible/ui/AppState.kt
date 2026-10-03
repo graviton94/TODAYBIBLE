@@ -43,6 +43,9 @@ class AppState(val store: Store) {
     var planId by mutableStateOf(store.planId)
     var planOpen by mutableStateOf(false)
     var cover by mutableStateOf(store.cover)
+    var voiceOn by mutableStateOf(store.voiceOn)
+    /** 내보내는 중 (소리 · 영상 · PDF). */
+    var exporting by mutableStateOf(false)
     var ownerName by mutableStateOf(store.ownerName)
     /** 이 장에서 고른 절 (없으면 다음 빈 절). */
     var target by mutableStateOf<Int?>(null)
@@ -87,6 +90,9 @@ class AppState(val store: Store) {
     fun setTextScale(s: Float) { scale = s; store.textScale = s }
     fun setStampMark(s: String) { stamp = s; store.stamp = s }
     /** 나의 성경 PDF: 평생권이 필요하면 평생권 화면으로. */
+    /** 노트 PDF 를 만들 권 (-1 = 전체). */
+    var notesBook by mutableStateOf<Int?>(null)
+    fun requestNotes(b: Int?) { if (gated()) purchaseOpen = true else notesBook = b ?: -1 }
     fun requestPdf(b: Int) { if (!lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)) purchaseOpen = true else pdfBook = b }
     fun setGoal(g: Int) { dailyGoal = g; store.dailyGoal = g }
     fun toggleNotebook() { notebook = !notebook; store.notebook = notebook }
@@ -133,6 +139,9 @@ class AppState(val store: Store) {
         val left = (pl.days - planDay() + 1).coerceAtLeast(1)
         return io.github.graviton94.todaybible.core.Plans.perDay(total, doneBefore, left).coerceAtLeast(1)
     }
+    /** 평생권이 있어야 하는데 없는 상태 (Play 에 닿을 때만 잠금). */
+    fun gated() = !lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)
+    fun toggleVoice() { if (gated()) { purchaseOpen = true; return }; voiceOn = !voiceOn; store.voiceOn = voiceOn }
     fun chooseCover(c: String) { cover = c; store.cover = c }
     fun setOwner(n: String) { ownerName = n; store.ownerName = n }
     fun coverColor() = when (cover) { "navy" -> io.github.graviton94.todaybible.design.Tokens.Covers.navy; "olive" -> io.github.graviton94.todaybible.design.Tokens.Covers.olive; "ebony" -> io.github.graviton94.todaybible.design.Tokens.Covers.ebony; else -> io.github.graviton94.todaybible.design.Tokens.Covers.burgundy }

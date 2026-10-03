@@ -216,4 +216,21 @@
     <string name="widget_run_desc">How many days you have kept writing</string>
     <string name="run_label">days in a row</string>
     <string name="photo_saved">Also saved to your gallery</string>
+    <string name="voice_keep">Keep my voice</string>
+    <string name="voice_keep_hint">Each verse you read aloud is saved on this phone only</string>
+    <string name="voice_recording">Recording</string>
+    <string name="voice_done_reading">I\'ve read it</string>
+    <string name="voice_chapter">My reading · %1$d verses · %2$s</string>
+    <string name="voice_export_audio">As audio</string>
+    <string name="voice_export_video">As video</string>
+    <string name="voice_play">Listen</string>
+    <string name="voice_stop">Stop</string>
+    <string name="exporting">Preparing…</string>
+    <string name="notes_pdf">Notebook PDF</string>
+    <string name="notes_cover">My handwritten notebook</string>
+    <string name="storage">Storage on this phone</string>
+    <string name="storage_line">Voice %1$s · Notebook photos %2$s</string>
+    <string name="cmp_voice">My voice</string>
+    <string name="cmp_notes">Notebook PDF</string>
+    <string name="duration_ms">%1$d:%2$02d</string>
 </resources>

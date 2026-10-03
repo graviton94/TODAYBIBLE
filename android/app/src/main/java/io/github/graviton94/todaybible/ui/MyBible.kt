@@ -115,6 +115,49 @@ object MyBible {
         return f
     }
 
+    /** 노트 PDF: 이 권(또는 전체)의 노트 사진만, 한 쪽에 한 장 · 머리에 권 · 장과 찍은 날. */
+    fun notes(ctx: Context, store: Store, tr: Translation, book: Int?): File? {
+        val korean = tr == Translation.KRV
+        val books = if (book != null) listOf(book) else io.github.graviton94.todaybible.core.Canon.books.indices.toList()
+        val photos = books.flatMap { b -> (1..io.github.graviton94.todaybible.core.Canon.books[b].chapters).mapNotNull { ch -> Photos.of(ctx, tr.id, b, ch)?.let { Triple(b, ch, it) } } }
+        if (photos.isEmpty()) return null
+        val c = Tokens.light
+        val serif = ResourcesCompat.getFont(ctx, if (korean) R.font.serif_kr_medium else R.font.garamond_medium)
+        val title = ResourcesCompat.getFont(ctx, if (korean) R.font.title_kr else R.font.garamond_semibold)
+        fun name(b: Int) = if (korean) io.github.graviton94.todaybible.core.Canon.books[b].ko else io.github.graviton94.todaybible.core.Canon.books[b].en
+        val doc = PdfDocument(); var no = 0
+        fun page(): PdfDocument.Page { no++; return doc.startPage(PdfDocument.PageInfo.Builder(W, H, no).create()) }
+        run {
+            val pg = page(); val cv = pg.canvas; cv.drawColor(c.leaf.toArgb())
+            val gilt = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = c.gilt.toArgb(); style = Paint.Style.STROKE; strokeWidth = 0.8f }
+            cv.drawRect(24f, 24f, W - 24f, H - 24f, gilt); cv.drawRect(29f, 29f, W - 29f, H - 29f, gilt)
+            val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = title; textSize = 24f; color = c.ink.toArgb(); textAlign = Paint.Align.CENTER }
+            cv.drawText(ctx.getString(R.string.notes_cover), W / 2f, H * 0.42f, tp)
+            val sub = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 11f; color = c.inkSoft.toArgb(); textAlign = Paint.Align.CENTER }
+            cv.drawText(if (book != null) name(book) else ctx.getString(R.string.app_name), W / 2f, H * 0.42f + 26f, sub)
+            if (store.ownerName.isNotBlank()) cv.drawText(store.ownerName, W / 2f, H * 0.42f + 44f, TextPaint(sub).apply { color = c.giltText.toArgb() })
+            doc.finishPage(pg)
+        }
+        val head = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 8f; color = c.inkSoft.toArgb() }
+        val fmt = DateTimeFormatter.ofPattern("yyyy. M. d")
+        for ((b, ch, f) in photos) {
+            val bmp = BitmapFactory.decodeFile(f.path) ?: continue
+            val pg = page(); val cv = pg.canvas; cv.drawColor(c.leaf.toArgb())
+            val day = java.time.Instant.ofEpochMilli(f.lastModified()).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+            cv.drawText("${name(b)} ${if (korean) "${ch}장" else "$ch"}", M.toFloat(), M.toFloat(), head)
+            cv.drawText(day.format(fmt), (W - M).toFloat(), M.toFloat(), TextPaint(head).apply { textAlign = Paint.Align.RIGHT })
+            val box = android.graphics.RectF(M.toFloat(), M + 12f, (W - M).toFloat(), (H - M).toFloat())
+            val k = minOf(box.width() / bmp.width, box.height() / bmp.height)
+            val dw = bmp.width * k; val dh = bmp.height * k
+            cv.drawBitmap(bmp, null, android.graphics.RectF(box.centerX() - dw / 2, box.top, box.centerX() + dw / 2, box.top + dh), Paint(Paint.FILTER_BITMAP_FLAG))
+            bmp.recycle(); doc.finishPage(pg)
+        }
+        val dir = File(ctx.cacheDir, "share").apply { mkdirs() }
+        val out = File(dir, "notebook${book?.let { "_${name(it).replace(' ', '_')}" } ?: ""}.pdf")
+        out.outputStream().use { doc.writeTo(it) }; doc.close()
+        return out
+    }
+
     fun share(ctx: Context, f: File) {
         val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", f)
         val send = Intent(Intent.ACTION_SEND).setType("application/pdf").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

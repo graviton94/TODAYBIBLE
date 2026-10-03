@@ -216,4 +216,21 @@
     <string name="widget_run_desc">며칠째 이어 쓰는지</string>
     <string name="run_label">일째 이어 씀</string>
     <string name="photo_saved">갤러리에도 담았어요</string>
+    <string name="voice_keep">내 목소리 남기기</string>
+    <string name="voice_keep_hint">소리 내어 읽은 절을 이 폰에만 저장해요</string>
+    <string name="voice_recording">녹음 중</string>
+    <string name="voice_done_reading">다 읽었어요</string>
+    <string name="voice_chapter">내 낭독 · %1$d절 · %2$s</string>
+    <string name="voice_export_audio">소리로</string>
+    <string name="voice_export_video">영상으로</string>
+    <string name="voice_play">듣기</string>
+    <string name="voice_stop">멈추기</string>
+    <string name="exporting">만드는 중이에요</string>
+    <string name="notes_pdf">노트 PDF</string>
+    <string name="notes_cover">내 손글씨 필사 노트</string>
+    <string name="storage">이 폰에 저장한 것</string>
+    <string name="storage_line">목소리 %1$s · 노트 사진 %2$s</string>
+    <string name="cmp_voice">내 목소리</string>
+    <string name="cmp_notes">노트 PDF</string>
+    <string name="duration_ms">%1$d분 %2$d초</string>
 </resources>

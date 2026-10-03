@@ -102,6 +102,8 @@ private fun Compare(s: AppState) {
         Triple(stringResource(R.string.cmp_books), stringResource(R.string.books_n, Canon.free.size), stringResource(R.string.books_n, Canon.books.size)),
         Triple(stringResource(R.string.cmp_plates), stringResource(R.string.cmp_some), stringResource(R.string.cmp_all)),
         Triple(stringResource(R.string.my_bible_pdf), "–", "✓"),
+        Triple(stringResource(R.string.cmp_voice), "–", "✓"),
+        Triple(stringResource(R.string.cmp_notes), "–", "✓"),
         Triple(stringResource(R.string.cmp_ads), stringResource(R.string.cmp_none), stringResource(R.string.cmp_none)),
     )
     Column(Modifier.fillMaxWidth()) {

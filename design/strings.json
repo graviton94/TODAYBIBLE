@@ -213,5 +213,22 @@
   "widget_run": {"en": "Days in a row", "ko": "이어 쓴 날"},
   "widget_run_desc": {"en": "How many days you have kept writing", "ko": "며칠째 이어 쓰는지"},
   "run_label": {"en": "days in a row", "ko": "일째 이어 씀"},
-  "photo_saved": {"en": "Also saved to your gallery", "ko": "갤러리에도 담았어요"}
+  "photo_saved": {"en": "Also saved to your gallery", "ko": "갤러리에도 담았어요"},
+  "voice_keep": {"en": "Keep my voice", "ko": "내 목소리 남기기"},
+  "voice_keep_hint": {"en": "Each verse you read aloud is saved on this phone only", "ko": "소리 내어 읽은 절을 이 폰에만 저장해요"},
+  "voice_recording": {"en": "Recording", "ko": "녹음 중"},
+  "voice_done_reading": {"en": "I've read it", "ko": "다 읽었어요"},
+  "voice_chapter": {"en": "My reading · %1$d verses · %2$s", "ko": "내 낭독 · %1$d절 · %2$s"},
+  "voice_export_audio": {"en": "As audio", "ko": "소리로"},
+  "voice_export_video": {"en": "As video", "ko": "영상으로"},
+  "voice_play": {"en": "Listen", "ko": "듣기"},
+  "voice_stop": {"en": "Stop", "ko": "멈추기"},
+  "exporting": {"en": "Preparing…", "ko": "만드는 중이에요"},
+  "notes_pdf": {"en": "Notebook PDF", "ko": "노트 PDF"},
+  "notes_cover": {"en": "My handwritten notebook", "ko": "내 손글씨 필사 노트"},
+  "storage": {"en": "Storage on this phone", "ko": "이 폰에 저장한 것"},
+  "storage_line": {"en": "Voice %1$s · Notebook photos %2$s", "ko": "목소리 %1$s · 노트 사진 %2$s"},
+  "cmp_voice": {"en": "My voice", "ko": "내 목소리"},
+  "cmp_notes": {"en": "Notebook PDF", "ko": "노트 PDF"},
+  "duration_ms": {"en": "%1$d:%2$02d", "ko": "%1$d분 %2$d초"}
 }

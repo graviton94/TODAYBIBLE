@@ -1,6 +1,10 @@
 package io.github.graviton94.todaybible.ui
 
 import android.graphics.BitmapFactory
+import android.os.Build
+import androidx.compose.runtime.rememberCoroutineScope
+import io.github.graviton94.todaybible.data.Voice
+import kotlinx.coroutines.launch
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -121,7 +125,7 @@ fun CopyPage(s: AppState) {
             0 -> WritePage(s, next)
             1 -> Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) { PaperTab(s) }
             else -> Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-                if (next == null) ChapterDoneNote(s) else AloudTab(s, next)
+                if (next == null) { ChapterDoneNote(s); VoiceRow(s) } else AloudTab(s, next)
             }
         }
     }
@@ -336,18 +340,15 @@ private fun sealInline(color: androidx.compose.ui.graphics.Color): Map<String, I
 @Composable
 private fun PaperTab(s: AppState) {
     val c = Theme.c; val ctx = LocalContext.current
-    val file = File(ctx.filesDir, "photos/${s.translation.id}_${s.book + 1}_${s.chapter}.jpg")
-    var stamp by remember(s.book, s.chapter) { mutableIntStateOf(if (file.exists()) 1 else 0) }
+    var photo by remember(s.book, s.chapter, s.translation) { mutableStateOf(Photos.of(ctx, s.translation.id, s.book, s.chapter)) }
     var declared by remember(s.book, s.chapter) { mutableStateOf(false) }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) runCatching {
-            file.parentFile?.mkdirs()
-            Photos.keep(ctx, uri, file, "${s.bookName()} ${s.chapter}")
-            stamp++
+            photo = Photos.keep(ctx, uri, s.translation.id, s.book, s.chapter, "${s.bookName()} ${s.chapter}")
             s.toast = ctx.getString(R.string.photo_saved)
         }
     }
-    val bitmap = remember(stamp) { if (file.exists()) runCatching { BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = 4 })?.asImageBitmap() }.getOrNull() else null }
+    val bitmap = remember(photo) { photo?.let { f -> runCatching { BitmapFactory.decodeFile(f.path, BitmapFactory.Options().apply { inSampleSize = 4 })?.asImageBitmap() }.getOrNull() } }
     Box(
         Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.photoAspect).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper)
             .clickable(role = Role.Button) { pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
@@ -381,53 +382,78 @@ private fun AloudTab(s: AppState, verse: Int) {
     var on by remember { mutableStateOf(false) }          // 듣기 켜짐 (절이 바뀌어도 이어감)
     var heard by remember(verse, s.chapter, s.book) { mutableStateOf("") }
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> mic = ok; if (ok) on = true }
-    val listen = canHear && mic
+    // 내 목소리 남기기 (평생권): 녹음과 음성 인식이 마이크 하나를 나눠 씀 (안드로이드 13+ 는 파이프로, 그 아래는 손으로 ‘다 읽었어요’)
+    val record = s.voiceOn && !s.gated()
+    var pipeFailed by remember { mutableStateOf(false) }
+    val recognize = canHear && (!record || (Build.VERSION.SDK_INT >= 33 && !pipeFailed))
 
-    if (listen || (canHear && !mic)) {
-        val lit = Recite.lit(plain, heard)
-        val done = Recite.done(plain, heard)
-        LaunchedEffect(done) {
-            if (done) { delay(Tokens.Motion.typeSettleMs.toLong()); haptic.performHapticFeedback(HapticFeedbackType.LongPress); s.fill(listOf(verse), Mode.ALOUD) }
-        }
-        DisposableEffect(on, verse, s.chapter, s.book, listen) {
-            if (!on || !listen) return@DisposableEffect onDispose { }
-            val rec = SpeechRecognizer.createSpeechRecognizer(ctx)
-            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, if (k) "ko-KR" else "en-US")
-                .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-                .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
-            var base = ""
+    if (canHear || record) {
+        val lit = if (recognize) Recite.lit(plain, heard) else plain.length
+        val done = recognize && Recite.done(plain, heard)
+        var finished by remember(verse, s.chapter, s.book) { mutableStateOf(false) }
+        fun complete() { if (finished) return; finished = true; haptic.performHapticFeedback(HapticFeedbackType.LongPress); s.fill(listOf(verse), Mode.ALOUD) }
+        LaunchedEffect(done) { if (done) { delay(Tokens.Motion.typeSettleMs.toLong()); complete() } }
+        DisposableEffect(on, verse, s.chapter, s.book, mic, record, recognize) {
+            if (!on || !mic) return@DisposableEffect onDispose { }
+            val session = if (record) Voice.Session(Voice.file(ctx, s.translation.id, s.book, s.chapter, verse)).also { it.start() } else null
+            var rec: SpeechRecognizer? = null
             var alive = true
-            rec.setRecognitionListener(object : RecognitionListener {
-                override fun onPartialResults(b: Bundle?) { b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { heard = "$base $it" } }
-                override fun onResults(b: Bundle?) {
-                    b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { heard = "$base $it" }
-                    base = heard
-                    if (alive && !Recite.done(plain, heard)) rec.startListening(intent)
-                }
-                override fun onError(e: Int) {
-                    if (!alive) return
-                    if (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) rec.startListening(intent) else on = false
-                }
-                override fun onReadyForSpeech(p: Bundle?) {}
-                override fun onBeginningOfSpeech() {}
-                override fun onRmsChanged(v: Float) {}
-                override fun onBufferReceived(b: ByteArray?) {}
-                override fun onEndOfSpeech() {}
-                override fun onEvent(t: Int, p: Bundle?) {}
-            })
-            rec.startListening(intent)
-            onDispose { alive = false; runCatching { rec.cancel(); rec.destroy() } }
+            if (recognize) {
+                val r = SpeechRecognizer.createSpeechRecognizer(ctx); rec = r
+                fun intent(): Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE, if (k) "ko-KR" else "en-US")
+                    .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                    .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+                    .apply {
+                        if (session != null && Build.VERSION.SDK_INT >= 33) {
+                            putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE, session.recognizerPipe())
+                            putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_CHANNEL_COUNT, 1)
+                            putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_ENCODING, android.media.AudioFormat.ENCODING_PCM_16BIT)
+                            putExtra(RecognizerIntent.EXTRA_AUDIO_SOURCE_SAMPLING_RATE, Voice.RECOGNIZER_RATE)
+                        }
+                    }
+                var base = ""
+                r.setRecognitionListener(object : RecognitionListener {
+                    override fun onPartialResults(b: Bundle?) { b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { heard = "$base $it" } }
+                    override fun onResults(b: Bundle?) {
+                        b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { heard = "$base $it" }
+                        base = heard
+                        if (alive && !Recite.done(plain, heard)) r.startListening(intent())
+                    }
+                    override fun onError(e: Int) {
+                        if (!alive) return
+                        when {
+                            e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> r.startListening(intent())
+                            session != null -> pipeFailed = true   // 녹음은 이어가고, 손으로 마침
+                            else -> on = false
+                        }
+                    }
+                    override fun onReadyForSpeech(p: Bundle?) {}
+                    override fun onBeginningOfSpeech() {}
+                    override fun onRmsChanged(v: Float) {}
+                    override fun onBufferReceived(b: ByteArray?) {}
+                    override fun onEndOfSpeech() {}
+                    override fun onEvent(t: Int, p: Bundle?) {}
+                })
+                r.startListening(intent())
+            }
+            onDispose {
+                alive = false; runCatching { rec?.cancel(); rec?.destroy() }
+                // 다 읽은 절만 남기고, 중간에 멈춘 녹음은 버림
+                if (session != null) { if (finished) session.stop() else session.discard() }
+            }
         }
         VerseText(s, verse, source, lit = lit)
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             Box(Modifier.size(Tokens.Size.emblem).clip(androidx.compose.foundation.shape.CircleShape).background(if (on) c.rubric else c.leather)
                 .clickable(role = Role.Button) { if (!mic) ask.launch(Manifest.permission.RECORD_AUDIO) else on = !on },
                 contentAlignment = Alignment.Center) { MicMark(c.leatherInk, Modifier.size(Tokens.Size.iconMd)) }
-            Text(stringResource(if (on) R.string.aloud_listening else R.string.aloud_listen), style = Theme.label().copy(color = if (on) c.rubric else c.ink))
-            Text(stringResource(R.string.aloud_hint), style = Theme.small().copy(textAlign = TextAlign.Center))
+            Text(stringResource(when { on && record -> R.string.voice_recording; on -> R.string.aloud_listening; else -> R.string.aloud_listen }), style = Theme.label().copy(color = if (on) c.rubric else c.ink))
+            if (on && !recognize) BookButton(stringResource(R.string.voice_done_reading), Modifier.fillMaxWidth()) { complete() }
+            Text(stringResource(if (record) R.string.voice_keep_hint else R.string.aloud_hint), style = Theme.small().copy(textAlign = TextAlign.Center))
         }
+        VoiceRow(s)
         return
     }
 
@@ -474,5 +500,61 @@ fun ShareVerseSheet(s: AppState, v: Int) {
             BookButton(stringResource(R.string.close), Modifier.weight(1f), quiet = true) { s.shareVerse = null }
             BookButton(stringResource(R.string.share), Modifier.weight(1f)) { Cards.share(ctx, bmp, "verse"); s.shareVerse = null }
         }
+    }
+}
+
+/** 이 장의 내 낭독: 길이 · 듣기 · 소리로 · 영상으로 내보내기 (평생권). */
+@Composable
+private fun VoiceRow(s: AppState) {
+    val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
+    val parts = remember(s.fills.size, s.book, s.chapter, s.translation) { Voice.verses(ctx, s.translation.id, s.book, s.chapter) }
+    if (parts.isEmpty()) return
+    val total = remember(parts) { parts.sumOf { Voice.durationMs(it.second) } }
+    val scope = rememberCoroutineScope()
+    var player by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+    DisposableEffect(Unit) { onDispose { player?.release() } }
+    fun export(video: Boolean) {
+        if (s.gated()) { s.purchaseOpen = true; return }
+        if (s.exporting) return
+        s.exporting = true
+        scope.launch {
+            val name = "${s.bookName().replace(' ', '_')}_${s.chapter}"
+            val out = java.io.File(ctx.cacheDir, "share/$name.${if (video) "mp4" else "m4a"}")
+            val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                if (!video) Voice.exportAudio(parts.map { it.second }, out)
+                else {
+                    val t = s.text(); val plate = s.store.plateFor(s.book, s.chapter)?.id
+                    val frames = parts.map { (v, f) -> Cards.verse(ctx, k, "${s.bookName()} ${s.chapter}:$v", t.verse(s.chapter, v), plate) to Voice.durationMs(f) * 1000 }
+                    Voice.exportVideo(frames, parts.map { it.second }, out).also { frames.forEach { it.first.recycle() } }
+                }
+            }
+            s.exporting = false
+            if (ok) {
+                val uri = androidx.core.content.FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", out)
+                val send = Intent(Intent.ACTION_SEND).setType(if (video) "video/mp4" else "audio/mp4").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                ctx.startActivity(Intent.createChooser(send, null))
+            }
+        }
+    }
+    Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s4).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s4),
+        verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        val sec = (total / 1000).toInt()
+        Text(stringResource(R.string.voice_chapter, parts.size, stringResource(R.string.duration_ms, sec / 60, sec % 60)), style = Theme.label(), maxLines = 1)
+        Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            BookButton(stringResource(if (player != null) R.string.voice_stop else R.string.voice_play), Modifier.weight(1f), quiet = true) {
+                player?.let { it.release(); player = null; return@BookButton }
+                // 절 녹음을 차례로
+                var i = 0
+                fun next() {
+                    if (i >= parts.size) { player?.release(); player = null; return }
+                    val mp = android.media.MediaPlayer(); mp.setDataSource(parts[i++].second.path); mp.prepare()
+                    mp.setOnCompletionListener { it.release(); next() }; player = mp; mp.start()
+                }
+                next()
+            }
+            BookButton(stringResource(R.string.voice_export_audio), Modifier.weight(1f), enabled = !s.exporting) { export(false) }
+            BookButton(stringResource(R.string.voice_export_video), Modifier.weight(1f), enabled = !s.exporting) { export(true) }
+        }
+        if (s.exporting) Text(stringResource(R.string.exporting), style = Theme.small())
     }
 }

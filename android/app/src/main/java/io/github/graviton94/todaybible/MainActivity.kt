@@ -97,6 +97,7 @@ class MainActivity : ComponentActivity() {
         i.getStringExtra("tb.cover")?.let { s.chooseCover(it) }
         i.getStringExtra("tb.owner")?.let { s.setOwner(it) }
         if (i.getBooleanExtra("tb.planSheet", false)) s.planOpen = true
+        if (i.hasExtra("tb.voice") && s.voiceOn != i.getBooleanExtra("tb.voice", false)) s.toggleVoice()
         if (i.hasExtra("tb.welcomeStep")) s.welcomeStep = i.getIntExtra("tb.welcomeStep", 0)
         s.lifetime.debugSet(if (i.hasExtra("tb.owned")) i.getBooleanExtra("tb.owned", false) else null, i.getStringExtra("tb.price"))
         if (i.getBooleanExtra("tb.purchase", false)) s.purchaseOpen = true

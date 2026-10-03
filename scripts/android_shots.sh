@@ -48,6 +48,9 @@ open --es tb.plan mark30;                                          shot p02_toda
 open --es tb.cover navy --es tb.owner 김은혜 --ez tb.opening true; sleep 3.2; snap p03_cover_navy_name
 open --es tb.plan none --es tb.cover burgundy --es tb.owner ""
 open --ei tb.page 1; adb shell input tap 790 550;                  shot p04_aloud_mic 3
+open --ei tb.page 1 --ez tb.voice true; adb shell input tap 790 550; shot p05_aloud_voice 3
+open --ez tb.settings true; swipe_up; swipe_up;                    shot p06_settings_voice 2
+open --ez tb.voice false
 open --ei tb.page 3;                                               shot r00_record_stats 5
 open --ei tb.page 0 --ei tb.toast 5;                               shot t01_toast 1.5
 open --ez tb.cardShots true

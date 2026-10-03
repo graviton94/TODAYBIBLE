@@ -101,6 +101,14 @@ fun SettingsPage(s: AppState) {
                 }
             }
             Group(stringResource(R.string.my_cover)) { CoverPicker(s) }
+            Group(stringResource(R.string.voice_keep)) {
+                ChoiceRow(stringResource(R.string.voice_keep_hint), s.voiceOn) { s.toggleVoice() }
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                val (voice, photos) = androidx.compose.runtime.remember { io.github.graviton94.todaybible.data.Voice.usage(ctx) }
+                fun mb(b: Long) = if (b < 1_000_000) "%.1fMB".format(b / 1_000_000f) else "%.0fMB".format(b / 1_000_000f)
+                Text(stringResource(R.string.storage) + " · " + stringResource(R.string.storage_line, mb(voice), mb(photos)), style = Theme.small())
+                BookButton(stringResource(R.string.notes_pdf), Modifier.fillMaxWidth(), quiet = true) { s.requestNotes(null) }
+            }
             Group(stringResource(R.string.lifetime)) {
                 ChoiceRow(stringResource(if (s.lifetime.owned) R.string.owned else R.string.lifetime_head), s.lifetime.owned) { s.purchaseOpen = true }
             }

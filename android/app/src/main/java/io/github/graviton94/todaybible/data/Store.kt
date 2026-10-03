@@ -96,6 +96,10 @@ class Store(val context: Context) {
     var lastGoal: Int
         get() = prefs.getInt("last_goal", 0)
         set(v) = prefs.edit().putInt("last_goal", v).apply()
+    /** 내 목소리 남기기 (평생권). */
+    var voiceOn: Boolean
+        get() = prefs.getBoolean("voice", false)
+        set(v) = prefs.edit().putBoolean("voice", v).apply()
     var startDay: Long
         get() = prefs.getLong("start", -1)
         set(v) = prefs.edit().putLong("start", v).apply()
