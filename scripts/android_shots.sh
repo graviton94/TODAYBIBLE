@@ -78,9 +78,9 @@ open --ez tb.seed true --es tb.tr KJV --es tb.plate prodigal;      shot e5_plate
 open --ez tb.lock true --es tb.price "'\$29.99'" --ez tb.purchase true; shot e6_purchase 4
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # 큰 글자 · 작은 화면
-open --ez tb.seed true --es tb.tr KRV --es tb.scale 1.3 --ei tb.page 1; shot x01_large_copy 5
+open --ez tb.seed true --es tb.tr KRV --ef tb.scale 1.3 --ei tb.page 1; shot x01_large_copy 5
 open --ei tb.page 0;                                               shot x02_large_today 4
-open --es tb.scale 1.0
+open --ef tb.scale 1.0
 adb shell wm size 720x1280; adb shell wm density 320
 open --ei tb.page 0;                                               shot x03_small_today 5
 open --ez tb.reset true --ei tb.welcomeStep 3;                     shot x04_small_welcome 4

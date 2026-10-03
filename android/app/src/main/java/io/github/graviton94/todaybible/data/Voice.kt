@@ -54,11 +54,22 @@ object Voice {
         @Volatile private var running = false
         @Volatile private var pipeOut: ParcelFileDescriptor.AutoCloseOutputStream? = null
         private var thread: Thread? = null
+        // 음성 인식으로 가는 소리는 따로 흘려보냄: 인식이 잠시 안 읽어도 녹음이 멈추지 않게 (넘치면 버림)
+        private val toRecognizer = java.util.concurrent.ArrayBlockingQueue<ByteArray>(64)
+        private val feeder = Thread {
+            while (true) {
+                val chunk = runCatching { toRecognizer.take() }.getOrNull() ?: break
+                if (chunk.isEmpty()) break
+                val p = pipeOut ?: continue
+                if (runCatching { p.write(chunk) }.isFailure) pipeOut = null
+            }
+        }.apply { isDaemon = true; name = "voice-feed" }
 
         fun recognizerPipe(): ParcelFileDescriptor {
             val (read, write) = ParcelFileDescriptor.createPipe()
             runCatching { pipeOut?.close() }
             pipeOut = ParcelFileDescriptor.AutoCloseOutputStream(write)
+            if (!feeder.isAlive) runCatching { feeder.start() }
             return read
         }
 
@@ -101,11 +112,11 @@ object Voice {
                     while (running) {
                         val n = rec.read(pcm, 0, pcm.size); if (n <= 0) continue
                         // 음성 인식에 16kHz 로 (두 표본 평균)
-                        pipeOut?.let { p ->
+                        if (pipeOut != null) {
                             val sb = ByteBuffer.wrap(pcm, 0, n).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer(); val ob = ByteBuffer.wrap(half).order(ByteOrder.LITTLE_ENDIAN)
                             var m = 0
                             while (sb.remaining() >= 2) { val a = sb.get().toInt(); val b = sb.get().toInt(); ob.putShort(((a + b) / 2).toShort()); m += 2 }
-                            if (runCatching { p.write(half, 0, m) }.isFailure) pipeOut = null
+                            toRecognizer.offer(half.copyOf(m))
                         }
                         var off = 0
                         while (off < n) {
@@ -124,7 +135,7 @@ object Voice {
                 runCatching { rec.stop() }; rec.release()
                 runCatching { enc.stop() }; enc.release()
                 runCatching { if (started) mux.stop() }; runCatching { mux.release() }
-                runCatching { pipeOut?.close() }
+                toRecognizer.clear(); toRecognizer.offer(ByteArray(0)); runCatching { pipeOut?.close() }; pipeOut = null
                 if (started && samples > RATE / 2) tmp.renameTo(out) else tmp.delete()
             }.apply { name = "voice"; start() }
         }
