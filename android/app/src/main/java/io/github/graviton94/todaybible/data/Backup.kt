@@ -27,6 +27,23 @@ object Backup {
         return out
     }
 
+    /** 정해 둔 곳(구글 드라이브 등)에 같은 파일을 새로 써요. */
+    fun keep(ctx: Context, uri: Uri): Boolean = runCatching {
+        val tmp = write(ctx, File(ctx.cacheDir, "backup/harubible.zip"))
+        ctx.contentResolver.openOutputStream(uri, "wt")!!.use { o -> tmp.inputStream().use { it.copyTo(o) } }
+        tmp.delete(); Store(ctx).backupAt = System.currentTimeMillis(); true
+    }.getOrDefault(false)
+
+    /** 앱을 닫을 때: 마지막 보관 뒤로 새로 쓴 것이 있고 한 시간이 지났으면 뒤에서 조용히 보관. */
+    fun auto(ctx: Context) {
+        val st = Store(ctx); val u = st.backupUri.takeIf { it.isNotEmpty() } ?: return
+        val changed = (files.map { File(ctx.filesDir, it) } + dirs.map { File(ctx.filesDir, it) }).filter { it.exists() }
+            .flatMap { if (it.isDirectory) it.walkTopDown().toList() else listOf(it) }.maxOfOrNull { it.lastModified() } ?: 0L
+        if (changed <= st.backupAt || System.currentTimeMillis() - st.backupAt < 3_600_000L) return
+        val app = ctx.applicationContext
+        Thread { keep(app, Uri.parse(u)) }.apply { name = "backup"; isDaemon = false }.start()
+    }
+
     /** 되살리기: 기록 파일이 들어 있어야 함. 성공하면 true (앱을 다시 그려야 함). */
     fun read(ctx: Context, uri: Uri): Boolean = runCatching {
         var ok = false
@@ -54,6 +71,7 @@ object Backup {
             for (i in 0 until nodes.length) {
                 val n = nodes.item(i) as? org.w3c.dom.Element ?: continue
                 val key = n.getAttribute("name"); val v = n.getAttribute("value")
+                if (key.startsWith("backup_")) continue // 보관 위치 권한은 이 폰의 것
                 when (n.tagName) {
                     "string" -> ed.putString(key, n.textContent)
                     "int" -> v.toIntOrNull()?.let { ed.putInt(key, it) }

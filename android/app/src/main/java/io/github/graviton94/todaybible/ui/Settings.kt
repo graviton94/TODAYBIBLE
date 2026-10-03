@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.graviton94.todaybible.BuildConfig
 import io.github.graviton94.todaybible.R
+import kotlinx.coroutines.launch
 import io.github.graviton94.todaybible.core.Translation
 import io.github.graviton94.todaybible.design.Theme
 import io.github.graviton94.todaybible.design.ThemeChoice
@@ -129,12 +130,30 @@ fun SettingsPage(s: AppState) {
                         if (ok) (ctx as? android.app.Activity)?.recreate()
                     }
                 }
-                BookButton(stringResource(R.string.backup_export), Modifier.fillMaxWidth(), quiet = true) {
-                    val day = s.today().toString()
-                    val f = io.github.graviton94.todaybible.data.Backup.write(ctx, java.io.File(ctx.cacheDir, "share/harubible_$day.zip"))
-                    val uri = androidx.core.content.FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", f)
-                    ctx.startActivity(android.content.Intent.createChooser(android.content.Intent(android.content.Intent.ACTION_SEND).setType("application/zip")
-                        .putExtra(android.content.Intent.EXTRA_STREAM, uri).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION), null))
+                var where by remember { mutableStateOf(s.store.backupUri) }
+                var at by remember { mutableStateOf(s.store.backupAt) }
+                val scope = androidx.compose.runtime.rememberCoroutineScope()
+                fun keepNow(u: String) = scope.launch {
+                    val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { io.github.graviton94.todaybible.data.Backup.keep(ctx, android.net.Uri.parse(u)) }
+                    at = s.store.backupAt; s.toast = ctx.getString(if (ok) R.string.backup_saved else R.string.backup_fail)
+                }
+                val create = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+                    if (uri != null) {
+                        runCatching { ctx.contentResolver.takePersistableUriPermission(uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION) }
+                        where = uri.toString(); s.store.backupUri = where; keepNow(where)
+                    }
+                }
+                if (where.isEmpty()) {
+                    BookButton(stringResource(R.string.backup_drive), Modifier.fillMaxWidth()) { create.launch("harubible_backup.zip") }
+                    Text(stringResource(R.string.backup_drive_note), style = Theme.small())
+                } else {
+                    val last = if (at > 0) java.time.Instant.ofEpochMilli(at).atZone(java.time.ZoneId.systemDefault())
+                        .format(java.time.format.DateTimeFormatter.ofPattern(if (s.korean) "M월 d일 H:mm" else "d MMM H:mm")) else "–"
+                    Text(stringResource(R.string.backup_on, last), style = Theme.small().copy(color = c.inkSoft))
+                    Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                        BookButton(stringResource(R.string.backup_now), Modifier.weight(1f), quiet = true) { keepNow(where) }
+                        BookButton(stringResource(R.string.backup_off), Modifier.weight(1f), quiet = true) { where = ""; s.store.backupUri = "" }
+                    }
                 }
                 BookButton(stringResource(R.string.backup_import), Modifier.fillMaxWidth(), quiet = true) { pick.launch(arrayOf("application/zip", "application/octet-stream")) }
             }

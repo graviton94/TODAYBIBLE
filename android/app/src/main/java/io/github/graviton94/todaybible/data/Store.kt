@@ -92,6 +92,13 @@ class Store(val context: Context) {
     var ownerName: String
         get() = prefs.getString("owner", "")!!
         set(v) = prefs.edit().putString("owner", v).apply()
+    /** 자동 보관 위치 (구글 드라이브 등, 저장소 접근 프레임워크 문서) · 마지막으로 보관한 때. */
+    var backupUri: String
+        get() = prefs.getString("backup_uri", "")!!
+        set(v) = prefs.edit().putString("backup_uri", v).apply()
+    var backupAt: Long
+        get() = prefs.getLong("backup_at", 0)
+        set(v) = prefs.edit().putLong("backup_at", v).apply()
     /** 위젯이 쓰는 오늘의 분량 (길잡이 반영). */
     var lastGoal: Int
         get() = prefs.getInt("last_goal", 0)

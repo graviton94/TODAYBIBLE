@@ -230,8 +230,7 @@
     <string name="cmp_notes">Notebook PDF</string>
     <string name="duration_ms">%1$d:%2$02d</string>
     <string name="backup">Backup</string>
-    <string name="backup_export">Save records to a file</string>
-    <string name="backup_import">Restore from a file</string>
+    <string name="backup_import">Restore from Drive or a file</string>
     <string name="backup_done">Records restored</string>
     <string name="backup_bad">This file can\'t be read</string>
     <string name="find_hint">Go to · John 3:16</string>
@@ -239,15 +238,22 @@
     <string name="owner_note">Used in greetings and pressed in gold on your cover</string>
     <string name="ob_name">What shall we call you?</string>
     <string name="ob_name_p">Your name goes on the cover of the Bible you write.</string>
-    <string name="ob_restore">Wrote here before? Restore from a file</string>
+    <string name="ob_restore">Wrote here before? Restore from Drive or a file</string>
     <string name="hi_morning">Good morning, %1$s</string>
     <string name="hi_day">Good afternoon, %1$s</string>
     <string name="hi_evening">Good evening, %1$s</string>
     <string name="reminder_named">%1$s, today\'s verse · %2$s</string>
-    <string name="backup_hint">Your writing, handwriting and voice in one file. Keep it before changing phones.</string>
+    <string name="backup_hint">Your writing, handwriting and voice in one file. Keep it in Google Drive and a new phone picks up where you left off.</string>
     <string name="hand_hint">Write on the lines with a finger or pen</string>
     <string name="hand_sheet">Sheet %1$d</string>
     <string name="hand_undo">Undo</string>
     <string name="hand_more">New sheet</string>
     <string name="hand_done">Done</string>
+    <string name="backup_drive">Keep in Google Drive</string>
+    <string name="backup_drive_note">Choose Drive in the save screen. After that, the same file is updated whenever you write something new.</string>
+    <string name="backup_on">Kept automatically · last %1$s</string>
+    <string name="backup_now">Keep now</string>
+    <string name="backup_off">Stop keeping</string>
+    <string name="backup_saved">Kept</string>
+    <string name="backup_fail">Couldn\'t keep it. Choose the place again.</string>
 </resources>

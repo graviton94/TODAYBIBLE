@@ -56,6 +56,7 @@ import kotlin.math.min
  * 펜을 쓰면 누르는 힘으로, 손가락이면 빠르기로 굵기가 달라져요. 펜이 닿은 뒤로는 손바닥 닿음은 무시.
  * 칸이 모자라면 ‘한 장 더’. ‘다 썼어요’ 하면 획으로 저장하고 그 절이 채워져요.
  */
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 @Composable
 fun HandTab(s: AppState, verse: Int) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current; val haptic = LocalHapticFeedback.current

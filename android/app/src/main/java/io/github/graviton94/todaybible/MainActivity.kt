@@ -65,6 +65,11 @@ class MainActivity : ComponentActivity() {
     }
 
     // 알림을 눌러 다시 열 때: 필사 장으로
+    override fun onStop() {
+        super.onStop()
+        io.github.graviton94.todaybible.data.Backup.auto(this)
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { state?.page = it }
