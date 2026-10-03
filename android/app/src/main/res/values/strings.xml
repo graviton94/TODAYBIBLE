@@ -17,12 +17,9 @@
     <string name="choose_chapter">Choose a chapter</string>
     <string name="locked_book">Opens with lifetime access</string>
     <string name="mode_type">Type</string>
-    <string name="mode_paper">Paper</string>
+    <string name="mode_paper">By hand</string>
     <string name="mode_aloud">Read aloud</string>
     <string name="type_hint">Copy the verse here</string>
-    <string name="paper_photo">Notebook photo</string>
-    <string name="paper_declare">I copied all of chapter %1$d</string>
-    <string name="paper_add">Add to this chapter</string>
     <string name="aloud_start">Begin reading</string>
     <string name="aloud_pause">Pause</string>
     <string name="aloud_slow">Slow</string>
@@ -147,7 +144,7 @@
     <string name="ob1_h">A whole Bible, in your own hand</string>
     <string name="ob1_p">%1$s verses. A few each day, and it becomes your own Bible.</string>
     <string name="ob2_h">Write over the faint text</string>
-    <string name="ob2_p">Type it, copy it on paper, or read it aloud. What you write stays in ink.</string>
+    <string name="ob2_p">Type it, write it by hand, or read it aloud. What you write stays in ink.</string>
     <string name="ob3_h">Finish a chapter, open a plate</string>
     <string name="ob3_p">Bible engravings appear piece by piece as you write.</string>
     <string name="ob_start">Where shall we begin?</string>
@@ -215,7 +212,6 @@
     <string name="widget_run">Days in a row</string>
     <string name="widget_run_desc">How many days you have kept writing</string>
     <string name="run_label">days in a row</string>
-    <string name="photo_saved">Also saved to your gallery</string>
     <string name="voice_keep">Keep my voice</string>
     <string name="voice_keep_hint">Each verse you read aloud is recorded on this phone only</string>
     <string name="voice_recording">Recording</string>
@@ -226,10 +222,10 @@
     <string name="voice_play">Listen</string>
     <string name="voice_stop">Stop</string>
     <string name="exporting">Preparing…</string>
-    <string name="notes_pdf">Notebook PDF</string>
+    <string name="notes_pdf">Handwriting PDF</string>
     <string name="notes_cover">My handwritten notebook</string>
     <string name="storage">Storage on this phone</string>
-    <string name="storage_line">Voice %1$s · Notebook photos %2$s</string>
+    <string name="storage_line">Voice %1$s · Handwriting %2$s</string>
     <string name="cmp_voice">My voice</string>
     <string name="cmp_notes">Notebook PDF</string>
     <string name="duration_ms">%1$d:%2$02d</string>
@@ -248,5 +244,10 @@
     <string name="hi_day">Good afternoon, %1$s</string>
     <string name="hi_evening">Good evening, %1$s</string>
     <string name="reminder_named">%1$s, today\'s verse · %2$s</string>
-    <string name="backup_hint">Your writing, photos and voice in one file. Keep it before changing phones.</string>
+    <string name="backup_hint">Your writing, handwriting and voice in one file. Keep it before changing phones.</string>
+    <string name="hand_hint">Write on the lines with a finger or pen</string>
+    <string name="hand_sheet">Sheet %1$d</string>
+    <string name="hand_undo">Undo</string>
+    <string name="hand_more">New sheet</string>
+    <string name="hand_done">Done</string>
 </resources>

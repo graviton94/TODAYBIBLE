@@ -43,7 +43,7 @@ object Voice {
     /** 녹음 · 노트 사진이 차지하는 크기 (바이트). */
     fun usage(ctx: Context): Pair<Long, Long> {
         fun size(d: File): Long = d.walkTopDown().filter { it.isFile }.sumOf { it.length() }
-        return size(File(ctx.filesDir, "voice")) to size(File(ctx.filesDir, "photos"))
+        return size(File(ctx.filesDir, "voice")) to size(File(ctx.filesDir, "ink"))
     }
 
     /**

@@ -2,7 +2,6 @@ package io.github.graviton94.todaybible.ui
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.text.Layout
@@ -95,18 +94,6 @@ object MyBible {
                 y += lay.height + 5f
             }
             y += 8f
-            // 이 장을 종이에 쓴 노트 사진이 있으면 한 쪽에 붙임
-            Photos.of(ctx, tr.id, book, ch)?.let { f ->
-                BitmapFactory.decodeFile(f.path)?.let { bmp ->
-                    doc.finishPage(pg); pg = newPage(); header(ch)
-                    val box = android.graphics.RectF(M.toFloat(), M + 16f, (W - M).toFloat(), (H - M).toFloat())
-                    val k = minOf(box.width() / bmp.width, box.height() / bmp.height)
-                    val dw = bmp.width * k; val dh = bmp.height * k
-                    pg.canvas.drawBitmap(bmp, null, android.graphics.RectF(box.centerX() - dw / 2, box.top, box.centerX() + dw / 2, box.top + dh), Paint(Paint.FILTER_BITMAP_FLAG))
-                    bmp.recycle()
-                    doc.finishPage(pg); pg = newPage(); header(minOf(ch + 1, text.chapterCount)); y = M + 14f
-                }
-            }
         }
         doc.finishPage(pg)
         val dir = File(ctx.cacheDir, "share").apply { mkdirs() }
@@ -115,20 +102,22 @@ object MyBible {
         return f
     }
 
-    /** 노트 PDF: 이 권(또는 전체)의 노트 사진만, 한 쪽에 한 장 · 머리에 권 · 장과 찍은 날. */
+    /** 손글씨 PDF: 이 권(또는 전체)에 손으로 쓴 절들을 획 그대로 (어떤 크기로 뽑아도 선명). 장마다 머리 · 절마다 여백에 번호와 날짜. */
     fun notes(ctx: Context, store: Store, tr: Translation, book: Int?): File? {
         val korean = tr == Translation.KRV
         val books = if (book != null) listOf(book) else io.github.graviton94.todaybible.core.Canon.books.indices.toList()
-        val photos = books.flatMap { b -> (1..io.github.graviton94.todaybible.core.Canon.books[b].chapters).mapNotNull { ch -> Photos.of(ctx, tr.id, b, ch)?.let { Triple(b, ch, it) } } }
-        if (photos.isEmpty()) return null
+        val chapters = books.flatMap { b -> io.github.graviton94.todaybible.data.Ink.chapters(ctx, tr.id, b).map { b to it } }
+        if (chapters.isEmpty()) return null
         val c = Tokens.light
         val serif = ResourcesCompat.getFont(ctx, if (korean) R.font.serif_kr_medium else R.font.garamond_medium)
         val title = ResourcesCompat.getFont(ctx, if (korean) R.font.title_kr else R.font.garamond_semibold)
         fun name(b: Int) = if (korean) io.github.graviton94.todaybible.core.Canon.books[b].ko else io.github.graviton94.todaybible.core.Canon.books[b].en
+        val firstDay = HashMap<Int, Long>()
+        store.loadFills().filter { it.translation == tr }.forEach { f -> firstDay.merge(f.key.raw, f.epochDay) { a, b -> minOf(a, b) } }
         val doc = PdfDocument(); var no = 0
-        fun page(): PdfDocument.Page { no++; return doc.startPage(PdfDocument.PageInfo.Builder(W, H, no).create()) }
+        fun page(): PdfDocument.Page { no++; return doc.startPage(PdfDocument.PageInfo.Builder(W, H, no).create()).also { it.canvas.drawColor(c.leaf.toArgb()) } }
         run {
-            val pg = page(); val cv = pg.canvas; cv.drawColor(c.leaf.toArgb())
+            val pg = page(); val cv = pg.canvas
             val gilt = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = c.gilt.toArgb(); style = Paint.Style.STROKE; strokeWidth = 0.8f }
             cv.drawRect(24f, 24f, W - 24f, H - 24f, gilt); cv.drawRect(29f, 29f, W - 29f, H - 29f, gilt)
             val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = title; textSize = 24f; color = c.ink.toArgb(); textAlign = Paint.Align.CENTER }
@@ -139,19 +128,34 @@ object MyBible {
             doc.finishPage(pg)
         }
         val head = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 8f; color = c.inkSoft.toArgb() }
-        val fmt = DateTimeFormatter.ofPattern("yyyy. M. d")
-        for ((b, ch, f) in photos) {
-            val bmp = BitmapFactory.decodeFile(f.path) ?: continue
-            val pg = page(); val cv = pg.canvas; cv.drawColor(c.leaf.toArgb())
-            val day = java.time.Instant.ofEpochMilli(f.lastModified()).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-            cv.drawText("${name(b)} ${if (korean) "${ch}장" else "$ch"}", M.toFloat(), M.toFloat(), head)
-            cv.drawText(day.format(fmt), (W - M).toFloat(), M.toFloat(), TextPaint(head).apply { textAlign = Paint.Align.RIGHT })
-            val box = android.graphics.RectF(M.toFloat(), M + 12f, (W - M).toFloat(), (H - M).toFloat())
-            val k = minOf(box.width() / bmp.width, box.height() / bmp.height)
-            val dw = bmp.width * k; val dh = bmp.height * k
-            cv.drawBitmap(bmp, null, android.graphics.RectF(box.centerX() - dw / 2, box.top, box.centerX() + dw / 2, box.top + dh), Paint(Paint.FILTER_BITMAP_FLAG))
-            bmp.recycle(); doc.finishPage(pg)
+        val num = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 9f; color = c.rubric.toArgb() }
+        val rule = Paint().apply { color = c.noteLine.toArgb(); strokeWidth = 0.4f }
+        val md = DateTimeFormatter.ofPattern("M. d")
+        val gutter = 30f; val left = M + gutter; val w = W - M - left
+        var pg = page(); var y = M.toFloat()
+        for ((b, ch) in chapters) {
+            if (y > M + 1f) { doc.finishPage(pg); pg = page(); y = M.toFloat() }
+            pg.canvas.drawText("${name(b)} ${if (korean) "${ch}장" else "$ch"}", M.toFloat(), y, head); y += 14f
+            for (v in io.github.graviton94.todaybible.data.Ink.verses(ctx, tr.id, b, ch)) {
+                val ink = io.github.graviton94.todaybible.data.Ink.load(io.github.graviton94.todaybible.data.Ink.file(ctx, tr.id, b, ch, v)) ?: continue
+                val line = ink.line * w
+                ink.sheets.forEachIndexed { i, sheet ->
+                    val lines = kotlin.math.ceil((ink.height(i) + line * 0.25f) / line).toInt().coerceAtLeast(1)
+                    val hgt = lines * line
+                    if (y + hgt > H - M) { doc.finishPage(pg); pg = page(); y = M.toFloat() }
+                    val cv = pg.canvas
+                    for (l in 1..lines) cv.drawLine(left, y + l * line, left + w, y + l * line, rule)
+                    if (i == 0) {
+                        cv.drawText("$v", M.toFloat(), y + line * 0.6f, num)
+                        firstDay[VerseKey(b, ch, v).raw]?.let { d -> cv.drawText(LocalDate.ofEpochDay(d).format(md), M.toFloat(), y + line * 0.6f + 11f, head) }
+                    }
+                    io.github.graviton94.todaybible.data.Ink.draw(cv, sheet, left, y, w, c.penInk.toArgb())
+                    y += hgt
+                }
+                y += 6f
+            }
         }
+        doc.finishPage(pg)
         val dir = File(ctx.cacheDir, "share").apply { mkdirs() }
         val out = File(dir, "notebook${book?.let { "_${name(it).replace(' ', '_')}" } ?: ""}.pdf")
         out.outputStream().use { doc.writeTo(it) }; doc.close()

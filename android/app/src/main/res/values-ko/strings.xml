@@ -17,12 +17,9 @@
     <string name="choose_chapter">장 고르기</string>
     <string name="locked_book">평생권으로 열려요</string>
     <string name="mode_type">타자</string>
-    <string name="mode_paper">종이</string>
+    <string name="mode_paper">손글씨</string>
     <string name="mode_aloud">낭독</string>
     <string name="type_hint">여기에 옮겨 써요</string>
-    <string name="paper_photo">노트 사진</string>
-    <string name="paper_declare">%1$d장을 빠짐없이 썼어요</string>
-    <string name="paper_add">이 장에 붙이기</string>
     <string name="aloud_start">읽기 시작</string>
     <string name="aloud_pause">멈추기</string>
     <string name="aloud_slow">천천히</string>
@@ -147,7 +144,7 @@
     <string name="ob1_h">성경 한 권을, 내 손으로</string>
     <string name="ob1_p">%1$s절. 하루 몇 절씩 옮겨 쓰면 나만의 성경이 돼요.</string>
     <string name="ob2_h">흐린 글자 위에 그대로</string>
-    <string name="ob2_p">타자로, 종이 노트로, 소리 내어 읽어서. 쓴 글자는 먹으로 남아요.</string>
+    <string name="ob2_p">타자로, 손글씨로, 소리 내어 읽어서. 쓴 글자는 먹으로 남아요.</string>
     <string name="ob3_h">장을 마치면, 판화 한 장</string>
     <string name="ob3_p">쓴 만큼 성경 판화가 조각조각 드러나요.</string>
     <string name="ob_start">어디서 시작할까요?</string>
@@ -215,7 +212,6 @@
     <string name="widget_run">이어 쓴 날</string>
     <string name="widget_run_desc">며칠째 이어 쓰는지</string>
     <string name="run_label">일째 이어 씀</string>
-    <string name="photo_saved">갤러리에도 담았어요</string>
     <string name="voice_keep">내 목소리 남기기</string>
     <string name="voice_keep_hint">소리 내어 읽은 절을 이 폰에만 녹음해요</string>
     <string name="voice_recording">녹음 중</string>
@@ -226,10 +222,10 @@
     <string name="voice_play">듣기</string>
     <string name="voice_stop">멈추기</string>
     <string name="exporting">만드는 중이에요</string>
-    <string name="notes_pdf">노트 PDF</string>
+    <string name="notes_pdf">손글씨 PDF</string>
     <string name="notes_cover">내 손글씨 필사 노트</string>
     <string name="storage">이 폰에 저장한 것</string>
-    <string name="storage_line">목소리 %1$s · 노트 사진 %2$s</string>
+    <string name="storage_line">목소리 %1$s · 손글씨 %2$s</string>
     <string name="cmp_voice">내 목소리</string>
     <string name="cmp_notes">노트 PDF</string>
     <string name="duration_ms">%1$d분 %2$d초</string>
@@ -248,5 +244,10 @@
     <string name="hi_day">%1$s님, 평안한 오후예요</string>
     <string name="hi_evening">%1$s님, 평안한 저녁이에요</string>
     <string name="reminder_named">%1$s님, 오늘 쓸 절 · %2$s</string>
-    <string name="backup_hint">쓴 글자 · 사진 · 목소리를 파일 하나로 보관해요. 폰을 바꾸기 전에 남겨 두세요.</string>
+    <string name="backup_hint">쓴 글자 · 손글씨 · 목소리를 파일 하나로 보관해요. 폰을 바꾸기 전에 남겨 두세요.</string>
+    <string name="hand_hint">손가락이나 펜으로 줄 위에 써요</string>
+    <string name="hand_sheet">%1$d장째</string>
+    <string name="hand_undo">되돌리기</string>
+    <string name="hand_more">한 장 더</string>
+    <string name="hand_done">다 썼어요</string>
 </resources>

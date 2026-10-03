@@ -13,7 +13,7 @@ import java.util.zip.ZipOutputStream
  */
 object Backup {
     private val files = listOf("fills.tsv", "earned.tsv")
-    private val dirs = listOf("photos", "voice")
+    private val dirs = listOf("ink", "voice")
 
     fun write(ctx: Context, out: File): File {
         out.parentFile?.mkdirs()

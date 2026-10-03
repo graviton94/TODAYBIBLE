@@ -125,7 +125,11 @@ fun CopyPage(s: AppState) {
         }
         when (tab) {
             0 -> WritePage(s, next)
-            1 -> Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) { PaperTab(s) }
+            1 -> if (next != null) HandTab(s, next) else Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+                ChapterDoneNote(s)
+                if (io.github.graviton94.todaybible.data.Ink.verses(LocalContext.current, s.translation.id, s.book, s.chapter).isNotEmpty())
+                    BookButton(stringResource(R.string.notes_pdf), Modifier.fillMaxWidth(), quiet = true) { s.requestNotes(s.book) }
+            }
             else -> Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
                 if (next == null) { ChapterDoneNote(s); VoiceRow(s) } else AloudTab(s, next)
             }
@@ -230,7 +234,7 @@ private fun NotebookView(s: AppState, current: Int?, source: String, typed: Stri
     val t = s.text(); val p = s.progress
     val written = s.fills.filter { it.translation == s.translation && it.key.book == s.book && it.key.chapter == s.chapter }
         .groupBy { it.key.verse }.mapValues { (_, f) -> f.minOf { it.epochDay } }.toSortedMap()
-    val list = rememberLazyListState()
+    val list = rememberLazyListState(); val ctx = LocalContext.current
     LaunchedEffect(written.size) { if (written.isNotEmpty()) list.animateScrollToItem(written.size) }
     Column(Modifier.fillMaxSize()) {
         if (current != null) Box(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) { VerseText(s, current, source) }
@@ -244,7 +248,10 @@ private fun NotebookView(s: AppState, current: Int?, source: String, typed: Stri
         }.clickable(remember { MutableInteractionSource() }, null) { onWrite() },
             contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = Tokens.Size.touch * 2)) {
             items(written.keys.toList(), key = { it }) { v ->
-                NoteLine(java.time.LocalDate.ofEpochDay(written.getValue(v)).format(fmt), buildAnnotatedString {
+                // 손으로 쓴 절은 그 손글씨 그대로
+                val ink = remember(s.translation, s.book, s.chapter, v) { io.github.graviton94.todaybible.data.Ink.file(ctx, s.translation.id, s.book, s.chapter, v).takeIf { it.exists() }?.let { io.github.graviton94.todaybible.data.Ink.load(it) } }
+                if (ink != null) HandNoteLine(java.time.LocalDate.ofEpochDay(written.getValue(v)).format(fmt), v, ink)
+                else NoteLine(java.time.LocalDate.ofEpochDay(written.getValue(v)).format(fmt), buildAnnotatedString {
                     withStyle(SpanStyle(color = c.rubric)) { append("$v ") }; append(Markup.plain(t.verse(s.chapter, v)))
                 }, pen)
             }
@@ -279,6 +286,19 @@ private fun NoteLine(date: String, text: AnnotatedString, pen: TextStyle) {
             val lh = pen.lineHeight.toPx(); var y = lh
             while (y <= size.height + 1f) { drawLine(c.noteLine, Offset(-Tokens.Space.s5.toPx(), y), Offset(size.width, y), Tokens.Stroke.hair.toPx()); y += lh }
         })
+    }
+}
+
+/** 줄 공책 한 덩이 (손글씨): 왼쪽 여백에 날짜와 절 번호. */
+@Composable
+private fun HandNoteLine(date: String, verse: Int, ink: io.github.graviton94.todaybible.data.Ink.Page) {
+    val c = Theme.c
+    Row(Modifier.fillMaxWidth().padding(end = Tokens.Space.s5)) {
+        Column(Modifier.width(Tokens.Size.noteMargin).padding(top = Tokens.Space.s2), horizontalAlignment = Alignment.End) {
+            Text(date, style = Theme.small().copy(color = c.inkSoft), maxLines = 1)
+            Text("$verse", style = Theme.small().copy(color = c.rubric), maxLines = 1)
+        }
+        Box(Modifier.weight(1f).padding(start = Tokens.Space.s5)) { InkSheets(ink, c.penInk, c.noteLine) }
     }
 }
 
@@ -337,35 +357,6 @@ private fun sealInline(color: androidx.compose.ui.graphics.Color): Map<String, I
     "seal" to InlineTextContent(Placeholder(Tokens.Leading.verseNumber.em, Tokens.Leading.verseNumber.em, PlaceholderVerticalAlign.TextCenter)) {
         StampMark(STAMP_CROSS, color, Modifier.fillMaxSize())
     })
-
-@Composable
-private fun PaperTab(s: AppState) {
-    val c = Theme.c; val ctx = LocalContext.current
-    var photo by remember(s.book, s.chapter, s.translation) { mutableStateOf(Photos.of(ctx, s.translation.id, s.book, s.chapter)) }
-    var declared by remember(s.book, s.chapter) { mutableStateOf(false) }
-    val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) runCatching {
-            photo = Photos.keep(ctx, uri, s.translation.id, s.book, s.chapter, "${s.bookName()} ${s.chapter}")
-            s.toast = ctx.getString(R.string.photo_saved)
-        }
-    }
-    val bitmap = remember(photo) { photo?.let { f -> runCatching { BitmapFactory.decodeFile(f.path, BitmapFactory.Options().apply { inSampleSize = 4 })?.asImageBitmap() }.getOrNull() } }
-    Box(
-        Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.photoAspect).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper)
-            .clickable(role = Role.Button) { pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-        contentAlignment = Alignment.Center,
-    ) {
-        if (bitmap != null) Image(bitmap, null, Modifier.fillMaxWidth(), contentScale = ContentScale.Crop)
-        else Text(stringResource(R.string.paper_photo), style = Theme.body().copy(color = c.inkSoft))
-    }
-    Row(Modifier.fillMaxWidth().clickable { declared = !declared }, verticalAlignment = Alignment.CenterVertically) {
-        Checkbox(declared, { declared = it }, colors = CheckboxDefaults.colors(checkedColor = c.leather, uncheckedColor = c.inkSoft, checkmarkColor = c.leatherInk))
-        Text(stringResource(R.string.paper_declare, s.chapter), style = Theme.body(), modifier = Modifier.weight(1f))
-    }
-    BookButton(stringResource(R.string.paper_add), Modifier.fillMaxWidth(), enabled = declared) {
-        s.fill(s.text().fillable(s.chapter), Mode.PAPER)
-    }
-}
 
 /**
  * 낭독 (G1): 소리 내어 읽으면 알아들은 만큼 글자가 먹으로 (기기 안 음성 인식 · 녹음은 남기지 않음).

@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 구글 계정 자동 백업 (안드로이드 11 이하): 기록 · 발자취 · 설정만. 노트 사진은 갤러리 사본이 따로 남음 (25MB 한도 보호) -->
+<!-- 구글 계정 자동 백업 (안드로이드 11 이하): 기록 · 발자취 · 설정만. 손글씨(획이라 작음)까지. 목소리는 파일 보관으로 (25MB 한도 보호) -->
 <full-backup-content>
     <include domain="file" path="fills.tsv" />
     <include domain="file" path="earned.tsv" />
+    <include domain="file" path="ink/" />
     <include domain="sharedpref" path="." />
 </full-backup-content>

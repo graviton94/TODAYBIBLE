@@ -29,6 +29,7 @@ object Tokens {
     }
     object Stroke {
         val hair = 1.dp
+        val pen = 2.6.dp
         val rule = 2.dp
         val gilt = 1.5.dp
         val giltFine = 1.dp
@@ -68,6 +69,8 @@ object Tokens {
         val cardMedal = 120.dp
         val cardGap = 24.dp
         val noteMargin = 44.dp
+        val handLine = 56.dp
+        val handModel = 168.dp
         val initialBox = 56.dp
         val initialHome = 44.dp
         val hiddenField = 1.dp
@@ -151,6 +154,7 @@ object Tokens {
         const val shine = 0.22f
         const val peek = 0.93f
         const val veilPiece = 0.86f
+        const val handGuide = 0.35f
     }
     object Leading {
         const val verse = 1.8f

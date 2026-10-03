@@ -51,6 +51,10 @@ open --es tb.plan none --es tb.cover burgundy --es tb.owner ""
 open --ei tb.page 1; adb shell input tap 640 551;                  shot p04_aloud_mic 3
 open --ei tb.page 1 --ez tb.voice true; adb shell input tap 640 551; shot p05_aloud_voice 3
 open --ez tb.settings true; swipe_up; swipe_up;                    shot p06_settings_voice 2
+# 손글씨: 빈 공책 → 몇 획 그은 공책
+open --ei tb.page 1; adb shell input tap 390 551;                  shot p07_hand_empty 3
+for st in "180 1000 300 1000" "240 960 240 1040" "200 1060 290 1080" "340 990 420 990" "380 990 370 1090" "370 1040 430 1050" "470 980 470 1100" "520 1000 620 1000" "570 960 560 1100" "520 1060 610 1060"; do adb shell input swipe $st 180; done
+shot p08_hand_written 2
 open --ez tb.voice false
 open --ei tb.page 3;                                               shot r00_record_stats 5
 open --ei tb.page 0 --ei tb.toast 5;                               shot t01_toast 1.5
