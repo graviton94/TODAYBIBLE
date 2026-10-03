@@ -305,7 +305,6 @@
     <string name="guide_net">인터넷 필요</string>
     <string name="guide_voice_n">목소리 %1$d · %2$s</string>
     <string name="guide_preview">미리 듣기 (시편 23:1)</string>
-    <string name="guide_ai_sample">견주어 듣기: AI 낭독 견본 (시편 23편)</string>
     <string name="guide_ai_stop">견본 멈추기</string>
     <string name="missed_n">놓친 낱말 %1$d개 · 곧 다음 절로 넘어가요</string>
     <string name="missed_listen">이 낱말 듣기</string>
@@ -328,4 +327,13 @@
     <string name="reminder_aloud">함께 읽기</string>
     <string name="hand_phrase">구절만</string>
     <string name="hand_whole">절 전체</string>
+    <string name="narr_get_hint">%1$s 낭독 목소리를 받으면 진중한 목소리와 함께 읽어요</string>
+    <string name="narr_get">받기</string>
+    <string name="narr_loading">받는 중 %1$d%%</string>
+    <string name="narr_failed">받지 못했어요. 인터넷을 확인하고 다시 눌러 주세요.</string>
+    <string name="narr_male">진중한 남성 목소리 (미리 만든 낭독)</string>
+    <string name="narr_female">차분한 여성 목소리 (미리 만든 낭독)</string>
+    <string name="narr_device">폰의 읽기 목소리</string>
+    <string name="narr_preview">미리 듣기 (시편 23편)</string>
+    <string name="narr_usage">받아 둔 낭독 · %1$s</string>
 </resources>

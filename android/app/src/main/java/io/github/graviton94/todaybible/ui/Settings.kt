@@ -276,20 +276,26 @@ private fun GuideVoiceSettings(s: AppState) {
         val sample = io.github.graviton94.todaybible.core.Markup.plain(s.store.book(s.translation, 18).verse(23, 1))
         guide.speak(sample, s.aloudRate(), { _, _ -> }, { })
     }
-    // 견주어 듣기: 미리 만든 AI 낭독 견본 (시편 23편, 오픈 소스 목소리)
+    // 미리 만든 낭독 목소리 (개역한글): 듣기는 받은 권이 있으면 그 음원으로
     if (s.korean) {
+        val N = io.github.graviton94.todaybible.data.Narration
+        listOf(N.MALE to R.string.narr_male, N.FEMALE to R.string.narr_female, N.DEVICE to R.string.narr_device).forEach { (v, id) ->
+            ChoiceRow(stringResource(id), s.narrator == v) { s.chooseNarrator(v) }
+        }
         var player by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
         androidx.compose.runtime.DisposableEffect(Unit) { onDispose { runCatching { player?.release() }; player = null } }
-        BookButton(stringResource(if (player != null) R.string.guide_ai_stop else R.string.guide_ai_sample), Modifier.fillMaxWidth(), quiet = true) {
+        if (s.narrator != N.DEVICE) BookButton(stringResource(if (player != null) R.string.guide_ai_stop else R.string.narr_preview), Modifier.fillMaxWidth(), quiet = true) {
             player?.let { runCatching { it.release() }; player = null; return@BookButton }
             guide.stop()
             player = runCatching {
                 android.media.MediaPlayer().apply {
-                    ctx.assets.openFd("voice/ps23_ai.m4a").use { setDataSource(it.fileDescriptor, it.startOffset, it.length) }
+                    ctx.assets.openFd("voice/${s.narrator}_ps23.m4a").use { setDataSource(it.fileDescriptor, it.startOffset, it.length) }
                     setOnCompletionListener { mp -> mp.release(); player = null }
                     prepare(); start()
                 }
             }.getOrNull()
         }
+        val used = remember(s.narrationLoad) { N.usage(ctx) }
+        if (used > 0) Text(stringResource(R.string.narr_usage, "%.0fMB".format(used / 1_000_000f)), style = Theme.small())
     }
 }

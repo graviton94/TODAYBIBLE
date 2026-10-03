@@ -88,6 +88,23 @@ class AppState(val store: Store) {
     fun addAloud(secs: Int) { val d = today().toEpochDay(); aloudLog = aloudLog + (d to (aloudLog[d] ?: 0) + secs); store.saveAloud(aloudLog) }
     var aloudSpeed by mutableStateOf(store.aloudSpeed)
     var guideVoice by mutableStateOf(store.guideVoice)
+    var narrator by mutableStateOf(store.narrator)
+    fun chooseNarrator(v: String) { narrator = v; store.narrator = v }
+    /** 낭독 음원 내려받는 중: 권 → 0..1 (실패하면 -1). */
+    var narrationLoad by mutableStateOf<Pair<Int, Float>?>(null)
+    fun downloadNarration(book: Int) {
+        if (narrationLoad?.second?.let { it in 0f..0.999f } == true) return
+        val v = narrator; val ctx = store.context; narrationLoad = book to 0f
+        val ui = android.os.Handler(android.os.Looper.getMainLooper())
+        Thread {
+            var last = 0L
+            val ok = io.github.graviton94.todaybible.data.Narration.download(ctx, v, book) { got, total ->
+                val now = System.currentTimeMillis()
+                if (now - last > 200 && total > 0) { last = now; ui.post { narrationLoad = book to (got.toFloat() / total).coerceAtMost(0.99f) } }
+            }
+            ui.post { narrationLoad = if (ok) book to 1f else book to -1f }
+        }.apply { name = "narration" }.start()
+    }
     fun chooseAloudSpeed(i: Int) { aloudSpeed = i; store.aloudSpeed = i }
     fun chooseGuideVoice(n: String) { guideVoice = n; store.guideVoice = n }
     /** 낭독 빠르기 (1 = 보통). */

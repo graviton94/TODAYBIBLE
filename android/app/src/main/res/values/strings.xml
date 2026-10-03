@@ -305,7 +305,6 @@
     <string name="guide_net">needs internet</string>
     <string name="guide_voice_n">Voice %1$d · %2$s</string>
     <string name="guide_preview">Hear a sample (Psalm 23:1)</string>
-    <string name="guide_ai_sample">Compare: AI narration sample (Psalm 23)</string>
     <string name="guide_ai_stop">Stop the sample</string>
     <string name="missed_n">%1$d word(s) not caught · moving on shortly</string>
     <string name="missed_listen">Hear them</string>
@@ -328,4 +327,13 @@
     <string name="reminder_aloud">Read along</string>
     <string name="hand_phrase">One phrase</string>
     <string name="hand_whole">Whole verse</string>
+    <string name="narr_get_hint">Get the narration for %1$s to read along with a calm voice</string>
+    <string name="narr_get">Get</string>
+    <string name="narr_loading">Downloading %1$d%%</string>
+    <string name="narr_failed">Couldn\'t download. Check the internet and tap again.</string>
+    <string name="narr_male">Steady male voice (prepared narration)</string>
+    <string name="narr_female">Calm female voice (prepared narration)</string>
+    <string name="narr_device">This phone\'s reading voice</string>
+    <string name="narr_preview">Hear a sample (Psalm 23)</string>
+    <string name="narr_usage">Narration on this phone · %1$s</string>
 </resources>

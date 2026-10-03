@@ -430,6 +430,23 @@ private fun sealInline(color: androidx.compose.ui.graphics.Color): Map<String, I
         StampMark(STAMP_CROSS, color, Modifier.fillMaxSize())
     })
 
+/** 이 권의 낭독 음원이 아직 없으면: 받기 (권마다 한 번, 와이파이에서 권해요). */
+@Composable
+private fun NarrationBanner(s: AppState, has: Boolean) {
+    if (has || !s.korean || s.narrator == io.github.graviton94.todaybible.data.Narration.DEVICE) return
+    val c = Theme.c
+    val load = s.narrationLoad?.takeIf { it.first == s.book }
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s3),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        Text(when {
+            load == null -> stringResource(R.string.narr_get_hint, s.bookName())
+            load.second < 0f -> stringResource(R.string.narr_failed)
+            else -> stringResource(R.string.narr_loading, (load.second * 100).toInt())
+        }, style = Theme.small(), modifier = Modifier.weight(1f))
+        if (load == null || load.second < 0f) BookButton(stringResource(R.string.narr_get), Modifier.width(Tokens.Size.narrButton), quiet = true) { s.downloadNarration(s.book) }
+    }
+}
+
 /** 낭독 위: 함께 읽기 · 혼자 읽기, 빠르기 (천천히 · 보통 · 빠르게). */
 @Composable
 private fun AloudControls(s: AppState, guideReady: Boolean) {
@@ -501,10 +518,15 @@ private fun AloudTab(s: AppState, verse: Int) {
     val recognize = canHear && (!record || (Build.VERSION.SDK_INT >= 33 && !pipeFailed))
     // 가이드 목소리 (함께 읽기): 먼저 한 절을 차분히 들려주고, 다 들으면 마이크가 열려요
     val main = remember { android.os.Handler(android.os.Looper.getMainLooper()) }
-    val guide = remember(k) { io.github.graviton94.todaybible.data.GuideVoice(ctx, k, s.guideVoice) }
+    val guide = remember(k, s.narrator) { io.github.graviton94.todaybible.data.GuideVoice(ctx, k, s.guideVoice, s.narrator) }
     DisposableEffect(guide) { onDispose { guide.release() } }
-    var guideReady by remember(guide) { mutableStateOf(false) }
-    LaunchedEffect(guide) { guide.whenReady { main.post { guideReady = guide.ready } } }
+    // 미리 만든 낭독 음원을 받은 권이면 폰 목소리가 없어도 함께 읽기 · 교독을 쓸 수 있어요
+    val loaded = s.narrationLoad
+    val narratedBook = remember(s.narrator, s.book, loaded) { k && s.narrator != io.github.graviton94.todaybible.data.Narration.DEVICE && io.github.graviton94.todaybible.data.Narration.has(ctx, s.narrator, s.book) }
+    var ttsReady by remember(guide) { mutableStateOf(false) }
+    LaunchedEffect(guide) { guide.whenReady { main.post { ttsReady = guide.ready } } }
+    val guideReady = ttsReady || narratedBook
+    val voiceFile = remember(verse, s.chapter, s.book, narratedBook) { guide.narrated(s.book, s.chapter, verse) }
     // 0 함께 읽기 · 1 교독 · 2 혼자 읽기 (가이드 목소리가 없으면 혼자)
     val mode = if (guideReady) s.aloudMode else 2
     val useGuide = mode == 0
@@ -536,17 +558,21 @@ private fun AloudTab(s: AppState, verse: Int) {
                             spoken = -1
                             if (!running) return@post
                             if (record) {
-                                val wav = java.io.File(ctx.cacheDir, "guide_${s.book}_${s.chapter}_$verse.wav")
                                 val target = Voice.file(ctx, s.translation.id, s.book, s.chapter, verse)
-                                guide.synthesize(plain, s.aloudRate(), wav) { ok -> if (ok) Thread { Voice.encodeWav(wav, target); wav.delete() }.start() }
+                                // 미리 만든 음원은 내 녹음과 같은 결이라 그대로, 폰 목소리는 파일로 만들어 바꿔서
+                                if (voiceFile != null) Thread { runCatching { target.parentFile?.mkdirs(); voiceFile.copyTo(target, overwrite = true) } }.start()
+                                else {
+                                    val wav = java.io.File(ctx.cacheDir, "guide_${s.book}_${s.chapter}_$verse.wav")
+                                    guide.synthesize(plain, s.aloudRate(), wav) { ok -> if (ok) Thread { Voice.encodeWav(wav, target); wav.delete() }.start() }
+                                }
                             }
                             complete()
                         }
-                    })
+                    }, file = voiceFile)
                 }
                 useGuide && !finished -> {
                     on = false; spoken = 0
-                    guide.speak(plain, s.aloudRate(), onRange = { _, e -> main.post { spoken = e } }, onDone = { main.post { spoken = -1; if (running) on = true } })
+                    guide.speak(plain, s.aloudRate(), onRange = { _, e -> main.post { spoken = e } }, onDone = { main.post { spoken = -1; if (running) on = true } }, file = voiceFile)
                 }
                 else -> on = true
             }
@@ -608,6 +634,7 @@ private fun AloudTab(s: AppState, verse: Int) {
                 if (session != null) { if (finished) session.stop() else session.discard() }
             }
         }
+        NarrationBanner(s, narratedBook)
         AloudControls(s, guideReady)
         val at = if (spoken >= 0) spoken else lit
         if (s.aloudBig) AloudLines(s, verse, plain, at, if (review) missed else emptyList(), guiding = spoken >= 0)
@@ -642,12 +669,13 @@ private fun AloudTab(s: AppState, verse: Int) {
     var lit by remember(verse, s.chapter, s.book) { mutableIntStateOf(0) }
     LaunchedEffect(playing, verse) {
         if (!playing) { guide.stop(); return@LaunchedEffect }
-        if (useGuide) { guide.speak(plain, s.aloudRate(), onRange = { _, e -> main.post { lit = e } }, onDone = { main.post { lit = plain.length; playing = false } }); return@LaunchedEffect }
+        if (useGuide) { guide.speak(plain, s.aloudRate(), onRange = { _, e -> main.post { lit = e } }, onDone = { main.post { lit = plain.length; playing = false } }, file = voiceFile); return@LaunchedEffect }
         while (playing && lit < plain.length) {
             delay(ReadingPace.delayMillis(plain[lit], k, s.aloudRate())); lit++
         }
         if (lit >= plain.length) playing = false
     }
+    NarrationBanner(s, narratedBook)
     AloudControls(s, guideReady)
     VerseText(s, verse, source, lit = lit)
     Text(stringResource(R.string.aloud_no_mic), style = Theme.small())

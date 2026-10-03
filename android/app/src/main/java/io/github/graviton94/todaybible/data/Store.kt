@@ -156,6 +156,10 @@ class Store(val context: Context) {
     var aloudSpeed: Int
         get() = prefs.getInt("aloud_speed", 1)
         set(v) = prefs.edit().putInt("aloud_speed", v).apply()
+    /** 낭독 목소리: m5 진중한 남성 · f5 차분한 여성 (미리 만든 음원) · device 폰 목소리. */
+    var narrator: String
+        get() = prefs.getString("narrator", "m5")!!
+        set(v) = prefs.edit().putString("narrator", v).apply()
     var guideVoice: String
         get() = prefs.getString("guide_voice", "")!!
         set(v) = prefs.edit().putString("guide_voice", v).apply()
