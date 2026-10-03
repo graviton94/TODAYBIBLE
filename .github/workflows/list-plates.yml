@@ -15,15 +15,21 @@ jobs:
           import json, urllib.parse, urllib.request
           UA={"User-Agent":"HaruBible/0.1 (https://github.com/graviton94/TODAYBIBLE)"}
           API="https://commons.wikimedia.org/w/api.php?"
+          import time, traceback
+          errs=[]
           def get(**p):
               p.update(format="json")
-              return json.load(urllib.request.urlopen(urllib.request.Request(API+urllib.parse.urlencode(p),headers=UA),timeout=60))
+              for a in range(4):
+                  try: return json.load(urllib.request.urlopen(urllib.request.Request(API+urllib.parse.urlencode(p),headers=UA),timeout=60))
+                  except Exception as e:
+                      errs.append(f"{p.get('list') or p.get('prop')}: {e}"); time.sleep(5*(a+1))
+              return {"query":{"categorymembers":[],"search":[],"pages":{}}}
           seen={}
           def members(cat, depth=0):
               cont={}
               while True:
                   r=get(action="query",list="categorymembers",cmtitle=cat,cmlimit="500",cmtype="file|subcat",**cont)
-                  for m in r["query"]["categorymembers"]:
+                  for m in r.get("query",{}).get("categorymembers",[]):
                       t=m["title"]
                       if t.startswith("Category:"):
                           if depth<1: members(t,depth+1)
@@ -35,7 +41,7 @@ jobs:
           for c in cats:
               try:
                   r=get(action="query",list="categorymembers",cmtitle=c,cmlimit="1")
-                  n=len(r["query"]["categorymembers"]); found.append(f"{c}\t{n}")
+                  n=len(r.get("query",{}).get("categorymembers",[])); found.append(f"{c}\t{n}")
                   if n: members(c)
               except Exception as e: found.append(f"{c}\terror {e}")
           # 검색으로도
@@ -43,7 +49,7 @@ jobs:
               off=0
               for _ in range(6):
                   r=get(action="query",list="search",srsearch=q,srnamespace="6",srlimit="50",sroffset=str(off))
-                  for m in r["query"]["search"]: seen.setdefault(m["title"],"search:"+q)
+                  for m in r.get("query",{}).get("search",[]): seen.setdefault(m["title"],"search:"+q)
                   if "continue" not in r: break
                   off=r["continue"]["sroffset"]
           # 크기 · 설명
@@ -52,10 +58,11 @@ jobs:
           out.write("# title\tsource\twidth\theight\n")
           for i in range(0,len(titles),50):
               r=get(action="query",titles="|".join(titles[i:i+50]),prop="imageinfo",iiprop="size")
-              for p in r["query"]["pages"].values():
+              for p in r.get("query",{}).get("pages",{}).values():
                   ii=(p.get("imageinfo") or [{}])[0]
                   out.write(f"{p['title']}\t{seen.get(p['title'],'')}\t{ii.get('width','')}\t{ii.get('height','')}\n")
-          open("art/dore/categories.tsv","w").write("\n".join(found)+"\n")
+          open("art/dore/categories.tsv","w").write("\n".join(found+errs[:50])+"\n")
+          for e in errs[:5]: print("::warning::"+e)
           print(len(titles),"files")
           PY
       - name: Commit
