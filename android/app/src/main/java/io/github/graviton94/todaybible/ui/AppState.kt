@@ -71,7 +71,14 @@ class AppState(val store: Store) {
     var fixedToday: LocalDate? = null
 
     val korean: Boolean get() = translation == Translation.KRV
-    val progress: Progress get() = Progress(fills.toList())
+    // 기록은 덧붙이기만 하므로 개수가 같으면 다시 셀 필요 없음 (화면마다 수백 번 부름)
+    private var cachedProgress: Progress? = null
+    private var cachedSize = -1
+    val progress: Progress get() {
+        val n = fills.size
+        cachedProgress?.takeIf { cachedSize == n }?.let { return it }
+        return Progress(fills.toList()).also { cachedProgress = it; cachedSize = n }
+    }
     fun today(): LocalDate = fixedToday ?: LocalDate.now()
     fun text(b: Int = book) = store.book(translation, b)
     /** 무료 네 권 밖은 평생권이 있어야 열림. Play 에 닿지 않는 곳(직접 설치 등)에서는 잠그지 않음. */
@@ -149,12 +156,18 @@ class AppState(val store: Store) {
     /** 다음 판화: 지금 권에서 이 장 뒤로 가장 가까운 것, 없으면 가장 많이 쓴 (아직 다 안 찬) 것. 남은 절 수와 함께. */
     fun nextPlate(): Pair<io.github.graviton94.todaybible.data.Plate, Int>? {
         val p = progress
+        // 시작한 권만 본문을 읽음 (나머지는 아직 한 절도 안 썼으니 남은 절 = 장 전체)
+        val started = startedBooks()
         fun left(pl: io.github.graviton94.todaybible.data.Plate): Int { val t = store.book(translation, pl.book); return t.fillable(pl.chapter).count { !p.isFilled(translation, VerseKey(pl.book, pl.chapter, it)) } }
-        val open = store.plates.filter { !locked(it.book) && left(it) > 0 }
+        val open = store.plates.filter { !locked(it.book) && (it.book !in started || left(it) > 0) }
         val here = open.filter { it.book == book && it.chapter >= chapter }.minByOrNull { it.chapter }
-        val pick = here ?: open.maxByOrNull { p.chapterFraction(translation, store.book(translation, it.book), it.chapter) } ?: return null
+        val pick = here ?: open.filter { it.book in started }.maxByOrNull { plateFraction(it) } ?: open.firstOrNull() ?: return null
         return pick to left(pick)
     }
+    fun startedBooks(): Set<Int> = progress.filled(translation).map { VerseKey(it).book }.toSet()
+    /** 판화 장의 완성도 (시작 안 한 권은 0, 본문을 읽지 않음). */
+    fun plateFraction(pl: io.github.graviton94.todaybible.data.Plate, started: Set<Int> = startedBooks()): Float =
+        if (pl.book !in started) 0f else progress.chapterFraction(translation, store.book(translation, pl.book), pl.chapter)
 
     fun setReminder(h: Int) { reminderHour = h; store.reminderHour = h; io.github.graviton94.todaybible.data.Reminder.schedule(store.context, h) }
 

@@ -99,7 +99,7 @@ fun HomePage(s: AppState) {
         WeekStamps(s)
         // 다음 판화
         s.nextPlate()?.let { (pl, left) ->
-            val f = s.progress.chapterFraction(s.translation, s.store.book(s.translation, pl.book), pl.chapter)
+            val f = s.plateFraction(pl)
             val n = Pieces.revealed(f); val order = remember(pl.id) { Pieces.order(pl.id.hashCode()) }.take(n).toSet()
             val img = rememberPlate(pl.id, small = true)
             Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.plateView = pl }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {

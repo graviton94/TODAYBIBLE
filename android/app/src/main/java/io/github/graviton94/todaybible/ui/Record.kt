@@ -126,7 +126,7 @@ private fun DayCell(s: AppState, d: LocalDate, present: Boolean, today: Boolean,
 }
 
 /** 판화가 있는 장의 완성도 (0..1). */
-private fun plateFraction(s: AppState, p: Plate): Float = s.progress.chapterFraction(s.translation, s.text(p.book), p.chapter)
+private fun plateFraction(s: AppState, p: Plate): Float = s.plateFraction(p)
 
 /** 화첩: 판화마다 그 장을 쓴 만큼 조각이 드러남 (3×4 = 12조각). 누르면 그 장으로. */
 @Composable

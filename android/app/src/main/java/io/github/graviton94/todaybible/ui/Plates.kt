@@ -48,7 +48,7 @@ fun PlatePage(s: AppState, p: Plate) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     BackHandler { s.plateView = null }
     val t = s.store.book(s.translation, p.book)
-    val f = s.progress.chapterFraction(s.translation, t, p.chapter)
+    val f = s.plateFraction(p)
     val n = Pieces.revealed(f); val shown = remember(p.id) { Pieces.order(p.id.hashCode()) }.take(n).toSet()
     val img = rememberPlate(p.id)
     val ref = if (k) "${s.bookName(p.book)} ${p.chapter}:${p.verse}" else "${s.bookName(p.book)} ${p.chapter}:${p.verse}"
