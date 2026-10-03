@@ -297,7 +297,7 @@
     <string name="guide_start">Begin reading along</string>
     <string name="guide_again">Hear it again</string>
     <string name="guide_settings">Reading voice</string>
-    <string name="guide_toggle">A guide voice reads each verse first, then you read it</string>
+    <string name="guide_toggle">On the read-aloud page choose Read along (the voice reads first), Responsive (the voice and you take turns), or Read alone.</string>
     <string name="guide_none">This phone has no reading voice for this language yet. You can add one in the phone\'s text-to-speech settings.</string>
     <string name="guide_install">Open text-to-speech settings</string>
     <string name="guide_q_high">natural</string>
@@ -307,4 +307,25 @@
     <string name="guide_preview">Hear a sample (Psalm 23:1)</string>
     <string name="guide_ai_sample">Compare: AI narration sample (Psalm 23)</string>
     <string name="guide_ai_stop">Stop the sample</string>
+    <string name="missed_n">%1$d word(s) not caught · moving on shortly</string>
+    <string name="missed_listen">Hear them</string>
+    <string name="missed_again">Read again</string>
+    <string name="missed_fill">Fill as is</string>
+    <string name="resp_mode">Responsive</string>
+    <string name="resp_guide">Leader reads</string>
+    <string name="resp_you">Your verse</string>
+    <string name="resp_start">Begin responsive reading</string>
+    <string name="aloud_big">Large</string>
+    <string name="verse_n">Verse %1$d</string>
+    <string name="minutes_n">%1$d min</string>
+    <string name="aloud_today">read aloud today</string>
+    <string name="aloud_week">This week · %1$d min</string>
+    <string name="gift_send">Send my reading to family</string>
+    <string name="gift_title">%1$s %2$d, in my voice</string>
+    <string name="gift_title_named">%2$s %3$d, read by %1$s</string>
+    <string name="view_grid">Grid</string>
+    <string name="grid_hint">One letter to a square. Tap to type.</string>
+    <string name="reminder_aloud">Read along</string>
+    <string name="hand_phrase">One phrase</string>
+    <string name="hand_whole">Whole verse</string>
 </resources>

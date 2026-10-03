@@ -297,7 +297,7 @@
     <string name="guide_start">함께 읽기 시작</string>
     <string name="guide_again">다시 듣기</string>
     <string name="guide_settings">낭독 목소리</string>
-    <string name="guide_toggle">가이드 목소리가 한 절을 먼저 읽고, 이어서 내가 읽어요</string>
+    <string name="guide_toggle">낭독 화면에서 함께 읽기(목소리가 먼저) · 교독(목소리와 한 절씩 주고받기) · 혼자 읽기를 고를 수 있어요.</string>
     <string name="guide_none">이 폰에 한국어 읽기 목소리가 아직 없어요. 폰의 ‘텍스트 음성 변환’ 설정에서 받을 수 있어요.</string>
     <string name="guide_install">텍스트 음성 변환 설정 열기</string>
     <string name="guide_q_high">자연스러운 목소리</string>
@@ -307,4 +307,25 @@
     <string name="guide_preview">미리 듣기 (시편 23:1)</string>
     <string name="guide_ai_sample">견주어 듣기: AI 낭독 견본 (시편 23편)</string>
     <string name="guide_ai_stop">견본 멈추기</string>
+    <string name="missed_n">놓친 낱말 %1$d개 · 곧 다음 절로 넘어가요</string>
+    <string name="missed_listen">이 낱말 듣기</string>
+    <string name="missed_again">다시 읽기</string>
+    <string name="missed_fill">이대로 채우기</string>
+    <string name="resp_mode">교독</string>
+    <string name="resp_guide">인도 · 들어요</string>
+    <string name="resp_you">회중 · 내 차례예요</string>
+    <string name="resp_start">교독 시작</string>
+    <string name="aloud_big">큰 글씨</string>
+    <string name="verse_n">%1$d절</string>
+    <string name="minutes_n">%1$d분</string>
+    <string name="aloud_today">오늘 소리 내어 읽었어요</string>
+    <string name="aloud_week">이번 이레 · %1$d분</string>
+    <string name="gift_send">가족에게 보내기</string>
+    <string name="gift_title">내 목소리로 읽은 %1$s %2$d장</string>
+    <string name="gift_title_named">%1$s님이 읽어 주는 %2$s %3$d장</string>
+    <string name="view_grid">원고지</string>
+    <string name="grid_hint">한 칸에 한 글자씩. 누르면 써요.</string>
+    <string name="reminder_aloud">함께 읽기</string>
+    <string name="hand_phrase">구절만</string>
+    <string name="hand_whole">절 전체</string>
 </resources>

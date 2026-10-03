@@ -72,13 +72,22 @@ class AppState(val store: Store) {
     /** 손글씨 펜 · 밑글씨 · 쓰는 감각 · 밤 필사. */
     var pen by mutableStateOf(store.pen)
     var handGuide by mutableStateOf(store.handGuide)
+    var handPhrase by mutableStateOf(store.handPhrase)
+    fun flipHandPhrase() { handPhrase = !handPhrase; store.handPhrase = handPhrase }
     var penSound by mutableStateOf(store.penSound)
     var paperHaptic by mutableStateOf(store.paperHaptic)
     var candle by mutableStateOf(store.candle)
-    var aloudGuide by mutableStateOf(store.aloudGuide)
+    var aloudMode by mutableStateOf(store.aloudMode)
+    var aloudBig by mutableStateOf(store.aloudBig)
+    /** 날마다 소리 내어 읽은 시간 (초). */
+    var aloudLog by mutableStateOf(store.loadAloud())
+    /** 아침 알림의 ‘함께 읽기’로 열었을 때: 낭독을 곧바로 시작. */
+    var aloudNow by mutableStateOf(false)
+    fun chooseAloudMode(i: Int) { aloudMode = i; store.aloudMode = i }
+    fun flipAloudBig() { aloudBig = !aloudBig; store.aloudBig = aloudBig }
+    fun addAloud(secs: Int) { val d = today().toEpochDay(); aloudLog = aloudLog + (d to (aloudLog[d] ?: 0) + secs); store.saveAloud(aloudLog) }
     var aloudSpeed by mutableStateOf(store.aloudSpeed)
     var guideVoice by mutableStateOf(store.guideVoice)
-    fun flipAloudGuide() { aloudGuide = !aloudGuide; store.aloudGuide = aloudGuide }
     fun chooseAloudSpeed(i: Int) { aloudSpeed = i; store.aloudSpeed = i }
     fun chooseGuideVoice(n: String) { guideVoice = n; store.guideVoice = n }
     /** 낭독 빠르기 (1 = 보통). */
@@ -139,7 +148,10 @@ class AppState(val store: Store) {
     fun requestNotes(b: Int?) { if (gated()) purchaseOpen = true else notesBook = b ?: -1 }
     fun requestPdf(b: Int) { if (!lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)) purchaseOpen = true else pdfBook = b }
     fun setGoal(g: Int) { dailyGoal = g; store.dailyGoal = g }
-    fun toggleNotebook() { notebook = !notebook; store.notebook = notebook }
+    fun toggleNotebook() { notebook = !notebook; store.notebook = notebook; typeView = if (notebook) 1 else 0; store.typeView = typeView }
+    /** 타자 보기: 0 책 · 1 노트 · 2 원고지. */
+    var typeView by mutableStateOf(store.typeView)
+    fun chooseTypeView(v: Int) { typeView = v; store.typeView = v; notebook = v == 1; store.notebook = notebook }
     fun finishOnboarding(startBook: Int, startChapter: Int) {
         onboarded = true; store.onboarded = true
         book = startBook; chapter = startChapter; target = null; store.setBookmark(translation, startBook, startChapter); page = 1

@@ -146,6 +146,73 @@ object Voice {
     }
 
     /** 이 장의 절 녹음을 이어 붙여 소리 파일 하나로 (다시 부호화하지 않음). */
+    /**
+     * 가이드 목소리가 읽은 절 (교독): 읽기 엔진이 만든 WAV 를 내 녹음과 같은 결 (32kHz 모노 AAC) 로 바꿔 그 절 자리에 둬요.
+     * 그래야 장 전체를 이어 붙였을 때 가이드 · 내 목소리가 차례대로 이어져요.
+     */
+    fun encodeWav(wav: File, out: File): Boolean = runCatching {
+        val b = ByteBuffer.wrap(wav.readBytes()).order(ByteOrder.LITTLE_ENDIAN)
+        var rate = 0; var ch = 1; var bits = 16; var data: ShortArray? = null
+        b.position(12)
+        while (b.remaining() >= 8) {
+            val id = ByteArray(4).also { b.get(it) }.toString(Charsets.US_ASCII); val len = b.int
+            val at = b.position()
+            when (id) {
+                "fmt " -> { b.short; ch = b.short.toInt(); rate = b.int; b.int; b.short; bits = b.short.toInt() }
+                "data" -> { val n = minOf(len, b.remaining()) / 2; data = ShortArray(n).also { b.asShortBuffer().get(it) } }
+            }
+            b.position(minOf(b.limit(), at + len + (len and 1)))
+        }
+        val src = data ?: return false
+        if (bits != 16 || rate <= 0) return false
+        // 모노로 · 32kHz 로 (선형 보간)
+        val mono = if (ch == 1) src else ShortArray(src.size / ch) { i -> (0 until ch).sumOf { src[i * ch + it].toInt() }.div(ch).toShort() }
+        val n = (mono.size.toLong() * RATE / rate).toInt()
+        val pcm = ByteBuffer.allocate(n * 2).order(ByteOrder.LITTLE_ENDIAN)
+        for (i in 0 until n) {
+            val x = i.toDouble() * rate / RATE; val k = x.toInt().coerceAtMost(mono.size - 1); val f = x - k
+            val a = mono[k].toInt(); val c = mono[minOf(k + 1, mono.size - 1)].toInt()
+            pcm.putShort((a + (c - a) * f).toInt().toShort())
+        }
+        val bytes = pcm.array()
+        out.parentFile?.mkdirs()
+        val fmt = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, RATE, 1).apply {
+            setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
+            setInteger(MediaFormat.KEY_BIT_RATE, BITRATE); setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 16384)
+        }
+        val enc = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC)
+        enc.configure(fmt, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE); enc.start()
+        val tmp = File(out.path + ".part")
+        val mux = MediaMuxer(tmp.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+        var track = -1; var started = false; val info = MediaCodec.BufferInfo()
+        fun drain(end: Boolean) {
+            while (true) {
+                val i = enc.dequeueOutputBuffer(info, if (end) 10_000 else 0)
+                if (i == MediaCodec.INFO_TRY_AGAIN_LATER) { if (!end) return else continue }
+                if (i == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) { track = mux.addTrack(enc.outputFormat); mux.start(); started = true; continue }
+                if (i < 0) continue
+                val buf = enc.getOutputBuffer(i)!!
+                if (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0) info.size = 0
+                if (info.size > 0 && started) { buf.position(info.offset); buf.limit(info.offset + info.size); mux.writeSampleData(track, buf, info) }
+                enc.releaseOutputBuffer(i, false)
+                if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) return
+            }
+        }
+        var off = 0
+        while (off < bytes.size) {
+            val ii = enc.dequeueInputBuffer(10_000); if (ii < 0) { drain(false); continue }
+            val ib = enc.getInputBuffer(ii)!!; ib.clear()
+            val len = minOf(ib.remaining(), bytes.size - off); ib.put(bytes, off, len)
+            enc.queueInputBuffer(ii, 0, len, (off / 2).toLong() * 1_000_000L / RATE, 0); off += len
+            drain(false)
+        }
+        val ii = enc.dequeueInputBuffer(10_000)
+        if (ii >= 0) enc.queueInputBuffer(ii, 0, 0, (bytes.size / 2).toLong() * 1_000_000L / RATE, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+        drain(true)
+        runCatching { enc.stop() }; enc.release(); runCatching { if (started) mux.stop() }; runCatching { mux.release() }
+        if (started) tmp.renameTo(out) else { tmp.delete(); false }
+    }.getOrDefault(false)
+
     fun exportAudio(parts: List<File>, out: File): Boolean = runCatching {
         out.parentFile?.mkdirs()
         val mux = MediaMuxer(out.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)

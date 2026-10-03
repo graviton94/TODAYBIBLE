@@ -18,6 +18,10 @@ class GuideVoice(ctx: Context, private val korean: Boolean, private val preferre
     @Volatile var ready = false; private set
     @Volatile var voices: List<Voice> = emptyList(); private set
     private var onReady: (() -> Unit)? = null
+    @Volatile private var curId: String? = null
+    @Volatile private var curRange: ((Int, Int) -> Unit)? = null
+    @Volatile private var curDone: (() -> Unit)? = null
+    private val pending = java.util.concurrent.ConcurrentHashMap<String, (Boolean) -> Unit>()
 
     init {
         tts = TextToSpeech(ctx.applicationContext) { status ->
@@ -31,6 +35,13 @@ class GuideVoice(ctx: Context, private val korean: Boolean, private val preferre
             if (pick != null) t.voice = pick else t.language = if (korean) Locale.KOREAN else Locale.ENGLISH
             t.setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build())
             t.setPitch(PITCH)
+            t.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                override fun onStart(u: String?) {}
+                override fun onRangeStart(u: String?, start: Int, end: Int, frame: Int) { if (u == curId) curRange?.invoke(start, end) }
+                override fun onDone(u: String?) { if (u == curId) curDone?.invoke(); u?.let { pending.remove(it) }?.invoke(true) }
+                @Deprecated("") override fun onError(u: String?) { if (u == curId) curDone?.invoke(); u?.let { pending.remove(it) }?.invoke(false) }
+                override fun onStop(u: String?, interrupted: Boolean) { u?.let { pending.remove(it) }?.invoke(false) }
+            })
             ready = pick != null || t.isLanguageAvailable(if (korean) Locale.KOREAN else Locale.ENGLISH) >= TextToSpeech.LANG_AVAILABLE
             onReady?.invoke()
         }
@@ -50,17 +61,21 @@ class GuideVoice(ctx: Context, private val korean: Boolean, private val preferre
         val t = tts ?: return
         t.setSpeechRate(rate * BASE_RATE)
         val id = "v${System.nanoTime()}"
-        t.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-            override fun onStart(u: String?) {}
-            override fun onRangeStart(u: String?, start: Int, end: Int, frame: Int) { if (u == id) onRange(start, end) }
-            override fun onDone(u: String?) { if (u == id) onDone() }
-            @Deprecated("") override fun onError(u: String?) { if (u == id) onDone() }
-            override fun onStop(u: String?, interrupted: Boolean) {}
-        })
+        curId = id; curRange = onRange; curDone = onDone
         t.speak(text, TextToSpeech.QUEUE_FLUSH, Bundle(), id)
     }
 
-    fun stop() { runCatching { tts?.stop() } }
+    /** 같은 목소리 · 빠르기로 WAV 파일 만들기 (교독 녹음용). 다 되면 onDone(성공). */
+    fun synthesize(text: String, rate: Float, out: java.io.File, onDone: (Boolean) -> Unit) {
+        val t = tts ?: return onDone(false)
+        t.setSpeechRate(rate * BASE_RATE)
+        val id = "f${System.nanoTime()}"
+        pending[id] = onDone
+        out.parentFile?.mkdirs()
+        if (t.synthesizeToFile(text, Bundle(), out, id) != TextToSpeech.SUCCESS) { pending.remove(id); onDone(false) }
+    }
+
+    fun stop() { curId = null; runCatching { tts?.stop() } }
     fun release() { runCatching { tts?.stop(); tts?.shutdown() }; tts = null }
 
     companion object {

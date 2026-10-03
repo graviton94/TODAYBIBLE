@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -62,6 +64,7 @@ fun RecordPage(s: AppState) {
         RunningHead(stringResource(R.string.page_record), stringResource(R.string.presence_n, Presence.total(days)), k)
         yearShown(s)?.let { YearCard(s, it) }
         Stats(s)
+        if (s.aloudLog.isNotEmpty()) AloudTime(s)
         YearStamps(s)
         PresenceMonth(s, days)
         if (s.marks.isNotEmpty()) {
@@ -354,5 +357,32 @@ private fun YearCard(s: AppState, year: Int) {
         BookButton(stringResource(R.string.year_share), Modifier.fillMaxWidth().padding(top = Tokens.Space.s2), quiet = true) {
             Cards.share(ctx, Cards.year(ctx, k, title, big, lines), "year_$year")
         }
+    }
+}
+
+/** 소리 내어 읽은 시간 (U2): 오늘 몇 분 · 이번 이레 막대. */
+@Composable
+private fun AloudTime(s: AppState) {
+    val c = Theme.c; val k = s.korean
+    val today = s.today().toEpochDay()
+    val week = (6 downTo 0).map { today - it }.map { s.aloudLog[it] ?: 0 }
+    val max = week.maxOrNull()?.coerceAtLeast(60) ?: 60
+    val names = stringResource(R.string.weekdays)
+    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            Text(stringResource(R.string.minutes_n, (week.last() + 30) / 60), style = Theme.title(k, Tokens.Text.display), maxLines = 1)
+            Text(stringResource(R.string.aloud_today), style = Theme.small(), maxLines = 1, modifier = Modifier.padding(bottom = Tokens.Space.s2))
+        }
+        Row(Modifier.fillMaxWidth().height(Tokens.Size.aloudBars), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2), verticalAlignment = Alignment.Bottom) {
+            week.forEachIndexed { i, secs ->
+                Column(Modifier.weight(1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
+                    Box(Modifier.fillMaxWidth().fillMaxHeight((secs.toFloat() / max).coerceIn(0.03f, 1f) * Tokens.Ratio.barMax).clip(RoundedCornerShape(Tokens.Radius.chip))
+                        .background(if (i == 6) c.rubric else c.rubric.copy(alpha = Tokens.Alpha.rest)))
+                    val d = java.time.LocalDate.ofEpochDay(today - 6 + i)
+                    Text(names[d.dayOfWeek.value % 7].toString(), style = Theme.small(), maxLines = 1)
+                }
+            }
+        }
+        Text(stringResource(R.string.aloud_week, (week.sum() + 30) / 60), style = Theme.small())
     }
 }

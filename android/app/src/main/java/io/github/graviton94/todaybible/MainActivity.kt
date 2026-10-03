@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
         s.lifetime.connect()
         if (BuildConfig.DEV_TOOLS) debugSetup(s, intent)
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; s.opening = false }
+        openAloud(s, intent)
         if (store.reminderHour >= 0) io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
         setContent {
             val dark = s.night || when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK -> true }
@@ -79,6 +80,18 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { state?.page = it }
+        state?.let { openAloud(it, intent) }
+    }
+
+    /** 아침 알림의 ‘함께 읽기’: 그 절로 열고 낭독을 곧바로. */
+    private fun openAloud(s: AppState, i: Intent) {
+        if (!i.getBooleanExtra("aloud", false)) return
+        i.removeExtra("aloud")
+        getSystemService(android.app.NotificationManager::class.java)?.cancel(io.github.graviton94.todaybible.data.Reminder.ID)
+        val b = i.getIntExtra("at_b", -1); val c = i.getIntExtra("at_c", -1); val v = i.getIntExtra("at_v", -1)
+        s.opening = false
+        if (b >= 0 && c > 0) { s.open(b, c); if (v > 0) s.target = v }
+        s.store.copyTab = 0; s.page = 1; s.aloudNow = true
     }
 
     /**

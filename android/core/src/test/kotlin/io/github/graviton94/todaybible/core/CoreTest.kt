@@ -145,5 +145,15 @@ class CoreTest {
         assertEquals(null, Reference.parse("요 30:1"))
         assertEquals(null, Reference.parse("안녕"))
     }
-}
 
+    @Test fun reciteMissedAndPhrases() {
+        val v = "그가 나를 푸른 초장에 누이시며 쉴만한 물 가으로 인도하시는도다"
+        assertTrue(Recite.missed(v, v).isEmpty())
+        val miss = Recite.missed(v, "그가 나를 푸른 초장에 누이시며 쉴만한 인도하시는도다")
+        assertTrue(miss.any { v.substring(it.first, it.last + 1) == "가으로" })
+        val ps = Recite.phrases(v).map { v.substring(it.first, it.last + 1) }
+        assertEquals(v.replace(" ", ""), ps.joinToString("").replace(" ", ""))
+        assertTrue(ps.size >= 2)
+        assertTrue(ps.first().endsWith("누이시며"))
+    }
+}

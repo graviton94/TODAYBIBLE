@@ -24,7 +24,7 @@ import java.time.ZoneId
  */
 object Reminder {
     private const val CHANNEL = "daily_verse"
-    private const val ID = 7
+    const val ID = 7
 
     fun schedule(ctx: Context, hour: Int) {
         val am = ctx.getSystemService(AlarmManager::class.java)
@@ -56,7 +56,13 @@ object Reminder {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val body = Markup.plain(text.verse(ch, v))
         val n = android.app.Notification.Builder(ctx, CHANNEL).setSmallIcon(R.drawable.ic_stat_cross).setContentTitle(title).setContentText(body)
-            .setStyle(android.app.Notification.BigTextStyle().bigText(body)).setContentIntent(open).setAutoCancel(true).build()
+            .setStyle(android.app.Notification.BigTextStyle().bigText(body)).setContentIntent(open).setAutoCancel(true)
+            // 함께 읽기 (Y1): 누르면 앱이 그 절로 열리고 가이드 목소리가 곧바로 읽기 시작
+            .addAction(android.app.Notification.Action.Builder(android.graphics.drawable.Icon.createWithResource(ctx, R.drawable.ic_stat_cross), ctx.getString(R.string.reminder_aloud),
+                PendingIntent.getActivity(ctx, 2, Intent(ctx, MainActivity::class.java).putExtra("page", 1).putExtra("aloud", true)
+                    .putExtra("at_b", b).putExtra("at_c", ch).putExtra("at_v", v).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+                    PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)).build())
+            .build()
         runCatching { nm.notify(ID, n) }
     }
 }

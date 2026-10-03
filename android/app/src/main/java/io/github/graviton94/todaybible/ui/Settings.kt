@@ -258,7 +258,7 @@ private fun GuideVoiceSettings(s: AppState) {
     var list by remember(guide) { mutableStateOf<List<android.speech.tts.Voice>>(emptyList()) }
     var ready by remember(guide) { mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(guide) { guide.whenReady { main.post { list = guide.voices; ready = true } } }
-    ChoiceRow(stringResource(R.string.guide_toggle), s.aloudGuide) { s.flipAloudGuide() }
+    Text(stringResource(R.string.guide_toggle), style = Theme.small())
     if (ready && list.isEmpty()) {
         Text(stringResource(R.string.guide_none), style = Theme.small())
         BookButton(stringResource(R.string.guide_install), Modifier.fillMaxWidth(), quiet = true) {

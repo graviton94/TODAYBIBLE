@@ -74,7 +74,7 @@ import kotlin.math.min
  * 펜(M1): 만년필(기본) · 붓펜 · 연필(평생권). 펜을 쓰면 누르는 힘으로, 손가락이면 빠르기로 굵기가 달라져요.
  * 쓰는 감각(Q1): 긋는 빠르기만큼 사각사각 · 손끝에 아주 약한 종이 결. 펜이 닿은 뒤로는 손바닥 닿음은 무시.
  */
-@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun HandTab(s: AppState, verse: Int) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current; val haptic = LocalHapticFeedback.current
@@ -88,7 +88,11 @@ fun HandTab(s: AppState, verse: Int) {
     var padH by remember { mutableIntStateOf(1) }
     val feel = remember { io.github.graviton94.todaybible.data.PenFeel(ctx.applicationContext) }
     androidx.compose.runtime.DisposableEffect(Unit) { onDispose { feel.release() } }
-    val plain = Markup.plain(s.text().verse(s.chapter, verse))
+    val full = Markup.plain(s.text().verse(s.chapter, verse))
+    // 마음에 닿은 구절만 (X1): 숨 쉴 자리로 나눈 구절 가운데 고른 것만 써요 (처음엔 첫 구절). 고른 구절들은 이어진 한 덩이.
+    val parts = remember(full) { io.github.graviton94.todaybible.core.Recite.phrases(full) }
+    var pick by remember(key) { mutableStateOf(0..0) }
+    val plain = if (s.handPhrase && parts.isNotEmpty()) full.substring(parts[pick.first.coerceIn(parts.indices)].first, parts[pick.last.coerceIn(parts.indices)].last + 1) else full
     val ink = if (s.pen == Ink.PENCIL) c.graphite else c.penInk
     val measurer = rememberTextMeasurer()
     val dens = LocalDensity.current
@@ -123,7 +127,33 @@ fun HandTab(s: AppState, verse: Int) {
                 modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Switch) { s.flipGuide() })
         }
         // 밑글씨가 없으면 위에 본문, 있으면 절 번호만
-        if (s.handGuide) Text(stringResource(R.string.hand_where, verse, sheet + 1, maxOf(sheetsNeeded, sheet + 1)), style = Theme.small().copy(color = c.rubric), maxLines = 1)
+        // 구절만 · 절 전체
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            listOf(true to R.string.hand_phrase, false to R.string.hand_whole).forEach { (v, id) ->
+                Text(stringResource(id), style = Theme.small().copy(color = if (s.handPhrase == v) c.rubric else c.inkSoft), maxLines = 1,
+                    modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.RadioButton) { if (s.handPhrase != v) s.flipHandPhrase() })
+            }
+        }
+        if (s.handPhrase && parts.size > 1 && strokes.isEmpty() && earlier.isEmpty()) {
+            // 구절 고르기: 누르면 그 구절, 이어서 다른 구절을 누르면 그 사이까지
+            Text(buildAnnotatedString {
+                withStyle(SpanStyle(color = c.rubric)) { append("$verse ") }
+                parts.forEachIndexed { i, r ->
+                    withStyle(SpanStyle(color = if (i in pick) c.ink else c.unwritten, background = if (i in pick) c.mark else androidx.compose.ui.graphics.Color.Unspecified)) { append(full.substring(r.first, r.last + 1)) }
+                    if (i < parts.lastIndex) append(" ")
+                }
+            }, style = Theme.verse(k), modifier = Modifier.fillMaxWidth().heightIn(max = Tokens.Size.handModel).verticalScroll(rememberScrollState()))
+            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                parts.forEachIndexed { i, r ->
+                    val on = i in pick
+                    Text(full.substring(r.first, r.last + 1), style = Theme.small().copy(color = if (on) c.leatherInk else c.ink), maxLines = 1,
+                        modifier = Modifier.heightIn(min = Tokens.Size.tab).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (on) c.leather else c.paper)
+                            .clickable(role = Role.Button) { pick = if (i in pick && pick.first == pick.last) i..i else if (i < pick.first) i..pick.last else if (i > pick.last) pick.first..i else i..i }
+                            .padding(horizontal = Tokens.Space.s3).wrapContentHeight())
+                }
+            }
+        }
+        else if (s.handGuide) Text(stringResource(R.string.hand_where, verse, sheet + 1, maxOf(sheetsNeeded, sheet + 1)), style = Theme.small().copy(color = c.rubric), maxLines = 1)
         else Box(Modifier.fillMaxWidth().heightIn(max = Tokens.Size.handModel).verticalScroll(rememberScrollState())) {
             Text(buildAnnotatedString { withStyle(SpanStyle(color = c.rubric)) { append("$verse ") }; append(plain) }, style = Theme.verse(k))
         }

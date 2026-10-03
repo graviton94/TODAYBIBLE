@@ -77,6 +77,9 @@ object Tokens {
         val hiddenField = 1.dp
         val widgetRing = 64.dp
         val grain = 14.dp
+        val aloudBox = 200.dp
+        val aloudBars = 84.dp
+        val gridCell = 34.dp
     }
     object Text {
         val verse = 21.sp
@@ -103,6 +106,8 @@ object Tokens {
         val gridInitial = 20.sp
         val guide = 40.sp
         val hint = 20.sp
+        val aloudBig = 30.sp
+        val gridChar = 20.sp
     }
     /** 표지 가죽 (나의 성경 꾸미기). */
     object Covers {
@@ -136,6 +141,8 @@ object Tokens {
         const val turnMs = 520
         const val aloudSlow = 0.85f
         const val aloudFast = 1.3f
+        const val reviewMs = 4000
+        const val tickMs = 90
     }
     object Ratio {
         const val plateAspect = 0.766f
@@ -150,6 +157,7 @@ object Tokens {
         const val welcomeArt = 1.25f
         const val initialFinish = 1.25f
         const val heatGap = 0.18f
+        const val barMax = 0.8f
     }
     object Alpha {
         const val faint = 0.5f

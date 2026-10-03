@@ -62,6 +62,55 @@ object Recite {
         val covered = plain.take(lit(plain, heard)).count(::keep)
         return covered >= n - maxOf(LOOK, n / 12)
     }
+    /**
+     * 본문 글자마다 알아들었는지 (lit 과 같은 맞춤). 글자가 아닌 자리(띄어쓰기 · 문장부호)는 true.
+     */
+    fun matched(plain: String, heard: String): BooleanArray {
+        val h = heard.filter(::keep).lowercase()
+        val idx = plain.indices.filter { keep(plain[it]) }
+        val t = idx.map { plain[it].lowercaseChar() }
+        val ok = BooleanArray(plain.length) { !keep(plain[it]) }
+        var j = 0; var misses = 0
+        for (i in t.indices) {
+            if (j >= h.length) break
+            var found = -1
+            for (d in 0..LOOK) if (j + d < h.length && h[j + d] == t[i]) { found = j + d; break }
+            if (found >= 0) { j = found + 1; ok[idx[i]] = true; misses = 0 } else if (++misses > SKIP) break
+        }
+        return ok
+    }
+
+    /** 알아듣지 못한 낱말들 (본문 안의 [시작, 끝) 자리). 낱말 글자의 절반 넘게 놓쳤으면 놓친 낱말. */
+    fun missed(plain: String, heard: String): List<IntRange> {
+        val ok = matched(plain, heard)
+        return Regex("\\S+").findAll(plain).map { it.range }.filter { r ->
+            val letters = r.filter { keep(plain[it]) }
+            letters.isNotEmpty() && letters.count { !ok[it] } * 2 > letters.size
+        }.toList()
+    }
+
+    /**
+     * 숨 쉴 자리로 나눈 구절들: 이어지는 말끝(~며 · ~고 · ~니 …)에서 끊고, 너무 짧은 토막은 붙임.
+     * 큰 글씨 한 줄 낭독 · 구절만 손으로 · 가이드 목소리의 쉼에 같이 써요. 각 구절은 본문 안의 [시작, 끝).
+     */
+    fun phrases(plain: String, min: Int = 9): List<IntRange> {
+        val words = Regex("\\S+").findAll(plain).map { it.range }.toList()
+        val out = ArrayList<IntRange>(); var start = -1
+        for ((n, w) in words.withIndex()) {
+            if (start < 0) start = w.first
+            val word = plain.substring(w.first, w.last + 1).trimEnd(',', '.', ';', ':', '?', '!')
+            val len = plain.substring(start, w.last + 1).count(::keep)
+            val brk = plain[w.last] in ",;:.?!" || (CONT.containsMatchIn(word) && len >= min)
+            if (brk || n == words.lastIndex) { out.add(start..w.last); start = -1 }
+        }
+        // 끝 토막이 너무 짧으면 앞에 붙임
+        if (out.size >= 2 && plain.substring(out.last().first, out.last().last + 1).count(::keep) < 5) {
+            val last = out.removeAt(out.lastIndex); out[out.lastIndex] = out.last().first..last.last
+        }
+        return out
+    }
+    private val CONT = Regex("(며|고|니|되|나|여|서|면|매|요|라|은|는|도)$")
+
     private const val LOOK = 3
     /** 옛말 어미처럼 알아듣기가 자주 놓치는 글자를 몇 개까지 건너뛰어도 따라갈지. */
     private const val SKIP = 6

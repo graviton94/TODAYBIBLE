@@ -78,6 +78,10 @@ class Store(val context: Context) {
     var notebook: Boolean
         get() = prefs.getBoolean("notebook", false)
         set(v) = prefs.edit().putBoolean("notebook", v).apply()
+    /** 타자 보기 (0 책 · 1 노트 · 2 원고지). 처음엔 원고지, 예전에 노트를 쓰던 분은 노트. */
+    var typeView: Int
+        get() = prefs.getInt("type_view", if (notebook) 1 else 2)
+        set(v) = prefs.edit().putInt("type_view", v).apply()
     /** 길잡이 (없으면 null) · 시작한 날. */
     var planId: String?
         get() = prefs.getString("plan", null)
@@ -119,6 +123,10 @@ class Store(val context: Context) {
     var pen: Int
         get() = prefs.getInt("pen", 0)
         set(v) = prefs.edit().putInt("pen", v).apply()
+    /** 손글씨는 마음에 닿은 구절만 (X1). */
+    var handPhrase: Boolean
+        get() = prefs.getBoolean("hand_phrase", true)
+        set(v) = prefs.edit().putBoolean("hand_phrase", v).apply()
     var handGuide: Boolean
         get() = prefs.getBoolean("hand_guide", true)
         set(v) = prefs.edit().putBoolean("hand_guide", v).apply()
@@ -138,15 +146,29 @@ class Store(val context: Context) {
         get() = prefs.getInt("copy_tab", 0)
         set(v) = prefs.edit().putInt("copy_tab", v).apply()
     /** 낭독: 가이드 목소리와 함께 읽기 · 빠르기 (0 천천히 · 1 보통 · 2 빠르게) · 고른 목소리. */
-    var aloudGuide: Boolean
-        get() = prefs.getBoolean("aloud_guide", true)
-        set(v) = prefs.edit().putBoolean("aloud_guide", v).apply()
+    var aloudMode: Int
+        get() = prefs.getInt("aloud_mode", 0)
+        set(v) = prefs.edit().putInt("aloud_mode", v).apply()
+    /** 큰 글씨 한 줄 낭독. */
+    var aloudBig: Boolean
+        get() = prefs.getBoolean("aloud_big", true)
+        set(v) = prefs.edit().putBoolean("aloud_big", v).apply()
     var aloudSpeed: Int
         get() = prefs.getInt("aloud_speed", 1)
         set(v) = prefs.edit().putInt("aloud_speed", v).apply()
     var guideVoice: String
         get() = prefs.getString("guide_voice", "")!!
         set(v) = prefs.edit().putString("guide_voice", v).apply()
+
+    /** 소리 내어 읽은 시간 (날 → 초). */
+    private val aloudFile get() = java.io.File(context.filesDir, "aloud.tsv")
+    fun loadAloud(): Map<Long, Int> = runCatching {
+        aloudFile.takeIf { it.exists() }?.readLines()?.mapNotNull { l -> l.split('\t').takeIf { it.size >= 2 }?.let { it[0].toLong() to it[1].toInt() } }?.toMap().orEmpty()
+    }.getOrDefault(emptyMap())
+    fun saveAloud(m: Map<Long, Int>) {
+        val tmp = java.io.File(aloudFile.path + ".tmp")
+        tmp.writeText(m.entries.sortedBy { it.key }.joinToString("") { "${it.key}\t${it.value}\n" }); tmp.renameTo(aloudFile)
+    }
 
     /** 형광펜 밑줄 (번역 · 절 · 그은 날). 파일 하나에 통째로. */
     data class Mark(val translation: Translation, val key: io.github.graviton94.todaybible.core.VerseKey, val epochDay: Long)

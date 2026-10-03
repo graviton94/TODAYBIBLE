@@ -44,6 +44,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -110,6 +111,7 @@ fun CopyPage(s: AppState) {
     val doneCount = fillable.count { p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) }
     // 낭독 · 타자 · 손글씨 (교인 인터뷰: 낭독을 가장 많이 씀). 마지막에 고른 방식으로 열려요.
     var tab by remember { mutableIntStateOf(s.store.copyTab) }
+    LaunchedEffect(s.aloudNow) { if (s.aloudNow) { tab = 0; s.store.copyTab = 0 } }
 
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
@@ -139,9 +141,9 @@ fun CopyPage(s: AppState) {
 private fun ViewToggle(s: AppState) {
     val c = Theme.c
     Row(Modifier.padding(start = Tokens.Space.s3).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper)) {
-        listOf(false to R.string.view_book, true to R.string.view_note).forEach { (note, id) ->
-            val on = s.notebook == note
-            Box(Modifier.heightIn(min = Tokens.Size.tab).clickable(role = Role.Tab) { if (!on) s.toggleNotebook() }
+        listOf(0 to R.string.view_book, 1 to R.string.view_note, 2 to R.string.view_grid).forEach { (v, id) ->
+            val on = s.typeView == v
+            Box(Modifier.heightIn(min = Tokens.Size.tab).clickable(role = Role.Tab) { if (!on) s.chooseTypeView(v) }
                 .background(if (on) c.leather else androidx.compose.ui.graphics.Color.Transparent).padding(horizontal = Tokens.Space.s3), contentAlignment = Alignment.Center) {
                 Text(stringResource(id), style = Theme.small().copy(color = if (on) c.leatherInk else c.inkSoft), maxLines = 1)
             }
@@ -178,8 +180,11 @@ private fun WritePage(s: AppState, verse: Int?) {
     fun write() { focus.requestFocus(); keyboard?.show() }
 
     Box(Modifier.fillMaxSize()) {
-        if (s.notebook) NotebookView(s, verse, source, value.text, marks) { write() }
-        else BookView(s, verse, marks, sealed) { write() }
+        when (s.typeView) {
+            1 -> NotebookView(s, verse, source, value.text, marks) { write() }
+            2 -> GridView(s, verse, source, marks) { write() }
+            else -> BookView(s, verse, marks, sealed) { write() }
+        }
         // 숨은 입력칸: 붙여넣기 · 자동완성으로 한꺼번에 들어온 글은 받지 않음 (한 자씩 옮겨 쓰기)
         BasicTextField(
             value = value,
@@ -228,6 +233,59 @@ private fun BookView(s: AppState, current: Int?, marks: List<TypeJudge.Mark>, se
             }
         }
         if (chapterDone) item { ChapterDoneNote(s) }
+    }
+}
+
+/**
+ * 원고지 보기 (W1): 위에 옮겨 쓸 절, 아래 원고지 칸에 한 칸에 한 글자씩. 띄어쓰기는 빈 칸.
+ * 맞게 쓴 글자가 칸에 놓일 때마다 펜 소리 한 번 · 아주 약한 결. 지금 쓸 칸 밑에 붉은 줄.
+ */
+@Composable
+private fun GridView(s: AppState, verse: Int?, source: String, marks: List<TypeJudge.Mark>, onWrite: () -> Unit) {
+    val c = Theme.c; val ctx = LocalContext.current; val view = androidx.compose.ui.platform.LocalView.current
+    if (verse == null) { Box(Modifier.padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) { ChapterDoneNote(s) }; return }
+    val plain = Markup.plain(source)
+    val feel = remember { io.github.graviton94.todaybible.data.PenFeel(ctx.applicationContext) }
+    DisposableEffect(Unit) { onDispose { feel.release() } }
+    val ok = marks.count { it == TypeJudge.Mark.OK }
+    LaunchedEffect(ok) {
+        if (ok > 0) {
+            if (s.penSound) { feel.speed(0.7f); delay(Tokens.Motion.tickMs.toLong()); feel.speed(0f) }
+            if (s.paperHaptic) view.performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK)
+        }
+    }
+    val cursor = marks.indexOfFirst { it == TypeJudge.Mark.PENDING }
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).clickable(remember { MutableInteractionSource() }, null) { onWrite() }
+        .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+        VerseText(s, verse, source, faint = true)
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val cols = (maxWidth / Tokens.Size.gridCell).toInt().coerceAtLeast(6)
+            val cell = maxWidth / cols
+            Column(Modifier.drawBehind {
+                drawLine(c.rubric.copy(alpha = Tokens.Alpha.faint), Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx())
+                drawLine(c.rubric.copy(alpha = Tokens.Alpha.faint), Offset.Zero, Offset(0f, size.height), Tokens.Stroke.hair.toPx())
+            }) {
+                plain.indices.chunked(cols).forEach { row ->
+                    Row {
+                        (0 until cols).forEach { j ->
+                            val i = row.getOrNull(j)
+                            val m = i?.let { marks.getOrNull(it) }
+                            Box(Modifier.size(cell).drawBehind {
+                                val w = Tokens.Stroke.hair.toPx(); val line = c.rubric.copy(alpha = Tokens.Alpha.faint)
+                                drawLine(line, Offset(size.width, 0f), Offset(size.width, size.height), w)
+                                drawLine(line, Offset(0f, size.height), Offset(size.width, size.height), w)
+                                if (i != null && i == cursor) drawLine(c.rubric, Offset(size.width * 0.2f, size.height - Tokens.Stroke.rule.toPx() * 2), Offset(size.width * 0.8f, size.height - Tokens.Stroke.rule.toPx() * 2), Tokens.Stroke.rule.toPx())
+                            }, contentAlignment = Alignment.Center) {
+                                if (i != null && plain[i] != ' ' && m != null && m != TypeJudge.Mark.PENDING)
+                                    Text(plain[i].toString(), style = Theme.verse(s.korean).copy(fontSize = Tokens.Text.gridChar * s.scale, lineHeight = Tokens.Text.gridChar * s.scale,
+                                        color = if (m == TypeJudge.Mark.WRONG) c.rubric else c.ink, textAlign = TextAlign.Center), maxLines = 1)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Text(stringResource(R.string.grid_hint), style = Theme.small())
     }
 }
 
@@ -322,7 +380,7 @@ private fun ChapterDoneNote(s: AppState) {
  * faint = 아직 안 쓴 절. sealed = 방금 마침 (끝에 도장 · 아래 금선).
  */
 @Composable
-fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null, marks: List<TypeJudge.Mark>? = null, faint: Boolean = false, sealed: Boolean = false, marked: Boolean = false) {
+fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null, marks: List<TypeJudge.Mark>? = null, faint: Boolean = false, sealed: Boolean = false, marked: Boolean = false, missed: List<IntRange> = emptyList()) {
     val c = Theme.c; val k = s.korean
     val nibAt = marks?.indexOfFirst { it == TypeJudge.Mark.PENDING } ?: -1
     val body: AnnotatedString = buildAnnotatedString {
@@ -340,6 +398,12 @@ fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null, marks: L
                         else -> if (i + j == nibAt) style.copy(color = c.unwritten, textDecoration = TextDecoration.Underline, background = c.rubric.copy(alpha = Tokens.Alpha.nib)) else style.copy(color = c.unwritten)
                     }
                     withStyle(st) { append(ch) }
+                }
+            } else if (missed.isNotEmpty()) {
+                // 놓친 낱말은 붉은 밑줄
+                sp.text.forEachIndexed { j, ch ->
+                    val miss = missed.any { (i + j) in it }
+                    withStyle(style.copy(color = if (miss) c.rubric else c.ink, textDecoration = if (miss) TextDecoration.Underline else null)) { append(ch) }
                 }
             } else {
                 val cut = if (lit == null) sp.text.length else (lit - i).coerceIn(0, sp.text.length)
@@ -367,9 +431,46 @@ private fun sealInline(color: androidx.compose.ui.graphics.Color): Map<String, I
 /** 낭독 위: 함께 읽기 · 혼자 읽기, 빠르기 (천천히 · 보통 · 빠르게). */
 @Composable
 private fun AloudControls(s: AppState, guideReady: Boolean) {
+    val c = Theme.c
     Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        if (guideReady) UnderlineTabs(listOf(stringResource(R.string.guide_together), stringResource(R.string.guide_alone)), if (s.aloudGuide) 0 else 1) { if ((it == 0) != s.aloudGuide) s.flipAloudGuide() }
-        UnderlineTabs(listOf(stringResource(R.string.aloud_slow), stringResource(R.string.aloud_normal), stringResource(R.string.aloud_fast)), s.aloudSpeed) { s.chooseAloudSpeed(it) }
+        if (guideReady) UnderlineTabs(listOf(stringResource(R.string.guide_together), stringResource(R.string.resp_mode), stringResource(R.string.guide_alone)), s.aloudMode) { s.chooseAloudMode(it) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            UnderlineTabs(listOf(stringResource(R.string.aloud_slow), stringResource(R.string.aloud_normal), stringResource(R.string.aloud_fast)), s.aloudSpeed, Modifier.weight(1f)) { s.chooseAloudSpeed(it) }
+            Text(stringResource(R.string.aloud_big), style = Theme.small().copy(color = if (s.aloudBig) c.rubric else c.inkSoft), maxLines = 1,
+                modifier = Modifier.padding(start = Tokens.Space.s3).heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Switch) { s.flipAloudBig() })
+        }
+    }
+}
+
+/**
+ * 큰 글씨 한 줄 낭독 (T1): 숨 쉴 자리로 나눈 구절 가운데 지금 읽을 한 줄만 크게. 알아들으면 다음 줄이 스르륵 올라와요.
+ * 위에는 방금 읽은 줄 (작게, 먹), 아래는 다음 줄 (흐리게).
+ */
+@Composable
+private fun AloudLines(s: AppState, verse: Int, plain: String, at: Int, missed: List<IntRange>, guiding: Boolean) {
+    val c = Theme.c; val k = s.korean
+    val parts = remember(plain) { Recite.phrases(plain) }
+    val cur = parts.indexOfFirst { at <= it.last }.let { if (it < 0) parts.lastIndex else it }
+    fun line(i: Int) = parts.getOrNull(i)?.let { plain.substring(it.first, it.last + 1) }
+    Column(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.aloudBox), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2, Alignment.CenterVertically)) {
+        Text(stringResource(R.string.verse_n, verse), style = Theme.small().copy(color = c.rubric), maxLines = 1)
+        androidx.compose.animation.AnimatedContent(cur, transitionSpec = {
+            (androidx.compose.animation.slideInVertically(tween(Tokens.Motion.fadeMs)) { it / 2 } + androidx.compose.animation.fadeIn(tween(Tokens.Motion.fadeMs))) togetherWith
+                (androidx.compose.animation.slideOutVertically(tween(Tokens.Motion.fadeMs)) { -it / 2 } + androidx.compose.animation.fadeOut(tween(Tokens.Motion.fadeMs)))
+        }, label = "line") { i ->
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                line(i - 1)?.let { Text(it, style = Theme.verse(k).copy(color = c.inkSoft, textAlign = TextAlign.Center)) }
+                val r = parts.getOrNull(i)
+                if (r != null) Text(buildAnnotatedString {
+                    for (j in r) {
+                        val miss = missed.any { j in it }
+                        val color = when { miss -> c.rubric; j < at -> if (guiding) c.giltText else c.ink; else -> c.unwritten }
+                        withStyle(SpanStyle(color = color, textDecoration = if (miss) TextDecoration.Underline else null)) { append(plain[j]) }
+                    }
+                }, style = Theme.verse(k).copy(fontSize = Tokens.Text.aloudBig * s.scale, lineHeight = Tokens.Text.aloudBig * s.scale * Tokens.Leading.title, textAlign = TextAlign.Center))
+                line(i + 1)?.let { Text(it, style = Theme.verse(k).copy(color = c.unwritten, textAlign = TextAlign.Center)) }
+            }
+        }
     }
 }
 
@@ -390,6 +491,8 @@ private fun AloudTab(s: AppState, verse: Int) {
     var heard by remember(verse, s.chapter, s.book) { mutableStateOf("") }
     var running by remember { mutableStateOf(false) }      // 읽기가 켜져 있음 (절이 바뀌어도 이어감)
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> mic = ok; if (ok) running = true }
+    // 아침 알림 ‘함께 읽기’로 열었으면 곧바로 시작 (Y1)
+    LaunchedEffect(s.aloudNow) { if (s.aloudNow) { s.aloudNow = false; if (mic) running = true else ask.launch(Manifest.permission.RECORD_AUDIO) } }
     // 내 목소리 남기기 (평생권): 녹음과 음성 인식이 마이크 하나를 나눠 씀 (안드로이드 13+ 는 파이프로, 그 아래는 손으로 ‘다 읽었어요’)
     val record = s.voiceOn && !s.gated()
     var pipeFailed by remember { mutableStateOf(false) }
@@ -400,7 +503,11 @@ private fun AloudTab(s: AppState, verse: Int) {
     DisposableEffect(guide) { onDispose { guide.release() } }
     var guideReady by remember(guide) { mutableStateOf(false) }
     LaunchedEffect(guide) { guide.whenReady { main.post { guideReady = guide.ready } } }
-    val useGuide = s.aloudGuide && guideReady
+    // 0 함께 읽기 · 1 교독 · 2 혼자 읽기 (가이드 목소리가 없으면 혼자)
+    val mode = if (guideReady) s.aloudMode else 2
+    val useGuide = mode == 0
+    // 교독: 장의 첫째 · 셋째 … 절은 인도(가이드), 둘째 · 넷째 … 는 회중(나)
+    val guideTurn = mode == 1 && s.text().fillable(s.chapter).indexOf(verse) % 2 == 0
     var spoken by remember(verse, s.chapter, s.book) { mutableIntStateOf(-1) }   // 가이드가 읽은 데까지 (-1 = 가이드가 읽는 중 아님)
     var replay by remember { mutableIntStateOf(0) }
 
@@ -409,15 +516,46 @@ private fun AloudTab(s: AppState, verse: Int) {
         val done = recognize && Recite.done(plain, heard)
         var finished by remember(verse, s.chapter, s.book) { mutableStateOf(false) }
         fun complete() { if (finished) return; finished = true; haptic.performHapticFeedback(HapticFeedbackType.LongPress); s.fill(listOf(verse), Mode.ALOUD) }
-        LaunchedEffect(done) { if (done) { delay(Tokens.Motion.typeSettleMs.toLong()); complete() } }
-        LaunchedEffect(running, verse, s.chapter, s.book, useGuide, replay) {
+        // 놓친 곳 (T2): 다 읽었는데 알아듣지 못한 낱말이 있으면 붉게 짚고, 잠시 뒤 그대로 채움 (듣기 · 다시 읽기를 누르면 기다림)
+        val missed = remember(heard, done) { if (done) Recite.missed(plain, heard) else emptyList() }
+        var review by remember(verse, s.chapter, s.book) { mutableStateOf(false) }
+        var hold by remember(verse, s.chapter, s.book) { mutableStateOf(false) }
+        var retry by remember(verse, s.chapter, s.book) { mutableIntStateOf(0) }
+        LaunchedEffect(done) { if (done) { delay(Tokens.Motion.typeSettleMs.toLong()); if (missed.isEmpty()) complete() else review = true } }
+        LaunchedEffect(review, hold) { if (review && !hold) { delay(Tokens.Motion.reviewMs.toLong()); complete() } }
+        LaunchedEffect(running, verse, s.chapter, s.book, mode, replay) {
             if (!running) { guide.stop(); spoken = -1; on = false; return@LaunchedEffect }
-            if (useGuide && !finished) {
-                on = false; spoken = 0
-                guide.speak(plain, s.aloudRate(), onRange = { _, e -> main.post { spoken = e } }, onDone = { main.post { spoken = -1; if (running) on = true } })
-            } else on = true
+            when {
+                // 교독 · 인도 차례: 가이드가 읽은 절도 읽은 것으로 채우고, 녹음을 켰으면 가이드 목소리도 그 절 자리에 남겨 장 전체가 이어지게
+                guideTurn && !finished -> {
+                    on = false; spoken = 0
+                    guide.speak(plain, s.aloudRate(), onRange = { _, e -> main.post { spoken = e } }, onDone = {
+                        main.post {
+                            spoken = -1
+                            if (!running) return@post
+                            if (record) {
+                                val wav = java.io.File(ctx.cacheDir, "guide_${s.book}_${s.chapter}_$verse.wav")
+                                val target = Voice.file(ctx, s.translation.id, s.book, s.chapter, verse)
+                                guide.synthesize(plain, s.aloudRate(), wav) { ok -> if (ok) Thread { Voice.encodeWav(wav, target); wav.delete() }.start() }
+                            }
+                            complete()
+                        }
+                    })
+                }
+                useGuide && !finished -> {
+                    on = false; spoken = 0
+                    guide.speak(plain, s.aloudRate(), onRange = { _, e -> main.post { spoken = e } }, onDone = { main.post { spoken = -1; if (running) on = true } })
+                }
+                else -> on = true
+            }
         }
-        DisposableEffect(on, verse, s.chapter, s.book, mic, record, recognize) {
+        // 소리 내어 읽은 시간 (U2)
+        DisposableEffect(running) {
+            if (!running) return@DisposableEffect onDispose { }
+            val t0 = System.currentTimeMillis()
+            onDispose { val secs = ((System.currentTimeMillis() - t0) / 1000).toInt(); if (secs in 3..3600) s.addAloud(secs) }
+        }
+        DisposableEffect(on, verse, s.chapter, s.book, mic, record, recognize, retry) {
             if (!on || !mic) return@DisposableEffect onDispose { }
             val session = if (record) Voice.Session(Voice.file(ctx, s.translation.id, s.book, s.chapter, verse)).also { it.start() } else null
             var rec: SpeechRecognizer? = null
@@ -469,16 +607,28 @@ private fun AloudTab(s: AppState, verse: Int) {
             }
         }
         AloudControls(s, guideReady)
-        VerseText(s, verse, source, lit = if (spoken >= 0) spoken else lit)
+        val at = if (spoken >= 0) spoken else lit
+        if (s.aloudBig) AloudLines(s, verse, plain, at, if (review) missed else emptyList(), guiding = spoken >= 0)
+        else VerseText(s, verse, source, lit = at, missed = if (review) missed else emptyList())
+        if (review) Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            Text(stringResource(R.string.missed_n, missed.size), style = Theme.small().copy(color = c.rubric))
+            Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                if (guideReady) BookButton(stringResource(R.string.missed_listen), Modifier.weight(1f), quiet = true) {
+                    hold = true; guide.speak(missed.joinToString(" ") { plain.substring(it.first, it.last + 1) }, s.aloudRate(), { _, _ -> }, { })
+                }
+                BookButton(stringResource(R.string.missed_again), Modifier.weight(1f), quiet = true) { hold = false; review = false; heard = ""; retry++ }
+                BookButton(stringResource(R.string.missed_fill), Modifier.weight(1f)) { complete() }
+            }
+        }
         val micLabel = stringResource(R.string.aloud_listen)
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             Box(Modifier.size(Tokens.Size.emblem).clip(androidx.compose.foundation.shape.CircleShape).background(if (running) c.rubric else c.leather)
                 .semantics { contentDescription = micLabel }.clickable(role = Role.Button) { if (!mic) ask.launch(Manifest.permission.RECORD_AUDIO) else running = !running },
                 contentAlignment = Alignment.Center) { MicMark(c.leatherInk, Modifier.size(Tokens.Size.iconMd)) }
-            Text(stringResource(when { spoken >= 0 -> R.string.guide_reading; on && record -> R.string.voice_recording; on && useGuide -> R.string.guide_your_turn; on -> R.string.aloud_listening; useGuide -> R.string.guide_start; else -> R.string.aloud_listen }),
+            Text(stringResource(when { spoken >= 0 && guideTurn -> R.string.resp_guide; spoken >= 0 -> R.string.guide_reading; on && mode == 1 -> R.string.resp_you; on && record -> R.string.voice_recording; on && useGuide -> R.string.guide_your_turn; on -> R.string.aloud_listening; mode == 1 -> R.string.resp_start; useGuide -> R.string.guide_start; else -> R.string.aloud_listen }),
                 style = Theme.label().copy(color = if (running) c.rubric else c.ink))
             if (on && !recognize) BookButton(stringResource(R.string.voice_done_reading), Modifier.fillMaxWidth()) { complete() }
-            if (running && useGuide && spoken < 0) BookButton(stringResource(R.string.guide_again), Modifier.fillMaxWidth(), quiet = true) { replay++ }
+            if (running && useGuide && spoken < 0 && !review) BookButton(stringResource(R.string.guide_again), Modifier.fillMaxWidth(), quiet = true) { replay++ }
             Text(stringResource(if (record) R.string.voice_keep_hint else R.string.aloud_hint), style = Theme.small().copy(textAlign = TextAlign.Center))
         }
         VoiceRow(s)
@@ -585,6 +735,30 @@ private fun VoiceRow(s: AppState) {
             BookButton(stringResource(R.string.voice_export_audio), Modifier.weight(1f), enabled = !s.exporting) { export(false) }
             BookButton(stringResource(R.string.voice_export_video), Modifier.weight(1f), enabled = !s.exporting) { export(true) }
         }
+        // 가족에게 보내기 (U1): 표지 카드 한 장 + 이 장 낭독을 함께
+        BookButton(stringResource(R.string.gift_send), Modifier.fillMaxWidth(), enabled = !s.exporting) {
+            if (s.gated()) { s.purchaseOpen = true; return@BookButton }
+            s.exporting = true
+            scope.launch {
+                val name = "${s.bookName().replace(' ', '_')}_${s.chapter}"
+                val audio = java.io.File(ctx.cacheDir, "share/$name.m4a")
+                val title = if (s.ownerName.isNotBlank()) ctx.getString(R.string.gift_title_named, s.ownerName, s.bookName(), s.chapter) else ctx.getString(R.string.gift_title, s.bookName(), s.chapter)
+                val sec = (total / 1000).toInt()
+                val card = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    if (!Voice.exportAudio(parts.map { it.second }, audio)) null
+                    else Cards.year(ctx, k, title, stringResource0(ctx, R.string.duration_ms, sec / 60, sec % 60), listOf(ctx.getString(R.string.voice_chapter, parts.size, ctx.getString(R.string.duration_ms, sec / 60, sec % 60))))
+                }
+                s.exporting = false
+                if (card == null) return@launch
+                val img = java.io.File(ctx.cacheDir, "share/$name.png").also { f -> f.outputStream().use { card.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) } }
+                fun uri(f: java.io.File) = androidx.core.content.FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", f)
+                val send = Intent(Intent.ACTION_SEND_MULTIPLE).setType("*/*").putParcelableArrayListExtra(Intent.EXTRA_STREAM, arrayListOf(uri(img), uri(audio)))
+                    .putExtra(Intent.EXTRA_TEXT, title).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                ctx.startActivity(Intent.createChooser(send, null))
+            }
+        }
         if (s.exporting) Text(stringResource(R.string.exporting), style = Theme.small())
     }
 }
+
+private fun stringResource0(ctx: android.content.Context, id: Int, vararg a: Any) = ctx.getString(id, *a)
