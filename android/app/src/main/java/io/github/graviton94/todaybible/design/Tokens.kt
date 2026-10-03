@@ -71,6 +71,7 @@ object Tokens {
         val initialBox = 56.dp
         val initialHome = 44.dp
         val hiddenField = 1.dp
+        val widgetRing = 64.dp
     }
     object Text {
         val verse = 21.sp
@@ -95,6 +96,13 @@ object Tokens {
         val penLine = 34.sp
         val initialBox = 30.sp
         val gridInitial = 20.sp
+    }
+    /** 표지 가죽 (나의 성경 꾸미기). */
+    object Covers {
+        val burgundy = Color(0xFF4A1913)
+        val navy = Color(0xFF1E2A44)
+        val olive = Color(0xFF3A4022)
+        val ebony = Color(0xFF1E1915)
     }
     object Motion {
         const val inkMs = 600
@@ -130,6 +138,7 @@ object Tokens {
         const val shineWidth = 0.18f
         const val welcomeArt = 1.25f
         const val initialFinish = 1.25f
+        const val heatGap = 0.18f
     }
     object Alpha {
         const val faint = 0.5f

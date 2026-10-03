@@ -2,6 +2,7 @@ package io.github.graviton94.todaybible.ui
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.graphics.Paint
 import android.graphics.pdf.PdfDocument
 import android.text.Layout
@@ -28,7 +29,7 @@ object MyBible {
     private const val W = 420; private const val H = 595 // A5 (pt)
     private const val M = 42
 
-    fun make(ctx: Context, store: Store, tr: Translation, book: Int): File {
+    fun make(ctx: Context, store: Store, tr: Translation, book: Int, owner: String = store.ownerName): File {
         val korean = tr == Translation.KRV
         val text = store.book(tr, book)
         val firstDay = HashMap<Int, Long>()
@@ -54,6 +55,7 @@ object MyBible {
             val fmt = DateTimeFormatter.ofPattern("yyyy. M. d")
             val sub = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 10f; color = c.inkSoft.toArgb(); textAlign = Paint.Align.CENTER }
             cv.drawText(ctx.getString(R.string.my_bible_cover), W / 2f, H * 0.42f + 28f, sub)
+            if (owner.isNotBlank()) cv.drawText(owner, W / 2f, H * 0.42f + 60f, TextPaint(tp).apply { textSize = 13f; color = c.giltText.toArgb() })
             if (days.isNotEmpty()) cv.drawText("${LocalDate.ofEpochDay(days.min()).format(fmt)} – ${LocalDate.ofEpochDay(days.max()).format(fmt)}", W / 2f, H * 0.42f + 44f, sub)
             val foot = TextPaint(sub).apply { color = c.giltText.toArgb() }
             cv.drawText(ctx.getString(R.string.app_name), W / 2f, H - 48f, foot)
@@ -93,6 +95,18 @@ object MyBible {
                 y += lay.height + 5f
             }
             y += 8f
+            // 이 장을 종이에 쓴 노트 사진이 있으면 한 쪽에 붙임
+            Photos.of(ctx, tr.id, book, ch)?.let { f ->
+                BitmapFactory.decodeFile(f.path)?.let { bmp ->
+                    doc.finishPage(pg); pg = newPage(); header(ch)
+                    val box = android.graphics.RectF(M.toFloat(), M + 16f, (W - M).toFloat(), (H - M).toFloat())
+                    val k = minOf(box.width() / bmp.width, box.height() / bmp.height)
+                    val dw = bmp.width * k; val dh = bmp.height * k
+                    pg.canvas.drawBitmap(bmp, null, android.graphics.RectF(box.centerX() - dw / 2, box.top, box.centerX() + dw / 2, box.top + dh), Paint(Paint.FILTER_BITMAP_FLAG))
+                    bmp.recycle()
+                    doc.finishPage(pg); pg = newPage(); header(minOf(ch + 1, text.chapterCount)); y = M + 14f
+                }
+            }
         }
         doc.finishPage(pg)
         val dir = File(ctx.cacheDir, "share").apply { mkdirs() }

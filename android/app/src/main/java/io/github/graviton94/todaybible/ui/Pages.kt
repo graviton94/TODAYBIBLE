@@ -106,6 +106,7 @@ fun Root(s: AppState) {
             val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { MyBible.make(ctx, s.store, s.translation, b) }.getOrNull() }
             s.pdfBook = null; f?.let { MyBible.share(ctx, it) }
         }
+        if (s.planOpen) PlanSheet(s)
         s.picker?.let { b -> BookSheet({ s.picker = null }) { ChapterGrid(s, b) { ch -> s.picker = null; s.open(b, ch) } } }
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
         // 토스트: 이름표 위에 잠깐

@@ -34,3 +34,33 @@ object ReadingPace {
         return (ms / speed).toLong()
     }
 }
+
+/**
+ * 소리 내어 읽기: 알아들은 말이 본문을 어디까지 덮었는지. 띄어쓰기 · 문장부호 · 대소문자는 보지 않고,
+ * 알아듣기가 한두 글자 놓치거나 더해도 따라가도록 앞을 조금 내다보며 맞춤.
+ */
+object Recite {
+    private fun keep(c: Char) = c.isLetterOrDigit()
+    /** 본문(Markup.plain) 가운데 밝힐 글자 수. */
+    fun lit(plain: String, heard: String): Int {
+        val h = heard.filter(::keep).lowercase()
+        val idx = plain.indices.filter { keep(plain[it]) }      // 본문 글자의 원래 자리
+        val t = idx.map { plain[it].lowercaseChar() }
+        var j = 0; var last = -1; var misses = 0
+        for (i in t.indices) {
+            if (j >= h.length) break
+            var found = -1
+            for (d in 0..LOOK) if (j + d < h.length && h[j + d] == t[i]) { found = j + d; break }
+            if (found >= 0) { j = found + 1; last = i; misses = 0 } else if (++misses > LOOK) break
+        }
+        return if (last < 0) 0 else idx[last] + 1
+    }
+    /** 다 읽었는지: 본문 글자의 거의 다(마지막 몇 글자 놓침 허용)를 덮었으면. */
+    fun done(plain: String, heard: String): Boolean {
+        val n = plain.count(::keep); if (n == 0) return true
+        val covered = plain.take(lit(plain, heard)).count(::keep)
+        return covered >= n - LOOK
+    }
+    private const val LOOK = 3
+}
+

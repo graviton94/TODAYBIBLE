@@ -78,6 +78,24 @@ class Store(val context: Context) {
     var notebook: Boolean
         get() = prefs.getBoolean("notebook", false)
         set(v) = prefs.edit().putBoolean("notebook", v).apply()
+    /** 길잡이 (없으면 null) · 시작한 날. */
+    var planId: String?
+        get() = prefs.getString("plan", null)
+        set(v) = prefs.edit().putString("plan", v).apply()
+    var planStart: Long
+        get() = prefs.getLong("plan_start", 0)
+        set(v) = prefs.edit().putLong("plan_start", v).apply()
+    /** 표지 가죽 (burgundy · navy · olive · ebony) · 금박 이름. */
+    var cover: String
+        get() = prefs.getString("cover", "burgundy")!!
+        set(v) = prefs.edit().putString("cover", v).apply()
+    var ownerName: String
+        get() = prefs.getString("owner", "")!!
+        set(v) = prefs.edit().putString("owner", v).apply()
+    /** 위젯이 쓰는 오늘의 분량 (길잡이 반영). */
+    var lastGoal: Int
+        get() = prefs.getInt("last_goal", 0)
+        set(v) = prefs.edit().putInt("last_goal", v).apply()
     var startDay: Long
         get() = prefs.getLong("start", -1)
         set(v) = prefs.edit().putLong("start", v).apply()

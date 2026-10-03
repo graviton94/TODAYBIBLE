@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.graviton94.todaybible.R
+import io.github.graviton94.todaybible.core.Markup
 import io.github.graviton94.todaybible.core.Milestone
 import io.github.graviton94.todaybible.core.Pieces
 import io.github.graviton94.todaybible.core.Presence
@@ -56,6 +57,8 @@ fun RecordPage(s: AppState) {
     val days = s.progress.days()
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
         RunningHead(stringResource(R.string.page_record), stringResource(R.string.presence_n, Presence.total(days)), k)
+        Stats(s)
+        YearStamps(s)
         PresenceMonth(s, days)
         Section(stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size}", k)
         PlateGallery(s)
@@ -206,3 +209,75 @@ fun milestoneName(ctx: android.content.Context, m: Milestone): String =
     ctx.getString(ctx.resources.getIdentifier("ms_${m.name}_name", "string", ctx.packageName))
 fun milestoneRule(ctx: android.content.Context, m: Milestone): String =
     ctx.getString(ctx.resources.getIdentifier("ms_${m.name}_rule", "string", ctx.packageName))
+
+/** 숫자로 본 나의 성경 (J2): 지어낸 말 없이 숫자만. */
+@Composable
+private fun Stats(s: AppState) {
+    val c = Theme.c; val k = s.korean
+    val tr = s.translation
+    val mine = s.fills.filter { it.translation == tr }
+    val keys = mine.map { it.key.raw }.toSet()
+    val letters = remember(keys.size, tr) {
+        keys.groupBy { io.github.graviton94.todaybible.core.VerseKey(it).book }.entries.sumOf { (b, ks) ->
+            val t = s.store.book(tr, b); ks.sumOf { r -> val v = io.github.graviton94.todaybible.core.VerseKey(r); Markup.plain(t.verse(v.chapter, v.verse)).count { !it.isWhitespace() } }
+        }
+    }
+    val chapters = remember(keys.size, tr) {
+        keys.map { io.github.graviton94.todaybible.core.VerseKey(it).book }.toSet().sumOf { b -> val t = s.store.book(tr, b); (1..t.chapterCount).count { s.progress.chapterDone(tr, t, it) } }
+    }
+    val longest = Presence.longestStreak(s.progress.days())
+    val hour = mine.groupBy { java.time.Instant.ofEpochMilli(it.atMillis).atZone(java.time.ZoneId.systemDefault()).hour }.maxByOrNull { it.value.size }?.key
+    val byMode = mine.groupBy { it.mode }.mapValues { it.value.size }
+    val all = mine.size.coerceAtLeast(1)
+    fun pct(m: io.github.graviton94.todaybible.core.Mode) = (byMode[m] ?: 0) * 100 / all
+    val cells = listOf(
+        stringResource(R.string.verses_n, keys.size) to stringResource(R.string.stat_verses),
+        stringResource(R.string.letters_n, "%,d".format(letters)) to stringResource(R.string.stat_letters),
+        stringResource(R.string.chapters_n, chapters) to stringResource(R.string.stat_chapters),
+        stringResource(R.string.days_n, longest) to stringResource(R.string.stat_longest),
+        (hour?.let { java.time.LocalTime.of(it, 0).format(DateTimeFormatter.ofPattern(if (k) "a h시" else "h a", if (k) java.util.Locale.KOREAN else java.util.Locale.ENGLISH)) } ?: "–") to stringResource(R.string.stat_hour),
+        stringResource(R.string.stat_modes, pct(io.github.graviton94.todaybible.core.Mode.TYPE), pct(io.github.graviton94.todaybible.core.Mode.PAPER), pct(io.github.graviton94.todaybible.core.Mode.ALOUD)) to "",
+    )
+    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        cells.take(4).chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                row.forEach { (big, small) ->
+                    Column(Modifier.weight(1f).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s3)) {
+                        Text(big, style = Theme.title(k), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(small, style = Theme.small(), maxLines = 1)
+                    }
+                }
+            }
+        }
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("${cells[4].second} · ${cells[4].first}", style = Theme.small(), maxLines = 1, modifier = Modifier.weight(1f))
+        }
+        Text(cells[5].first, style = Theme.small(), maxLines = 1)
+    }
+}
+
+/** 한 해 도장첩 (J1): 주마다 한 줄, 붉을수록 많이 쓴 날. */
+@Composable
+private fun YearStamps(s: AppState) {
+    val c = Theme.c; val k = s.korean
+    val today = s.today(); val year = today.year
+    val counts = s.fills.filter { it.translation == s.translation }.groupBy { it.epochDay }.mapValues { it.value.size }
+    val jan1 = java.time.LocalDate.of(year, 1, 1); val start = jan1.minusDays((jan1.dayOfWeek.value % 7).toLong())
+    val stamped = counts.keys.count { java.time.LocalDate.ofEpochDay(it).year == year }
+    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(if (k) "${year}년" else "$year", style = Theme.label(), modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.year_stamps, stamped), style = Theme.small())
+        }
+        Canvas(Modifier.fillMaxWidth().aspectRatio(53f / 7f)) {
+            val cell = size.width / 53f; val gap = cell * Tokens.Ratio.heatGap
+            for (w in 0 until 53) for (d in 0 until 7) {
+                val day = start.plusDays((w * 7 + d).toLong())
+                if (day.year != year) continue
+                val n = counts[day.toEpochDay()] ?: 0
+                val col = when { day.isAfter(today) -> c.hair.copy(alpha = Tokens.Alpha.faint); n == 0 -> c.hair; n < 5 -> c.rubric.copy(alpha = Tokens.Alpha.faint); else -> c.rubric }
+                drawRect(col, Offset(w * cell, d * cell), Size(cell - gap, cell - gap))
+            }
+        }
+    }
+}

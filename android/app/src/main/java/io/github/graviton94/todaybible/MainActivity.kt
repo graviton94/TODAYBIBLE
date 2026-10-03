@@ -47,6 +47,9 @@ class MainActivity : ComponentActivity() {
         runCatching {
             save("widget_light", io.github.graviton94.todaybible.widget.VerseWidget.bitmap(this, 360, 170, false, day))
             save("widget_dark", io.github.graviton94.todaybible.widget.VerseWidget.bitmap(this, 360, 170, true, day))
+            save("widget_goal", io.github.graviton94.todaybible.widget.GoalWidget().draw(this, 110, 110, false))
+            save("widget_run", io.github.graviton94.todaybible.widget.RunWidget().draw(this, 110, 110, false))
+            save("widget_goal_dark", io.github.graviton94.todaybible.widget.GoalWidget().draw(this, 110, 110, true))
             val k = s.korean; val now = day.atTime(7, 12)
             val ref = if (k) "${s.bookName(0)} 1:1" else "${s.bookName(0)} 1:1"
             save("card_verse", io.github.graviton94.todaybible.ui.Cards.verse(this, k, ref, s.store.book(s.translation, 0).verse(1, 1), "noah", now))
@@ -90,6 +93,10 @@ class MainActivity : ComponentActivity() {
         if (i.hasExtra("tb.notebook")) { if (s.notebook != i.getBooleanExtra("tb.notebook", false)) s.toggleNotebook() }
         s.plateView = i.getStringExtra("tb.plate")?.let { id -> s.store.plates.firstOrNull { it.id == id } }
         s.peekBook = i.getIntExtra("tb.peek", 0).takeIf { it > 0 }?.minus(1)?.also { s.purchaseOpen = true }
+        i.getStringExtra("tb.plan")?.let { s.choosePlan(it); s.store.planStart = s.today().toEpochDay() - 2 }
+        i.getStringExtra("tb.cover")?.let { s.setCover(it) }
+        i.getStringExtra("tb.owner")?.let { s.setOwner(it) }
+        if (i.getBooleanExtra("tb.planSheet", false)) s.planOpen = true
         if (i.hasExtra("tb.welcomeStep")) s.welcomeStep = i.getIntExtra("tb.welcomeStep", 0)
         s.lifetime.debugSet(if (i.hasExtra("tb.owned")) i.getBooleanExtra("tb.owned", false) else null, i.getStringExtra("tb.price"))
         if (i.getBooleanExtra("tb.purchase", false)) s.purchaseOpen = true

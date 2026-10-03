@@ -42,6 +42,13 @@ open --es tb.award OLIVE;                                          shot a01_awar
 open --ez tb.lock true --es tb.price ₩29,900 --ez tb.purchase true; shot e01_purchase_compare 4
 open --ez tb.lock true --es tb.price ₩29,900 --ei tb.peek 43;      shot e02_purchase_peek 4
 open --ez tb.settings true;                                        shot s01_settings 4
+swipe_up;                                                          shot s02_settings_cover 2
+open --ez tb.planSheet true;                                       shot p01_plan_sheet 4
+open --es tb.plan mark30;                                          shot p02_today_plan 5
+open --es tb.cover navy --es tb.owner 김은혜 --ez tb.opening true; sleep 3.2; snap p03_cover_navy_name
+open --es tb.plan none --es tb.cover burgundy --es tb.owner ""
+open --ei tb.page 1; adb shell input tap 790 550;                  shot p04_aloud_mic 3
+open --ei tb.page 3;                                               shot r00_record_stats 5
 open --ei tb.page 0 --ei tb.toast 5;                               shot t01_toast 1.5
 open --ez tb.cardShots true
 C=/sdcard/Android/data/$P/files/cards

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 구글 계정 백업 · 새 폰으로 옮기기 (안드로이드 12+): 기록 · 발자취 · 설정. 노트 사진은 기기 간 옮기기에만 -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="fills.tsv" />
+        <include domain="file" path="earned.tsv" />
+        <include domain="sharedpref" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="." />
+        <include domain="sharedpref" path="." />
+    </device-transfer>
+</data-extraction-rules>

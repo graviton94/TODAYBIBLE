@@ -1,6 +1,16 @@
 package io.github.graviton94.todaybible.ui
 
 import android.graphics.BitmapFactory
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
+import androidx.compose.runtime.DisposableEffect
+import androidx.core.content.ContextCompat
+import io.github.graviton94.todaybible.core.Recite
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.fillMaxSize
@@ -332,8 +342,9 @@ private fun PaperTab(s: AppState) {
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) runCatching {
             file.parentFile?.mkdirs()
-            ctx.contentResolver.openInputStream(uri)?.use { input -> file.outputStream().use { input.copyTo(it) } }
+            Photos.keep(ctx, uri, file, "${s.bookName()} ${s.chapter}")
             stamp++
+            s.toast = ctx.getString(R.string.photo_saved)
         }
     }
     val bitmap = remember(stamp) { if (file.exists()) runCatching { BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = 4 })?.asImageBitmap() }.getOrNull() else null }
@@ -354,11 +365,73 @@ private fun PaperTab(s: AppState) {
     }
 }
 
+/**
+ * 낭독 (G1): 소리 내어 읽으면 알아들은 만큼 글자가 먹으로 (기기 안 음성 인식 · 녹음은 남기지 않음).
+ * 다 읽으면 도장 · 진동과 함께 채워지고, 켜 둔 채로 다음 절로 이어짐.
+ * 음성 인식이 없거나 마이크를 허락하지 않으면 읽는 빠르기로 밝아지는 방식.
+ */
 @Composable
 private fun AloudTab(s: AppState, verse: Int) {
-    val k = s.korean
+    val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     val source = s.text().verse(s.chapter, verse)
     val plain = Markup.plain(source)
+    val haptic = LocalHapticFeedback.current
+    val canHear = remember { SpeechRecognizer.isRecognitionAvailable(ctx) }
+    var mic by remember { mutableStateOf(ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) }
+    var on by remember { mutableStateOf(false) }          // 듣기 켜짐 (절이 바뀌어도 이어감)
+    var heard by remember(verse, s.chapter, s.book) { mutableStateOf("") }
+    val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> mic = ok; if (ok) on = true }
+    val listen = canHear && mic
+
+    if (listen || (canHear && !mic)) {
+        val lit = Recite.lit(plain, heard)
+        val done = Recite.done(plain, heard)
+        LaunchedEffect(done) {
+            if (done) { delay(Tokens.Motion.typeSettleMs.toLong()); haptic.performHapticFeedback(HapticFeedbackType.LongPress); s.fill(listOf(verse), Mode.ALOUD) }
+        }
+        DisposableEffect(on, verse, s.chapter, s.book, listen) {
+            if (!on || !listen) return@DisposableEffect onDispose { }
+            val rec = SpeechRecognizer.createSpeechRecognizer(ctx)
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, if (k) "ko-KR" else "en-US")
+                .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+            var base = ""
+            var alive = true
+            rec.setRecognitionListener(object : RecognitionListener {
+                override fun onPartialResults(b: Bundle?) { b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { heard = "$base $it" } }
+                override fun onResults(b: Bundle?) {
+                    b?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { heard = "$base $it" }
+                    base = heard
+                    if (alive && !Recite.done(plain, heard)) rec.startListening(intent)
+                }
+                override fun onError(e: Int) {
+                    if (!alive) return
+                    if (e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT) rec.startListening(intent) else on = false
+                }
+                override fun onReadyForSpeech(p: Bundle?) {}
+                override fun onBeginningOfSpeech() {}
+                override fun onRmsChanged(v: Float) {}
+                override fun onBufferReceived(b: ByteArray?) {}
+                override fun onEndOfSpeech() {}
+                override fun onEvent(t: Int, p: Bundle?) {}
+            })
+            rec.startListening(intent)
+            onDispose { alive = false; runCatching { rec.cancel(); rec.destroy() } }
+        }
+        VerseText(s, verse, source, lit = lit)
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            Box(Modifier.size(Tokens.Size.emblem).clip(androidx.compose.foundation.shape.CircleShape).background(if (on) c.rubric else c.leather)
+                .clickable(role = Role.Button) { if (!mic) ask.launch(Manifest.permission.RECORD_AUDIO) else on = !on },
+                contentAlignment = Alignment.Center) { MicMark(c.leatherInk, Modifier.size(Tokens.Size.iconMd)) }
+            Text(stringResource(if (on) R.string.aloud_listening else R.string.aloud_listen), style = Theme.label().copy(color = if (on) c.rubric else c.ink))
+            Text(stringResource(R.string.aloud_hint), style = Theme.small().copy(textAlign = TextAlign.Center))
+        }
+        return
+    }
+
+    // 음성 인식이 없을 때: 읽는 빠르기로 밝아짐
     var speed by remember { mutableIntStateOf(0) }
     var playing by remember(verse, s.chapter, s.book) { mutableStateOf(false) }
     var lit by remember(verse, s.chapter, s.book) { mutableIntStateOf(0) }
@@ -369,9 +442,22 @@ private fun AloudTab(s: AppState, verse: Int) {
         if (lit >= plain.length) playing = false
     }
     VerseText(s, verse, source, lit = lit)
+    Text(stringResource(R.string.aloud_no_mic), style = Theme.small())
     UnderlineTabs(listOf(stringResource(R.string.aloud_slow), stringResource(R.string.aloud_normal)), speed, Modifier.padding(horizontal = Tokens.Space.s6)) { speed = it }
     if (lit >= plain.length) BookButton(stringResource(R.string.aloud_done), Modifier.fillMaxWidth()) { s.fill(listOf(verse), Mode.ALOUD) }
     else BookButton(stringResource(if (playing) R.string.aloud_pause else R.string.aloud_start), Modifier.fillMaxWidth()) { playing = !playing }
+}
+
+/** 마이크 (가는 선). */
+@Composable
+private fun MicMark(color: androidx.compose.ui.graphics.Color, modifier: Modifier) {
+    Box(modifier.drawBehind {
+        val w = Tokens.Stroke.rule.toPx(); val cx = size.width / 2
+        val bw = size.width * 0.36f; val bh = size.height * 0.52f
+        drawRoundRect(color, Offset(cx - bw / 2, 0f), androidx.compose.ui.geometry.Size(bw, bh), androidx.compose.ui.geometry.CornerRadius(bw / 2), style = androidx.compose.ui.graphics.drawscope.Stroke(w))
+        drawArc(color, 0f, 180f, false, Offset(cx - bw * 0.85f, bh * 0.35f), androidx.compose.ui.geometry.Size(bw * 1.7f, bh * 0.95f), style = androidx.compose.ui.graphics.drawscope.Stroke(w))
+        drawLine(color, Offset(cx, bh * 1.3f), Offset(cx, size.height), w)
+    })
 }
 
 /** 채운 절을 누르면: 나누기 카드 미리보기 + 나누기. */

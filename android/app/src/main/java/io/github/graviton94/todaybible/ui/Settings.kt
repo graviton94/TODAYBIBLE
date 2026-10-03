@@ -23,6 +23,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -98,6 +100,7 @@ fun SettingsPage(s: AppState) {
                     }
                 }
             }
+            Group(stringResource(R.string.my_cover)) { CoverPicker(s) }
             Group(stringResource(R.string.lifetime)) {
                 ChoiceRow(stringResource(if (s.lifetime.owned) R.string.owned else R.string.lifetime_head), s.lifetime.owned) { s.purchaseOpen = true }
             }
@@ -143,3 +146,36 @@ fun BackArrow(modifier: Modifier = Modifier) {
     })
 }
 
+
+/** 나의 성경 꾸미기 (H1): 표지 가죽 네 가지 · 금박 이름. 평생권이 필요하면 평생권 화면으로. */
+@Composable
+private fun CoverPicker(s: AppState) {
+    val c = Theme.c; val k = s.korean
+    val gated = !s.lifetime.owned && (s.lifetime.ready || s.lifetime.forceReady || s.forceLock)
+    val covers = listOf("burgundy" to R.string.cover_burgundy, "navy" to R.string.cover_navy, "olive" to R.string.cover_olive, "ebony" to R.string.cover_ebony)
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        covers.forEach { (id, name) ->
+            val on = s.cover == id
+            val col = when (id) { "navy" -> Tokens.Covers.navy; "olive" -> Tokens.Covers.olive; "ebony" -> Tokens.Covers.ebony; else -> Tokens.Covers.burgundy }
+            Column(Modifier.weight(1f).clickable(role = Role.RadioButton) { if (gated && id != "burgundy") s.purchaseOpen = true else s.setCover(id) },
+                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.chip)).background(col)
+                    .drawBehind {
+                        giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = true)
+                        if (on) drawRect(c.rubric, Offset(0f, size.height - Tokens.Stroke.rule.toPx() * 2), androidx.compose.ui.geometry.Size(size.width, Tokens.Stroke.rule.toPx() * 2))
+                    }, contentAlignment = Alignment.Center) {
+                    StampMark(STAMP_CROSS, c.gilt, Modifier.size(Tokens.Size.iconSm))
+                    if (gated && id != "burgundy") Box(Modifier.align(Alignment.TopEnd).padding(Tokens.Space.s2)) { LockMark(c.leatherInk, Modifier.size(Tokens.Size.lock)) }
+                }
+                Text(stringResource(name), style = Theme.small().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1)
+            }
+        }
+    }
+    var name by remember { mutableStateOf(s.ownerName) }
+    androidx.compose.foundation.text.BasicTextField(
+        value = name, onValueChange = { v -> if (v.length <= 12 && !gated) { name = v; s.setOwner(v.trim()) } else if (gated) s.purchaseOpen = true },
+        singleLine = true, textStyle = Theme.body(), cursorBrush = androidx.compose.ui.graphics.SolidColor(c.rubric),
+        modifier = Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).drawBehind { drawLine(c.inkSoft, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
+        decorationBox = { inner -> Box(contentAlignment = Alignment.CenterStart) { if (name.isEmpty()) Text(stringResource(R.string.owner_hint), style = Theme.body().copy(color = c.unwritten)); inner() } },
+    )
+}

@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -62,7 +64,7 @@ fun HomePage(s: AppState) {
             if (run > 0) stringResource(R.string.day_n, run) else "", k)
         // 오늘의 분량
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-            val goal = s.dailyGoal
+            val goal = s.effectiveGoal()
             val frac = if (goal == Goal.CHAPTER) (if (met) 1f else 0f) else (verses.toFloat() / goal).coerceIn(0f, 1f)
             Box(Modifier.size(Tokens.Size.medalLg), contentAlignment = Alignment.Center) {
                 Canvas(Modifier.fillMaxSize()) {
@@ -82,13 +84,17 @@ fun HomePage(s: AppState) {
                 }, style = Theme.small().copy(color = if (met) c.giltText else c.inkSoft), maxLines = 2)
             }
         }
-        // 이어 쓸 한 절
+        // 이어 쓸 한 절 (길잡이가 있으면 길잡이의 다음 절)
+        val pn = s.planNext()
+        val (cb, cc) = if (pn != null) pn.first to pn.second else s.book to s.chapter
+        val ct = s.store.book(s.translation, cb)
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            val v = next ?: t.fillable(s.chapter).first()
-            Text(stringResource(R.string.continue_ref, "${s.bookName()} ${s.chapter}:$v"), style = Theme.small().copy(color = c.rubric), maxLines = 1)
-            Text(Markup.plain(t.verse(s.chapter, v)), style = Theme.body().copy(color = c.inkSoft), maxLines = 3, overflow = TextOverflow.Ellipsis)
-            BookButton(stringResource(R.string.continue_now), Modifier.fillMaxWidth()) { s.open(s.book, s.chapter) }
+            val v = pn?.third ?: next ?: t.fillable(s.chapter).first()
+            Text(stringResource(R.string.continue_ref, "${s.bookName(cb)} $cc:$v"), style = Theme.small().copy(color = c.rubric), maxLines = 1)
+            Text(Markup.plain(ct.verse(cc, v)), style = Theme.body().copy(color = c.inkSoft), maxLines = 3, overflow = TextOverflow.Ellipsis)
+            BookButton(stringResource(R.string.continue_now), Modifier.fillMaxWidth()) { s.open(cb, cc) }
         }
+        PlanCard(s)
         // 이번 주 도장 (주일부터)
         WeekStamps(s)
         // 다음 판화
@@ -146,5 +152,50 @@ fun WeekStamps(s: AppState) {
                 }
             }
         }
+    }
+}
+
+/** 길잡이 (I1): 고른 길의 진행 · 없으면 고르기. */
+@Composable
+private fun PlanCard(s: AppState) {
+    val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
+    val pl = s.plan
+    if (pl == null) { BookButton(stringResource(R.string.plan_choose), Modifier.fillMaxWidth(), quiet = true) { s.planOpen = true }; return }
+    val (total, done) = s.planCounts()
+    Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.planOpen = true }, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(planName(ctx, pl.id), style = Theme.label(), maxLines = 1, modifier = Modifier.weight(1f))
+            Text(if (done >= total) stringResource(R.string.plan_done) else stringResource(R.string.plan_day, minOf(s.planDay(), pl.days), pl.days), style = Theme.small(), maxLines = 1)
+        }
+        Box(Modifier.fillMaxWidth().height(Tokens.Size.handleH * 2).clip(RoundedCornerShape(Tokens.Size.handleH)).background(c.hair)) {
+            Box(Modifier.fillMaxWidth(if (total == 0) 0f else done.toFloat() / total).height(Tokens.Size.handleH * 2).background(c.rubric))
+        }
+        Text(stringResource(R.string.plan_progress, "%,d".format(done), "%,d".format(total)), style = Theme.small(), maxLines = 1)
+    }
+}
+
+fun planName(ctx: android.content.Context, id: String): String = ctx.getString(ctx.resources.getIdentifier("plan_$id", "string", ctx.packageName))
+
+/** 길잡이 고르기 시트. */
+@Composable
+fun PlanSheet(s: AppState) {
+    val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
+    BookSheet({ s.planOpen = false }) {
+        Text(stringResource(R.string.plan), style = Theme.title(k), modifier = Modifier.fillMaxWidth())
+        io.github.graviton94.todaybible.core.Plans.all.forEach { pl ->
+            val verses = remember(pl.id, s.translation) { pl.chapters.sumOf { (b, ch) -> s.store.book(s.translation, b).fillable(ch).size } }
+            val on = s.planId == pl.id
+            Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(if (on) c.paper else c.leaf)
+                .clickable(role = Role.RadioButton) { s.choosePlan(pl.id) }.padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s2),
+                verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(planName(ctx, pl.id), style = Theme.body(), maxLines = 1)
+                    Text(stringResource(R.string.plan_rate, (verses + pl.days - 1) / pl.days, pl.days), style = Theme.small(), maxLines = 1)
+                }
+                if (pl.books.any { s.locked(it) }) LockMark(c.unwritten, Modifier.size(Tokens.Size.lock))
+                else if (on) Box(Modifier.size(Tokens.Size.dot).clip(androidx.compose.foundation.shape.CircleShape).background(c.rubric))
+            }
+        }
+        BookButton(stringResource(R.string.plan_none), Modifier.fillMaxWidth(), quiet = true) { s.choosePlan(null) }
     }
 }

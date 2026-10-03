@@ -56,6 +56,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.em
 import io.github.graviton94.todaybible.R
 import io.github.graviton94.todaybible.core.Goal
 import io.github.graviton94.todaybible.core.Markup
@@ -106,7 +107,7 @@ fun Opening(s: AppState, onDone: () -> Unit) {
         Box(Modifier.fillMaxSize().graphicsLayer {
             transformOrigin = TransformOrigin(0f, 0.5f); cameraDistance = Tokens.Motion.openCamera * density
             rotationY = -Tokens.Motion.openAngle * turn.value; alpha = if (turn.value > 0.85f) (1f - turn.value) / 0.15f else 1f
-        }.background(c.leather)) {
+        }.background(s.coverColor())) {
             // 금박이 빛을 받는 순간: 금빛이 잠깐 밝아졌다 돌아옴 (띠 · 그라데이션 없이)
             val glint = kotlin.math.sin(shine.value * Math.PI).toFloat()
             val gold = androidx.compose.ui.graphics.lerp(c.gilt, c.leatherInk, glint * Tokens.Alpha.shine * 3f)
@@ -130,6 +131,8 @@ fun Opening(s: AppState, onDone: () -> Unit) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
                     StampMark(STAMP_CROSS, gold.copy(alpha = draw.value), Modifier.size(Tokens.Size.emblem))
                     Text(stringResource(R.string.app_name), style = Theme.title(k, Tokens.Text.display).copy(color = gold.copy(alpha = draw.value)))
+                    // 금박 이름 (H1)
+                    if (s.ownerName.isNotBlank()) Text(s.ownerName.toList().joinToString(" "), style = Theme.label().copy(color = gold.copy(alpha = draw.value), letterSpacing = Tokens.Tracking.headEn.em))
                 }
             }
         }

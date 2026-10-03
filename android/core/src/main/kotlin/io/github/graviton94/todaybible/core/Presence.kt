@@ -16,6 +16,17 @@ object Presence {
     /**
      * 이어 쓴 날 수: 오늘(아직 안 썼으면 어제)부터 거슬러 셈. 비어 있는 주일은 건너뛰고 끊지 않음.
      */
+    /** 가장 길게 이어 쓴 날 수 (비어 있는 주일은 끊지 않음). */
+    fun longestStreak(days: Set<Long>): Int {
+        if (days.isEmpty()) return 0
+        val sorted = days.sorted(); var best = 1; var run = 1
+        for (i in 1 until sorted.size) {
+            val gap = (sorted[i - 1] + 1 until sorted[i]).map { LocalDate.ofEpochDay(it) }
+            run = if (gap.all { isRest(it) }) run + 1 else 1
+            best = maxOf(best, run)
+        }
+        return best
+    }
     fun streak(days: Set<Long>, today: LocalDate): Int {
         var d = if (today.toEpochDay() in days) today else today.minusDays(1)
         var n = 0
@@ -72,5 +83,25 @@ object Goal {
     fun met(goal: Int, todayVerses: Int, todayChapters: Int): Boolean = if (goal == CHAPTER) todayChapters > 0 else todayVerses >= goal
     /** 이 분량이면 몇 날이 걸리는지 (절 수 기준, 장이면 장 수). */
     fun days(goal: Int, verses: Int, chapters: Int): Int = if (goal == CHAPTER) chapters else (verses + goal - 1) / goal
+}
+
+/** 필사 길잡이: 정한 권 · 장을 정한 날 수 안에. 하루 분량은 남은 절을 남은 날로 나눔. */
+data class Plan(val id: String, val chapters: List<Pair<Int, Int>>, val days: Int) {
+    val books: Set<Int> get() = chapters.map { it.first }.toSet()
+}
+
+object Plans {
+    private fun whole(book: Int) = (1..Canon.books[book].chapters).map { book to it }
+    val all = listOf(
+        Plan("mark30", whole(40), 30),
+        Plan("prov31", whole(19), 31),
+        Plan("ps365", whole(18), 365),
+        Plan("nt365", (39..65).flatMap { whole(it) }, 365),
+    )
+    fun byId(id: String?) = all.firstOrNull { it.id == id }
+    /** 오늘 몇째 날인지 (1부터, 날 수를 넘으면 마지막 날). */
+    fun day(start: Long, today: LocalDate): Int = (today.toEpochDay() - start + 1).toInt().coerceIn(1, Int.MAX_VALUE)
+    /** 오늘 분량: 남은 절 ÷ 남은 날 (올림, 하루 1절 이상). */
+    fun perDay(total: Int, done: Int, daysLeft: Int): Int = if (total <= done) 0 else maxOf(1, (total - done + daysLeft - 1) / maxOf(1, daysLeft))
 }
 

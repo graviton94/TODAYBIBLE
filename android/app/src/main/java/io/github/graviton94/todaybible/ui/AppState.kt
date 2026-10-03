@@ -40,6 +40,10 @@ class AppState(val store: Store) {
     var peekBook by mutableStateOf<Int?>(null)
     /** 처음 소개의 몇째 장. */
     var welcomeStep by mutableStateOf(0)
+    var planId by mutableStateOf(store.planId)
+    var planOpen by mutableStateOf(false)
+    var cover by mutableStateOf(store.cover)
+    var ownerName by mutableStateOf(store.ownerName)
     /** 이 장에서 고른 절 (없으면 다음 빈 절). */
     var target by mutableStateOf<Int?>(null)
     var reminderHour by mutableStateOf(store.reminderHour)
@@ -69,7 +73,10 @@ class AppState(val store: Store) {
     fun text(b: Int = book) = store.book(translation, b)
     /** 무료 네 권 밖은 평생권이 있어야 열림. Play 에 닿지 않는 곳(직접 설치 등)에서는 잠그지 않음. */
     fun locked(b: Int) = b !in Canon.free && !lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)
-    private fun widgets() { val ctx = store.context; Thread { runCatching { io.github.graviton94.todaybible.widget.VerseWidget.refresh(ctx) } }.start() }
+    private fun widgets() {
+        val ctx = store.context; runCatching { store.lastGoal = effectiveGoal() }
+        Thread { runCatching { io.github.graviton94.todaybible.widget.VerseWidget.refresh(ctx) }; runCatching { io.github.graviton94.todaybible.widget.SmallWidget.refreshAll(ctx) } }.start()
+    }
 
     fun open(b: Int, ch: Int) {
         if (locked(b)) { peekBook = b; purchaseOpen = true; return }
@@ -96,7 +103,39 @@ class AppState(val store: Store) {
         return fills.filter { it.translation == translation && it.epochDay == d }.map { it.key.book to it.key.chapter }.toSet()
             .count { (b, c) -> p.chapterDone(translation, store.book(translation, b), c) }
     }
-    fun goalMet() = io.github.graviton94.todaybible.core.Goal.met(dailyGoal, todayVerses(), todayChapters())
+    fun goalMet() = io.github.graviton94.todaybible.core.Goal.met(effectiveGoal(), todayVerses(), todayChapters())
+
+    // ── 길잡이 ──
+    val plan: io.github.graviton94.todaybible.core.Plan? get() = io.github.graviton94.todaybible.core.Plans.byId(planId)
+    fun choosePlan(id: String?) {
+        val p = io.github.graviton94.todaybible.core.Plans.byId(id)
+        if (p != null && p.books.any { locked(it) }) { peekBook = p.books.first { locked(it) }; purchaseOpen = true; return }
+        planId = id; store.planId = id; store.planStart = today().toEpochDay(); planOpen = false
+        planNext()?.let { (b, c, _) -> book = b; chapter = c; target = null; store.setBookmark(translation, b, c) }
+    }
+    /** 길잡이 범위의 절 수 · 쓴 절 수. */
+    fun planCounts(): Pair<Int, Int> {
+        val pl = plan ?: return 0 to 0; val p = progress; var total = 0; var done = 0
+        pl.chapters.forEach { (b, c) -> val t = store.book(translation, b); t.fillable(c).forEach { v -> total++; if (p.isFilled(translation, VerseKey(b, c, v))) done++ } }
+        return total to done
+    }
+    /** 길잡이에서 다음에 쓸 (권, 장, 절). */
+    fun planNext(): Triple<Int, Int, Int>? {
+        val pl = plan ?: return null; val p = progress
+        for ((b, c) in pl.chapters) { val t = store.book(translation, b); p.nextVerse(translation, t, c)?.let { return Triple(b, c, it) } }
+        return null
+    }
+    fun planDay(): Int = io.github.graviton94.todaybible.core.Plans.day(store.planStart, today())
+    /** 오늘의 분량: 길잡이가 있으면 남은 절 ÷ 남은 날 (오늘 쓴 절은 오늘 몫에 포함). */
+    fun effectiveGoal(): Int {
+        val pl = plan ?: return dailyGoal
+        val (total, done) = planCounts(); val doneBefore = done - todayVerses()
+        val left = (pl.days - planDay() + 1).coerceAtLeast(1)
+        return io.github.graviton94.todaybible.core.Plans.perDay(total, doneBefore, left).coerceAtLeast(1)
+    }
+    fun setCover(c: String) { cover = c; store.cover = c }
+    fun setOwner(n: String) { ownerName = n; store.ownerName = n }
+    fun coverColor() = when (cover) { "navy" -> io.github.graviton94.todaybible.design.Tokens.Covers.navy; "olive" -> io.github.graviton94.todaybible.design.Tokens.Covers.olive; "ebony" -> io.github.graviton94.todaybible.design.Tokens.Covers.ebony; else -> io.github.graviton94.todaybible.design.Tokens.Covers.burgundy }
 
     /** 다음 판화: 지금 권에서 이 장 뒤로 가장 가까운 것, 없으면 가장 많이 쓴 (아직 다 안 찬) 것. 남은 절 수와 함께. */
     fun nextPlate(): Pair<io.github.graviton94.todaybible.data.Plate, Int>? {
@@ -119,7 +158,7 @@ class AppState(val store: Store) {
         if (store.startDay < 0) store.startDay = day
         store.append(new); fills.addAll(new); widgets()
         val t = text()
-        val wasMet = io.github.graviton94.todaybible.core.Goal.met(dailyGoal, todayVerses() - new.size, 0)
+        val wasMet = io.github.graviton94.todaybible.core.Goal.met(effectiveGoal(), todayVerses() - new.size, 0)
         if (progress.chapterDone(tr, t, chapter)) finished = book to chapter
         else if (!wasMet && goalMet()) toast = store.context.getString(io.github.graviton94.todaybible.R.string.goal_done)
         else if (mode != Mode.TYPE) toast = store.context.getString(io.github.graviton94.todaybible.R.string.filled_n, new.size)

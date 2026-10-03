@@ -106,5 +106,30 @@ class CoreTest {
         assertTrue(Goal.met(5, 5, 0)); assertFalse(Goal.met(5, 4, 0)); assertTrue(Goal.met(Goal.CHAPTER, 0, 1))
         assertEquals(136, Goal.days(5, 678, 16))
     }
+
+    @Test fun longestStreakAndPlans() {
+        val sat = LocalDate.of(2026, 10, 3)
+        val days = (0L..5L).map { sat.minusDays(it).toEpochDay() }.toSet() + sat.minusDays(7).toEpochDay() + sat.minusDays(8).toEpochDay() + sat.minusDays(30).toEpochDay()
+        assertEquals(8, Presence.longestStreak(days))
+        assertEquals(0, Presence.longestStreak(emptySet()))
+        val mark = Plans.byId("mark30")!!
+        assertEquals(16, mark.chapters.size)
+        assertEquals(260, Plans.byId("nt365")!!.chapters.size)
+        assertEquals(23, Plans.perDay(678, 0, 30))
+        assertEquals(0, Plans.perDay(678, 678, 3))
+        assertEquals(1, Plans.day(sat.toEpochDay(), sat))
+    }
+
+    @Test fun reciteFollowsSpeech() {
+        val v = "여호와는 나의 목자시니 내가 부족함이 없으리로다"
+        assertEquals(0, Recite.lit(v, ""))
+        assertEquals("여호와는 나의".length, Recite.lit(v, "여호와는 나의"))
+        // 띄어쓰기 · 한 글자 잘못 알아들어도 따라감
+        assertTrue(Recite.lit(v, "여호와는나의 목자 시니 내가") >= "여호와는 나의 목자시니 내가".length - 1)
+        assertTrue(Recite.done(v, "여호와는 나의 목자시니 내가 부족함이 없으리로다"))
+        assertTrue(Recite.done(v, "여호와는 나의 목자시니 내가 부족함이 없으리"))
+        assertFalse(Recite.done(v, "여호와는 나의 목자시니"))
+        assertTrue(Recite.done("And he goeth up into a mountain", "and he goes up into a mountain"))
+    }
 }
 
