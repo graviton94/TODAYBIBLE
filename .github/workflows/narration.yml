@@ -1,0 +1,44 @@
+name: Narration
+on:
+  workflow_dispatch:
+    inputs:
+      tag: { description: "release tag", default: "narration-v1" }
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - run: gh release view "${{ inputs.tag }}" -R "${{ github.repository }}" >/dev/null 2>&1 || gh release create "${{ inputs.tag }}" -R "${{ github.repository }}" --title "낭독 음원 ${{ inputs.tag }}" --notes "Supertonic 3 (Supertone, OpenRAIL-M)로 만든 개역한글 낭독. 권마다 목소리마다 zip 하나."
+        env: { GH_TOKEN: "${{ github.token }}" }
+  book:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    strategy:
+      fail-fast: false
+      max-parallel: 20
+      matrix:
+        voice: [M5, F5]
+        book: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - uses: actions/cache@v4
+        with: { path: /tmp/st/assets, key: supertonic3-aafc6e3 }
+      - name: Get Supertonic 3
+        run: |
+          [ -d /tmp/st/py ] || git clone -q --depth 1 https://github.com/supertone-oss-archive/supertonic.git /tmp/st-src
+          mkdir -p /tmp/st && cp -rn /tmp/st-src/py /tmp/st/ 2>/dev/null || true
+          pip install -q huggingface_hub -r /tmp/st/py/requirements.txt
+          [ -f /tmp/st/assets/voice_styles/M5.json ] || hf download supertone-oss-archive/supertonic-3 --revision aafc6e32416a594460b32413efc49d7fe4ce6d46 --local-dir /tmp/st/assets
+          sudo apt-get install -y -qq ffmpeg >/dev/null
+      - name: Narrate
+        run: python scripts/narrate.py /tmp/st/py /tmp/st/assets ${{ matrix.voice }} ${{ matrix.book }} out
+      - name: Upload to release
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          n=$(printf "%s_%02d" "$(echo ${{ matrix.voice }} | tr A-Z a-z)" ${{ matrix.book }})
+          (cd out/$n && zip -q -0 ../$n.zip *.m4a)
+          ls -la out/$n.zip
+          gh release upload "${{ inputs.tag }}" out/$n.zip --clobber -R "${{ github.repository }}"
