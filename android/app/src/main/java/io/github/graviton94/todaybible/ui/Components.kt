@@ -113,9 +113,10 @@ fun BookSheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit
             Modifier.fillMaxWidth().graphicsLayer { translationY = (1f - shown.value) * size.height * 0.15f }
                 .clip(RoundedCornerShape(topStart = Tokens.Radius.sheet, topEnd = Tokens.Radius.sheet)).background(c.leaf)
                 .drawBehind {
-                    val w = Tokens.Stroke.giltFine.toPx(); val r = Tokens.Radius.sheet.toPx(); val g = Tokens.Size.bandGap.toPx()
-                    drawLine(c.gilt, Offset(r, w), Offset(size.width - r, w), w)
-                    drawLine(c.gilt, Offset(r, w + g), Offset(size.width - r, w + g), w)
+                    // 둥근 모서리 안쪽에서 시작하는 두 줄 (가장자리에 붙으면 떠 보임)
+                    val w = Tokens.Stroke.giltFine.toPx(); val x = Tokens.Space.s5.toPx(); val y = Tokens.Space.s1.toPx(); val g = Tokens.Size.bandGap.toPx()
+                    drawLine(c.gilt, Offset(x, y), Offset(size.width - x, y), w)
+                    drawLine(c.gilt, Offset(x, y + g), Offset(size.width - x, y + g), w)
                 }
                 .clickable(remember { MutableInteractionSource() }, null) {}
                 .navigationBarsPadding().padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s3, bottom = Tokens.Space.s5),
