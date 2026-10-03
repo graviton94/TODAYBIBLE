@@ -271,7 +271,7 @@ fun HandBookView(s: AppState, book: Int) {
     androidx.activity.compose.BackHandler { s.handBook = null }
     val chapters = remember(book, s.translation) { Ink.chapters(ctx, s.translation.id, book) }
     val pager = androidx.compose.foundation.pager.rememberPagerState { chapters.size.coerceAtLeast(1) }
-    Column(Modifier.fillMaxSize().background(c.leaf).systemBarsPadding()) {
+    Column(Modifier.fillMaxSize().background(c.leaf).clickable(remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, null) {}.systemBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically) {
             RunningHead(stringResource(R.string.hand_book, s.bookName(book)), if (chapters.isEmpty()) "" else "${pager.currentPage + 1} / ${chapters.size}", k, Modifier.weight(1f))
         }

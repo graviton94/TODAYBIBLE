@@ -199,7 +199,7 @@
     <string name="stat_chapters">chapters finished</string>
     <string name="stat_longest">longest run</string>
     <string name="stat_hour">most often</string>
-    <string name="stat_modes">Typed %1$d%% · Handwritten %2$d · Aloud %3$d</string>
+    <string name="stat_modes">Typed %1$d%% · Handwritten %2$d%% · Aloud %3$d%%</string>
     <string name="letters_n">%1$s</string>
     <string name="chapters_n">%1$d</string>
     <string name="days_n">%1$d days</string>
@@ -347,7 +347,7 @@
     <string name="ob_read_done">Your first verse is in ink.</string>
     <string name="ob_skip_read">Later</string>
     <string name="mic_why_h">Why the microphone?</string>
-    <string name="mic_why">The phone listens on the device to check the verse you read aloud. Nothing is recorded unless you turn on Keep my voice.</string>
+    <string name="mic_why">The phone listens on the device to check the verse you read aloud. Your reading is kept only on this phone, and you can delete it anytime.</string>
     <string name="mic_allow">Allow the microphone</string>
     <string name="size_huge">Huge</string>
     <string name="contrast_setting">Sharper (darker faint text, clearer lines)</string>
@@ -370,6 +370,7 @@
     <string name="rec_hide">Hide recordings</string>
     <string name="rec_row">Verse %1$d · %2$d:%3$02d</string>
     <string name="rec_delete">Delete</string>
+    <string name="rec_again">Read again</string>
     <string name="rec_deleted">Verse %1$d recording deleted</string>
     <string name="rec_clear">Delete all recordings</string>
     <string name="rec_clear_sure">Tap again to delete all</string>

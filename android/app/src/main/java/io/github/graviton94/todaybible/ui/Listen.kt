@@ -58,7 +58,8 @@ fun ListenReader(s: AppState, book: Int, chapter: Int) {
     val verses = t.fillable(ch)
     val list = rememberLazyListState()
     LaunchedEffect(now?.verse, ch) { now?.verse?.let { v -> verses.indexOf(v).takeIf { it >= 0 }?.let { list.animateScrollToItem((it - 1).coerceAtLeast(0)) } } }
-    Column(Modifier.fillMaxSize().background(c.leaf).systemBarsPadding()) {
+    // 아래 쪽으로 눌림 · 밀기가 새지 않게
+    Column(Modifier.fillMaxSize().background(c.leaf).clickable(androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, null) {}.systemBarsPadding()) {
         Box(Modifier.padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) {
             RunningHead(stringResource(R.string.listen_head, s.bookName(b), ch), stringResource(R.string.listen_mode), k)
         }
@@ -80,7 +81,7 @@ fun ListenReader(s: AppState, book: Int, chapter: Int) {
         // 아래: 앞 장 · 듣기/멈추기 · 다음 장
         Row(Modifier.fillMaxWidth().padding(Tokens.Space.s4), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             BookButton(stringResource(R.string.listen_prev), Modifier.weight(1f), quiet = true, enabled = ch > 1) {
-                if (now != null) ListenService.start(ctx, b, ch - 1, 1, s.aloudRate()) else s.listenAt = b to ch - 1
+                s.listenAt = b to ch - 1; if (now != null) ListenService.start(ctx, b, ch - 1, 1, s.aloudRate())
             }
             val label = stringResource(if (now != null) R.string.listen_stop else R.string.listen_start)
             Box(Modifier.size(Tokens.Size.emblem).clip(CircleShape).background(if (now != null) c.rubric else c.leather)
@@ -88,7 +89,7 @@ fun ListenReader(s: AppState, book: Int, chapter: Int) {
                     if (now != null) ListenService.stop(ctx) else ListenService.start(ctx, b, ch, verses.firstOrNull() ?: 1, s.aloudRate())
                 }, contentAlignment = Alignment.Center) { PlayMark(c.leatherInk, now != null, Modifier.size(Tokens.Size.iconMd)) }
             BookButton(stringResource(R.string.listen_next), Modifier.weight(1f), quiet = true, enabled = ch < Canon.books[b].chapters) {
-                if (now != null) ListenService.start(ctx, b, ch + 1, 1, s.aloudRate()) else s.listenAt = b to ch + 1
+                s.listenAt = b to ch + 1; if (now != null) ListenService.start(ctx, b, ch + 1, 1, s.aloudRate())
             }
         }
         Text(stringResource(R.string.listen_hint), style = Theme.small(), modifier = Modifier.padding(start = Tokens.Space.s5, end = Tokens.Space.s5, bottom = Tokens.Space.s3).heightIn(min = Tokens.Size.hiddenField))

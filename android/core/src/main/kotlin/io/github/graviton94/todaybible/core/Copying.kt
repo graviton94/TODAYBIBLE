@@ -23,7 +23,7 @@ object TypeJudge {
         val targets = src.filterNot(::ignorable).lowercase()
         var k = 0
         return src.map { c ->
-            if (ignorable(c)) { if (k == 0 || k > t.length) Mark.PENDING else Mark.OK }
+            if (ignorable(c)) { if (t.isEmpty() || k > t.length) Mark.PENDING else Mark.OK }
             else {
                 val m = when {
                     k >= t.length -> Mark.PENDING
@@ -162,6 +162,15 @@ object Recite {
         return out
     }
     private val CONT = Regex("(며|고|니|되|나|여|서|면|매|요|라|도)$")
+
+    /** 큰 글씨 한 줄에 들어가지 않는 토막은 가운데에 가까운 띄어쓰기에서 둘로 (들어갈 때까지). */
+    fun fit(plain: String, parts: List<IntRange>, fits: (IntRange) -> Boolean): List<IntRange> = parts.flatMap { split(plain, it, fits) }
+    private fun split(plain: String, r: IntRange, fits: (IntRange) -> Boolean): List<IntRange> {
+        if (fits(r)) return listOf(r)
+        val mid = (r.first + r.last) / 2
+        val gap = (r.first + 1..r.last - 1).filter { plain[it] == ' ' }.minByOrNull { kotlin.math.abs(it - mid) } ?: return listOf(r)
+        return split(plain, r.first..gap - 1, fits) + split(plain, gap + 1..r.last, fits)
+    }
 
     private const val LOOK = 3
     /** 옛말 어미처럼 알아듣기가 자주 놓치는 글자를 몇 개까지 건너뛰어도 따라갈지. */

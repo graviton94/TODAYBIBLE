@@ -12,7 +12,7 @@ import java.time.ZoneId
 class WidgetTick : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         val r = goAsync()
-        Thread { refreshAll(ctx); schedule(ctx); r.finish() }.start()
+        Thread { try { refreshAll(ctx); schedule(ctx) } finally { r.finish() } }.start()
     }
 
     companion object {

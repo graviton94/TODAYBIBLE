@@ -34,8 +34,8 @@ import java.time.LocalDate
 
 /** 내 손글씨 위젯 (S1): 손으로 쓴 절 하나를 내 글씨 그대로. 하루에 한 번 다른 절로. */
 class HandWidget : AppWidgetProvider() {
-    override fun onUpdate(ctx: Context, manager: AppWidgetManager, ids: IntArray) { val r = goAsync(); Thread { ids.forEach { draw(ctx, manager, it) }; r.finish() }.start() }
-    override fun onAppWidgetOptionsChanged(ctx: Context, manager: AppWidgetManager, id: Int, options: Bundle) { val r = goAsync(); Thread { draw(ctx, manager, id); r.finish() }.start() }
+    override fun onUpdate(ctx: Context, manager: AppWidgetManager, ids: IntArray) { val r = goAsync(); Thread { try { ids.forEach { draw(ctx, manager, it) } } finally { r.finish() } }.start() }
+    override fun onAppWidgetOptionsChanged(ctx: Context, manager: AppWidgetManager, id: Int, options: Bundle) { val r = goAsync(); Thread { try { draw(ctx, manager, id) } finally { r.finish() } }.start() }
 
     companion object {
         fun refresh(ctx: Context) {

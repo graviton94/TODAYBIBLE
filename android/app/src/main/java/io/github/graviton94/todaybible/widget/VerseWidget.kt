@@ -44,8 +44,8 @@ import java.time.LocalDate
  * 앱과 같은 글꼴 · 토큰으로 그림 한 장을 그려 붙임. 누르면 필사 장으로.
  */
 class VerseWidget : AppWidgetProvider() {
-    override fun onUpdate(ctx: Context, manager: AppWidgetManager, ids: IntArray) { val r = goAsync(); Thread { ids.forEach { draw(ctx, manager, it) }; r.finish() }.start() }
-    override fun onAppWidgetOptionsChanged(ctx: Context, manager: AppWidgetManager, id: Int, options: Bundle) { val r = goAsync(); Thread { draw(ctx, manager, id); r.finish() }.start() }
+    override fun onUpdate(ctx: Context, manager: AppWidgetManager, ids: IntArray) { val r = goAsync(); Thread { try { ids.forEach { draw(ctx, manager, it) } } finally { r.finish() } }.start() }
+    override fun onAppWidgetOptionsChanged(ctx: Context, manager: AppWidgetManager, id: Int, options: Bundle) { val r = goAsync(); Thread { try { draw(ctx, manager, id) } finally { r.finish() } }.start() }
 
     companion object {
         /** 앱에서 기록이 바뀌면 부름. */

@@ -134,7 +134,7 @@ fun SettingsPage(s: AppState) {
                 // 녹음 모두 지우기: 한 번 더 눌러야 지워요
                 var sure by remember { mutableStateOf(false) }
                 if (voice > 0) BookButton(stringResource(if (sure) R.string.rec_clear_sure else R.string.rec_clear), Modifier.fillMaxWidth(), quiet = true) {
-                    if (!sure) sure = true else { java.io.File(ctx.filesDir, "voice").deleteRecursively(); sure = false; s.toast = ctx.getString(R.string.rec_cleared) }
+                    if (!sure) sure = true else { java.io.File(ctx.filesDir, "voice").deleteRecursively(); s.voiceRev++; sure = false; s.toast = ctx.getString(R.string.rec_cleared) }
                 }
             }
             Group(stringResource(R.string.lifetime)) {

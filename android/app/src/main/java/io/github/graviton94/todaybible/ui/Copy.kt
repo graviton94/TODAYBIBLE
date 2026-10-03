@@ -133,8 +133,10 @@ fun CopyPage(s: AppState) {
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 UnderlineTabs(listOf(stringResource(R.string.mode_aloud), stringResource(R.string.mode_type), stringResource(R.string.mode_paper)), tab, Modifier.weight(1f)) { tab = it; s.store.copyTab = it }
-                if (tab == 1) ViewToggle(s)
+                if (tab == 1 && s.scale <= 1.15f) ViewToggle(s)
             }
+            // 큰 글씨: 탭이 눌리지 않게 보기 고르기는 아랫줄로
+            if (tab == 1 && s.scale > 1.15f) Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s2), horizontalArrangement = Arrangement.End) { ViewToggle(s) }
         }
         when (tab) {
             1 -> WritePage(s, next)
@@ -144,7 +146,10 @@ fun CopyPage(s: AppState) {
                     BookButton(stringResource(R.string.notes_pdf), Modifier.fillMaxWidth(), quiet = true) { s.requestNotes(s.book) }
             }
             else -> Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-                if (next == null) { ChapterDoneNote(s); VoiceRow(s) } else AloudTab(s, next)
+                // 녹음을 지우고 다시 읽기를 고른 절이 있으면 그 절부터
+                val again = s.reread?.takeIf { it.first == s.book && it.second == s.chapter && it.third in fillable }?.third
+                val aloudVerse = again ?: next
+                if (aloudVerse == null) { ChapterDoneNote(s); VoiceRow(s) } else AloudTab(s, aloudVerse)
             }
         }
     }
@@ -486,20 +491,24 @@ private fun AloudControls(s: AppState, guideReady: Boolean) {
 @Composable
 private fun AloudLines(s: AppState, verse: Int, plain: String, at: Int, missed: List<IntRange>, guiding: Boolean) {
     val c = Theme.c; val k = s.korean
-    val parts = remember(plain) { Recite.phrases(plain) }
+    val measurer = rememberTextMeasurer(); val base = Theme.verse(k)
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+    val maxW = constraints.maxWidth
+    // 큰 글씨가 줄어들지 않게: 한 줄에 안 들어가는 토막은 더 잘게 나눠요
+    val floor = Tokens.Text.aloudFit.value * s.scale
+    val parts = remember(plain, maxW, s.scale) {
+        Recite.fit(plain, Recite.phrases(plain)) { r -> measurer.measure(plain.substring(r.first, r.last + 1), base.copy(fontSize = floor.sp), maxLines = 1, softWrap = false).size.width <= maxW }
+    }
     val cur = parts.indexOfFirst { at <= it.last }.let { if (it < 0) parts.lastIndex else it }
-    fun line(i: Int) = parts.getOrNull(i)?.let { plain.substring(it.first, it.last + 1) }
     Column(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.aloudBox), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3, Alignment.CenterVertically)) {
         Text(stringResource(R.string.line_of, verse, cur + 1, parts.size), style = Theme.small().copy(color = c.rubric), maxLines = 1)
         // 꼭 한 줄: 화면 너비에 맞춰 글자 크기를 줄여서라도 한 줄로
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val measurer = rememberTextMeasurer(); val dens = LocalDensity.current
-            val base = Theme.verse(k)
+        Box(Modifier.fillMaxWidth()) {
             val r = parts.getOrNull(cur)
             val line = r?.let { plain.substring(it.first, it.last + 1) }.orEmpty()
-            val size = remember(line, constraints.maxWidth, s.scale) {
+            val size = remember(line, maxW, s.scale) {
                 var sp = Tokens.Text.aloudBig.value * s.scale
-                while (sp > Tokens.Text.aloudMin.value && measurer.measure(line, base.copy(fontSize = sp.sp), maxLines = 1, softWrap = false).size.width > constraints.maxWidth) sp *= 0.93f
+                while (sp > Tokens.Text.aloudMin.value && measurer.measure(line, base.copy(fontSize = sp.sp), maxLines = 1, softWrap = false).size.width > maxW) sp *= 0.93f
                 sp.sp
             }
             androidx.compose.animation.AnimatedContent(cur, transitionSpec = {
@@ -521,10 +530,11 @@ private fun AloudLines(s: AppState, verse: Int, plain: String, at: Int, missed: 
             parts.indices.forEach { i -> Box(Modifier.size(Tokens.Size.dot).clip(androidx.compose.foundation.shape.CircleShape).background(if (i <= cur) c.rubric else c.hair)) }
         }
     }
+    }
 }
 
 /**
- * 낭독 (G1): 소리 내어 읽으면 알아들은 만큼 글자가 먹으로 (기기 안 음성 인식 · 녹음은 남기지 않음).
+ * 낭독 (G1): 소리 내어 읽으면 알아들은 만큼 글자가 먹으로 (기기 안 음성 인식 · 읽은 목소리는 이 폰에만 녹음).
  * 다 읽으면 도장 · 진동과 함께 채워지고, 켜 둔 채로 다음 절로 이어짐.
  * 음성 인식이 없거나 마이크를 허락하지 않으면 읽는 빠르기로 밝아지는 방식.
  */
@@ -550,6 +560,10 @@ private fun AloudTab(s: AppState, verse: Int) {
             BookButton(stringResource(R.string.not_now), Modifier.fillMaxWidth(), quiet = true) { whyMic = false }
         }
     }
+    // 듣기와 낭독은 함께 하지 않아요: 듣기를 열면 읽기를 멈추고, 읽기를 켜면 듣기를 멈춰요 (낭독 목소리를 내 목소리로 알아듣지 않게)
+    val listening = io.github.graviton94.todaybible.data.ListenService.now.collectAsState().value != null
+    LaunchedEffect(s.listenAt, listening) { if (s.listenAt != null || listening) running = false }
+    LaunchedEffect(running) { if (running && io.github.graviton94.todaybible.data.ListenService.now.value != null) io.github.graviton94.todaybible.data.ListenService.stop(ctx) }
     // 아침 알림 ‘함께 읽기’로 열었으면 곧바로 시작 (Y1)
     LaunchedEffect(s.aloudNow) { if (s.aloudNow) { s.aloudNow = false; if (mic) running = true else ask.launch(Manifest.permission.RECORD_AUDIO) } }
     // 내 목소리 남기기 (평생권): 녹음과 음성 인식이 마이크 하나를 나눠 씀 (안드로이드 13+ 는 파이프로, 그 아래는 손으로 ‘다 읽었어요’)
@@ -583,11 +597,11 @@ private fun AloudTab(s: AppState, verse: Int) {
     var spoken by remember(verse, s.chapter, s.book) { mutableIntStateOf(-1) }   // 가이드가 읽은 데까지 (-1 = 가이드가 읽는 중 아님)
     var replay by remember { mutableIntStateOf(0) }
 
-    if (canHear || record) {
+    if (canHear || (record && mic)) {
         val lit = if (recognize) Recite.lit(plain, heard) else plain.length
         val done = recognize && Recite.done(plain, heard)
         var finished by remember(verse, s.chapter, s.book) { mutableStateOf(false) }
-        fun complete() { if (finished) return; finished = true; haptic.performHapticFeedback(HapticFeedbackType.LongPress); s.fill(listOf(verse), Mode.ALOUD) }
+        fun complete() { if (finished) return; finished = true; haptic.performHapticFeedback(HapticFeedbackType.LongPress); s.fill(listOf(verse), Mode.ALOUD); if (s.reread?.third == verse) { s.reread = null; s.voiceRev++ } }
         // 놓친 곳 (T2): 다 읽었는데 알아듣지 못한 낱말이 있으면 붉게 짚고, 잠시 뒤 그대로 채움 (듣기 · 다시 읽기를 누르면 기다림)
         val missed = remember(heard, done) { if (done) Recite.missed(plain, heard) else emptyList() }
         var review by remember(verse, s.chapter, s.book) { mutableStateOf(false) }
@@ -776,9 +790,10 @@ fun ShareVerseSheet(s: AppState, v: Int) {
 @Composable
 private fun VoiceRow(s: AppState) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
-    val parts = remember(s.fills.size, s.book, s.chapter, s.translation) { Voice.verses(ctx, s.translation.id, s.book, s.chapter) }
+    val parts = remember(s.fills.size, s.book, s.chapter, s.translation, s.voiceRev) { Voice.verses(ctx, s.translation.id, s.book, s.chapter) }
     if (parts.isEmpty()) return
-    val total = remember(parts) { parts.sumOf { Voice.durationMs(it.second) } }
+    val lengths = remember(parts) { parts.associate { it.first to Voice.durationMs(it.second) } }
+    val total = lengths.values.sum()
     val scope = rememberCoroutineScope()
     var player by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
     DisposableEffect(Unit) { onDispose { player?.release() } }
@@ -847,18 +862,21 @@ private fun VoiceRow(s: AppState) {
         if (s.exporting) Text(stringResource(R.string.exporting), style = Theme.small())
         // 절마다 녹음: 듣기 · 지우기 (마음에 안 들면 지우고 다시 읽어요)
         var open by remember { mutableStateOf(false) }
-        var gone by remember(s.book, s.chapter) { mutableStateOf(setOf<Int>()) }
         Text(stringResource(if (open) R.string.rec_hide else R.string.rec_show), style = Theme.small().copy(color = c.rubric),
             modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { open = !open })
-        if (open) parts.filter { it.first !in gone }.forEach { (v, f) ->
+        if (open) parts.forEach { (v, f) ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                val sec = (Voice.durationMs(f) / 1000).toInt()
+                val sec = ((lengths[v] ?: 0L) / 1000).toInt()
                 Text(stringResource(R.string.rec_row, v, sec / 60, sec % 60), style = Theme.body(), modifier = Modifier.weight(1f))
                 Text(stringResource(R.string.voice_play), style = Theme.small().copy(color = c.ink), modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
                     player?.release(); player = runCatching { android.media.MediaPlayer().apply { setDataSource(f.path); prepare(); setOnCompletionListener { it.release(); player = null }; start() } }.getOrNull()
                 })
                 Text(stringResource(R.string.rec_delete), style = Theme.small().copy(color = c.rubric), modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
-                    player?.release(); player = null; f.delete(); gone = gone + v; s.toast = ctx.getString(R.string.rec_deleted, v)
+                    player?.release(); player = null; f.delete(); s.voiceRev++; s.toast = ctx.getString(R.string.rec_deleted, v)
+                })
+                // 지우고 그 절을 다시 소리 내어 읽기
+                Text(stringResource(R.string.rec_again), style = Theme.small().copy(color = c.ink), modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
+                    player?.release(); player = null; f.delete(); s.voiceRev++; s.reread = Triple(s.book, s.chapter, v); s.store.copyTab = 0
                 })
             }
         }

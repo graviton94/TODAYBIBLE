@@ -37,8 +37,8 @@ import java.time.LocalDate
 abstract class SmallWidget : AppWidgetProvider() {
     abstract fun draw(ctx: Context, wDp: Int, hDp: Int, dark: Boolean): Bitmap
     // 그림 그리기는 뒤에서 (받는 쪽 시간 제한 안에)
-    override fun onUpdate(ctx: Context, m: AppWidgetManager, ids: IntArray) { val r = goAsync(); Thread { ids.forEach { update(ctx, m, it) }; r.finish() }.start() }
-    override fun onAppWidgetOptionsChanged(ctx: Context, m: AppWidgetManager, id: Int, o: Bundle) { val r = goAsync(); Thread { update(ctx, m, id); r.finish() }.start() }
+    override fun onUpdate(ctx: Context, m: AppWidgetManager, ids: IntArray) { val r = goAsync(); Thread { try { ids.forEach { update(ctx, m, it) } } finally { r.finish() } }.start() }
+    override fun onAppWidgetOptionsChanged(ctx: Context, m: AppWidgetManager, id: Int, o: Bundle) { val r = goAsync(); Thread { try { update(ctx, m, id) } finally { r.finish() } }.start() }
     private fun update(ctx: Context, m: AppWidgetManager, id: Int) {
         val o = m.getAppWidgetOptions(id)
         // 세로 화면 기준 자리 (가로 · 세로 중 작은 쪽으로 정사각)

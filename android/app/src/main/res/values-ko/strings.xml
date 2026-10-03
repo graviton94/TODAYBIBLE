@@ -199,7 +199,7 @@
     <string name="stat_chapters">마친 장</string>
     <string name="stat_longest">가장 길게 이어 씀</string>
     <string name="stat_hour">가장 자주 쓴 때</string>
-    <string name="stat_modes">타자 %1$d%% · 손글씨 %2$d · 낭독 %3$d</string>
+    <string name="stat_modes">타자 %1$d%% · 손글씨 %2$d%% · 낭독 %3$d%%</string>
     <string name="letters_n">%1$s자</string>
     <string name="chapters_n">%1$d장</string>
     <string name="days_n">%1$d일</string>
@@ -347,7 +347,7 @@
     <string name="ob_read_done">첫 절이 먹으로 채워졌어요.</string>
     <string name="ob_skip_read">나중에 할게요</string>
     <string name="mic_why_h">마이크를 쓰는 까닭</string>
-    <string name="mic_why">소리 내어 읽은 말씀이 맞는지 폰 안에서만 알아들어요. 녹음은 ‘내 목소리 남기기’를 켰을 때만 남아요.</string>
+    <string name="mic_why">소리 내어 읽은 말씀이 맞는지 폰 안에서만 알아들어요. 읽은 목소리는 이 폰에만 남고, 언제든 지울 수 있어요.</string>
     <string name="mic_allow">마이크 허락하기</string>
     <string name="size_huge">아주 크게</string>
     <string name="contrast_setting">또렷하게 (흐린 글자를 진하게, 줄을 또렷하게)</string>
@@ -370,6 +370,7 @@
     <string name="rec_hide">녹음 접기</string>
     <string name="rec_row">%1$d절 · %2$d:%3$02d</string>
     <string name="rec_delete">지우기</string>
+    <string name="rec_again">다시 읽기</string>
     <string name="rec_deleted">%1$d절 녹음을 지웠어요</string>
     <string name="rec_clear">녹음 모두 지우기</string>
     <string name="rec_clear_sure">한 번 더 누르면 모두 지워요</string>

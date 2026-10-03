@@ -2,6 +2,7 @@ package io.github.graviton94.todaybible.ui
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import io.github.graviton94.todaybible.core.Canon
@@ -118,6 +119,10 @@ class AppState(val store: Store) {
     var night by mutableStateOf(false)
     /** 듣기 화면 (권, 장). */
     var listenAt by mutableStateOf<Pair<Int, Int>?>(null)
+    /** 녹음을 지우고 다시 읽을 절 (권, 장, 절). 채운 절이라도 낭독에서 다시 열어요. */
+    var reread by mutableStateOf<Triple<Int, Int, Int>?>(null)
+    /** 녹음 파일이 바뀌면 올림 (지우기 · 모두 지우기 뒤에 목록을 다시 읽게). */
+    var voiceRev by mutableIntStateOf(0)
     /** 손글씨로 넘겨 보는 권. */
     var handBook by mutableStateOf<Int?>(null)
 
@@ -243,7 +248,7 @@ class AppState(val store: Store) {
     fun plateFraction(pl: io.github.graviton94.todaybible.data.Plate, started: Set<Int> = startedBooks()): Float =
         if (pl.book !in started) 0f else progress.chapterFraction(translation, store.book(translation, pl.book), pl.chapter)
 
-    fun setReminder(h: Int) { reminderHour = h; store.reminderHour = h; if (h >= 0) { store.lastReminderHour = h; store.reminderDay = if (java.time.LocalTime.now().hour >= h) java.time.LocalDate.now().toEpochDay() else -1 }; io.github.graviton94.todaybible.data.Reminder.schedule(store.context, h) }
+    fun setReminder(h: Int) { reminderHour = h; store.reminderHour = h; if (h >= 0) { store.lastReminderHour = h; val today = java.time.LocalDate.now().toEpochDay(); store.reminderDay = if (java.time.LocalTime.now().hour >= h || store.postedDay == today) today else -1 }; io.github.graviton94.todaybible.data.Reminder.schedule(store.context, h) }
 
     /** 절(들)을 채움. 장을 다 채우면 finished, 새 발자취가 생기면 award. */
     fun fill(verses: List<Int>, mode: Mode) {

@@ -146,6 +146,20 @@ class CoreTest {
         assertEquals(null, Reference.parse("안녕"))
     }
 
+    @Test fun leadingPunctuationFollowsTyping() {
+        val m = TypeJudge.marks("“주는", "주")
+        assertEquals(TypeJudge.Mark.OK, m[0])
+        assertEquals(TypeJudge.Mark.PENDING, TypeJudge.marks("“주는", "")[0])
+    }
+
+    @Test fun phrasesFitOneLine() {
+        val v = "여호와는 나의 목자시니 내가 부족함이 없으리로다"
+        val fit = Recite.fit(v, listOf(v.indices)) { it.last - it.first + 1 <= 10 }
+        assertTrue(fit.size > 1)
+        assertTrue(fit.all { it.last - it.first + 1 <= 10 })
+        assertEquals(v.replace(" ", ""), fit.joinToString("") { v.substring(it.first, it.last + 1).replace(" ", "") })
+    }
+
     @Test fun reciteMissedAndPhrases() {
         val v = "그가 나를 푸른 초장에 누이시며 쉴만한 물 가으로 인도하시는도다"
         assertTrue(Recite.missed(v, v).isEmpty())

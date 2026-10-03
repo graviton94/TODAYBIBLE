@@ -124,6 +124,10 @@ class Store(val context: Context) {
         get() = prefs.getInt("reminder_last", 7)
         set(v) = prefs.edit().putInt("reminder_last", v).apply()
     /** 알림을 마지막으로 낸 날 (하루 한 번). */
+    /** 알림을 실제로 띄운 날 (하루 한 번). */
+    var postedDay: Long
+        get() = prefs.getLong("posted_day", -1)
+        set(v) = prefs.edit().putLong("posted_day", v).apply()
     var reminderDay: Long
         get() = prefs.getLong("reminder_day", -1)
         set(v) = prefs.edit().putLong("reminder_day", v).apply()

@@ -26,6 +26,8 @@ object Reminder {
     private const val CHANNEL = "daily_verse"
     const val ID = 7
 
+    private const val WINDOW_MS = 15 * 60_000L
+
     /**
      * 다음 알림 한 번을 맞춰요 (정각, 잠든 폰에서도 몇 분 안에). 알림이 울리면 받는 쪽에서 다음 날 것을 다시 맞춰요.
      * 앱을 정각 조금 뒤에 열었는데 오늘 알림이 아직이면 곧바로 한 번.
@@ -33,7 +35,8 @@ object Reminder {
     fun schedule(ctx: Context, hour: Int) {
         val am = ctx.getSystemService(AlarmManager::class.java)
         val pi = PendingIntent.getBroadcast(ctx, 0, Intent(ctx, ReminderReceiver::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        am.cancel(pi)
+        val backup = PendingIntent.getBroadcast(ctx, 8, Intent(ctx, ReminderReceiver::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        am.cancel(pi); am.cancel(backup)
         if (hour < 0) return
         val now = LocalDateTime.now(); val today = LocalDate.now()
         var at = today.atTime(hour, 0)
@@ -41,7 +44,10 @@ object Reminder {
             val missedToday = Store(ctx).reminderDay != today.toEpochDay() && now.isBefore(at.plusHours(2))
             at = if (missedToday) now.plusSeconds(30) else at.plusDays(1)
         }
-        am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pi)
+        val ms = at.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        // 정확한 알람을 쓸 수 있으면 정각에. 아니면 15분 창으로 맞추고, 깊이 잠든 폰을 위해 잠결에도 울리는 것을 하나 더 (먼저 울린 쪽만 띄움)
+        if (Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms()) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, ms, pi)
+        else { am.setWindow(AlarmManager.RTC_WAKEUP, ms, WINDOW_MS, pi); am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, ms + WINDOW_MS, backup) }
     }
 
     fun post(ctx: Context) {
@@ -54,6 +60,7 @@ object Reminder {
         if (LocalDateTime.now().isAfter(LocalDate.now().atTime(store.reminderHour, 0).plusHours(2))) return
         val fills = store.loadFills()
         if (fills.any { it.epochDay == today }) return
+        store.postedDay = today
         val tr = store.translation; val p = Progress(fills)
         // 길잡이가 있으면 길잡이의 다음 절, 없으면 책갈피
         val planNext = io.github.graviton94.todaybible.core.Plans.byId(store.planId)?.chapters?.firstNotNullOfOrNull { (pb, pc) ->

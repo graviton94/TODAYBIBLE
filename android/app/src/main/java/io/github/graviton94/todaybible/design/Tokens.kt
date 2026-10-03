@@ -112,6 +112,7 @@ object Tokens {
         val aloudBig = 30.sp
         val gridChar = 20.sp
         val aloudMin = 18.sp
+        val aloudFit = 26.sp
     }
     /** 표지 가죽 (나의 성경 꾸미기). */
     object Covers {
