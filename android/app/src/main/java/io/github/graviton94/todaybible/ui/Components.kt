@@ -1,6 +1,21 @@
 package io.github.graviton94.todaybible.ui
 
 import androidx.compose.foundation.background
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,18 +61,84 @@ fun RunningHead(left: String, right: String, korean: Boolean) {
     }
 }
 
-/** 가죽 버튼 (주요 동작) 또는 조용한 버튼. 높이 56dp 이상. */
+/**
+ * 버튼: 무광 가죽 + 안쪽 금박 테 (위아래 변은 책등 띠처럼 두 줄). 누르면 가죽이 한 톤 깊어짐.
+ * quiet = 바탕 없이 머리카락 테 한 줄. 비활성 = 옅은 바탕 · 흐린 테.
+ */
 @Composable
 fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = false, enabled: Boolean = true, onClick: () -> Unit) {
     val c = Theme.c
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val fill = when { quiet -> Color.Transparent; !enabled -> c.hair; pressed -> c.leatherDeep; else -> c.leather }
+    val line = when { quiet || !enabled -> c.hair; else -> c.gilt.copy(alpha = Tokens.Alpha.frame) }
     Box(
-        modifier.heightIn(min = 56.dp).clip(RoundedCornerShape(Tokens.Radius.button))
-            .background(if (quiet) Color.Transparent else if (enabled) c.leather else c.hair)
-            .then(if (quiet) Modifier.drawBehind { drawRoundRect(c.hair, style = Stroke(Tokens.Stroke.hair.toPx()), cornerRadius = androidx.compose.ui.geometry.CornerRadius(Tokens.Radius.button.toPx())) } else Modifier)
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3),
+        modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(fill)
+            .drawBehind { giltFrame(line, bands = !quiet && enabled) }
+            .clickable(source, null, enabled = enabled, role = Role.Button, onClick = onClick)
+            .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3),
         contentAlignment = Alignment.Center,
     ) {
         Text(text, style = Theme.label().copy(color = if (quiet) c.ink else if (enabled) c.leatherInk else c.inkSoft, textAlign = TextAlign.Center), maxLines = 1, overflow = TextOverflow.Ellipsis)
+    }
+}
+
+/** 안쪽 금박 테 (버튼 · 토스트 공통). bands = 위아래 변에 한 줄 더 (책등 띠). */
+fun DrawScope.giltFrame(color: Color, bands: Boolean) {
+    val i = Tokens.Size.frameInset.toPx(); val w = Tokens.Stroke.giltFine.toPx()
+    drawRoundRect(color, Offset(i, i), Size(size.width - 2 * i, size.height - 2 * i), CornerRadius(Tokens.Radius.frame.toPx()), style = Stroke(w))
+    if (bands) {
+        val g = i + Tokens.Size.bandGap.toPx(); val x0 = i + Tokens.Radius.frame.toPx(); val x1 = size.width - x0
+        drawLine(color, Offset(x0, g), Offset(x1, g), w)
+        drawLine(color, Offset(x0, size.height - g), Offset(x1, size.height - g), w)
+    }
+}
+
+/**
+ * 시트 (아래에서 올라오는 한 장): 장 고르기 · 발자취 · 확인 창 공통.
+ * 종이 바탕 + 위쪽 금선 두 줄 (책등 띠) + 금빛 손잡이. 바깥을 누르거나 뒤로 가면 닫힘.
+ */
+@Composable
+fun BookSheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+    val c = Theme.c
+    val shown = remember { Animatable(0f) }
+    LaunchedEffect(Unit) { shown.animateTo(1f, tween(Tokens.Motion.fadeMs)) }
+    BackHandler(onBack = onDismiss)
+    Box(
+        Modifier.fillMaxSize().graphicsLayer { alpha = shown.value }.background(c.scrim)
+            .clickable(remember { MutableInteractionSource() }, null, onClick = onDismiss),
+        contentAlignment = Alignment.BottomCenter,
+    ) {
+        Column(
+            Modifier.fillMaxWidth().graphicsLayer { translationY = (1f - shown.value) * size.height * 0.15f }
+                .clip(RoundedCornerShape(topStart = Tokens.Radius.sheet, topEnd = Tokens.Radius.sheet)).background(c.leaf)
+                .drawBehind {
+                    val w = Tokens.Stroke.giltFine.toPx(); val r = Tokens.Radius.sheet.toPx(); val g = Tokens.Size.bandGap.toPx()
+                    drawLine(c.gilt, Offset(r, w), Offset(size.width - r, w), w)
+                    drawLine(c.gilt, Offset(r, w + g), Offset(size.width - r, w + g), w)
+                }
+                .clickable(remember { MutableInteractionSource() }, null) {}
+                .navigationBarsPadding().padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s3, bottom = Tokens.Space.s5),
+            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2),
+        ) {
+            Box(Modifier.size(Tokens.Size.handleW, Tokens.Size.handleH).clip(RoundedCornerShape(Tokens.Size.handleH)).background(c.gilt.copy(alpha = Tokens.Alpha.handle)))
+            content()
+        }
+    }
+}
+
+/** 토스트: 짧은 한 줄. 가죽 띠 + 금박 테, 화면 아래 이름표 위에 잠깐. */
+@Composable
+fun BookToast(text: String) {
+    val c = Theme.c
+    Row(
+        Modifier.heightIn(min = Tokens.Size.toastMinH).clip(RoundedCornerShape(Tokens.Radius.button)).background(c.leather)
+            .drawBehind { giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = true) }
+            .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2),
+    ) {
+        StampMark(STAMP_CROSS, c.gilt, Modifier.size(Tokens.Size.iconSm))
+        Text(text, style = Theme.label().copy(color = c.leatherInk), maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -69,7 +150,7 @@ fun UnderlineTabs(items: List<String>, selected: Int, modifier: Modifier = Modif
         items.forEachIndexed { i, s ->
             val on = i == selected
             Box(
-                Modifier.weight(1f).heightIn(min = 48.dp).clickable(role = Role.Tab) { onSelect(i) }.drawBehind {
+                Modifier.weight(1f).heightIn(min = Tokens.Size.tab).clickable(role = Role.Tab) { onSelect(i) }.drawBehind {
                     val h = if (on) Tokens.Stroke.rule.toPx() else Tokens.Stroke.hair.toPx()
                     drawRect(if (on) c.rubric else c.hair, Offset(0f, size.height - h), androidx.compose.ui.geometry.Size(size.width, h))
                 },

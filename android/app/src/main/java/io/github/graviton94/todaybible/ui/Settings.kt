@@ -33,7 +33,7 @@ import io.github.graviton94.todaybible.design.Theme
 import io.github.graviton94.todaybible.design.ThemeChoice
 import io.github.graviton94.todaybible.design.Tokens
 
-private val SCALES = listOf(1f, 1.15f, 1.3f)
+private val SCALES = listOf(1f, Tokens.Ratio.scaleLarge, Tokens.Ratio.scaleLarger)
 
 /** 설정: 한 장짜리. 고르는 것은 모두 밑줄 탭 · 한 줄 목록. */
 @Composable
@@ -42,8 +42,8 @@ fun SettingsPage(s: AppState) {
     BackHandler { s.settingsOpen = false }
     Column(Modifier.fillMaxSize().background(c.leaf)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(56.dp).clickable(role = Role.Button) { s.settingsOpen = false }, contentAlignment = Alignment.Center) {
-                BackArrow(Modifier.size(22.dp))
+            Box(Modifier.size(Tokens.Size.touch).clickable(role = Role.Button) { s.settingsOpen = false }, contentAlignment = Alignment.Center) {
+                BackArrow(Modifier.size(Tokens.Size.icon))
             }
             Text(stringResource(R.string.settings), style = Theme.title(k), maxLines = 1)
         }
@@ -63,7 +63,7 @@ fun SettingsPage(s: AppState) {
                 UnderlineTabs(listOf(stringResource(R.string.size_regular), stringResource(R.string.size_large), stringResource(R.string.size_larger)),
                     SCALES.indexOfFirst { kotlin.math.abs(it - s.scale) < 0.01f }.coerceAtLeast(0)) { s.setTextScale(SCALES[it]) }
                 // 지금 고른 번역 · 크기로 창세기 1:1
-                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.button)).background(c.paper).padding(Tokens.Space.s4)) {
+                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).padding(Tokens.Space.s4)) {
                     VerseText(s, 1, s.text(0).verse(1, 1))
                 }
             }
@@ -72,11 +72,11 @@ fun SettingsPage(s: AppState) {
                     STAMPS.forEach { m ->
                         val on = m == s.stamp
                         Box(
-                            Modifier.weight(1f).heightIn(min = 56.dp).clip(RoundedCornerShape(Tokens.Radius.button)).background(if (on) c.paper else c.leaf)
+                            Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (on) c.paper else c.leaf)
                                 .drawBehind { if (on) drawLine(c.rubric, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.rule.toPx() * 2) }
                                 .clickable(role = Role.RadioButton) { s.setStampMark(m) },
                             contentAlignment = Alignment.Center,
-                        ) { StampMark(m, if (on) c.rubric else c.inkSoft, Modifier.size(26.dp)) }
+                        ) { StampMark(m, if (on) c.rubric else c.inkSoft, Modifier.size(Tokens.Size.iconMd)) }
                     }
                 }
             }
@@ -101,12 +101,12 @@ private fun Group(title: String, content: @Composable () -> Unit) {
 private fun ChoiceRow(text: String, on: Boolean, onClick: () -> Unit) {
     val c = Theme.c
     Row(
-        Modifier.fillMaxWidth().heightIn(min = 52.dp).clickable(role = Role.RadioButton, onClick = onClick)
+        Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clickable(role = Role.RadioButton, onClick = onClick)
             .drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text, style = Theme.body().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-        if (on) Box(Modifier.size(8.dp).clip(RoundedCornerShape(50)).background(c.rubric))
+        if (on) Box(Modifier.size(Tokens.Size.dot).clip(androidx.compose.foundation.shape.CircleShape).background(c.rubric))
     }
 }
 

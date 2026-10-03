@@ -17,7 +17,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -58,7 +57,6 @@ fun LibraryPage(s: AppState) {
     val started = filled.map { VerseKey(it).book }.toSet()
     val doneBooks = remember(filled.size, s.translation) { started.filter { p.bookDone(s.translation, s.text(it)) }.toSet() }
     var group by remember { mutableStateOf(Canon.books[s.book].group) }
-    var picker by remember { mutableStateOf<Int?>(null) }
     val since = if (s.store.startDay >= 0) LocalDate.ofEpochDay(s.store.startDay).format(DateTimeFormatter.ofPattern(if (k) "yyyy. M. d" else "d MMM yyyy")) else null
 
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
@@ -77,7 +75,7 @@ fun LibraryPage(s: AppState) {
                     row.forEach { g ->
                         val on = g == group
                         Box(
-                            Modifier.weight(1f).heightIn(min = 48.dp).clip(RoundedCornerShape(Tokens.Radius.button))
+                            Modifier.weight(1f).heightIn(min = Tokens.Size.tab).clip(RoundedCornerShape(Tokens.Radius.chip))
                                 .background(if (on) c.leather else c.paper).clickable(role = Role.Tab) { group = g },
                             contentAlignment = Alignment.Center,
                         ) { Text(if (k) groupNames[g]!!.first else groupNames[g]!!.second, style = Theme.small().copy(color = if (on) c.leatherInk else c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis) }
@@ -89,12 +87,12 @@ fun LibraryPage(s: AppState) {
             Canon.inGroup(group).forEach { b ->
                 val n = filled.count { VerseKey(it).book == b.index }
                 Row(
-                    Modifier.fillMaxWidth().heightIn(min = 52.dp).clickable { picker = b.index }
+                    Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clickable { s.picker = b.index }
                         .drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(if (k) b.ko else b.en, style = Theme.body(), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                    if (b.index in doneBooks) StampMark(STAMP_CROSS, c.giltText, Modifier.size(18.dp))
+                    if (b.index in doneBooks) StampMark(STAMP_CROSS, c.giltText, Modifier.size(Tokens.Size.iconSm))
                     else Text(if (n > 0) stringResource(R.string.verses_n, n) else if (k) "${b.chapters}장" else "${b.chapters} ch.", style = Theme.small(), maxLines = 1)
                 }
             }
@@ -102,11 +100,6 @@ fun LibraryPage(s: AppState) {
         BookButton(stringResource(R.string.continue_at, s.bookName(), s.chapter), Modifier.fillMaxWidth()) { s.page = 1 }
     }
 
-    picker?.let { b ->
-        ModalBottomSheet(onDismissRequest = { picker = null }, containerColor = c.leaf, contentColor = c.ink) {
-            ChapterGrid(s, b) { ch -> picker = null; s.open(b, ch) }
-        }
-    }
 }
 
 /** 책장 한 칸: 권마다 책등 하나. 높이 = 장 수(로그), 다 쓴 권 = 금박 띠, 쓰는 권 = 붉은 가죽, 시작 안 한 권 = 빈 자리. */
@@ -119,8 +112,8 @@ private fun Shelf(label: String, range: IntRange, s: AppState, started: Set<Int>
             Text("${range.count { it in done }} / ${range.count()}", style = Theme.small())
         }
         Row(
-            Modifier.fillMaxWidth().height(76.dp).drawBehind { drawRect(c.inkSoft, Offset(0f, size.height - 3.dp.toPx()), Size(size.width, 3.dp.toPx())) }.padding(bottom = 3.dp),
-            horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.Bottom,
+            Modifier.fillMaxWidth().height(Tokens.Size.shelf).drawBehind { val b = Tokens.Size.shelfBase.toPx(); drawRect(c.inkSoft, Offset(0f, size.height - b), Size(size.width, b)) }.padding(bottom = Tokens.Size.shelfBase),
+            horizontalArrangement = Arrangement.spacedBy(Tokens.Size.spineGap), verticalAlignment = Alignment.Bottom,
         ) {
             range.forEach { i ->
                 val ch = Canon.books[i].chapters
@@ -131,7 +124,7 @@ private fun Shelf(label: String, range: IntRange, s: AppState, started: Set<Int>
                         0 -> drawRect(c.hair, style = Stroke(Tokens.Stroke.hair.toPx()))
                         else -> drawRect(if (state == 3) c.rubric else c.leather)
                     }
-                    if (state == 2) { val y = size.height * 0.16f; drawRect(c.gilt, Offset(size.width * 0.18f, y), Size(size.width * 0.64f, 1.5.dp.toPx())); drawRect(c.gilt, Offset(size.width * 0.18f, y + 5.dp.toPx()), Size(size.width * 0.64f, 1.5.dp.toPx())) }
+                    if (state == 2) { val y = size.height * 0.16f; drawRect(c.gilt, Offset(size.width * 0.18f, y), Size(size.width * 0.64f, Tokens.Stroke.gilt.toPx())); drawRect(c.gilt, Offset(size.width * 0.18f, y + (Tokens.Size.bandGap + Tokens.Stroke.rule).toPx()), Size(size.width * 0.64f, Tokens.Stroke.gilt.toPx())) }
                 })
             }
         }
@@ -142,20 +135,20 @@ private fun Shelf(label: String, range: IntRange, s: AppState, started: Set<Int>
 @Composable
 fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
     val c = Theme.c; val t = s.text(b); val p = s.progress
-    Column(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s5).padding(bottom = Tokens.Space.s6), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         Text(s.bookName(b), style = Theme.title(s.korean))
         Text(stringResource(R.string.choose_chapter), style = Theme.small())
-        Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             (1..t.chapterCount).chunked(6).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                     row.forEach { ch ->
                         val f = p.chapterFraction(s.translation, t, ch)
                         val plate = s.store.plateFor(b, ch) != null
                         Box(
-                            Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(Tokens.Radius.button)).background(if (f >= 1f) c.ink else c.paper)
+                            Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (f >= 1f) c.ink else c.paper)
                                 .drawBehind {
-                                    if (f in 0.0001f..0.9999f) drawRoundRect(c.rubric, style = Stroke(Tokens.Stroke.rule.toPx()), cornerRadius = CornerRadius(Tokens.Radius.button.toPx()))
-                                    if (plate) drawCircle(c.gilt, 2.5.dp.toPx(), Offset(size.width - 7.dp.toPx(), 7.dp.toPx()))
+                                    if (f in 0.0001f..0.9999f) drawRoundRect(c.rubric, style = Stroke(Tokens.Stroke.rule.toPx()), cornerRadius = CornerRadius(Tokens.Radius.chip.toPx()))
+                                    if (plate) { val d = Tokens.Size.plateDot.toPx(); drawCircle(c.gilt, d / 2, Offset(size.width - d - Tokens.Space.s1.toPx(), d + Tokens.Space.s1.toPx())) }
                                 }
                                 .clickable(role = Role.Button) { onPick(ch) },
                             contentAlignment = Alignment.Center,

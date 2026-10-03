@@ -94,4 +94,5 @@
     <string name="next_chapter">다음 · %1$s %2$d장</string>
     <string name="app_version">버전 %1$s</string>
     <string name="weekdays">일월화수목금토</string>
+    <string name="filled_n">%1$d절을 채웠어요</string>
 </resources>

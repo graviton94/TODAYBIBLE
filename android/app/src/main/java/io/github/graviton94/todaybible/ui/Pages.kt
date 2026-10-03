@@ -68,7 +68,7 @@ fun Root(s: AppState) {
     val scope = rememberCoroutineScope()
     // 이름표 · 버튼으로 옮길 땐 ‘숨 한 번’, 손으로 넘길 땐 ‘내려앉는 종이’
     var breath by remember { mutableStateOf(false) }
-    fun turnTo(i: Int) { scope.launch { breath = true; try { pager.animateScrollToPage(i, animationSpec = androidx.compose.animation.core.tween(420)) } finally { breath = false } } }
+    fun turnTo(i: Int) { scope.launch { breath = true; try { pager.animateScrollToPage(i, animationSpec = androidx.compose.animation.core.tween(Tokens.Motion.pageMs)) } finally { breath = false } } }
     LaunchedEffect(s.page) { if (pager.currentPage != s.page && !pager.isScrollInProgress) turnTo(s.page) }
     LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect { s.page = it } }
     BackHandler(enabled = pager.currentPage != 0 && !s.settingsOpen && s.finished == null && s.award == null) { turnTo(0) }
@@ -80,7 +80,7 @@ fun Root(s: AppState) {
             TopBar(s)
             HorizontalPager(
                 pager, Modifier.weight(1f).fillMaxWidth(), beyondViewportPageCount = 0, userScrollEnabled = !typing,
-                flingBehavior = PagerDefaults.flingBehavior(pager, snapPositionalThreshold = 0.25f),
+                flingBehavior = PagerDefaults.flingBehavior(pager, snapPositionalThreshold = Tokens.Motion.turnSnap),
             ) { page ->
                 val incoming by remember(page) { derivedStateOf { (pager.currentPage - page) + pager.currentPageOffsetFraction < 0f } }
                 Box(Modifier.fillMaxSize().zIndex(if (incoming) 1f else 0f).pageTurn(pager, page) { breath }) {
@@ -95,7 +95,13 @@ fun Root(s: AppState) {
         }
         if (s.settingsOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { SettingsPage(s) }
         s.finished?.let { (b, ch) -> FinishedPage(s, b, ch) }
+        s.picker?.let { b -> BookSheet({ s.picker = null }) { ChapterGrid(s, b) { ch -> s.picker = null; s.open(b, ch) } } }
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
+        // 토스트: 이름표 위에 잠깐
+        s.toast?.let { msg ->
+            LaunchedEffect(msg) { kotlinx.coroutines.delay(Tokens.Motion.toastMs.toLong()); s.toast = null }
+            Box(Modifier.fillMaxSize().navigationBarsPadding().padding(bottom = Tokens.Size.touch + Tokens.Space.s4, start = Tokens.Space.s5, end = Tokens.Space.s5), contentAlignment = Alignment.BottomCenter) { BookToast(msg) }
+        }
     }
 }
 
@@ -104,10 +110,10 @@ fun Root(s: AppState) {
 private fun TopBar(s: AppState) {
     val c = Theme.c
     Row(Modifier.fillMaxWidth().padding(start = Tokens.Space.s5, end = Tokens.Space.s1), verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(R.string.app_name), style = Theme.title(s.korean, Tokens.Text.label * 1.3f).copy(color = c.inkSoft), maxLines = 1, modifier = Modifier.weight(1f))
+        Text(stringResource(R.string.app_name), style = Theme.brand(s.korean), maxLines = 1, modifier = Modifier.weight(1f))
         val label = stringResource(R.string.settings)
-        Box(Modifier.size(56.dp).semantics { contentDescription = label }.clickable(role = Role.Button) { s.settingsOpen = true }, contentAlignment = Alignment.Center) {
-            Gear(Modifier.size(22.dp))
+        Box(Modifier.size(Tokens.Size.touch).semantics { contentDescription = label }.clickable(role = Role.Button) { s.settingsOpen = true }, contentAlignment = Alignment.Center) {
+            Gear(Modifier.size(Tokens.Size.icon))
         }
     }
 }
@@ -138,7 +144,7 @@ private fun PageTabs(current: Int, onSelect: (Int) -> Unit) {
         names.forEachIndexed { i, n ->
             val on = i == current
             Box(
-                Modifier.weight(1f).heightIn(min = 56.dp).clickable(role = Role.Tab) { onSelect(i) }.drawBehind {
+                Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Tab) { onSelect(i) }.drawBehind {
                     if (on) { val w = size.width * 0.32f; drawRect(c.rubric, Offset((size.width - w) / 2, 0f), Size(w, Tokens.Stroke.rule.toPx())) }
                 },
                 contentAlignment = Alignment.Center,

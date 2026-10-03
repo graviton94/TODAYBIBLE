@@ -32,16 +32,17 @@ def tokens():
     for mode in ("light", "dark"):
         c = t["color"][mode]
         L.append(f"    val {mode} = Palette(" + ", ".join(f"{k} = {kt_color(v)}" for k, v in c.items()) + ")")
-    for group, unit in (("space", "dp"), ("radius", "dp"), ("stroke", "dp"), ("text", "sp")):
+    for group, unit in (("space", "dp"), ("radius", "dp"), ("stroke", "dp"), ("size", "dp"), ("text", "sp")):
         L.append(f"    object {group.capitalize()} {{")
         for k, v in t[group].items(): L.append(f"        val {k} = {v}.{unit}")
         L.append("    }")
     L.append("    object Motion {")
     for k, v in t["motion"].items(): L.append(f"        const val {k} = {v}" + ("f" if isinstance(v, float) else ""))
     L.append("    }")
-    L.append("    object Ratio {")
-    for k, v in t["ratio"].items(): L.append(f"        const val {k} = {float(v)}f")
-    L.append("    }")
+    for group in ("ratio", "alpha", "leading", "tracking"):
+        L.append(f"    object {group.capitalize()} {{")
+        for k, v in t[group].items(): L.append(f"        const val {k} = {float(v)}f")
+        L.append("    }")
     L.append("}")
     return {os.path.join(PKG, "Tokens.kt"): "\n".join(L) + "\n"}
 

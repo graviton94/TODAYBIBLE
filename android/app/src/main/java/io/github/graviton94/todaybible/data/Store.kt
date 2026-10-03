@@ -16,7 +16,7 @@ data class Plate(val id: String, val book: Int, val chapter: Int, val ko: String
 /**
  * 기기 안 저장. 필사 기록은 덮어쓰지 않고 한 줄씩 덧붙이기만 함 (fills.tsv). 설정은 SharedPreferences.
  */
-class Store(private val context: Context) {
+class Store(val context: Context) {
     private val prefs = context.getSharedPreferences("today", Context.MODE_PRIVATE)
     private val fillsFile = File(context.filesDir, "fills.tsv")
     private val earnedFile = File(context.filesDir, "earned.tsv")

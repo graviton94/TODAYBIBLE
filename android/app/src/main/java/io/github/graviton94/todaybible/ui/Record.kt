@@ -94,7 +94,7 @@ private fun PresenceMonth(s: AppState, days: Set<Long>) {
         cells.chunked(7).forEach { week ->
             Row(Modifier.fillMaxWidth()) {
                 week.forEach { d ->
-                    Box(Modifier.weight(1f).aspectRatio(1f).padding(2.dp), contentAlignment = Alignment.Center) {
+                    Box(Modifier.weight(1f).aspectRatio(1f).padding(Tokens.Size.spineGap), contentAlignment = Alignment.Center) {
                         if (d != null) DayCell(s, d, d.toEpochDay() in days, d == today, d.isAfter(today))
                     }
                 }
@@ -109,14 +109,14 @@ private fun DayCell(s: AppState, d: LocalDate, present: Boolean, today: Boolean,
     val c = Theme.c
     Box(
         Modifier.fillMaxSize().drawBehind {
-            if (today) drawRoundRect(c.ink, style = Stroke(Tokens.Stroke.hair.toPx()), cornerRadius = CornerRadius(Tokens.Radius.button.toPx()))
+            if (today) drawRoundRect(c.ink, style = Stroke(Tokens.Stroke.hair.toPx()), cornerRadius = CornerRadius(Tokens.Radius.chip.toPx()))
         },
         contentAlignment = Alignment.Center,
     ) {
-        if (present) StampMark(s.stamp, c.rubric, Modifier.fillMaxSize(0.62f))
+        if (present) StampMark(s.stamp, c.rubric, Modifier.fillMaxSize(Tokens.Ratio.stampInCell))
         else Text("${d.dayOfMonth}", style = Theme.small().copy(color = when {
-            future -> c.hair.copy(alpha = 0.6f)
-            Presence.isRest(d) -> c.rubric.copy(alpha = 0.75f)
+            future -> c.hair.copy(alpha = Tokens.Alpha.future)
+            Presence.isRest(d) -> c.rubric.copy(alpha = Tokens.Alpha.rest)
             else -> c.unwritten
         }), maxLines = 1)
     }
@@ -153,7 +153,7 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
     val img = rememberPlate(p.id)
     Column(modifier.clickable(role = Role.Button) { s.open(p.book, p.chapter) }, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
         Box(
-            Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.button)).background(c.paper)
+            Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper)
                 .drawWithContent {
                     drawContent()
                     // 아직 드러나지 않은 조각은 종이로 덮고, 조각 사이엔 머리카락 같은 줄
@@ -163,12 +163,12 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
                         for (x in 1 until Pieces.COLS) drawLine(c.hair, Offset(x * w, 0f), Offset(x * w, size.height), Tokens.Stroke.hair.toPx())
                         for (y in 1 until Pieces.ROWS) drawLine(c.hair, Offset(0f, y * h), Offset(size.width, y * h), Tokens.Stroke.hair.toPx())
                     }
-                    if (n == 0) drawRoundRect(c.hair, style = Stroke(Tokens.Stroke.hair.toPx()), cornerRadius = CornerRadius(Tokens.Radius.button.toPx()))
+                    if (n == 0) drawRoundRect(c.hair, style = Stroke(Tokens.Stroke.hair.toPx()), cornerRadius = CornerRadius(Tokens.Radius.chip.toPx()))
                 },
             contentAlignment = Alignment.Center,
         ) {
             if (img != null) Image(img, if (k) p.ko else p.en, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
-            if (n == 0) Canvas(Modifier.size(22.dp)) { stamp(STAMP_CROSS, c.unwritten.copy(alpha = 0.5f)) }
+            if (n == 0) Canvas(Modifier.size(Tokens.Size.icon)) { stamp(STAMP_CROSS, c.unwritten.copy(alpha = Tokens.Alpha.faint)) }
         }
         Text(if (k) p.ko else p.en, style = Theme.label(), maxLines = 2, overflow = TextOverflow.Ellipsis)
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -187,11 +187,11 @@ private fun MilestoneList(s: AppState) {
         Milestone.entries.forEach { m ->
             val day = s.earned[m]
             Row(
-                Modifier.fillMaxWidth().heightIn(min = 64.dp).drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }
+                Modifier.fillMaxWidth().heightIn(min = Tokens.Size.rowTall).drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }
                     .padding(vertical = Tokens.Space.s2),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3),
             ) {
-                Canvas(Modifier.size(44.dp)) { medal(m, day != null, c.leather, c.gilt, c.unwritten.copy(alpha = 0.55f)) }
+                Canvas(Modifier.size(Tokens.Size.medal)) { medal(m, day != null, c.leather, c.gilt, c.unwritten.copy(alpha = Tokens.Alpha.medalFaint)) }
                 Column(Modifier.weight(1f)) {
                     Text(milestoneName(ctx, m), style = Theme.label().copy(color = if (day != null) c.ink else c.inkSoft), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(milestoneRule(ctx, m), style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis)

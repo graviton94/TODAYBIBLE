@@ -104,7 +104,7 @@ private fun ChapterDoneNote(s: AppState) {
 fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null, marks: List<TypeJudge.Mark>? = null) {
     val c = Theme.c; val k = s.korean
     val body: AnnotatedString = buildAnnotatedString {
-        withStyle(SpanStyle(fontFamily = Fonts.black, color = c.rubric, fontSize = 1.25.em)) { append("$number ") }
+        withStyle(SpanStyle(fontFamily = Fonts.black, color = c.rubric, fontSize = Tokens.Leading.verseNumber.em)) { append("$number ") }
         // lit 은 본문 글자만 셈 (절 번호 제외)
         var i = 0
         Markup.spans(text).forEach { sp ->
@@ -137,7 +137,7 @@ private fun TypeTab(s: AppState, verse: Int) {
     var value by remember(s.translation, s.book, s.chapter, verse) { mutableStateOf(TextFieldValue("")) }
     val marks = TypeJudge.marks(source, value.text)
     LaunchedEffect(value.text) {
-        if (TypeJudge.done(source, value.text)) { delay(350); s.fill(listOf(verse), Mode.TYPE) }
+        if (TypeJudge.done(source, value.text)) { delay(Tokens.Motion.typeSettleMs.toLong()); s.fill(listOf(verse), Mode.TYPE) }
     }
     if (verse > 1) {
         val prev = s.text().verse(s.chapter, verse - 1)
@@ -150,10 +150,10 @@ private fun TypeTab(s: AppState, verse: Int) {
             // 붙여넣기 · 자동완성으로 한꺼번에 들어온 글은 받지 않음 (한 자씩 옮겨 쓰기)
             if (nv.text.length - value.text.length <= 3) value = nv
         },
-        textStyle = Theme.verse(k).copy(fontSize = Theme.verse(k).fontSize * 0.86f, color = c.ink),
+        textStyle = Theme.typed(k),
         cursorBrush = SolidColor(c.rubric),
         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None),
-        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).drawBehind {
+        modifier = Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).drawBehind {
             drawLine(c.inkSoft, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.rule.toPx())
         }.padding(vertical = Tokens.Space.s2),
         decorationBox = { inner ->
@@ -177,7 +177,7 @@ private fun PaperTab(s: AppState) {
     }
     val bitmap = remember(stamp) { if (file.exists()) runCatching { BitmapFactory.decodeFile(file.path, BitmapFactory.Options().apply { inSampleSize = 4 })?.asImageBitmap() }.getOrNull() else null }
     Box(
-        Modifier.fillMaxWidth().aspectRatio(4f / 3f).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper)
+        Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.photoAspect).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper)
             .clickable(role = Role.Button) { pick.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
         contentAlignment = Alignment.Center,
     ) {
@@ -203,7 +203,7 @@ private fun AloudTab(s: AppState, verse: Int) {
     var lit by remember(verse, s.chapter, s.book) { mutableIntStateOf(0) }
     LaunchedEffect(playing, verse) {
         while (playing && lit < plain.length) {
-            delay(ReadingPace.delayMillis(plain[lit], k, if (speed == 0) 1f else 1.25f)); lit++
+            delay(ReadingPace.delayMillis(plain[lit], k, if (speed == 0) 1f else Tokens.Motion.aloudNormal)); lit++
         }
         if (lit >= plain.length) playing = false
     }

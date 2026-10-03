@@ -52,5 +52,7 @@ class MainActivity : ComponentActivity() {
         s.settingsOpen = i.getBooleanExtra("tb.settings", false)
         i.getStringExtra("tb.finished")?.split(':')?.let { s.finished = it[0].toInt() - 1 to it[1].toInt() }
         s.award = i.getStringExtra("tb.award")?.let { Milestone.valueOf(it) }
+        s.picker = i.getIntExtra("tb.picker", 0).takeIf { it > 0 }?.minus(1)
+        s.toast = i.getIntExtra("tb.toast", 0).takeIf { it > 0 }?.let { getString(R.string.filled_n, it) }
     }
 }

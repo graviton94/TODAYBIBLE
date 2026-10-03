@@ -67,14 +67,14 @@ fun FinishedPage(s: AppState, book: Int, chapter: Int, lifted: Boolean = false) 
             .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4),
     ) {
-        Text("$chapter", style = Theme.number().copy(fontSize = Tokens.Text.initial * 1.6f, textAlign = TextAlign.Center))
+        Text("$chapter", style = Theme.initial().copy(textAlign = TextAlign.Center))
         Text(stringResource(R.string.chapter_done, s.bookName(book), chapter), style = Theme.title(k).copy(textAlign = TextAlign.Center))
         if (plate != null) {
-            PlateUnderVeil(s, plate, veil.value, Modifier.fillMaxWidth(0.82f))
+            PlateUnderVeil(s, plate, veil.value, Modifier.fillMaxWidth(Tokens.Ratio.plateWidth))
             Text(if (veil.value >= 1f) (if (k) plate.ko else plate.en) else stringResource(R.string.veil_hint),
                 style = Theme.small().copy(textAlign = TextAlign.Center), maxLines = 1)
         } else {
-            Box(Modifier.padding(vertical = Tokens.Space.s5).size(64.dp)) { StampMark(STAMP_CROSS, c.gilt, Modifier.fillMaxSize()) }
+            Box(Modifier.padding(vertical = Tokens.Space.s5).size(Tokens.Size.emblem)) { StampMark(STAMP_CROSS, c.gilt, Modifier.fillMaxSize()) }
         }
         val (nb, nc) = remember(book, chapter) { s.nextChapter(book, chapter) }
         if (plate != null && veil.value < 1f) {
@@ -97,7 +97,7 @@ private fun PlateUnderVeil(s: AppState, p: Plate, t: Float, modifier: Modifier) 
     val c = Theme.c
     val img = rememberPlate(p.id)
     Box(
-        modifier.aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.button)).background(c.paper).clipToBounds()
+        modifier.aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).clipToBounds()
             .drawWithContent {
                 drawContent()
                 if (t >= 1f) return@drawWithContent
@@ -105,49 +105,40 @@ private fun PlateUnderVeil(s: AppState, p: Plate, t: Float, modifier: Modifier) 
                 val y = -h * t
                 translate(0f, y) {
                     drawRect(c.leather, Offset.Zero, Size(w, h))
-                    val g = Tokens.Stroke.gilt.toPx(); val gap = 4.dp.toPx(); val edge = 10.dp.toPx()
+                    val g = Tokens.Stroke.gilt.toPx(); val gap = Tokens.Size.veilBandGap.toPx(); val edge = Tokens.Size.veilEdge.toPx()
                     // 위 · 아래 금선 두 줄
                     for (yy in listOf(edge, edge + gap, h - edge, h - edge - gap)) drawLine(c.gilt, Offset(edge, yy), Offset(w - edge, yy), g)
                     // 안쪽 금박 테 (모서리를 살짝 둥글게)
                     val inset = w * Tokens.Ratio.veilInset + edge
-                    drawRoundRect(c.gilt, Offset(inset, inset + gap), Size(w - inset * 2, h - (inset + gap) * 2), CornerRadius(3.dp.toPx()), style = Stroke(g * 0.8f))
+                    drawRoundRect(c.gilt, Offset(inset, inset + gap), Size(w - inset * 2, h - (inset + gap) * 2), CornerRadius(Tokens.Radius.frame.toPx()), style = Stroke(Tokens.Stroke.giltFine.toPx()))
                     // 가운데 ✠ 하나
-                    val m = w * 0.16f
+                    val m = w * Tokens.Ratio.veilMark
                     stamp(STAMP_CROSS, c.gilt, Offset(w / 2, h / 2), m)
                 }
                 // 걷히는 끝의 옅은 그늘
-                if (t > 0f) drawRect(c.shade, Offset(0f, h + y), Size(w, 8.dp.toPx() * (1f - t)))
+                if (t > 0f) drawRect(c.shade, Offset(0f, h + y), Size(w, Tokens.Size.edgeShade.toPx() * (1f - t)))
             },
     ) {
         if (img != null) Image(img, if (s.korean) p.ko else p.en, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
     }
 }
 
-/** 새 발자취: 아래에서 올라오는 카드 한 장. */
+/** 새 발자취: 시트 한 장. */
 @Composable
 fun AwardCard(s: AppState, m: Milestone) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     val name = milestoneName(ctx, m); val rule = milestoneRule(ctx, m)
-    BackHandler { s.award = null }
-    Box(Modifier.fillMaxSize().background(c.scrim).clickable(remember { MutableInteractionSource() }, null) { s.award = null }, contentAlignment = Alignment.BottomCenter) {
-        Column(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(topStart = Tokens.Radius.page, topEnd = Tokens.Radius.page)).background(c.leaf)
-                .clickable(remember { MutableInteractionSource() }, null) {}.navigationBarsPadding()
-                .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5),
-            horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2),
-        ) {
-            Canvas(Modifier.size(84.dp)) { medal(m, true, c.leather, c.gilt, c.unwritten) }
-            Text(stringResource(R.string.new_milestone), style = Theme.small().copy(color = c.rubric), maxLines = 1)
-            Text(name, style = Theme.title(k).copy(textAlign = TextAlign.Center), maxLines = 1)
-            Text(rule, style = Theme.small().copy(textAlign = TextAlign.Center), maxLines = 1)
-            Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                BookButton(stringResource(R.string.close), Modifier.weight(1f), quiet = true) { s.award = null }
-                BookButton(stringResource(R.string.share), Modifier.weight(1f)) {
-                    val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, "$name · $rule\n${ctx.getString(R.string.app_name)}")
-                    ctx.startActivity(Intent.createChooser(send, null))
-                }
+    BookSheet({ s.award = null }) {
+        Canvas(Modifier.padding(top = Tokens.Space.s2).size(Tokens.Size.medalLg)) { medal(m, true, c.leather, c.gilt, c.unwritten) }
+        Text(stringResource(R.string.new_milestone), style = Theme.small().copy(color = c.rubric), maxLines = 1)
+        Text(name, style = Theme.title(k).copy(textAlign = TextAlign.Center), maxLines = 1)
+        Text(rule, style = Theme.small().copy(textAlign = TextAlign.Center), maxLines = 1)
+        Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            BookButton(stringResource(R.string.close), Modifier.weight(1f), quiet = true) { s.award = null }
+            BookButton(stringResource(R.string.share), Modifier.weight(1f)) {
+                val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, "$name · $rule\n${ctx.getString(R.string.app_name)}")
+                ctx.startActivity(Intent.createChooser(send, null))
             }
         }
     }
 }
-

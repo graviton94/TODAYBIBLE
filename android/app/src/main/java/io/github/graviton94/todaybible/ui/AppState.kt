@@ -31,6 +31,10 @@ class AppState(val store: Store) {
     var finished by mutableStateOf<Pair<Int, Int>?>(null)
     /** 방금 얻은 발자취 (아래에서 올라오는 카드). */
     var award by mutableStateOf<Milestone?>(null)
+    /** 장 고르기 시트를 연 권. */
+    var picker by mutableStateOf<Int?>(null)
+    /** 짧은 알림 한 줄. */
+    var toast by mutableStateOf<String?>(null)
     var earned by mutableStateOf(store.loadEarned())
     /** 캡처용 고정 날짜 (개발자 도구). */
     var fixedToday: LocalDate? = null
@@ -57,6 +61,7 @@ class AppState(val store: Store) {
         store.append(new); fills.addAll(new)
         val t = text()
         if (progress.chapterDone(tr, t, chapter)) finished = book to chapter
+        else if (mode != Mode.TYPE) toast = store.context.getString(io.github.graviton94.todaybible.R.string.filled_n, new.size)
         checkMilestones()
     }
 

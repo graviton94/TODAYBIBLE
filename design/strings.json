@@ -91,5 +91,6 @@
   "veil_hint": {"en": "A plate awaits beneath the cover", "ko": "덮개 아래 판화가 있어요"},
   "next_chapter": {"en": "Next · %1$s %2$d", "ko": "다음 · %1$s %2$d장"},
   "app_version": {"en": "Version %1$s", "ko": "버전 %1$s"},
-  "weekdays": {"en": "SMTWTFS", "ko": "일월화수목금토"}
+  "weekdays": {"en": "SMTWTFS", "ko": "일월화수목금토"},
+  "filled_n": {"en": "%1$d filled", "ko": "%1$d절을 채웠어요"}
 }
