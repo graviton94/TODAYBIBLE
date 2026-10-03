@@ -62,6 +62,12 @@ fun HomePage(s: AppState) {
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
         RunningHead(today.format(DateTimeFormatter.ofPattern(if (k) "M월 d일 EEEE" else "EEEE, d MMMM", if (k) Locale.KOREAN else Locale.ENGLISH)),
             if (run > 0) stringResource(R.string.day_n, run) else "", k)
+        // 부를 이름이 있으면 때에 맞는 인사 한 줄
+        if (s.ownerName.isNotBlank()) {
+            val h = java.time.LocalTime.now().hour
+            Text(stringResource(when { h in 4..11 -> R.string.hi_morning; h in 12..17 -> R.string.hi_day; else -> R.string.hi_evening }, s.ownerName),
+                style = Theme.title(k), maxLines = 1)
+        }
         // 오늘의 분량
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
             val goal = s.effectiveGoal()

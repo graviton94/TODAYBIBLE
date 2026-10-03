@@ -48,7 +48,8 @@ object Reminder {
         val text = store.book(tr, b)
         val v = planNext?.third ?: p.nextVerse(tr, text, ch) ?: text.fillable(ch).first()
         val book = Canon.books[b]
-        val title = "${if (tr == Translation.KRV) book.ko else book.en} $ch:$v"
+        val ref = "${if (tr == Translation.KRV) book.ko else book.en} $ch:$v"
+        val title = if (store.ownerName.isNotBlank()) ctx.getString(R.string.reminder_named, store.ownerName, ref) else ref
         val nm = ctx.getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, ctx.getString(R.string.reminder_channel), NotificationManager.IMPORTANCE_DEFAULT))
         val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java).putExtra("page", 1).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),

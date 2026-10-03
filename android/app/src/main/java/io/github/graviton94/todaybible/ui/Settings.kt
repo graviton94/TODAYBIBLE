@@ -103,6 +103,10 @@ fun SettingsPage(s: AppState) {
                     }
                 }
             }
+            Group(stringResource(R.string.owner_name)) {
+                NameField(s)
+                Text(stringResource(R.string.owner_note), style = Theme.small())
+            }
             Group(stringResource(R.string.my_cover)) { CoverPicker(s) }
             Group(stringResource(R.string.voice_keep)) {
                 ChoiceRow(stringResource(R.string.voice_keep_hint), s.voiceOn) { s.toggleVoice() }
@@ -116,6 +120,7 @@ fun SettingsPage(s: AppState) {
                 ChoiceRow(stringResource(if (s.lifetime.owned) R.string.owned else R.string.lifetime_head), s.lifetime.owned) { s.purchaseOpen = true }
             }
             Group(stringResource(R.string.backup)) {
+                Text(stringResource(R.string.backup_hint), style = Theme.small())
                 val ctx = androidx.compose.ui.platform.LocalContext.current
                 val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                     if (uri != null) {
@@ -176,10 +181,10 @@ fun BackArrow(modifier: Modifier = Modifier) {
 }
 
 
-/** 나의 성경 꾸미기 (H1): 표지 가죽 네 가지 · 금박 이름. 평생권이 필요하면 평생권 화면으로. */
+/** 나의 성경 꾸미기 (H1): 표지 가죽 네 가지. 평생권이 필요하면 평생권 화면으로. */
 @Composable
 private fun CoverPicker(s: AppState) {
-    val c = Theme.c; val k = s.korean
+    val c = Theme.c
     val gated = !s.lifetime.owned && (s.lifetime.ready || s.lifetime.forceReady || s.forceLock)
     val covers = listOf("burgundy" to R.string.cover_burgundy, "navy" to R.string.cover_navy, "olive" to R.string.cover_olive, "ebony" to R.string.cover_ebony)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
@@ -200,11 +205,19 @@ private fun CoverPicker(s: AppState) {
             }
         }
     }
+}
+
+/** 부를 이름 (처음 소개 · 설정 공통). 인사와 표지 금박에 들어가요. */
+@Composable
+fun NameField(s: AppState, modifier: Modifier = Modifier, onDone: (() -> Unit)? = null) {
+    val c = Theme.c
     var name by remember { mutableStateOf(s.ownerName) }
     androidx.compose.foundation.text.BasicTextField(
-        value = name, onValueChange = { v -> if (v.length <= 12 && !gated) { name = v; s.setOwner(v.trim()) } else if (gated) s.purchaseOpen = true },
+        value = name, onValueChange = { v -> if (v.length <= 12) { name = v; s.setOwner(v.trim()) } },
         singleLine = true, textStyle = Theme.body(), cursorBrush = androidx.compose.ui.graphics.SolidColor(c.rubric),
-        modifier = Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).drawBehind { drawLine(c.inkSoft, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
+        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Done),
+        keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { onDone?.invoke() }),
+        modifier = modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).drawBehind { drawLine(c.inkSoft, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
         decorationBox = { inner -> Box(contentAlignment = Alignment.CenterStart) { if (name.isEmpty()) Text(stringResource(R.string.owner_hint), style = Theme.body().copy(color = c.unwritten)); inner() } },
     )
 }

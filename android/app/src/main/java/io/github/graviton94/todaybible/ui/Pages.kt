@@ -114,13 +114,13 @@ fun Root(s: AppState) {
         }
         s.picker?.let { b -> BookSheet({ s.picker = null }) { ChapterGrid(s, b) { ch -> s.picker = null; s.open(b, ch) } } }
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
+        if (!s.onboarded) Welcome(s)
+        else if (s.opening) Opening(s) { s.opening = false }
         // 토스트: 이름표 위에 잠깐
         s.toast?.let { msg ->
             LaunchedEffect(msg) { kotlinx.coroutines.delay(Tokens.Motion.toastMs.toLong()); s.toast = null }
             Box(Modifier.fillMaxSize().navigationBarsPadding().padding(bottom = Tokens.Size.touch + Tokens.Space.s4, start = Tokens.Space.s5, end = Tokens.Space.s5), contentAlignment = Alignment.BottomCenter) { BookToast(msg) }
         }
-        if (!s.onboarded) Welcome(s)
-        else if (s.opening) Opening(s) { s.opening = false }
     }
 }
 

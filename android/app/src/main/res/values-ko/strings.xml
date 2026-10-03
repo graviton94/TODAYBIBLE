@@ -194,8 +194,8 @@
     <string name="cover_navy">남색</string>
     <string name="cover_olive">올리브</string>
     <string name="cover_ebony">흑단</string>
-    <string name="owner_name">금박 이름</string>
-    <string name="owner_hint">표지에 새길 이름</string>
+    <string name="owner_name">내 이름</string>
+    <string name="owner_hint">어떻게 불러 드릴까요?</string>
     <string name="year_stamps">도장 %1$d</string>
     <string name="stat_verses">옮겨 쓴 절</string>
     <string name="stat_letters">쓴 글자</string>
@@ -208,7 +208,7 @@
     <string name="days_n">%1$d일</string>
     <string name="aloud_listen">소리 내어 읽기</string>
     <string name="aloud_listening">듣고 있어요</string>
-    <string name="aloud_hint">기기 안에서 알아들어요 · 녹음은 남기지 않아요</string>
+    <string name="aloud_hint">기기 안에서 알아듣고, 글자만 채워요</string>
     <string name="aloud_no_mic">마이크 없이 읽는 빠르기로 밝아져요</string>
     <string name="widget_goal">오늘의 분량</string>
     <string name="widget_goal_desc">오늘 쓴 절 고리</string>
@@ -217,7 +217,7 @@
     <string name="run_label">일째 이어 씀</string>
     <string name="photo_saved">갤러리에도 담았어요</string>
     <string name="voice_keep">내 목소리 남기기</string>
-    <string name="voice_keep_hint">소리 내어 읽은 절을 이 폰에만 저장해요</string>
+    <string name="voice_keep_hint">소리 내어 읽은 절을 이 폰에만 녹음해요</string>
     <string name="voice_recording">녹음 중</string>
     <string name="voice_done_reading">다 읽었어요</string>
     <string name="voice_chapter">내 낭독 · %1$d절 · %2$s</string>
@@ -240,4 +240,13 @@
     <string name="backup_bad">읽을 수 없는 파일이에요</string>
     <string name="find_hint">장절 찾기 · 요 3:16</string>
     <string name="find_none">그런 장절을 찾지 못했어요</string>
+    <string name="owner_note">인사와 표지 금박에 들어가요</string>
+    <string name="ob_name">어떻게 불러 드릴까요?</string>
+    <string name="ob_name_p">이 이름이 내가 쓰는 성경의 표지에 새겨져요.</string>
+    <string name="ob_restore">전에 쓰던 기록이 있나요? 파일에서 되살리기</string>
+    <string name="hi_morning">%1$s님, 좋은 아침이에요</string>
+    <string name="hi_day">%1$s님, 평안한 오후예요</string>
+    <string name="hi_evening">%1$s님, 평안한 저녁이에요</string>
+    <string name="reminder_named">%1$s님, 오늘 쓸 절 · %2$s</string>
+    <string name="backup_hint">쓴 글자 · 사진 · 목소리를 파일 하나로 보관해요. 폰을 바꾸기 전에 남겨 두세요.</string>
 </resources>

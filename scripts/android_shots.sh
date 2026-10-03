@@ -15,16 +15,17 @@ adb shell settings put global hide_error_dialogs 1
 sleep 30; adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 
-# 처음 한 번: 소개 여섯 장
+# 처음 한 번: 소개 일곱 장
 open --ez tb.reset true --es tb.theme LIGHT; sleep 15
-for i in 0 1 2 3 4 5; do open --ez tb.reset true --es tb.theme LIGHT --ei tb.welcomeStep $i; shot w0${i}_welcome 4; done
+for i in 0 1 2 3 4 5 6; do open --ez tb.reset true --es tb.theme LIGHT --ei tb.welcomeStep $i; shot w0${i}_welcome 4; done
 # 여는 순간: 금박 테 → 빛 → 표지 넘김 → 속표지
 open --ez tb.seed true --es tb.theme LIGHT; sleep 4
 adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --ez tb.opening true >/dev/null
 sleep 0.9; snap o01_cover; sleep 0.6; snap o02_shine; sleep 0.6; snap o03_turning; sleep 0.9; snap o04_title_page
 # 오늘 · 필사 (책 · 노트) · 서재 · 기록
-open;                                                              shot h01_today 5
+open --es tb.owner 은혜;                                             shot h01_today 5
 swipe_up;                                                          shot h02_today_more 2
+open --es tb.owner ""
 open --ei tb.page 1 --ez tb.notebook false;                        shot k01_copy_book 5
 adb shell input tap 540 1200; sleep 2;                             shot k02_copy_keyboard 1
 open --ei tb.page 1 --ez tb.notebook true;                         shot k03_copy_notebook 5
@@ -73,7 +74,7 @@ open --ei tb.page 1;                                               sleep 3
 adb shell input tap 540 1200; sleep 2; adb shell input text "And%she%sgoeth%sup%sinto%sa%smountian"; shot e2_copy_typing 2
 open --ei tb.page 1 --ez tb.notebook true;                         shot e3_notebook 4
 open --ei tb.page 1 --ez tb.notebook false
-open --ez tb.reset true --ei tb.welcomeStep 3;                     shot e4_welcome_goal 4
+open --ez tb.reset true --ei tb.welcomeStep 4;                     shot e4_welcome_goal 4
 open --ez tb.seed true --es tb.tr KJV --es tb.plate prodigal;      shot e5_plate 5
 open --ez tb.lock true --es tb.price "'\$29.99'" --ez tb.purchase true; shot e6_purchase 4
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
@@ -83,7 +84,7 @@ open --ei tb.page 0;                                               shot x02_larg
 open --ef tb.scale 1.0
 adb shell wm size 720x1280; adb shell wm density 320
 open --ei tb.page 0;                                               shot x03_small_today 5
-open --ez tb.reset true --ei tb.welcomeStep 3;                     shot x04_small_welcome 4
+open --ez tb.reset true --ei tb.welcomeStep 4;                     shot x04_small_welcome 4
 adb shell wm size reset; adb shell wm density reset
 
 adb logcat -d -s AndroidRuntime:E > "$OUT/logcat.txt" || true

@@ -194,8 +194,8 @@
     <string name="cover_navy">Navy</string>
     <string name="cover_olive">Olive</string>
     <string name="cover_ebony">Ebony</string>
-    <string name="owner_name">Name in gold</string>
-    <string name="owner_hint">Your name, for the cover</string>
+    <string name="owner_name">My name</string>
+    <string name="owner_hint">What shall we call you?</string>
     <string name="year_stamps">%1$d stamps</string>
     <string name="stat_verses">verses copied</string>
     <string name="stat_letters">letters written</string>
@@ -208,7 +208,7 @@
     <string name="days_n">%1$d days</string>
     <string name="aloud_listen">Read aloud</string>
     <string name="aloud_listening">Listening…</string>
-    <string name="aloud_hint">Recognised on your phone · nothing is recorded</string>
+    <string name="aloud_hint">Recognised on your phone, text only</string>
     <string name="aloud_no_mic">Without the microphone, the text brightens at reading pace</string>
     <string name="widget_goal">Today\'s portion</string>
     <string name="widget_goal_desc">Today\'s ring of verses</string>
@@ -217,7 +217,7 @@
     <string name="run_label">days in a row</string>
     <string name="photo_saved">Also saved to your gallery</string>
     <string name="voice_keep">Keep my voice</string>
-    <string name="voice_keep_hint">Each verse you read aloud is saved on this phone only</string>
+    <string name="voice_keep_hint">Each verse you read aloud is recorded on this phone only</string>
     <string name="voice_recording">Recording</string>
     <string name="voice_done_reading">I\'ve read it</string>
     <string name="voice_chapter">My reading · %1$d verses · %2$s</string>
@@ -240,4 +240,13 @@
     <string name="backup_bad">This file can\'t be read</string>
     <string name="find_hint">Go to · John 3:16</string>
     <string name="find_none">No such passage</string>
+    <string name="owner_note">Used in greetings and pressed in gold on your cover</string>
+    <string name="ob_name">What shall we call you?</string>
+    <string name="ob_name_p">Your name goes on the cover of the Bible you write.</string>
+    <string name="ob_restore">Wrote here before? Restore from a file</string>
+    <string name="hi_morning">Good morning, %1$s</string>
+    <string name="hi_day">Good afternoon, %1$s</string>
+    <string name="hi_evening">Good evening, %1$s</string>
+    <string name="reminder_named">%1$s, today\'s verse · %2$s</string>
+    <string name="backup_hint">Your writing, photos and voice in one file. Keep it before changing phones.</string>
 </resources>

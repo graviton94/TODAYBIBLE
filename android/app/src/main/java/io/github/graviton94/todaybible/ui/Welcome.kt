@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -140,15 +142,23 @@ fun Opening(s: AppState, onDone: () -> Unit) {
 }
 
 /**
- * 처음 한 번 (소개 세 장 → 오늘의 분량 → 시작할 곳 → 아침 알림). 문장은 한두 줄.
+ * 처음 한 번 (소개 세 장 → 부를 이름 · 기록 되살리기 → 오늘의 분량 → 시작할 곳 → 아침 알림). 문장은 한두 줄.
  */
 @Composable
 fun Welcome(s: AppState) {
     val c = Theme.c; val k = s.korean
     var start by remember { mutableIntStateOf(0) }
     val starts = listOf(Triple(0, 1, R.string.start_gen_note), Triple(40, 1, R.string.start_mark_note), Triple(18, 23, R.string.start_ps_note))
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) {
+            val ok = io.github.graviton94.todaybible.data.Backup.read(ctx, uri)
+            s.toast = ctx.getString(if (ok) R.string.backup_done else R.string.backup_bad)
+            if (ok) (ctx as? android.app.Activity)?.recreate()
+        }
+    }
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (ok) s.setReminder(7); finish(s, starts[start]) }
-    Column(Modifier.fillMaxSize().background(c.leaf).systemBarsPadding().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5),
+    Column(Modifier.fillMaxSize().background(c.leaf).systemBarsPadding().imePadding().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         AnimatedContent(s.welcomeStep, transitionSpec = { fadeIn(tween(Tokens.Motion.fadeMs)) togetherWith fadeOut(tween(Tokens.Motion.fadeMs)) }, label = "welcome", modifier = Modifier.weight(1f)) { i ->
             Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
@@ -158,8 +168,15 @@ fun Welcome(s: AppState) {
                         Text(stringResource(listOf(R.string.ob1_h, R.string.ob2_h, R.string.ob3_h)[i]), style = Theme.title(k, Tokens.Text.title))
                         Text(if (i == 0) stringResource(R.string.ob1_p, "%,d".format(s.translation.total)) else stringResource(listOf(R.string.ob1_p, R.string.ob2_p, R.string.ob3_p)[i]), style = Theme.body().copy(color = c.inkSoft))
                     }
-                    3 -> GoalChooser(s, title = true)
-                    4 -> {
+                    3 -> {
+                        Text(stringResource(R.string.ob_name), style = Theme.title(k, Tokens.Text.title))
+                        Text(stringResource(R.string.ob_name_p), style = Theme.body().copy(color = c.inkSoft))
+                        NameField(s) { s.welcomeStep++ }
+                        Text(stringResource(R.string.ob_restore), style = Theme.small().copy(color = c.rubric),
+                            modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { restore.launch(arrayOf("application/zip", "application/octet-stream")) })
+                    }
+                    4 -> GoalChooser(s, title = true)
+                    5 -> {
                         Text(stringResource(R.string.ob_start), style = Theme.title(k, Tokens.Text.title))
                         starts.forEachIndexed { j, (b, ch, note) ->
                             ChoiceCard(if (b == 18) (if (k) "${s.bookName(b)} ${ch}편" else "${s.bookName(b)} $ch") else (if (k) "${s.bookName(b)} ${ch}장" else "${s.bookName(b)} $ch"), stringResource(note), j == start) { start = j }
@@ -172,11 +189,11 @@ fun Welcome(s: AppState) {
                 }
             }
         }
-        // 점 여섯
+        // 점 일곱
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2, Alignment.CenterHorizontally)) {
-            for (i in 0..5) Box(Modifier.size(Tokens.Size.dot).clip(CircleShape).background(if (i == s.welcomeStep) c.rubric else c.hair))
+            for (i in 0..6) Box(Modifier.size(Tokens.Size.dot).clip(CircleShape).background(if (i == s.welcomeStep) c.rubric else c.hair))
         }
-        if (s.welcomeStep < 5) BookButton(stringResource(if (s.welcomeStep == 4) R.string.begin else R.string.next), Modifier.fillMaxWidth()) { s.welcomeStep++ }
+        if (s.welcomeStep < 6) BookButton(stringResource(if (s.welcomeStep == 5) R.string.begin else R.string.next), Modifier.fillMaxWidth()) { s.welcomeStep++ }
         else Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             BookButton(stringResource(R.string.not_now), Modifier.weight(1f), quiet = true) { finish(s, starts[start]) }
             BookButton(stringResource(R.string.yes_please), Modifier.weight(1f)) {
