@@ -109,7 +109,7 @@ object Recite {
         }
         return out
     }
-    private val CONT = Regex("(며|고|니|되|나|여|서|면|매|요|라|은|는|도)$")
+    private val CONT = Regex("(며|고|니|되|나|여|서|면|매|요|라|도)$")
 
     private const val LOOK = 3
     /** 옛말 어미처럼 알아듣기가 자주 놓치는 글자를 몇 개까지 건너뛰어도 따라갈지. */

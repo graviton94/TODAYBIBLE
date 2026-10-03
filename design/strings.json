@@ -197,7 +197,7 @@
   "stat_chapters": {"en": "chapters finished", "ko": "마친 장"},
   "stat_longest": {"en": "longest run", "ko": "가장 길게 이어 씀"},
   "stat_hour": {"en": "most often", "ko": "가장 자주 쓴 때"},
-  "stat_modes": {"en": "Type %1$d%% · Paper %2$d · Aloud %3$d", "ko": "타자 %1$d%% · 종이 %2$d · 낭독 %3$d"},
+  "stat_modes": {"en": "Typed %1$d%% · Handwritten %2$d · Aloud %3$d", "ko": "타자 %1$d%% · 손글씨 %2$d · 낭독 %3$d"},
   "letters_n": {"en": "%1$s", "ko": "%1$s자"},
   "chapters_n": {"en": "%1$d", "ko": "%1$d장"},
   "days_n": {"en": "%1$d days", "ko": "%1$d일"},

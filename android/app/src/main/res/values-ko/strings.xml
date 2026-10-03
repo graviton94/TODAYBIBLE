@@ -199,7 +199,7 @@
     <string name="stat_chapters">마친 장</string>
     <string name="stat_longest">가장 길게 이어 씀</string>
     <string name="stat_hour">가장 자주 쓴 때</string>
-    <string name="stat_modes">타자 %1$d%% · 종이 %2$d · 낭독 %3$d</string>
+    <string name="stat_modes">타자 %1$d%% · 손글씨 %2$d · 낭독 %3$d</string>
     <string name="letters_n">%1$s자</string>
     <string name="chapters_n">%1$d장</string>
     <string name="days_n">%1$d일</string>

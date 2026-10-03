@@ -354,9 +354,10 @@ private fun YearCard(s: AppState, year: Int) {
         Text(title, style = Theme.title(k).copy(color = c.gilt), maxLines = 1)
         Text(big, style = Theme.title(k, Tokens.Text.display).copy(color = c.leatherInk), maxLines = 1)
         lines.forEach { Text(it, style = Theme.small().copy(color = c.leatherInk), maxLines = 1) }
-        BookButton(stringResource(R.string.year_share), Modifier.fillMaxWidth().padding(top = Tokens.Space.s2), quiet = true) {
-            Cards.share(ctx, Cards.year(ctx, k, title, big, lines), "year_$year")
-        }
+        // 가죽 위의 금박 테 버튼
+        Box(Modifier.fillMaxWidth().padding(top = Tokens.Space.s2).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button))
+            .drawBehind { giltFrame(c.gilt, bands = false) }.clickable(role = androidx.compose.ui.semantics.Role.Button) { Cards.share(ctx, Cards.year(ctx, k, title, big, lines), "year_$year") },
+            contentAlignment = Alignment.Center) { Text(stringResource(R.string.year_share), style = Theme.label().copy(color = c.leatherInk)) }
     }
 }
 

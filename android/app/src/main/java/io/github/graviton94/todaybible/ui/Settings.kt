@@ -265,23 +265,6 @@ private fun GuideVoiceSettings(s: AppState) {
     // 읽는 빠르기 · 큰 글씨 한 줄
     UnderlineTabs(listOf(stringResource(R.string.aloud_slow), stringResource(R.string.aloud_normal), stringResource(R.string.aloud_fast)), s.aloudSpeed) { s.chooseAloudSpeed(it) }
     ChoiceRow(stringResource(R.string.aloud_big_setting), s.aloudBig) { s.flipAloudBig() }
-    if (ready && list.isEmpty()) {
-        Text(stringResource(R.string.guide_none), style = Theme.small())
-        BookButton(stringResource(R.string.guide_install), Modifier.fillMaxWidth(), quiet = true) {
-            runCatching { ctx.startActivity(android.content.Intent("com.android.settings.TTS_SETTINGS").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
-        }
-        return
-    }
-    val chosen = s.guideVoice.takeIf { n -> list.any { it.name == n } } ?: list.firstOrNull()?.name
-    list.take(4).forEachIndexed { i, v ->
-        val q = stringResource(if (v.quality >= android.speech.tts.Voice.QUALITY_HIGH) R.string.guide_q_high else R.string.guide_q_normal) +
-            (if (v.isNetworkConnectionRequired) " · " + stringResource(R.string.guide_net) else "")
-        ChoiceRow(stringResource(R.string.guide_voice_n, i + 1, q), v.name == chosen) { s.chooseGuideVoice(v.name); guide.choose(v.name) }
-    }
-    if (list.isNotEmpty()) BookButton(stringResource(R.string.guide_preview), Modifier.fillMaxWidth(), quiet = true) {
-        val sample = io.github.graviton94.todaybible.core.Markup.plain(s.store.book(s.translation, 18).verse(23, 1))
-        guide.speak(sample, s.aloudRate(), { _, _ -> }, { })
-    }
     // 미리 만든 낭독 목소리 (개역한글): 듣기는 받은 권이 있으면 그 음원으로
     if (s.korean) {
         val N = io.github.graviton94.todaybible.data.Narration
@@ -304,6 +287,27 @@ private fun GuideVoiceSettings(s: AppState) {
         val used = remember(s.narration) { N.usage(ctx) }
         if (used > 0) Text(stringResource(R.string.narr_usage, "%.0fMB".format(used / 1_000_000f)), style = Theme.small())
     }
+    // 폰 목소리는 낭독 목소리를 못 쓸 때만: 그때만 목록을 보여요
+    if (!s.korean || s.narrator == io.github.graviton94.todaybible.data.Narration.DEVICE) {
+        if (ready && list.isEmpty()) {
+            Text(stringResource(R.string.guide_none), style = Theme.small())
+            BookButton(stringResource(R.string.guide_install), Modifier.fillMaxWidth(), quiet = true) {
+                runCatching { ctx.startActivity(android.content.Intent("com.android.settings.TTS_SETTINGS").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
+            }
+        } else {
+        val chosen = s.guideVoice.takeIf { n -> list.any { it.name == n } } ?: list.firstOrNull()?.name
+        list.take(4).forEachIndexed { i, v ->
+            val q = stringResource(if (v.quality >= android.speech.tts.Voice.QUALITY_HIGH) R.string.guide_q_high else R.string.guide_q_normal) +
+                (if (v.isNetworkConnectionRequired) " · " + stringResource(R.string.guide_net) else "")
+            ChoiceRow(stringResource(R.string.guide_voice_n, i + 1, q), v.name == chosen) { s.chooseGuideVoice(v.name); guide.choose(v.name) }
+        }
+        if (list.isNotEmpty()) BookButton(stringResource(R.string.guide_preview), Modifier.fillMaxWidth(), quiet = true) {
+            val sample = io.github.graviton94.todaybible.core.Markup.plain(s.store.book(s.translation, 18).verse(23, 1))
+            guide.speak(sample, s.aloudRate(), { _, _ -> }, { })
+        }
+        }
+    }
+
 }
 
 /** 의견 보내기 (라1): 불편했던 점 · 좋았던 점을 적어 카카오톡 · 문자 등으로. 기기 · 앱 버전이 아래에 붙어요. 서버 없이 나누기 창으로. */
