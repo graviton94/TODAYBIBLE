@@ -77,13 +77,20 @@ object MyBible {
             for (v in text.fillable(ch)) {
                 val s = Markup.plain(text.verse(ch, v))
                 val lay = StaticLayout.Builder.obtain(s, 0, s.length, body, colW)
-                    .setAlignment(Layout.Alignment.ALIGN_NORMAL).setLineSpacing(0f, 1.45f).build()
+                    .setAlignment(Layout.Alignment.ALIGN_NORMAL).setLineSpacing(0f, 1.25f).setIncludePad(false)
+                    .apply {
+                        // 한글이 낱말 가운데서 끊기지 않게 (안드로이드 13+)
+                        if (android.os.Build.VERSION.SDK_INT >= 33) setLineBreakConfig(android.graphics.text.LineBreakConfig.Builder()
+                            .setLineBreakWordStyle(android.graphics.text.LineBreakConfig.LINE_BREAK_WORD_STYLE_PHRASE).build())
+                    }.build()
                 if (y + lay.height > H - M) { doc.finishPage(pg); pg = newPage(); header(ch); y = M + 14f }
                 val cv = pg.canvas
                 cv.save(); cv.translate(M + gutter, y); lay.draw(cv); cv.restore()
-                cv.drawText("$v", M.toFloat(), y + body.textSize, num.apply { textAlign = Paint.Align.LEFT })
-                firstDay[VerseKey(book, ch, v).raw]?.let { d -> cv.drawText(LocalDate.ofEpochDay(d).format(md), (W - M).toFloat() - 18f, y + body.textSize, margin) }
-                y += lay.height + 3f
+                // 절 번호 · 쓴 날짜는 첫 줄과 같은 줄에
+                val base = y + lay.getLineBaseline(0)
+                cv.drawText("$v", M.toFloat(), base, num.apply { textAlign = Paint.Align.LEFT })
+                firstDay[VerseKey(book, ch, v).raw]?.let { d -> cv.drawText(LocalDate.ofEpochDay(d).format(md), (W - M).toFloat() - 18f, base, margin) }
+                y += lay.height + 5f
             }
             y += 8f
         }
