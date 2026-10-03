@@ -142,7 +142,7 @@
   "ob1_h": {"en": "A whole Bible, in your own hand", "ko": "성경 한 권을, 내 손으로"},
   "ob1_p": {"en": "%1$s verses. A few each day, and it becomes your own Bible.", "ko": "%1$s절. 하루 몇 절씩 옮겨 쓰면 나만의 성경이 돼요."},
   "ob2_h": {"en": "Write over the faint text", "ko": "흐린 글자 위에 그대로"},
-  "ob2_p": {"en": "Type it, write it by hand, or read it aloud. What you write stays in ink.", "ko": "타자로, 손글씨로, 소리 내어 읽어서. 쓴 글자는 먹으로 남아요."},
+  "ob2_p": {"en": "Read it aloud, type it, or write it by hand. What you write stays in ink.", "ko": "소리 내어 읽어서, 타자로, 손글씨로. 쓴 글자는 먹으로 남아요."},
   "ob3_h": {"en": "Finish a chapter, open a plate", "ko": "장을 마치면, 판화 한 장"},
   "ob3_p": {"en": "Bible engravings appear piece by piece as you write.", "ko": "쓴 만큼 성경 판화가 조각조각 드러나요."},
   "ob_start": {"en": "Where shall we begin?", "ko": "어디서 시작할까요?"},

@@ -144,7 +144,7 @@
     <string name="ob1_h">성경 한 권을, 내 손으로</string>
     <string name="ob1_p">%1$s절. 하루 몇 절씩 옮겨 쓰면 나만의 성경이 돼요.</string>
     <string name="ob2_h">흐린 글자 위에 그대로</string>
-    <string name="ob2_p">타자로, 손글씨로, 소리 내어 읽어서. 쓴 글자는 먹으로 남아요.</string>
+    <string name="ob2_p">소리 내어 읽어서, 타자로, 손글씨로. 쓴 글자는 먹으로 남아요.</string>
     <string name="ob3_h">장을 마치면, 판화 한 장</string>
     <string name="ob3_p">쓴 만큼 성경 판화가 조각조각 드러나요.</string>
     <string name="ob_start">어디서 시작할까요?</string>

@@ -108,20 +108,21 @@ fun CopyPage(s: AppState) {
     val fillable = t.fillable(s.chapter)
     val next = s.target?.takeIf { it in fillable && !p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) } ?: p.nextVerse(s.translation, t, s.chapter)
     val doneCount = fillable.count { p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) }
-    var tab by remember { mutableIntStateOf(0) }
+    // 낭독 · 타자 · 손글씨 (교인 인터뷰: 낭독을 가장 많이 씀). 마지막에 고른 방식으로 열려요.
+    var tab by remember { mutableIntStateOf(s.store.copyTab) }
 
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             RunningHead(if (k) "${s.bookName()} ${s.chapter}장" else "${s.bookName().uppercase()} ${s.chapter}", stringResource(R.string.verse_of, doneCount, fillable.size), k,
                 Modifier.clickable(role = Role.Button) { s.picker = s.book })
             Row(verticalAlignment = Alignment.CenterVertically) {
-                UnderlineTabs(listOf(stringResource(R.string.mode_type), stringResource(R.string.mode_paper), stringResource(R.string.mode_aloud)), tab, Modifier.weight(1f)) { tab = it }
-                if (tab == 0) ViewToggle(s)
+                UnderlineTabs(listOf(stringResource(R.string.mode_aloud), stringResource(R.string.mode_type), stringResource(R.string.mode_paper)), tab, Modifier.weight(1f)) { tab = it; s.store.copyTab = it }
+                if (tab == 1) ViewToggle(s)
             }
         }
         when (tab) {
-            0 -> WritePage(s, next)
-            1 -> if (next != null) HandTab(s, next) else Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+            1 -> WritePage(s, next)
+            2 -> if (next != null) HandTab(s, next) else Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
                 ChapterDoneNote(s)
                 if (io.github.graviton94.todaybible.data.Ink.verses(LocalContext.current, s.translation.id, s.book, s.chapter).isNotEmpty())
                     BookButton(stringResource(R.string.notes_pdf), Modifier.fillMaxWidth(), quiet = true) { s.requestNotes(s.book) }

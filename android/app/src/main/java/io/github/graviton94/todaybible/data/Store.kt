@@ -133,6 +133,10 @@ class Store(val context: Context) {
         get() = prefs.getBoolean("candle", true)
         set(v) = prefs.edit().putBoolean("candle", v).apply()
 
+    /** 필사 방식 탭 (0 낭독 · 1 타자 · 2 손글씨). */
+    var copyTab: Int
+        get() = prefs.getInt("copy_tab", 0)
+        set(v) = prefs.edit().putInt("copy_tab", v).apply()
     /** 낭독: 가이드 목소리와 함께 읽기 · 빠르기 (0 천천히 · 1 보통 · 2 빠르게) · 고른 목소리. */
     var aloudGuide: Boolean
         get() = prefs.getBoolean("aloud_guide", true)
