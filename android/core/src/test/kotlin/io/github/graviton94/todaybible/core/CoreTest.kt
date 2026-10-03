@@ -180,6 +180,13 @@ class CoreTest {
         assertEquals(TypeJudge.Mark.WRONG, TypeJudge.marks("가방", "나")[0])
         assertEquals(listOf(TypeJudge.Mark.OK, TypeJudge.Mark.COMPOSING), TypeJudge.marks("가방", "가바").take(2))
         assertEquals(TypeJudge.Mark.WRONG, TypeJudge.marks("가방", "갑바")[0])            // 앞 글자가 굳은 뒤에는 틀림
+        // 천지인: 가 = 기 + ㆍ, 거 = ㄱㆍ + ㅣ, 구 = 그 + ㆍ, ㄸ = ㄷ 세 번
+        assertEquals(TypeJudge.Mark.COMPOSING, TypeJudge.marks("가방", "기")[0])
+        assertEquals(TypeJudge.Mark.COMPOSING, TypeJudge.marks("거룩", "ㄱㆍ")[0])
+        assertEquals(TypeJudge.Mark.COMPOSING, TypeJudge.marks("구원", "그")[0])
+        assertEquals(TypeJudge.Mark.COMPOSING, TypeJudge.marks("또 산에", "ㅌ")[0])
+        assertEquals(TypeJudge.Mark.OK, TypeJudge.marks("거룩", "거ㄹ")[0])
+        assertEquals(TypeJudge.Mark.WRONG, TypeJudge.marks("구원", "그워")[0])            // 굳은 뒤에는 틀림
         assertEquals(listOf('가', 'ㅂ'), TypeJudge.typedAt("가방", "가ㅂ"))
         assertTrue(TypeJudge.done("또 산에", "또산에"))
     }

@@ -8,12 +8,13 @@ data class Fill(val translation: Translation, val key: VerseKey, val mode: Mode,
 
 /**
  * 타자 필사 판정: 띄어쓰기 · 문장부호 · 대소문자는 보지 않고, 틀린 글자만 표시.
- * 한글은 자모를 하나씩 조합하며 쓰므로, 마지막 글자가 아직 조합 중이면 (치는 자모가 맞는 글자의 앞부분이면) 틀림이 아니라 COMPOSING.
+ * 한글은 자모를 하나씩 조합하며 쓰므로, 마지막 글자가 아직 조합 중이면 (두벌식 · 천지인 · 나랏글 어느 자판이든) 틀림이 아니라 COMPOSING.
  * 받침이 다음 글자로 넘어가는 경우 (가 + ㅂ → ‘갑’ → 가방) 도 다음 글자까지 이어 봐요.
  */
 object TypeJudge {
     enum class Mark { OK, WRONG, PENDING, COMPOSING }
-    private fun ignorable(c: Char) = c.isWhitespace() || c in ".,:;!?'\"()[]{}¶·-—‘’“”"
+    // 천지인 자판이 조합 중에 잠깐 보이는 아래아 (ㆍ ᆢ ‥) 도 글자로 치지 않음
+    private fun ignorable(c: Char) = c.isWhitespace() || c in ".,:;!?'\"()[]{}¶·-—‘’“”ㆍᆢᆞ‥"
     fun letters(s: String): String = Markup.plain(s).filterNot(::ignorable).lowercase()
 
     /** 원문 글자마다 상태 (무시하는 글자는 앞 글자 상태를 따라감). */
@@ -29,7 +30,7 @@ object TypeJudge {
                     k >= t.length -> Mark.PENDING
                     t[k] == c.lowercaseChar() -> Mark.OK
                     // 마지막 글자가 조합 중이면 틀림으로 보지 않음
-                    k == t.length - 1 && Hangul.isPrefix(t[k], targets, k) -> Mark.COMPOSING
+                    k == t.length - 1 && Hangul.composing(t[k], targets, k) -> Mark.COMPOSING
                     else -> Mark.WRONG
                 }
                 k++; m
@@ -64,6 +65,19 @@ object Hangul {
         val code = c.code - BASE
         if (code !in 0 until 11172) return split(c.toString())
         return INITIALS[code / 588].toString() + split(MEDIALS[(code % 588) / 28].toString()) + split(FINALS[code % 28])
+    }
+
+    /**
+     * 마지막 글자가 아직 조합 중으로 볼 만한지 (자판마다 거치는 모습이 달라요).
+     * 두벌식: isPrefix. 천지인 · 나랏글: 홀자음을 돌려 고르는 중 (ㄷ → ㄸ), 첫소리는 같고 모음 · 받침을 고르는 중 (기 → 가, 그 → 구, 갇 → 같).
+     */
+    fun composing(c: Char, targets: String, k: Int): Boolean {
+        if (isPrefix(c, targets, k)) return true
+        val tc = targets[k]
+        val hangul = (tc.code - BASE) in 0 until 11172
+        if (c in '\u3131'..'\u318E') return hangul
+        val a = c.code - BASE; val b = tc.code - BASE
+        return a in 0 until 11172 && hangul && a / 588 == b / 588 && c != tc
     }
 
     /** 친 글자 c 가 원문 targets[k] (와 다음 글자) 를 치는 도중의 모습인지. */
