@@ -136,6 +136,10 @@ class Store(val context: Context) {
     var paperHaptic: Boolean
         get() = prefs.getBoolean("paper_haptic", true)
         set(v) = prefs.edit().putBoolean("paper_haptic", v).apply()
+    /** 또렷하게 (고대비). */
+    var contrast: Boolean
+        get() = prefs.getBoolean("contrast", false)
+        set(v) = prefs.edit().putBoolean("contrast", v).apply()
     /** 밤 필사: 밤 9시 ~ 새벽 5시에 촛불빛 화면. */
     var candle: Boolean
         get() = prefs.getBoolean("candle", true)

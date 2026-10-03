@@ -159,6 +159,7 @@ object Tokens {
         const val initialFinish = 1.25f
         const val heatGap = 0.18f
         const val barMax = 0.8f
+        const val scaleHuge = 1.6f
     }
     object Alpha {
         const val faint = 0.5f
@@ -173,6 +174,7 @@ object Tokens {
         const val veilPiece = 0.86f
         const val handGuide = 0.35f
         const val guide = 0.22f
+        const val contrastHair = 0.45f
     }
     object Leading {
         const val verse = 1.8f

@@ -77,6 +77,8 @@ class AppState(val store: Store) {
     var penSound by mutableStateOf(store.penSound)
     var paperHaptic by mutableStateOf(store.paperHaptic)
     var candle by mutableStateOf(store.candle)
+    var contrast by mutableStateOf(store.contrast)
+    fun flipContrast() { contrast = !contrast; store.contrast = contrast }
     var aloudMode by mutableStateOf(store.aloudMode)
     var aloudBig by mutableStateOf(store.aloudBig)
     /** 날마다 소리 내어 읽은 시간 (초). */

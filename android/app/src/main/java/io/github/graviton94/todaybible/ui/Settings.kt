@@ -44,7 +44,7 @@ import io.github.graviton94.todaybible.design.Theme
 import io.github.graviton94.todaybible.design.ThemeChoice
 import io.github.graviton94.todaybible.design.Tokens
 
-private val SCALES = listOf(1f, Tokens.Ratio.scaleLarge, Tokens.Ratio.scaleLarger)
+private val SCALES = listOf(1f, Tokens.Ratio.scaleLarge, Tokens.Ratio.scaleLarger, Tokens.Ratio.scaleHuge)
 
 /** 설정: 한 장짜리. 고르는 것은 모두 밑줄 탭 · 한 줄 목록. */
 @Composable
@@ -72,8 +72,10 @@ fun SettingsPage(s: AppState) {
                 }
             }
             Group(stringResource(R.string.text_size)) {
-                UnderlineTabs(listOf(stringResource(R.string.size_regular), stringResource(R.string.size_large), stringResource(R.string.size_larger)),
+                UnderlineTabs(listOf(stringResource(R.string.size_regular), stringResource(R.string.size_large), stringResource(R.string.size_larger), stringResource(R.string.size_huge)),
                     SCALES.indexOfFirst { kotlin.math.abs(it - s.scale) < 0.01f }.coerceAtLeast(0)) { s.setTextScale(SCALES[it]) }
+                // 또렷하게 (나2): 흐린 글자를 진하게, 가는 줄을 또렷하게
+                ChoiceRow(stringResource(R.string.contrast_setting), s.contrast) { s.flipContrast() }
                 // 지금 고른 번역 · 크기로 창세기 1:1
                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).padding(Tokens.Space.s4)) {
                     VerseText(s, 1, s.text(0).verse(1, 1))
@@ -164,6 +166,7 @@ fun SettingsPage(s: AppState) {
                 }
                 BookButton(stringResource(R.string.backup_import), Modifier.fillMaxWidth(), quiet = true) { pick.launch(arrayOf("application/zip", "application/octet-stream")) }
             }
+            Group(stringResource(R.string.feedback)) { Feedback(s) }
             Group(stringResource(R.string.about)) {
                 Text(stringResource(R.string.about_text), style = Theme.small())
                 Text(stringResource(R.string.app_version, BuildConfig.VERSION_NAME), style = Theme.small())
@@ -297,5 +300,28 @@ private fun GuideVoiceSettings(s: AppState) {
         }
         val used = remember(s.narration) { N.usage(ctx) }
         if (used > 0) Text(stringResource(R.string.narr_usage, "%.0fMB".format(used / 1_000_000f)), style = Theme.small())
+    }
+}
+
+/** 의견 보내기 (라1): 불편했던 점 · 좋았던 점을 적어 카카오톡 · 문자 등으로. 기기 · 앱 버전이 아래에 붙어요. 서버 없이 나누기 창으로. */
+@Composable
+private fun Feedback(s: AppState) {
+    val c = Theme.c; val ctx = androidx.compose.ui.platform.LocalContext.current
+    var bad by remember { mutableStateOf("") }; var good by remember { mutableStateOf("") }
+    @Composable fun field(v: String, hint: Int, on: (String) -> Unit) = androidx.compose.foundation.text.BasicTextField(
+        value = v, onValueChange = on, textStyle = Theme.body(), cursorBrush = androidx.compose.ui.graphics.SolidColor(c.rubric),
+        modifier = Modifier.fillMaxWidth().heightIn(min = Tokens.Size.rowTall).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).padding(Tokens.Space.s3),
+        decorationBox = { inner -> Box { if (v.isEmpty()) Text(stringResource(hint), style = Theme.body().copy(color = c.unwritten)); inner() } })
+    field(bad, R.string.feedback_bad) { bad = it }
+    field(good, R.string.feedback_good) { good = it }
+    BookButton(stringResource(R.string.feedback_send), Modifier.fillMaxWidth(), enabled = bad.isNotBlank() || good.isNotBlank()) {
+        val info = "${ctx.getString(R.string.app_name)} ${BuildConfig.VERSION_NAME} · Android ${android.os.Build.VERSION.RELEASE} · ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} · ${s.translation.name} · ${s.narrator} · ${"%.2f".format(s.scale)}"
+        val text = buildString {
+            if (bad.isNotBlank()) append(ctx.getString(R.string.feedback_bad_label)).append('\n').append(bad.trim()).append("\n\n")
+            if (good.isNotBlank()) append(ctx.getString(R.string.feedback_good_label)).append('\n').append(good.trim()).append("\n\n")
+            append(info)
+        }
+        ctx.startActivity(android.content.Intent.createChooser(android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
+            .putExtra(android.content.Intent.EXTRA_SUBJECT, ctx.getString(R.string.feedback_subject)).putExtra(android.content.Intent.EXTRA_TEXT, text), null))
     }
 }

@@ -36,7 +36,7 @@ class MainActivity : ComponentActivity() {
                 val bar = if (dark) SystemBarStyle.dark(android.graphics.Color.TRANSPARENT) else SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
                 enableEdgeToEdge(bar, bar)
             }
-            TodayTheme(s.theme, s.scale, s.night) { Root(s) }
+            TodayTheme(s.theme, s.scale, s.night, s.contrast) { Root(s) }
             androidx.compose.runtime.LaunchedEffect(s.opening) { if (!s.opening) s.store.openedDay = s.today().toEpochDay() }
         }
     }

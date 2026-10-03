@@ -61,6 +61,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -430,6 +431,40 @@ private fun sealInline(color: androidx.compose.ui.graphics.Color): Map<String, I
         StampMark(STAMP_CROSS, color, Modifier.fillMaxSize())
     })
 
+/**
+ * 듣기 (다1): 낭독 목소리로 이 장을 이어 들어요. 화면이 꺼져도 계속, 다음 장으로 이어져요.
+ * 듣기만 한 절은 채우지 않아요.
+ */
+@Composable
+private fun ListenPanel(s: AppState, verse: Int, guideReady: Boolean) {
+    val c = Theme.c; val ctx = LocalContext.current
+    val now by io.github.graviton94.todaybible.data.ListenService.now.collectAsState()
+    val here = now?.takeIf { it.book == s.book && it.chapter == s.chapter }
+    AloudControls(s, guideReady)
+    val v = here?.verse ?: verse
+    VerseText(s, v, s.text().verse(s.chapter, v))
+    now?.takeIf { here == null }?.let { Text(stringResource(R.string.listen_where, s.bookName(it.book), it.chapter, it.verse), style = Theme.small().copy(color = c.rubric)) }
+    val label = stringResource(R.string.listen_mode)
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        Box(Modifier.size(Tokens.Size.emblem).clip(androidx.compose.foundation.shape.CircleShape).background(if (now != null) c.rubric else c.leather)
+            .semantics { contentDescription = label }.clickable(role = Role.Button) {
+                if (now != null) io.github.graviton94.todaybible.data.ListenService.stop(ctx)
+                else io.github.graviton94.todaybible.data.ListenService.start(ctx, s.book, s.chapter, verse, s.aloudRate())
+            }, contentAlignment = Alignment.Center) { PlayMark(c.leatherInk, now != null, Modifier.size(Tokens.Size.iconMd)) }
+        Text(stringResource(if (now != null) R.string.listen_stop else R.string.listen_start), style = Theme.label().copy(color = if (now != null) c.rubric else c.ink))
+        Text(stringResource(R.string.listen_hint), style = Theme.small().copy(textAlign = TextAlign.Center))
+    }
+}
+
+/** 재생 ▶ · 멈춤 ■ (글꼴에 기대지 않고 그려요). */
+@Composable
+private fun PlayMark(color: androidx.compose.ui.graphics.Color, playing: Boolean, modifier: Modifier) {
+    androidx.compose.foundation.Canvas(modifier) {
+        if (playing) drawRect(color, Offset(size.width * 0.22f, size.height * 0.22f), androidx.compose.ui.geometry.Size(size.width * 0.56f, size.height * 0.56f))
+        else drawPath(androidx.compose.ui.graphics.Path().apply { moveTo(size.width * 0.28f, size.height * 0.18f); lineTo(size.width * 0.84f, size.height * 0.5f); lineTo(size.width * 0.28f, size.height * 0.82f); close() }, color)
+    }
+}
+
 /** 이 장 낭독 목소리를 받는 중이거나 못 받았을 때 한 줄. */
 @Composable
 private fun NarrationBanner(s: AppState, loading: Boolean, failed: Boolean) {
@@ -447,7 +482,7 @@ private fun NarrationBanner(s: AppState, loading: Boolean, failed: Boolean) {
 private fun AloudControls(s: AppState, guideReady: Boolean) {
     val c = Theme.c
     Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        if (guideReady) UnderlineTabs(listOf(stringResource(R.string.guide_together), stringResource(R.string.resp_mode), stringResource(R.string.guide_alone)), s.aloudMode) { s.chooseAloudMode(it) }
+        if (guideReady) UnderlineTabs(listOf(stringResource(R.string.resp_mode), stringResource(R.string.listen_mode), stringResource(R.string.guide_alone)), s.aloudMode) { s.chooseAloudMode(it) }
         Row(verticalAlignment = Alignment.CenterVertically) {
             UnderlineTabs(listOf(stringResource(R.string.aloud_slow), stringResource(R.string.aloud_normal), stringResource(R.string.aloud_fast)), s.aloudSpeed, Modifier.weight(1f)) { s.chooseAloudSpeed(it) }
             Text(stringResource(R.string.aloud_big), style = Theme.small().copy(color = if (s.aloudBig) c.rubric else c.inkSoft), maxLines = 1,
@@ -505,6 +540,16 @@ private fun AloudTab(s: AppState, verse: Int) {
     var heard by remember(verse, s.chapter, s.book) { mutableStateOf("") }
     var running by remember { mutableStateOf(false) }      // 읽기가 켜져 있음 (절이 바뀌어도 이어감)
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> mic = ok; if (ok) running = true }
+    // 마이크를 왜 묻는지 먼저 (가2)
+    var whyMic by remember { mutableStateOf(false) }
+    if (whyMic) androidx.compose.ui.window.Dialog({ whyMic = false }) {
+        Column(Modifier.clip(RoundedCornerShape(Tokens.Radius.sheet)).background(c.leaf).padding(Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            Text(stringResource(R.string.mic_why_h), style = Theme.title(k))
+            Text(stringResource(R.string.mic_why), style = Theme.body())
+            BookButton(stringResource(R.string.mic_allow), Modifier.fillMaxWidth()) { whyMic = false; ask.launch(Manifest.permission.RECORD_AUDIO) }
+            BookButton(stringResource(R.string.not_now), Modifier.fillMaxWidth(), quiet = true) { whyMic = false }
+        }
+    }
     // 아침 알림 ‘함께 읽기’로 열었으면 곧바로 시작 (Y1)
     LaunchedEffect(s.aloudNow) { if (s.aloudNow) { s.aloudNow = false; if (mic) running = true else ask.launch(Manifest.permission.RECORD_AUDIO) } }
     // 내 목소리 남기기 (평생권): 녹음과 음성 인식이 마이크 하나를 나눠 씀 (안드로이드 13+ 는 파이프로, 그 아래는 손으로 ‘다 읽었어요’)
@@ -526,11 +571,15 @@ private fun AloudTab(s: AppState, verse: Int) {
     LaunchedEffect(guide) { guide.whenReady { main.post { ttsReady = guide.ready } } }
     val guideReady = narratedBook || narrLoading || ttsReady
     val voiceFile = remember(verse, s.chapter, s.book, narratedBook) { guide.narrated(s.book, s.chapter, verse) }
-    // 0 함께 읽기 · 1 교독 · 2 혼자 읽기 (가이드 목소리가 없으면 혼자)
+    // 0 교독 · 1 듣기 · 2 나만 읽기 (낭독 목소리를 쓸 수 없으면 나만 읽기)
     val mode = if (guideReady) s.aloudMode else 2
-    val useGuide = mode == 0
-    // 교독: 장의 첫째 · 셋째 … 절은 인도(가이드), 둘째 · 넷째 … 는 회중(나)
-    val guideTurn = mode == 1 && s.text().fillable(s.chapter).indexOf(verse) % 2 == 0
+    val useGuide = false
+    // 교독: 장의 첫째 · 셋째 … 절은 인도(낭독 목소리), 둘째 · 넷째 … 는 회중(나)
+    val guideTurn = mode == 0 && s.text().fillable(s.chapter).indexOf(verse) % 2 == 0
+    if (mode == 1) { ListenPanel(s, verse, guideReady); return }
+    // 읽는 동안 화면이 꺼지지 않게 (나1)
+    val view = androidx.compose.ui.platform.LocalView.current
+    DisposableEffect(running) { view.keepScreenOn = running; onDispose { view.keepScreenOn = false } }
     var spoken by remember(verse, s.chapter, s.book) { mutableIntStateOf(-1) }   // 가이드가 읽은 데까지 (-1 = 가이드가 읽는 중 아님)
     var replay by remember { mutableIntStateOf(0) }
 
@@ -548,7 +597,7 @@ private fun AloudTab(s: AppState, verse: Int) {
         LaunchedEffect(review, hold) { if (review && !hold) { delay(Tokens.Motion.reviewMs.toLong()); complete() } }
         LaunchedEffect(running, verse, s.chapter, s.book, mode, replay, narrLoading) {
             if (!running) { guide.stop(); spoken = -1; on = false; return@LaunchedEffect }
-            if (narrLoading && mode != 2) { on = false; return@LaunchedEffect }   // 목소리 받는 동안 잠깐 기다림
+            if (narrLoading && mode == 0) { on = false; return@LaunchedEffect }   // 목소리 받는 동안 잠깐 기다림
             when {
                 // 교독 · 인도 차례: 가이드가 읽은 절도 읽은 것으로 채우고, 녹음을 켰으면 가이드 목소리도 그 절 자리에 남겨 장 전체가 이어지게
                 guideTurn && !finished -> {
@@ -652,9 +701,9 @@ private fun AloudTab(s: AppState, verse: Int) {
         val micLabel = stringResource(R.string.aloud_listen)
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             Box(Modifier.size(Tokens.Size.emblem).clip(androidx.compose.foundation.shape.CircleShape).background(if (running) c.rubric else c.leather)
-                .semantics { contentDescription = micLabel }.clickable(role = Role.Button) { if (!mic) ask.launch(Manifest.permission.RECORD_AUDIO) else running = !running },
+                .semantics { contentDescription = micLabel }.clickable(role = Role.Button) { if (!mic) whyMic = true else running = !running },
                 contentAlignment = Alignment.Center) { MicMark(c.leatherInk, Modifier.size(Tokens.Size.iconMd)) }
-            Text(stringResource(when { spoken >= 0 && guideTurn -> R.string.resp_guide; spoken >= 0 -> R.string.guide_reading; on && mode == 1 -> R.string.resp_you; on && record -> R.string.voice_recording; on && useGuide -> R.string.guide_your_turn; on -> R.string.aloud_listening; mode == 1 -> R.string.resp_start; useGuide -> R.string.guide_start; else -> R.string.aloud_listen }),
+            Text(stringResource(when { spoken >= 0 && guideTurn -> R.string.resp_guide; spoken >= 0 -> R.string.guide_reading; on && mode == 0 -> R.string.resp_you; on && record -> R.string.voice_recording; on && useGuide -> R.string.guide_your_turn; on -> R.string.aloud_listening; mode == 0 -> R.string.resp_start; useGuide -> R.string.guide_start; else -> R.string.aloud_listen }),
                 style = Theme.label().copy(color = if (running) c.rubric else c.ink))
             if (on && !recognize) BookButton(stringResource(R.string.voice_done_reading), Modifier.fillMaxWidth()) { complete() }
             if (running && useGuide && spoken < 0 && !review) BookButton(stringResource(R.string.guide_again), Modifier.fillMaxWidth(), quiet = true) { replay++ }

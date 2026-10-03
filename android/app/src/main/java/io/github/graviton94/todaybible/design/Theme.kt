@@ -56,7 +56,10 @@ object Theme {
 }
 
 @Composable
-fun TodayTheme(choice: ThemeChoice, scale: Float, night: Boolean = false, content: @Composable () -> Unit) {
+fun TodayTheme(choice: ThemeChoice, scale: Float, night: Boolean = false, contrast: Boolean = false, content: @Composable () -> Unit) {
     val dark = when (choice) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK -> true }
-    CompositionLocalProvider(LocalPalette provides if (night) Tokens.candle else if (dark) Tokens.dark else Tokens.light, LocalScale provides scale, content = content)
+    CompositionLocalProvider(LocalPalette provides (if (night) Tokens.candle else if (dark) Tokens.dark else Tokens.light).let { p -> if (contrast) sharper(p) else p }, LocalScale provides scale, content = content)
 }
+
+/** 또렷하게: 흐린 글자는 한 단계씩 진하게, 가는 줄은 더 보이게 (같은 재료 색에서 끌어옴). */
+fun sharper(p: Palette): Palette = p.copy(inkSoft = p.ink, unwritten = p.inkSoft, hair = p.hair.copy(alpha = Tokens.Alpha.contrastHair), noteLine = p.noteLine.copy(alpha = Tokens.Alpha.contrastHair))

@@ -42,6 +42,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -147,8 +148,6 @@ fun Opening(s: AppState, onDone: () -> Unit) {
 @Composable
 fun Welcome(s: AppState) {
     val c = Theme.c; val k = s.korean
-    var start by remember { mutableIntStateOf(0) }
-    val starts = listOf(Triple(0, 1, R.string.start_gen_note), Triple(40, 1, R.string.start_mark_note), Triple(18, 23, R.string.start_ps_note))
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
@@ -157,53 +156,113 @@ fun Welcome(s: AppState) {
             if (ok) (ctx as? android.app.Activity)?.recreate()
         }
     }
-    val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (ok) s.setReminder(7); finish(s, starts[start]) }
+    // 처음은 시편 23편: 첫 절을 소리 내어 읽고 시작해요
+    fun done() = s.finishOnboarding(18, 23)
+    val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (ok) s.setReminder(7); done() }
+    var read by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize().background(c.leaf).systemBarsPadding().imePadding().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         AnimatedContent(s.welcomeStep, transitionSpec = { fadeIn(tween(Tokens.Motion.fadeMs)) togetherWith fadeOut(tween(Tokens.Motion.fadeMs)) }, label = "welcome", modifier = Modifier.weight(1f)) { i ->
             Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
                 when (i) {
-                    0, 1, 2 -> {
-                        Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.welcomeArt).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper), contentAlignment = Alignment.Center) { WelcomeArt(s, i) }
-                        Text(stringResource(listOf(R.string.ob1_h, R.string.ob2_h, R.string.ob3_h)[i]), style = Theme.title(k, Tokens.Text.title))
-                        Text(if (i == 0) stringResource(R.string.ob1_p, "%,d".format(s.translation.total)) else stringResource(listOf(R.string.ob1_p, R.string.ob2_p, R.string.ob3_p)[i]), style = Theme.body().copy(color = c.inkSoft))
+                    0 -> {
+                        Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.welcomeArt).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper), contentAlignment = Alignment.Center) { WelcomeArt(s, 1) }
+                        Text(stringResource(R.string.ob1_h), style = Theme.title(k, Tokens.Text.title))
+                        Text(stringResource(R.string.ob1_p, "%,d".format(s.translation.total)), style = Theme.body().copy(color = c.inkSoft))
+                        Text(stringResource(R.string.ob2_p), style = Theme.body().copy(color = c.inkSoft))
                     }
-                    3 -> {
+                    1 -> {
                         Text(stringResource(R.string.ob_name), style = Theme.title(k, Tokens.Text.title))
                         Text(stringResource(R.string.ob_name_p), style = Theme.body().copy(color = c.inkSoft))
                         NameField(s) { s.welcomeStep++ }
                         Text(stringResource(R.string.ob_restore), style = Theme.small().copy(color = c.rubric),
                             modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { restore.launch(arrayOf("application/zip", "application/octet-stream")) })
                     }
-                    4 -> GoalChooser(s, title = true)
-                    5 -> {
-                        Text(stringResource(R.string.ob_start), style = Theme.title(k, Tokens.Text.title))
-                        starts.forEachIndexed { j, (b, ch, note) ->
-                            ChoiceCard(if (b == 18) (if (k) "${s.bookName(b)} ${ch}편" else "${s.bookName(b)} $ch") else (if (k) "${s.bookName(b)} ${ch}장" else "${s.bookName(b)} $ch"), stringResource(note), j == start) { start = j }
-                        }
-                    }
-                    else -> {
-                        Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.welcomeArt).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper), contentAlignment = Alignment.Center) { WelcomeArt(s, 5) }
-                        Text(stringResource(R.string.ob_reminder), style = Theme.title(k, Tokens.Text.title))
-                    }
+                    else -> FirstReading(s) { read = true }
                 }
             }
         }
-        // 점 일곱
+        // 점 셋
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2, Alignment.CenterHorizontally)) {
-            for (i in 0..6) Box(Modifier.size(Tokens.Size.dot).clip(CircleShape).background(if (i == s.welcomeStep) c.rubric else c.hair))
+            for (i in 0..2) Box(Modifier.size(Tokens.Size.dot).clip(CircleShape).background(if (i == s.welcomeStep) c.rubric else c.hair))
         }
-        if (s.welcomeStep < 6) BookButton(stringResource(if (s.welcomeStep == 5) R.string.begin else R.string.next), Modifier.fillMaxWidth()) { s.welcomeStep++ }
-        else Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            BookButton(stringResource(R.string.not_now), Modifier.weight(1f), quiet = true) { finish(s, starts[start]) }
-            BookButton(stringResource(R.string.yes_please), Modifier.weight(1f)) {
-                if (Build.VERSION.SDK_INT >= 33) ask.launch(Manifest.permission.POST_NOTIFICATIONS) else { s.setReminder(7); finish(s, starts[start]) }
+        when {
+            s.welcomeStep < 2 -> BookButton(stringResource(R.string.next), Modifier.fillMaxWidth()) { s.welcomeStep++ }
+            // 첫 절을 읽었으면: 아침 알림을 물어보고 시작
+            read -> Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                Text(stringResource(R.string.ob_reminder), style = Theme.body())
+                Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                    BookButton(stringResource(R.string.not_now), Modifier.weight(1f), quiet = true) { done() }
+                    BookButton(stringResource(R.string.yes_please), Modifier.weight(1f)) {
+                        if (Build.VERSION.SDK_INT >= 33) ask.launch(Manifest.permission.POST_NOTIFICATIONS) else { s.setReminder(7); done() }
+                    }
+                }
             }
+            else -> BookButton(stringResource(R.string.ob_skip_read), Modifier.fillMaxWidth(), quiet = true) { done() }
         }
     }
 }
 
-private fun finish(s: AppState, start: Triple<Int, Int, Int>) = s.finishOnboarding(start.first, start.second)
+/**
+ * 처음 한 번 (가1 · 가2): 시편 23편 1절을 소리 내어 읽어요. 마이크를 왜 쓰는지 먼저 한 줄로 말하고, 허락을 받으면 듣기.
+ * 다 읽으면 도장과 함께 첫 절이 채워져요. 마이크를 쓰지 않으면 ‘다 읽었어요’로.
+ */
+@Composable
+private fun FirstReading(s: AppState, onRead: () -> Unit) {
+    val c = Theme.c; val k = s.korean; val ctx = androidx.compose.ui.platform.LocalContext.current
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val plain = io.github.graviton94.todaybible.core.Markup.plain(s.store.book(s.translation, 18).verse(23, 1))
+    var heard by remember { mutableStateOf("") }
+    var listening by remember { mutableStateOf(false) }
+    var done by remember { mutableStateOf(false) }
+    val canHear = remember { android.speech.SpeechRecognizer.isRecognitionAvailable(ctx) }
+    fun complete() {
+        if (done) return; done = true; listening = false
+        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+        s.book = 18; s.chapter = 23; s.fill(listOf(1), io.github.graviton94.todaybible.core.Mode.ALOUD); onRead()
+    }
+    val mic = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (ok && canHear) listening = true }
+    val lit = io.github.graviton94.todaybible.core.Recite.lit(plain, heard)
+    LaunchedEffect(heard) { if (io.github.graviton94.todaybible.core.Recite.done(plain, heard)) { kotlinx.coroutines.delay(Tokens.Motion.typeSettleMs.toLong()); complete() } }
+    androidx.compose.runtime.DisposableEffect(listening) {
+        if (!listening) return@DisposableEffect onDispose { }
+        val r = android.speech.SpeechRecognizer.createSpeechRecognizer(ctx); var alive = true; var base = ""
+        fun intent() = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, if (k) "ko-KR" else "en-US")
+            .putExtra(android.speech.RecognizerIntent.EXTRA_PARTIAL_RESULTS, true).putExtra(android.speech.RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
+        r.setRecognitionListener(object : android.speech.RecognitionListener {
+            override fun onPartialResults(b: android.os.Bundle?) { b?.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { heard = "$base $it" } }
+            override fun onResults(b: android.os.Bundle?) { b?.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { heard = "$base $it" }; base = heard; if (alive && !done) r.startListening(intent()) }
+            override fun onError(e: Int) { if (alive && !done) r.startListening(intent()) }
+            override fun onReadyForSpeech(p: android.os.Bundle?) {}
+            override fun onBeginningOfSpeech() {}
+            override fun onRmsChanged(v: Float) {}
+            override fun onBufferReceived(b: ByteArray?) {}
+            override fun onEndOfSpeech() {}
+            override fun onEvent(t: Int, p: android.os.Bundle?) {}
+        })
+        r.startListening(intent())
+        onDispose { alive = false; runCatching { r.cancel(); r.destroy() } }
+    }
+    Text(stringResource(R.string.ob_read_h), style = Theme.title(k, Tokens.Text.title))
+    Text(androidx.compose.ui.text.buildAnnotatedString {
+        withStyle(androidx.compose.ui.text.SpanStyle(color = c.ink)) { append(plain.substring(0, lit)) }
+        withStyle(androidx.compose.ui.text.SpanStyle(color = c.unwritten)) { append(plain.substring(lit)) }
+    }, style = Theme.verse(k).copy(fontSize = Tokens.Text.aloudBig * s.scale, lineHeight = Tokens.Text.aloudBig * s.scale * Tokens.Leading.title))
+    Text("${s.bookName(18)} 23:1", style = Theme.small().copy(color = c.rubric))
+    if (done) Text(stringResource(R.string.ob_read_done), style = Theme.body().copy(color = c.giltText))
+    else {
+        // 마이크를 왜 묻는지 (가2)
+        Text(stringResource(R.string.mic_why), style = Theme.small())
+        val granted = androidx.core.content.ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        if (canHear) BookButton(stringResource(if (listening) R.string.aloud_listening else R.string.ob_read_start), Modifier.fillMaxWidth()) {
+            if (granted) listening = !listening else mic.launch(Manifest.permission.RECORD_AUDIO)
+        }
+        BookButton(stringResource(R.string.voice_done_reading), Modifier.fillMaxWidth(), quiet = true) { complete() }
+    }
+}
+
 
 /** 오늘의 분량 고르기 (처음 소개 · 설정 공통). 고른 분량이면 얼마나 걸리는지 한 줄. */
 @Composable
