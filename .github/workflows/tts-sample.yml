@@ -7,20 +7,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: { python-version: "3.10" }
-      - name: Install MeloTTS
+        with: { python-version: "3.11" }
+      - name: Get Supertonic 3 (archived, pinned)
         run: |
-          pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
-          pip install git+https://github.com/myshell-ai/MeloTTS.git
-          python -m unidic download
-      - name: Make Psalm 23
-        run: python scripts/tts_sample.py tts_out
+          git clone -q --depth 1 https://github.com/supertone-oss-archive/supertonic.git /tmp/st
+          pip install -q huggingface_hub -r /tmp/st/py/requirements.txt
+          hf download supertone-oss-archive/supertonic-3 --revision aafc6e32416a594460b32413efc49d7fe4ce6d46 --local-dir /tmp/st/assets
+          ls /tmp/st/assets /tmp/st/assets/voice_styles
+      - name: Make Psalm 23 in ten voices
+        run: python scripts/tts_sample.py /tmp/st/py /tmp/st/assets tts_out
       - name: Encode and publish to tts-sample branch
         run: |
           sudo apt-get install -y -qq ffmpeg >/dev/null
           cd tts_out
           for f in *.wav; do ffmpeg -loglevel error -y -i "$f" -ac 1 -c:a aac -b:a 48k "${f%.wav}.m4a"; done
           rm *.wav; ls -la
-          git init -q && git checkout -q -b tts-sample && git add . 
-          git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "Psalm 23 sample"
+          git init -q && git checkout -q -b tts-sample && git add .
+          git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "Psalm 23 samples"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" tts-sample
