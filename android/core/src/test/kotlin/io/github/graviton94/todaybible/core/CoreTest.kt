@@ -156,4 +156,17 @@ class CoreTest {
         assertTrue(ps.size >= 2)
         assertTrue(ps.first().endsWith("누이시며"))
     }
+
+    @Test fun hangulComposing() {
+        assertEquals(TypeJudge.Mark.COMPOSING, TypeJudge.marks("또 산에", "ㄸ")[0])
+        assertEquals(TypeJudge.Mark.WRONG, TypeJudge.marks("또 산에", "도")[0])          // ㄸ 자리에 ㄷ 은 틀림
+        assertEquals(TypeJudge.Mark.COMPOSING, TypeJudge.marks("가방", "갑")[0])         // 받침이 다음 글자로 넘어갈 자리
+        assertEquals(TypeJudge.Mark.COMPOSING, TypeJudge.marks("왜", "오")[0])           // 겹모음 조합 중
+        assertEquals(TypeJudge.Mark.COMPOSING, TypeJudge.marks("닭", "달")[0])           // 겹받침 조합 중
+        assertEquals(TypeJudge.Mark.WRONG, TypeJudge.marks("가방", "나")[0])
+        assertEquals(listOf(TypeJudge.Mark.OK, TypeJudge.Mark.COMPOSING), TypeJudge.marks("가방", "가바").take(2))
+        assertEquals(TypeJudge.Mark.WRONG, TypeJudge.marks("가방", "갑바")[0])            // 앞 글자가 굳은 뒤에는 틀림
+        assertEquals(listOf('가', 'ㅂ'), TypeJudge.typedAt("가방", "가ㅂ"))
+        assertTrue(TypeJudge.done("또 산에", "또산에"))
+    }
 }

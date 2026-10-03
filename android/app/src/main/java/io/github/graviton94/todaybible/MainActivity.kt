@@ -29,7 +29,9 @@ class MainActivity : ComponentActivity() {
         if (BuildConfig.DEV_TOOLS) debugSetup(s, intent)
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; s.opening = false }
         openAloud(s, intent)
-        if (store.reminderHour >= 0) io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
+        // 알림 다시 맞추기 (끈 상태면 남은 알림을 지움) · 위젯 새로 그리기 (되살리기 · 업데이트 뒤에도 맞게)
+        io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
+        s.widgets()
         setContent {
             val dark = s.night || when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK -> true }
             LaunchedEffect(dark) {
@@ -102,6 +104,7 @@ class MainActivity : ComponentActivity() {
         i.getStringExtra("tb.today")?.let { s.fixedToday = LocalDate.parse(it) }
         if (i.extras?.keySet()?.any { it.startsWith("tb.") } == true) { s.nightOverride = i.getBooleanExtra("tb.night", false); s.checkNight() }
         i.getStringExtra("tb.mark")?.let { r -> r.split(',').forEach { v -> s.toggleMark(io.github.graviton94.todaybible.core.VerseKey(s.book, s.chapter, v.trim().toInt())) } }
+        i.getStringExtra("tb.listen")?.split(':')?.let { s.listenAt = it[0].toInt() - 1 to it[1].toInt() }
         if (i.hasExtra("tb.aloudMode")) s.chooseAloudMode(i.getIntExtra("tb.aloudMode", 0))
         if (i.hasExtra("tb.aloudBig")) { if (s.aloudBig != i.getBooleanExtra("tb.aloudBig", true)) s.flipAloudBig() }
         if (i.hasExtra("tb.typeView")) s.chooseTypeView(i.getIntExtra("tb.typeView", 0))

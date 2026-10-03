@@ -34,8 +34,8 @@ import java.time.LocalDate
 
 /** 내 손글씨 위젯 (S1): 손으로 쓴 절 하나를 내 글씨 그대로. 하루에 한 번 다른 절로. */
 class HandWidget : AppWidgetProvider() {
-    override fun onUpdate(ctx: Context, manager: AppWidgetManager, ids: IntArray) { ids.forEach { draw(ctx, manager, it) } }
-    override fun onAppWidgetOptionsChanged(ctx: Context, manager: AppWidgetManager, id: Int, options: Bundle) = draw(ctx, manager, id)
+    override fun onUpdate(ctx: Context, manager: AppWidgetManager, ids: IntArray) { val r = goAsync(); Thread { ids.forEach { draw(ctx, manager, it) }; r.finish() }.start() }
+    override fun onAppWidgetOptionsChanged(ctx: Context, manager: AppWidgetManager, id: Int, options: Bundle) { val r = goAsync(); Thread { draw(ctx, manager, id); r.finish() }.start() }
 
     companion object {
         fun refresh(ctx: Context) {
@@ -45,8 +45,9 @@ class HandWidget : AppWidgetProvider() {
 
         private fun draw(ctx: Context, m: AppWidgetManager, id: Int) {
             val o = m.getAppWidgetOptions(id)
-            val wDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 320).coerceAtLeast(180)
-            val hDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 150).coerceAtLeast(110)
+            // 세로 화면 기준 자리: 너비는 MIN_WIDTH, 높이는 MAX_HEIGHT
+            val wDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 320).coerceAtLeast(180)
+            val hDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 150).coerceAtLeast(110)
             val views = RemoteViews(ctx.packageName, R.layout.widget_verse)
             views.setImageViewBitmap(R.id.widget_image, runCatching { bitmap(ctx, wDp, hDp, VerseWidget.dark(ctx)) }.getOrNull())
             val open = Intent(ctx, MainActivity::class.java).putExtra("page", 1).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)

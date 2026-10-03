@@ -119,6 +119,14 @@ class Store(val context: Context) {
         get() = prefs.getLong("start", -1)
         set(v) = prefs.edit().putLong("start", v).apply()
 
+    /** 알림을 다시 켤 때 쓸 시각 (끄기 전 시각, 처음엔 아침 7시). */
+    var lastReminderHour: Int
+        get() = prefs.getInt("reminder_last", 7)
+        set(v) = prefs.edit().putInt("reminder_last", v).apply()
+    /** 알림을 마지막으로 낸 날 (하루 한 번). */
+    var reminderDay: Long
+        get() = prefs.getLong("reminder_day", -1)
+        set(v) = prefs.edit().putLong("reminder_day", v).apply()
     /** 손글씨: 펜 (만년필 · 붓펜 · 연필) · 밑글씨 · 펜 소리 · 종이 결 진동. */
     var pen: Int
         get() = prefs.getInt("pen", 0)

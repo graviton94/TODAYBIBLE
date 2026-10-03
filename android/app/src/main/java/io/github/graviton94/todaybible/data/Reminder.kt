@@ -26,20 +26,34 @@ object Reminder {
     private const val CHANNEL = "daily_verse"
     const val ID = 7
 
+    /**
+     * 다음 알림 한 번을 맞춰요 (정각, 잠든 폰에서도 몇 분 안에). 알림이 울리면 받는 쪽에서 다음 날 것을 다시 맞춰요.
+     * 앱을 정각 조금 뒤에 열었는데 오늘 알림이 아직이면 곧바로 한 번.
+     */
     fun schedule(ctx: Context, hour: Int) {
         val am = ctx.getSystemService(AlarmManager::class.java)
         val pi = PendingIntent.getBroadcast(ctx, 0, Intent(ctx, ReminderReceiver::class.java), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         am.cancel(pi)
         if (hour < 0) return
-        var at = LocalDate.now().atTime(hour, 0)
-        if (!at.isAfter(LocalDateTime.now())) at = at.plusDays(1)
-        am.setInexactRepeating(AlarmManager.RTC_WAKEUP, at.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), AlarmManager.INTERVAL_DAY, pi)
+        val now = LocalDateTime.now(); val today = LocalDate.now()
+        var at = today.atTime(hour, 0)
+        if (!at.isAfter(now)) {
+            val missedToday = Store(ctx).reminderDay != today.toEpochDay() && now.isBefore(at.plusHours(2))
+            at = if (missedToday) now.plusSeconds(30) else at.plusDays(1)
+        }
+        am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), pi)
     }
 
     fun post(ctx: Context) {
         val store = Store(ctx)
+        if (store.reminderHour < 0) return
+        // 하루 한 번만 (늦게 울렸어도 정한 시각에서 두 시간이 지났으면 건너뜀)
+        val today = LocalDate.now().toEpochDay()
+        if (store.reminderDay == today) return
+        store.reminderDay = today
+        if (LocalDateTime.now().isAfter(LocalDate.now().atTime(store.reminderHour, 0).plusHours(2))) return
         val fills = store.loadFills()
-        if (fills.any { it.epochDay == LocalDate.now().toEpochDay() }) return
+        if (fills.any { it.epochDay == today }) return
         val tr = store.translation; val p = Progress(fills)
         // 길잡이가 있으면 길잡이의 다음 절, 없으면 책갈피
         val planNext = io.github.graviton94.todaybible.core.Plans.byId(store.planId)?.chapters?.firstNotNullOfOrNull { (pb, pc) ->
@@ -59,7 +73,7 @@ object Reminder {
             .setStyle(android.app.Notification.BigTextStyle().bigText(body)).setContentIntent(open).setAutoCancel(true)
             // 함께 읽기 (Y1): 누르면 앱이 그 절로 열리고 가이드 목소리가 곧바로 읽기 시작
             .addAction(android.app.Notification.Action.Builder(android.graphics.drawable.Icon.createWithResource(ctx, R.drawable.ic_stat_cross), ctx.getString(R.string.reminder_aloud),
-                PendingIntent.getActivity(ctx, 2, Intent(ctx, MainActivity::class.java).putExtra("page", 1).putExtra("aloud", true)
+                PendingIntent.getActivity(ctx, 7, Intent(ctx, MainActivity::class.java).setAction("aloud").putExtra("page", 1).putExtra("aloud", true)
                     .putExtra("at_b", b).putExtra("at_c", ch).putExtra("at_v", v).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
                     PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)).build())
             .build()
@@ -68,10 +82,16 @@ object Reminder {
 }
 
 class ReminderReceiver : BroadcastReceiver() {
-    override fun onReceive(ctx: Context, intent: Intent) = Reminder.post(ctx)
+    override fun onReceive(ctx: Context, intent: Intent) {
+        val r = goAsync()
+        Thread { runCatching { Reminder.post(ctx) }; Reminder.schedule(ctx, Store(ctx).reminderHour); r.finish() }.start()
+    }
 }
 
-/** 다시 켜지거나 앱을 새로 깔면 알림 다시 맞춤. */
+/** 다시 켜지거나, 앱을 새로 깔거나, 시간대 · 시계가 바뀌면 알림 다시 맞춤 (자정 위젯 새로 그리기도). */
 class ReminderBoot : BroadcastReceiver() {
-    override fun onReceive(ctx: Context, intent: Intent) = Reminder.schedule(ctx, Store(ctx).reminderHour)
+    override fun onReceive(ctx: Context, intent: Intent) {
+        Reminder.schedule(ctx, Store(ctx).reminderHour)
+        io.github.graviton94.todaybible.widget.WidgetTick.schedule(ctx)
+    }
 }

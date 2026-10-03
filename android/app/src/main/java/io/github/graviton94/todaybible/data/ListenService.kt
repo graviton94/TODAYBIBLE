@@ -93,7 +93,8 @@ class ListenService : Service() {
                     if (i >= verses.size) { next(t); return }
                     val v = verses[i]; verse = v
                     _now.value = Now(book, chapter, v, true)
-                    val after = { ui.postDelayed({ step(i + 1) }, (900 / rate).toLong()) }
+                    // 절 사이는 짧게 (책 읽어 주듯 이어서)
+                    val after = { ui.postDelayed({ step(i + 1) }, (Narration.GAP_MS / rate).toLong()) }
                     val f = if (narrated) Narration.file(this, voice, book, chapter, v).takeIf { it.exists() } else null
                     if (f != null) {
                         runCatching { player?.release() }

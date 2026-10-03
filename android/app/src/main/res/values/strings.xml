@@ -212,8 +212,8 @@
     <string name="widget_run">Days in a row</string>
     <string name="widget_run_desc">How many days you have kept writing</string>
     <string name="run_label">days in a row</string>
-    <string name="voice_keep">Keep my voice</string>
-    <string name="voice_keep_hint">Each verse you read aloud is recorded on this phone only</string>
+    <string name="voice_keep">My voice</string>
+    <string name="voice_keep_hint">Every reading aloud is recorded on this phone only. Delete any you don\'t like.</string>
     <string name="voice_recording">Recording</string>
     <string name="voice_done_reading">I\'ve read it</string>
     <string name="voice_chapter">My reading · %1$d verses · %2$s</string>
@@ -338,7 +338,7 @@
     <string name="listen_mode">Listen</string>
     <string name="listen_start">Listen to this chapter</string>
     <string name="listen_stop">Stop</string>
-    <string name="listen_hint">Keeps playing with the screen off and goes on to the next chapter. Listening doesn\'t fill verses; copying is reading it yourself.</string>
+    <string name="listen_hint">Reads on with short pauses, like an audiobook. Keeps going with the screen off. Tap a verse to start there. Listening doesn\'t fill verses.</string>
     <string name="listen_where">Now playing · %1$s %2$d:%3$d</string>
     <string name="listen_channel">Listening</string>
     <string name="listen_title">Listening · %1$s %2$d</string>
@@ -362,4 +362,18 @@
     <string name="mybook_named">%1$s\'s Bible</string>
     <string name="mybook_count">%1$s verses copied · %2$s%% of the whole Bible</string>
     <string name="aloud_big_setting">Large single line while reading</string>
+    <string name="line_of">Verse %1$d · line %2$d of %3$d</string>
+    <string name="listen_head">%1$s %2$d</string>
+    <string name="listen_prev">Previous chapter</string>
+    <string name="listen_next">Next chapter</string>
+    <string name="rec_show">See recordings by verse</string>
+    <string name="rec_hide">Hide recordings</string>
+    <string name="rec_row">Verse %1$d · %2$d:%3$02d</string>
+    <string name="rec_delete">Delete</string>
+    <string name="rec_deleted">Verse %1$d recording deleted</string>
+    <string name="rec_clear">Delete all recordings</string>
+    <string name="rec_clear_sure">Tap again to delete all</string>
+    <string name="rec_cleared">All recordings deleted</string>
+    <string name="reminder_on">Daily reminder</string>
+    <string name="reminder_denied">Notifications are off for this app. Turn them on in the phone settings.</string>
 </resources>

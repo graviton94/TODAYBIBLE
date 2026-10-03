@@ -6,9 +6,13 @@ enum class Mode { TYPE, PAPER, ALOUD }
 /** 한 절을 채운 기록 (덮어쓰지 않고 쌓기만 함). */
 data class Fill(val translation: Translation, val key: VerseKey, val mode: Mode, val epochDay: Long, val atMillis: Long)
 
-/** 타자 필사 판정: 띄어쓰기 · 문장부호 · 대소문자는 보지 않고, 틀린 글자만 표시. */
+/**
+ * 타자 필사 판정: 띄어쓰기 · 문장부호 · 대소문자는 보지 않고, 틀린 글자만 표시.
+ * 한글은 자모를 하나씩 조합하며 쓰므로, 마지막 글자가 아직 조합 중이면 (치는 자모가 맞는 글자의 앞부분이면) 틀림이 아니라 COMPOSING.
+ * 받침이 다음 글자로 넘어가는 경우 (가 + ㅂ → ‘갑’ → 가방) 도 다음 글자까지 이어 봐요.
+ */
 object TypeJudge {
-    enum class Mark { OK, WRONG, PENDING }
+    enum class Mark { OK, WRONG, PENDING, COMPOSING }
     private fun ignorable(c: Char) = c.isWhitespace() || c in ".,:;!?'\"()[]{}¶·-—‘’“”"
     fun letters(s: String): String = Markup.plain(s).filterNot(::ignorable).lowercase()
 
@@ -16,13 +20,61 @@ object TypeJudge {
     fun marks(source: String, typed: String): List<Mark> {
         val src = Markup.plain(source)
         val t = letters(typed)
+        val targets = src.filterNot(::ignorable).lowercase()
         var k = 0
         return src.map { c ->
             if (ignorable(c)) { if (k == 0 || k > t.length) Mark.PENDING else Mark.OK }
-            else { val m = if (k >= t.length) Mark.PENDING else if (t[k] == c.lowercaseChar()) Mark.OK else Mark.WRONG; k++; m }
+            else {
+                val m = when {
+                    k >= t.length -> Mark.PENDING
+                    t[k] == c.lowercaseChar() -> Mark.OK
+                    // 마지막 글자가 조합 중이면 틀림으로 보지 않음
+                    k == t.length - 1 && Hangul.isPrefix(t[k], targets, k) -> Mark.COMPOSING
+                    else -> Mark.WRONG
+                }
+                k++; m
+            }
         }
     }
+
+    /** 원문 글자 자리마다 실제로 친 글자 (원고지 칸에 그대로 보여 주기). 무시하는 글자 · 아직 안 친 자리는 null. */
+    fun typedAt(source: String, typed: String): List<Char?> {
+        val src = Markup.plain(source); val t = letters(typed)
+        var k = 0
+        return src.map { c -> if (ignorable(c)) null else t.getOrNull(k++) }
+    }
+
     fun done(source: String, typed: String): Boolean = letters(source) == letters(typed)
+}
+
+/** 한글 자모: 음절을 치는 순서대로의 자모(겹모음 · 겹받침은 나눠서)로 풀기. */
+object Hangul {
+    private const val BASE = 0xAC00
+    private const val INITIALS = "ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ"
+    private const val MEDIALS = "ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ"
+    private val FINALS = listOf("", "ㄱ", "ㄲ", "ㄳ", "ㄴ", "ㄵ", "ㄶ", "ㄷ", "ㄹ", "ㄺ", "ㄻ", "ㄼ", "ㄽ", "ㄾ", "ㄿ", "ㅀ", "ㅁ", "ㅂ", "ㅄ", "ㅅ", "ㅆ", "ㅇ", "ㅈ", "ㅊ", "ㅋ", "ㅌ", "ㅍ", "ㅎ")
+    private val SPLIT = mapOf(
+        'ㅘ' to "ㅗㅏ", 'ㅙ' to "ㅗㅐ", 'ㅚ' to "ㅗㅣ", 'ㅝ' to "ㅜㅓ", 'ㅞ' to "ㅜㅔ", 'ㅟ' to "ㅜㅣ", 'ㅢ' to "ㅡㅣ",
+        'ㄳ' to "ㄱㅅ", 'ㄵ' to "ㄴㅈ", 'ㄶ' to "ㄴㅎ", 'ㄺ' to "ㄹㄱ", 'ㄻ' to "ㄹㅁ", 'ㄼ' to "ㄹㅂ", 'ㄽ' to "ㄹㅅ", 'ㄾ' to "ㄹㅌ", 'ㄿ' to "ㄹㅍ", 'ㅀ' to "ㄹㅎ", 'ㅄ' to "ㅂㅅ",
+    )
+    private fun split(s: String) = s.map { SPLIT[it] ?: it.toString() }.joinToString("")
+
+    /** 치는 순서대로의 자모. 한글이 아니면 그 글자 그대로. */
+    fun keys(c: Char): String {
+        val code = c.code - BASE
+        if (code !in 0 until 11172) return split(c.toString())
+        return INITIALS[code / 588].toString() + split(MEDIALS[(code % 588) / 28].toString()) + split(FINALS[code % 28])
+    }
+
+    /** 친 글자 c 가 원문 targets[k] (와 다음 글자) 를 치는 도중의 모습인지. */
+    fun isPrefix(c: Char, targets: String, k: Int): Boolean {
+        val t = keys(c); val a = keys(targets[k]); val b = targets.getOrNull(k + 1)?.let { keys(it) } ?: ""
+        if (t.isEmpty() || t == a) return false
+        // 아직 덜 친 글자 (ㄸ → 또, 오 → 왜, 달 → 닭)
+        if (t.length < a.length && a.startsWith(t)) return true
+        // 다음 글자의 첫소리가 받침처럼 잠깐 붙은 모습 (갑 → 가방)
+        return b.isNotEmpty() && t == a + b[0]
+    }
 }
 
 /** 낭독 속도: 성경 낭독보다 조금 느리게. 한국어 ≈ 3.6음절/초, 영어 ≈ 2.2단어/초. 쉼표 · 마침표에서 숨. */

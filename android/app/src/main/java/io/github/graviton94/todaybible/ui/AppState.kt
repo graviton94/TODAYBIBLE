@@ -116,6 +116,8 @@ class AppState(val store: Store) {
     fun aloudRate(): Float = when (aloudSpeed) { 0 -> io.github.graviton94.todaybible.design.Tokens.Motion.aloudSlow; 2 -> io.github.graviton94.todaybible.design.Tokens.Motion.aloudFast; else -> io.github.graviton94.todaybible.design.Tokens.Motion.aloudNormal }
     /** 지금 촛불빛인지 (앱으로 돌아올 때마다 다시 봄). */
     var night by mutableStateOf(false)
+    /** 듣기 화면 (권, 장). */
+    var listenAt by mutableStateOf<Pair<Int, Int>?>(null)
     /** 손글씨로 넘겨 보는 권. */
     var handBook by mutableStateOf<Int?>(null)
 
@@ -151,25 +153,25 @@ class AppState(val store: Store) {
     fun text(b: Int = book) = store.book(translation, b)
     /** 무료 네 권 밖은 평생권이 있어야 열림. Play 에 닿지 않는 곳(직접 설치 등)에서는 잠그지 않음. */
     fun locked(b: Int) = b !in Canon.free && !lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)
-    private fun widgets() {
+    fun widgets() {
         val ctx = store.context; runCatching { store.lastGoal = effectiveGoal() }
-        Thread { runCatching { io.github.graviton94.todaybible.widget.VerseWidget.refresh(ctx) }; runCatching { io.github.graviton94.todaybible.widget.SmallWidget.refreshAll(ctx) }; runCatching { io.github.graviton94.todaybible.widget.HandWidget.refresh(ctx) } }.start()
+        Thread { io.github.graviton94.todaybible.widget.WidgetTick.refreshAll(ctx); io.github.graviton94.todaybible.widget.WidgetTick.schedule(ctx) }.start()
     }
 
     fun open(b: Int, ch: Int) {
         if (locked(b)) { peekBook = b; purchaseOpen = true; return }
         book = b; chapter = ch; target = null; store.setBookmark(translation, b, ch); page = 1; widgets()
     }
-    fun chooseTranslation(t: Translation) { translation = t; store.translation = t; val bm = store.bookmark(t); book = bm.first; chapter = bm.second }
-    fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t }
+    fun chooseTranslation(t: Translation) { translation = t; store.translation = t; val bm = store.bookmark(t); book = bm.first; chapter = bm.second; widgets() }
+    fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t; widgets() }
     fun setTextScale(s: Float) { scale = s; store.textScale = s }
-    fun setStampMark(s: String) { stamp = s; store.stamp = s }
+    fun setStampMark(s: String) { stamp = s; store.stamp = s; widgets() }
     /** 나의 성경 PDF: 평생권이 필요하면 평생권 화면으로. */
     /** 노트 PDF 를 만들 권 (-1 = 전체). */
     var notesBook by mutableStateOf<Int?>(null)
     fun requestNotes(b: Int?) { if (gated()) purchaseOpen = true else notesBook = b ?: -1 }
     fun requestPdf(b: Int) { if (!lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)) purchaseOpen = true else pdfBook = b }
-    fun setGoal(g: Int) { dailyGoal = g; store.dailyGoal = g }
+    fun setGoal(g: Int) { dailyGoal = g; store.dailyGoal = g; widgets() }
     fun toggleNotebook() { notebook = !notebook; store.notebook = notebook; typeView = if (notebook) 1 else 0; store.typeView = typeView }
     /** 타자 보기: 0 책 · 1 노트 · 2 원고지. */
     var typeView by mutableStateOf(store.typeView)
@@ -196,6 +198,7 @@ class AppState(val store: Store) {
         if (p != null && p.books.any { locked(it) }) { peekBook = p.books.first { locked(it) }; purchaseOpen = true; return }
         planId = id; store.planId = id; store.planStart = today().toEpochDay(); planOpen = false
         planNext()?.let { (b, c, _) -> book = b; chapter = c; target = null; store.setBookmark(translation, b, c) }
+        widgets()
     }
     /** 길잡이 범위의 절 수 · 쓴 절 수. */
     fun planCounts(): Pair<Int, Int> {
@@ -221,7 +224,7 @@ class AppState(val store: Store) {
     fun gated() = !lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)
     fun toggleVoice() { if (gated()) { purchaseOpen = true; return }; voiceOn = !voiceOn; store.voiceOn = voiceOn }
     fun chooseCover(c: String) { cover = c; store.cover = c }
-    fun setOwner(n: String) { ownerName = n; store.ownerName = n }
+    fun setOwner(n: String) { ownerName = n; store.ownerName = n; widgets() }
     fun coverColor() = when (cover) { "navy" -> io.github.graviton94.todaybible.design.Tokens.Covers.navy; "olive" -> io.github.graviton94.todaybible.design.Tokens.Covers.olive; "ebony" -> io.github.graviton94.todaybible.design.Tokens.Covers.ebony; else -> io.github.graviton94.todaybible.design.Tokens.Covers.burgundy }
 
     /** 다음 판화: 지금 권에서 이 장 뒤로 가장 가까운 것, 없으면 가장 많이 쓴 (아직 다 안 찬) 것. 남은 절 수와 함께. */
@@ -240,7 +243,7 @@ class AppState(val store: Store) {
     fun plateFraction(pl: io.github.graviton94.todaybible.data.Plate, started: Set<Int> = startedBooks()): Float =
         if (pl.book !in started) 0f else progress.chapterFraction(translation, store.book(translation, pl.book), pl.chapter)
 
-    fun setReminder(h: Int) { reminderHour = h; store.reminderHour = h; io.github.graviton94.todaybible.data.Reminder.schedule(store.context, h) }
+    fun setReminder(h: Int) { reminderHour = h; store.reminderHour = h; if (h >= 0) { store.lastReminderHour = h; store.reminderDay = if (java.time.LocalTime.now().hour >= h) java.time.LocalDate.now().toEpochDay() else -1 }; io.github.graviton94.todaybible.data.Reminder.schedule(store.context, h) }
 
     /** 절(들)을 채움. 장을 다 채우면 finished, 새 발자취가 생기면 award. */
     fun fill(verses: List<Int>, mode: Mode) {

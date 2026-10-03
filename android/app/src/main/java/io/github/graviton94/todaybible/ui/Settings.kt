@@ -38,6 +38,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.graviton94.todaybible.BuildConfig
 import io.github.graviton94.todaybible.R
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.text.style.TextAlign
 import kotlinx.coroutines.launch
 import io.github.graviton94.todaybible.core.Translation
 import io.github.graviton94.todaybible.design.Theme
@@ -83,14 +85,18 @@ fun SettingsPage(s: AppState) {
             }
             Group(stringResource(R.string.daily_goal)) { GoalChooser(s, title = false) }
             Group(stringResource(R.string.reminder)) {
-                // 안드로이드 13+: 처음 켤 때 알림 허락을 물음
+                // 매일 알림: 끄기 · 켜기, 켜면 정각 아무 시나 (안드로이드 13+ 는 처음 켤 때 알림 허락을 물음)
+                val ctx = androidx.compose.ui.platform.LocalContext.current
                 var pending by remember { mutableIntStateOf(-1) }
-                val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (ok) s.setReminder(pending) }
-                val hours = listOf(-1, 7, 21)
-                UnderlineTabs(listOf(stringResource(R.string.reminder_off), stringResource(R.string.reminder_morning), stringResource(R.string.reminder_night)),
-                    hours.indexOf(s.reminderHour).coerceAtLeast(0)) { i ->
-                    val h = hours[i]
-                    if (h >= 0 && android.os.Build.VERSION.SDK_INT >= 33) { pending = h; ask.launch(android.Manifest.permission.POST_NOTIFICATIONS) } else s.setReminder(h)
+                val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (ok) s.setReminder(pending) else s.toast = ctx.getString(R.string.reminder_denied) }
+                fun turnOn(h: Int) { if (android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) { pending = h; ask.launch(android.Manifest.permission.POST_NOTIFICATIONS) } else s.setReminder(h) }
+                val on = s.reminderHour >= 0
+                ChoiceRow(stringResource(R.string.reminder_on), on) { if (on) s.setReminder(-1) else turnOn(s.store.lastReminderHour) }
+                if (on) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    val h = s.reminderHour
+                    BookButton("−", Modifier.width(Tokens.Size.touch), quiet = true) { turnOn((h + 23) % 24) }
+                    Text(hourLabel(h, s.korean), style = Theme.title(s.korean), textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+                    BookButton("+", Modifier.width(Tokens.Size.touch), quiet = true) { turnOn((h + 1) % 24) }
                 }
             }
             Group(stringResource(R.string.stamp)) {
@@ -119,12 +125,17 @@ fun SettingsPage(s: AppState) {
                 ChoiceRow(stringResource(R.string.candle_setting), s.candle) { s.flipCandle() }
             }
             Group(stringResource(R.string.voice_keep)) {
-                ChoiceRow(stringResource(R.string.voice_keep_hint), s.voiceOn) { s.toggleVoice() }
+                Text(stringResource(R.string.voice_keep_hint), style = Theme.small())
                 val ctx = androidx.compose.ui.platform.LocalContext.current
                 val (voice, photos) = androidx.compose.runtime.remember { io.github.graviton94.todaybible.data.Voice.usage(ctx) }
                 fun mb(b: Long) = if (b < 1_000_000) "%.1fMB".format(b / 1_000_000f) else "%.0fMB".format(b / 1_000_000f)
                 Text(stringResource(R.string.storage) + " · " + stringResource(R.string.storage_line, mb(voice), mb(photos)), style = Theme.small())
                 BookButton(stringResource(R.string.notes_pdf), Modifier.fillMaxWidth(), quiet = true) { s.requestNotes(null) }
+                // 녹음 모두 지우기: 한 번 더 눌러야 지워요
+                var sure by remember { mutableStateOf(false) }
+                if (voice > 0) BookButton(stringResource(if (sure) R.string.rec_clear_sure else R.string.rec_clear), Modifier.fillMaxWidth(), quiet = true) {
+                    if (!sure) sure = true else { java.io.File(ctx.filesDir, "voice").deleteRecursively(); sure = false; s.toast = ctx.getString(R.string.rec_cleared) }
+                }
             }
             Group(stringResource(R.string.lifetime)) {
                 ChoiceRow(stringResource(if (s.lifetime.owned) R.string.owned else R.string.lifetime_head), s.lifetime.owned) { s.purchaseOpen = true }
@@ -332,3 +343,8 @@ private fun Feedback(s: AppState) {
             .putExtra(android.content.Intent.EXTRA_SUBJECT, ctx.getString(R.string.feedback_subject)).putExtra(android.content.Intent.EXTRA_TEXT, text), null))
     }
 }
+
+/** 정각 시각 이름: 오전 7시 · 오후 9시 · 밤 12시 (7 a.m.). */
+fun hourLabel(h: Int, korean: Boolean): String =
+    if (korean) when (h) { 0 -> "밤 12시"; 12 -> "낮 12시"; in 1..11 -> "오전 ${h}시"; else -> "오후 ${h - 12}시" }
+    else when (h) { 0 -> "12 a.m."; 12 -> "12 p.m."; in 1..11 -> "$h a.m."; else -> "${h - 12} p.m." }

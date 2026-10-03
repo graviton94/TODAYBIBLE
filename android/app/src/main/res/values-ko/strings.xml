@@ -212,8 +212,8 @@
     <string name="widget_run">이어 쓴 날</string>
     <string name="widget_run_desc">며칠째 이어 쓰는지</string>
     <string name="run_label">일째 이어 씀</string>
-    <string name="voice_keep">내 목소리 남기기</string>
-    <string name="voice_keep_hint">소리 내어 읽은 절을 이 폰에만 녹음해요</string>
+    <string name="voice_keep">내 목소리</string>
+    <string name="voice_keep_hint">소리 내어 읽으면 이 폰에만 녹음돼요. 마음에 들지 않으면 지울 수 있어요.</string>
     <string name="voice_recording">녹음 중</string>
     <string name="voice_done_reading">다 읽었어요</string>
     <string name="voice_chapter">내 낭독 · %1$d절 · %2$s</string>
@@ -338,7 +338,7 @@
     <string name="listen_mode">듣기</string>
     <string name="listen_start">이 장 듣기</string>
     <string name="listen_stop">멈추기</string>
-    <string name="listen_hint">화면이 꺼져도 이어서 다음 장까지 들려 드려요. 듣기만 한 절은 채우지 않아요. 필사는 내가 읽어야 해요.</string>
+    <string name="listen_hint">책을 읽어 주듯 짧게 쉬며 이어 읽어요. 화면이 꺼져도 계속, 절을 누르면 거기서부터. 듣기만 한 절은 채우지 않아요.</string>
     <string name="listen_where">지금 듣는 곳 · %1$s %2$d:%3$d</string>
     <string name="listen_channel">듣기</string>
     <string name="listen_title">듣는 중 · %1$s %2$d장</string>
@@ -362,4 +362,18 @@
     <string name="mybook_named">%1$s님의 성경</string>
     <string name="mybook_count">%1$s절 옮겨 썼어요 · 온 성경의 %2$s%%</string>
     <string name="aloud_big_setting">읽을 때 큰 글씨 한 줄로</string>
+    <string name="line_of">%1$d절 · %2$d / %3$d줄</string>
+    <string name="listen_head">%1$s %2$d장</string>
+    <string name="listen_prev">앞 장</string>
+    <string name="listen_next">다음 장</string>
+    <string name="rec_show">절마다 녹음 보기</string>
+    <string name="rec_hide">녹음 접기</string>
+    <string name="rec_row">%1$d절 · %2$d:%3$02d</string>
+    <string name="rec_delete">지우기</string>
+    <string name="rec_deleted">%1$d절 녹음을 지웠어요</string>
+    <string name="rec_clear">녹음 모두 지우기</string>
+    <string name="rec_clear_sure">한 번 더 누르면 모두 지워요</string>
+    <string name="rec_cleared">녹음을 모두 지웠어요</string>
+    <string name="reminder_on">매일 알림</string>
+    <string name="reminder_denied">이 앱의 알림이 꺼져 있어요. 폰 설정에서 켜 주세요.</string>
 </resources>

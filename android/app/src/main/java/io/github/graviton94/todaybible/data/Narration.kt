@@ -13,6 +13,8 @@ import java.util.zip.ZipInputStream
  */
 object Narration {
     const val MALE = "m5"; const val FEMALE = "f5"; const val DEVICE = "device"
+    /** 듣기에서 절과 절 사이 쉼 (ms). */
+    const val GAP_MS = 350
     private const val BASE = "https://github.com/graviton94/TODAYBIBLE/releases/download/narration-v1"
 
     fun dir(ctx: Context, voice: String, book: Int) = File(ctx.filesDir, "narration/$voice/${book + 1}")

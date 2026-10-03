@@ -36,16 +36,18 @@ import java.time.LocalDate
 /** 작은 위젯 (L1) 공통: 앱과 같은 토큰으로 그림 한 장, 누르면 오늘 화면. */
 abstract class SmallWidget : AppWidgetProvider() {
     abstract fun draw(ctx: Context, wDp: Int, hDp: Int, dark: Boolean): Bitmap
-    override fun onUpdate(ctx: Context, m: AppWidgetManager, ids: IntArray) { ids.forEach { update(ctx, m, it) } }
-    override fun onAppWidgetOptionsChanged(ctx: Context, m: AppWidgetManager, id: Int, o: Bundle) = update(ctx, m, id)
+    // 그림 그리기는 뒤에서 (받는 쪽 시간 제한 안에)
+    override fun onUpdate(ctx: Context, m: AppWidgetManager, ids: IntArray) { val r = goAsync(); Thread { ids.forEach { update(ctx, m, it) }; r.finish() }.start() }
+    override fun onAppWidgetOptionsChanged(ctx: Context, m: AppWidgetManager, id: Int, o: Bundle) { val r = goAsync(); Thread { update(ctx, m, id); r.finish() }.start() }
     private fun update(ctx: Context, m: AppWidgetManager, id: Int) {
         val o = m.getAppWidgetOptions(id)
+        // 세로 화면 기준 자리 (가로 · 세로 중 작은 쪽으로 정사각)
         val w = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 110).coerceAtLeast(60)
-        val h = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 110).coerceAtLeast(60)
+        val h = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 110).coerceAtLeast(60)
         val views = RemoteViews(ctx.packageName, R.layout.widget_verse)
         views.setImageViewBitmap(R.id.widget_image, runCatching { draw(ctx, w, h, VerseWidget.dark(ctx)) }.getOrNull())
         val open = Intent(ctx, MainActivity::class.java).putExtra("page", 0).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        views.setOnClickPendingIntent(R.id.widget_image, PendingIntent.getActivity(ctx, 2, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+        views.setOnClickPendingIntent(R.id.widget_image, PendingIntent.getActivity(ctx, 3, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
         runCatching { m.updateAppWidget(id, views) }
     }
     companion object {

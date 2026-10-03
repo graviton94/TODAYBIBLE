@@ -58,7 +58,7 @@ shot p08_hand_written 2
 open --ez tb.voice false
 # 낭독 세 갈래 · 원고지 · 형광펜 · 한 해 · 밤 · 아주 크게
 open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 0;         shot q01_aloud_responsive 6
-open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 1;         shot q02_aloud_listen 4
+open --ei tb.page 1 --es tb.listen "41:3";                         shot q02_listen_reader 4
 open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 2;         shot q03_aloud_alone_big 4
 open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 2 --ez tb.aloudBig false; shot q04_aloud_alone_small 4
 open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 0 --ez tb.aloudBig true

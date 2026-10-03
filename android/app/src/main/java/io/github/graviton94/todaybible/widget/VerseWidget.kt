@@ -44,8 +44,8 @@ import java.time.LocalDate
  * 앱과 같은 글꼴 · 토큰으로 그림 한 장을 그려 붙임. 누르면 필사 장으로.
  */
 class VerseWidget : AppWidgetProvider() {
-    override fun onUpdate(ctx: Context, manager: AppWidgetManager, ids: IntArray) { ids.forEach { draw(ctx, manager, it) } }
-    override fun onAppWidgetOptionsChanged(ctx: Context, manager: AppWidgetManager, id: Int, options: Bundle) = draw(ctx, manager, id)
+    override fun onUpdate(ctx: Context, manager: AppWidgetManager, ids: IntArray) { val r = goAsync(); Thread { ids.forEach { draw(ctx, manager, it) }; r.finish() }.start() }
+    override fun onAppWidgetOptionsChanged(ctx: Context, manager: AppWidgetManager, id: Int, options: Bundle) { val r = goAsync(); Thread { draw(ctx, manager, id); r.finish() }.start() }
 
     companion object {
         /** 앱에서 기록이 바뀌면 부름. */
@@ -56,8 +56,9 @@ class VerseWidget : AppWidgetProvider() {
 
         private fun draw(ctx: Context, m: AppWidgetManager, id: Int) {
             val o = m.getAppWidgetOptions(id)
-            val wDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 320).coerceAtLeast(180)
-            val hDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 150).coerceAtLeast(110)
+            // 세로 화면 기준 자리: 너비는 MIN_WIDTH, 높이는 MAX_HEIGHT
+            val wDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 320).coerceAtLeast(180)
+            val hDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 150).coerceAtLeast(110)
             val views = RemoteViews(ctx.packageName, R.layout.widget_verse)
             views.setImageViewBitmap(R.id.widget_image, runCatching { bitmap(ctx, wDp, hDp, dark(ctx)) }.getOrNull())
             val open = Intent(ctx, MainActivity::class.java).putExtra("page", 1).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
