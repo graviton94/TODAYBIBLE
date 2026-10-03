@@ -29,7 +29,7 @@ class AppState(val store: Store) {
     var page by mutableStateOf(0)
     var onboarded by mutableStateOf(store.onboarded)
     /** 켤 때 표지 넘김 (처음 소개 뒤로는 매번). */
-    var opening by mutableStateOf(store.onboarded)
+    var opening by mutableStateOf(store.onboarded && store.openedDay != java.time.LocalDate.now().toEpochDay())
     var dailyGoal by mutableStateOf(store.dailyGoal)
     var notebook by mutableStateOf(store.notebook)
     /** 크게 보는 판화. */

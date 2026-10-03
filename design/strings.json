@@ -230,5 +230,10 @@
   "storage_line": {"en": "Voice %1$s · Notebook photos %2$s", "ko": "목소리 %1$s · 노트 사진 %2$s"},
   "cmp_voice": {"en": "My voice", "ko": "내 목소리"},
   "cmp_notes": {"en": "Notebook PDF", "ko": "노트 PDF"},
-  "duration_ms": {"en": "%1$d:%2$02d", "ko": "%1$d분 %2$d초"}
+  "duration_ms": {"en": "%1$d:%2$02d", "ko": "%1$d분 %2$d초"},
+  "backup": {"en": "Backup", "ko": "기록 보관"},
+  "backup_export": {"en": "Save records to a file", "ko": "기록을 파일로 내보내기"},
+  "backup_import": {"en": "Restore from a file", "ko": "파일에서 되살리기"},
+  "backup_done": {"en": "Records restored", "ko": "기록을 되살렸어요"},
+  "backup_bad": {"en": "This file can't be read", "ko": "읽을 수 없는 파일이에요"}
 }

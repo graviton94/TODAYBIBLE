@@ -45,10 +45,10 @@ open --ez tb.settings true;                                        shot s01_sett
 swipe_up;                                                          shot s02_settings_cover 2
 open --ez tb.planSheet true;                                       shot p01_plan_sheet 4
 open --es tb.plan mark30;                                          shot p02_today_plan 5
-open --es tb.cover navy --es tb.owner 김은혜 --ez tb.opening true; sleep 3.2; snap p03_cover_navy_name
+open --es tb.cover navy --es tb.owner 김은혜 --ez tb.opening true; sleep 2.3; snap p03_cover_navy_name
 open --es tb.plan none --es tb.cover burgundy --es tb.owner ""
-open --ei tb.page 1; adb shell input tap 790 550;                  shot p04_aloud_mic 3
-open --ei tb.page 1 --ez tb.voice true; adb shell input tap 790 550; shot p05_aloud_voice 3
+open --ei tb.page 1; adb shell input tap 640 551;                  shot p04_aloud_mic 3
+open --ei tb.page 1 --ez tb.voice true; adb shell input tap 640 551; shot p05_aloud_voice 3
 open --ez tb.settings true; swipe_up; swipe_up;                    shot p06_settings_voice 2
 open --ez tb.voice false
 open --ei tb.page 3;                                               shot r00_record_stats 5

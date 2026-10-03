@@ -265,7 +265,7 @@ private fun WelcomeArt(s: AppState, i: Int) {
                 drawContent()
                 val cols = io.github.graviton94.todaybible.core.Pieces.COLS; val rows = io.github.graviton94.todaybible.core.Pieces.ROWS
                 val w = size.width / cols; val h = size.height / rows
-                for (j in 0 until cols * rows) if (j !in shown) drawRect(c.paper, Offset((j % cols) * w, (j / cols) * h), Size(w + 1f, h + 1f))
+                for (j in 0 until cols * rows) if (j !in shown) drawRect(c.paper.copy(alpha = Tokens.Alpha.veilPiece), Offset((j % cols) * w, (j / cols) * h), Size(w + 1f, h + 1f))
             }) { if (img != null) Image(img, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
         }
         else -> Column(Modifier.padding(Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {

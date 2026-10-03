@@ -100,6 +100,10 @@ class Store(val context: Context) {
     var voiceOn: Boolean
         get() = prefs.getBoolean("voice", false)
         set(v) = prefs.edit().putBoolean("voice", v).apply()
+    /** 표지 넘김을 마지막으로 보여 준 날. */
+    var openedDay: Long
+        get() = prefs.getLong("opened", -1)
+        set(v) = prefs.edit().putLong("opened", v).apply()
     var startDay: Long
         get() = prefs.getLong("start", -1)
         set(v) = prefs.edit().putLong("start", v).apply()

@@ -132,10 +132,10 @@ private fun plateFraction(s: AppState, p: Plate): Float = s.progress.chapterFrac
 @Composable
 private fun PlateGallery(s: AppState) {
     Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-        s.store.plates.chunked(2).forEach { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+        s.store.plates.chunked(3).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 row.forEach { p -> PlateCard(s, p, Modifier.weight(1f)) }
-                if (row.size == 1) Box(Modifier.weight(1f))
+                repeat(3 - row.size) { Box(Modifier.weight(1f)) }
             }
         }
     }
@@ -164,7 +164,7 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
                     drawContent()
                     // 아직 드러나지 않은 조각은 종이로 덮고, 조각 사이엔 머리카락 같은 줄
                     val w = size.width / Pieces.COLS; val h = size.height / Pieces.ROWS
-                    for (i in 0 until Pieces.COUNT) if (i !in shown) drawRect(c.paper, Offset((i % Pieces.COLS) * w, (i / Pieces.COLS) * h), Size(w + 0.5f, h + 0.5f))
+                    for (i in 0 until Pieces.COUNT) if (i !in shown) drawRect(c.paper.copy(alpha = Tokens.Alpha.veilPiece), Offset((i % Pieces.COLS) * w, (i / Pieces.COLS) * h), Size(w + 0.5f, h + 0.5f))
                     if (n in 1 until Pieces.COUNT) {
                         for (x in 1 until Pieces.COLS) drawLine(c.hair, Offset(x * w, 0f), Offset(x * w, size.height), Tokens.Stroke.hair.toPx())
                         for (y in 1 until Pieces.ROWS) drawLine(c.hair, Offset(0f, y * h), Offset(size.width, y * h), Tokens.Stroke.hair.toPx())
@@ -176,11 +176,9 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
             if (img != null) Image(img, if (k) p.ko else p.en, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
             if (n == 0) Canvas(Modifier.size(Tokens.Size.icon)) { stamp(STAMP_CROSS, c.unwritten.copy(alpha = Tokens.Alpha.faint)) }
         }
-        Text(if (k) p.ko else p.en, style = Theme.label(), maxLines = 2, overflow = TextOverflow.Ellipsis)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(if (k) "${s.bookName(p.book)} ${p.chapter}장" else "${s.bookName(p.book)} ${p.chapter}", style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            Text("$n/${Pieces.COUNT}", style = Theme.small().copy(color = if (n == Pieces.COUNT) c.giltText else c.inkSoft), maxLines = 1)
-        }
+        // 세 줄로 좁으니 제목 한 줄 · 조각 수 한 줄 (권 · 장은 누르면 크게 보는 화면에)
+        Text(if (k) p.ko else p.en, style = Theme.small().copy(color = c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text("$n/${Pieces.COUNT}", style = Theme.small().copy(color = if (n == Pieces.COUNT) c.giltText else c.inkSoft), maxLines = 1)
     }
 }
 

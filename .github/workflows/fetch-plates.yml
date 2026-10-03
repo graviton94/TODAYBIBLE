@@ -32,8 +32,8 @@ jobs:
                   except Exception as e: print(pid, e); time.sleep(6*(a+1))
               if not data: bad.append(pid); continue
               im=Image.open(io.BytesIO(data)); im=ImageOps.exif_transpose(im).convert("L")
-              im.thumbnail((900,900), Image.LANCZOS)
-              im.save(dst, "JPEG", quality=80, optimize=True, progressive=True)
+              im.thumbnail((820,820), Image.LANCZOS)
+              im.save(dst, "JPEG", quality=74, optimize=True, progressive=True)
               print(pid, im.size, os.path.getsize(dst)); time.sleep(1.5)
           if bad: print("::warning::missing "+" ".join(bad))
           PY

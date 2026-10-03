@@ -32,6 +32,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.graviton94.todaybible.BuildConfig
@@ -48,9 +50,10 @@ private val SCALES = listOf(1f, Tokens.Ratio.scaleLarge, Tokens.Ratio.scaleLarge
 fun SettingsPage(s: AppState) {
     val c = Theme.c; val k = s.korean
     BackHandler { s.settingsOpen = false }
+    val backLabel = stringResource(R.string.back)
     Column(Modifier.fillMaxSize().background(c.leaf)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(Tokens.Size.touch).clickable(role = Role.Button) { s.settingsOpen = false }, contentAlignment = Alignment.Center) {
+            Box(Modifier.size(Tokens.Size.touch).semantics { contentDescription = backLabel }.clickable(role = Role.Button) { s.settingsOpen = false }, contentAlignment = Alignment.Center) {
                 BackArrow(Modifier.size(Tokens.Size.icon))
             }
             Text(stringResource(R.string.settings), style = Theme.title(k), maxLines = 1)
@@ -111,6 +114,24 @@ fun SettingsPage(s: AppState) {
             }
             Group(stringResource(R.string.lifetime)) {
                 ChoiceRow(stringResource(if (s.lifetime.owned) R.string.owned else R.string.lifetime_head), s.lifetime.owned) { s.purchaseOpen = true }
+            }
+            Group(stringResource(R.string.backup)) {
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                    if (uri != null) {
+                        val ok = io.github.graviton94.todaybible.data.Backup.read(ctx, uri)
+                        s.toast = ctx.getString(if (ok) R.string.backup_done else R.string.backup_bad)
+                        if (ok) (ctx as? android.app.Activity)?.recreate()
+                    }
+                }
+                BookButton(stringResource(R.string.backup_export), Modifier.fillMaxWidth(), quiet = true) {
+                    val day = s.today().toString()
+                    val f = io.github.graviton94.todaybible.data.Backup.write(ctx, java.io.File(ctx.cacheDir, "share/harubible_$day.zip"))
+                    val uri = androidx.core.content.FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", f)
+                    ctx.startActivity(android.content.Intent.createChooser(android.content.Intent(android.content.Intent.ACTION_SEND).setType("application/zip")
+                        .putExtra(android.content.Intent.EXTRA_STREAM, uri).addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION), null))
+                }
+                BookButton(stringResource(R.string.backup_import), Modifier.fillMaxWidth(), quiet = true) { pick.launch(arrayOf("application/zip", "application/octet-stream")) }
             }
             Group(stringResource(R.string.about)) {
                 Text(stringResource(R.string.about_text), style = Theme.small())

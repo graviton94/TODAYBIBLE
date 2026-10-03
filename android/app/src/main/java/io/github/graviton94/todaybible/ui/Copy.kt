@@ -80,6 +80,8 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -184,12 +186,11 @@ private fun WritePage(s: AppState, verse: Int?) {
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None),
             modifier = Modifier.size(Tokens.Size.hiddenField).alpha(0f).focusRequester(focus).onFocusChanged { focused = it.isFocused },
         )
-        if (!focused && verse != null) Box(Modifier.align(Alignment.BottomCenter).padding(bottom = Tokens.Space.s4)) {
-            Row(Modifier.clip(RoundedCornerShape(Tokens.Radius.button)).background(c.leather).clickable(role = Role.Button) { write() }
-                .drawBehind { giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = false) }
-                .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                Text(stringResource(R.string.tap_to_write), style = Theme.label().copy(color = c.leatherInk), maxLines = 1)
-            }
+        // 쓰기 안내: 글 위에 겹치지 않게 아래 띠로 (키보드가 열리면 사라짐)
+        if (!focused && verse != null) Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(c.leaf)
+            .drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }
+            .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) {
+            BookButton(stringResource(R.string.tap_to_write), Modifier.fillMaxWidth()) { write() }
         }
     }
 }
@@ -445,9 +446,10 @@ private fun AloudTab(s: AppState, verse: Int) {
             }
         }
         VerseText(s, verse, source, lit = lit)
+        val micLabel = stringResource(R.string.aloud_listen)
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             Box(Modifier.size(Tokens.Size.emblem).clip(androidx.compose.foundation.shape.CircleShape).background(if (on) c.rubric else c.leather)
-                .clickable(role = Role.Button) { if (!mic) ask.launch(Manifest.permission.RECORD_AUDIO) else on = !on },
+                .semantics { contentDescription = micLabel }.clickable(role = Role.Button) { if (!mic) ask.launch(Manifest.permission.RECORD_AUDIO) else on = !on },
                 contentAlignment = Alignment.Center) { MicMark(c.leatherInk, Modifier.size(Tokens.Size.iconMd)) }
             Text(stringResource(when { on && record -> R.string.voice_recording; on -> R.string.aloud_listening; else -> R.string.aloud_listen }), style = Theme.label().copy(color = if (on) c.rubric else c.ink))
             if (on && !recognize) BookButton(stringResource(R.string.voice_done_reading), Modifier.fillMaxWidth()) { complete() }

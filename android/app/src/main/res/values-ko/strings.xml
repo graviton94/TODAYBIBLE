@@ -233,4 +233,9 @@
     <string name="cmp_voice">내 목소리</string>
     <string name="cmp_notes">노트 PDF</string>
     <string name="duration_ms">%1$d분 %2$d초</string>
+    <string name="backup">기록 보관</string>
+    <string name="backup_export">기록을 파일로 내보내기</string>
+    <string name="backup_import">파일에서 되살리기</string>
+    <string name="backup_done">기록을 되살렸어요</string>
+    <string name="backup_bad">읽을 수 없는 파일이에요</string>
 </resources>

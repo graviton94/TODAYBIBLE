@@ -36,6 +36,7 @@ class MainActivity : ComponentActivity() {
                 enableEdgeToEdge(bar, bar)
             }
             TodayTheme(s.theme, s.scale) { Root(s) }
+            androidx.compose.runtime.LaunchedEffect(s.opening) { if (!s.opening) s.store.openedDay = s.today().toEpochDay() }
         }
     }
 

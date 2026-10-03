@@ -30,6 +30,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import io.github.graviton94.todaybible.R
 import io.github.graviton94.todaybible.core.Markup
 import io.github.graviton94.todaybible.core.Pieces
@@ -50,9 +52,10 @@ fun PlatePage(s: AppState, p: Plate) {
     val n = Pieces.revealed(f); val shown = remember(p.id) { Pieces.order(p.id.hashCode()) }.take(n).toSet()
     val img = rememberPlate(p.id)
     val ref = if (k) "${s.bookName(p.book)} ${p.chapter}:${p.verse}" else "${s.bookName(p.book)} ${p.chapter}:${p.verse}"
+    val backLabel = stringResource(R.string.back)
     Column(Modifier.fillMaxSize().background(c.leaf)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(Tokens.Size.touch).clickable(role = Role.Button) { s.plateView = null }, contentAlignment = Alignment.Center) { BackArrow(Modifier.size(Tokens.Size.icon)) }
+            Box(Modifier.size(Tokens.Size.touch).semantics { contentDescription = backLabel }.clickable(role = Role.Button) { s.plateView = null }, contentAlignment = Alignment.Center) { BackArrow(Modifier.size(Tokens.Size.icon)) }
             Text(stringResource(R.string.plates), style = Theme.title(k), maxLines = 1, modifier = Modifier.weight(1f))
             Text("$n/${Pieces.COUNT}", style = Theme.small(), modifier = Modifier.padding(end = Tokens.Space.s4))
         }
@@ -60,7 +63,7 @@ fun PlatePage(s: AppState, p: Plate) {
             Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).drawWithContent {
                 drawContent()
                 val w = size.width / Pieces.COLS; val h = size.height / Pieces.ROWS
-                for (i in 0 until Pieces.COUNT) if (i !in shown) drawRect(c.paper, Offset((i % Pieces.COLS) * w, (i / Pieces.COLS) * h), Size(w + 1f, h + 1f))
+                for (i in 0 until Pieces.COUNT) if (i !in shown) drawRect(c.paper.copy(alpha = Tokens.Alpha.veilPiece), Offset((i % Pieces.COLS) * w, (i / Pieces.COLS) * h), Size(w + 1f, h + 1f))
                 if (n in 1 until Pieces.COUNT) {
                     for (x in 1 until Pieces.COLS) drawLine(c.hair, Offset(x * w, 0f), Offset(x * w, size.height), Tokens.Stroke.hair.toPx())
                     for (y in 1 until Pieces.ROWS) drawLine(c.hair, Offset(0f, y * h), Offset(size.width, y * h), Tokens.Stroke.hair.toPx())

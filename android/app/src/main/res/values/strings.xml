@@ -233,4 +233,9 @@
     <string name="cmp_voice">My voice</string>
     <string name="cmp_notes">Notebook PDF</string>
     <string name="duration_ms">%1$d:%2$02d</string>
+    <string name="backup">Backup</string>
+    <string name="backup_export">Save records to a file</string>
+    <string name="backup_import">Restore from a file</string>
+    <string name="backup_done">Records restored</string>
+    <string name="backup_bad">This file can\'t be read</string>
 </resources>

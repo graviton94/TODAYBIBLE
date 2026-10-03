@@ -33,6 +33,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import io.github.graviton94.todaybible.R
 import io.github.graviton94.todaybible.design.Theme
@@ -49,9 +51,10 @@ fun PurchasePage(s: AppState) {
     LaunchedEffect(Unit) { life.connect() }
     fun close() { s.purchaseOpen = false; s.peekBook = null }
     BackHandler { close() }
+    val backLabel = stringResource(R.string.back)
     Column(Modifier.fillMaxSize().background(c.leaf)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(Tokens.Size.touch).clickable(role = Role.Button) { close() }, contentAlignment = Alignment.Center) { BackArrow(Modifier.size(Tokens.Size.icon)) }
+            Box(Modifier.size(Tokens.Size.touch).semantics { contentDescription = backLabel }.clickable(role = Role.Button) { close() }, contentAlignment = Alignment.Center) { BackArrow(Modifier.size(Tokens.Size.icon)) }
             Text(stringResource(R.string.lifetime), style = Theme.title(k), maxLines = 1)
         }
         Column(

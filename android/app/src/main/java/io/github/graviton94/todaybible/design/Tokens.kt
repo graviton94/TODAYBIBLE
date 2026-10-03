@@ -150,6 +150,7 @@ object Tokens {
         const val nib = 0.14f
         const val shine = 0.22f
         const val peek = 0.93f
+        const val veilPiece = 0.86f
     }
     object Leading {
         const val verse = 1.8f

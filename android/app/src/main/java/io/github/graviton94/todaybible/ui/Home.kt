@@ -106,7 +106,7 @@ fun HomePage(s: AppState) {
                 Box(Modifier.width(Tokens.Size.initialHome).aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.frame)).background(c.paper).drawWithContent {
                     drawContent()
                     val w = size.width / Pieces.COLS; val h = size.height / Pieces.ROWS
-                    for (i in 0 until Pieces.COUNT) if (i !in order) drawRect(c.paper, Offset((i % Pieces.COLS) * w, (i / Pieces.COLS) * h), Size(w + 1f, h + 1f))
+                    for (i in 0 until Pieces.COUNT) if (i !in order) drawRect(c.paper.copy(alpha = Tokens.Alpha.veilPiece), Offset((i % Pieces.COLS) * w, (i / Pieces.COLS) * h), Size(w + 1f, h + 1f))
                 }) { if (img != null) Image(img, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(R.string.next_plate, if (k) pl.ko else pl.en, left), style = Theme.label(), maxLines = 1, overflow = TextOverflow.Ellipsis)

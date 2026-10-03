@@ -40,9 +40,13 @@ object Reminder {
         val store = Store(ctx)
         val fills = store.loadFills()
         if (fills.any { it.epochDay == LocalDate.now().toEpochDay() }) return
-        val tr = store.translation; val (b, ch) = store.bookmark(tr)
+        val tr = store.translation; val p = Progress(fills)
+        // 길잡이가 있으면 길잡이의 다음 절, 없으면 책갈피
+        val planNext = io.github.graviton94.todaybible.core.Plans.byId(store.planId)?.chapters?.firstNotNullOfOrNull { (pb, pc) ->
+            p.nextVerse(tr, store.book(tr, pb), pc)?.let { Triple(pb, pc, it) } }
+        val (b, ch) = planNext?.let { it.first to it.second } ?: store.bookmark(tr)
         val text = store.book(tr, b)
-        val v = Progress(fills).nextVerse(tr, text, ch) ?: text.fillable(ch).first()
+        val v = planNext?.third ?: p.nextVerse(tr, text, ch) ?: text.fillable(ch).first()
         val book = Canon.books[b]
         val title = "${if (tr == Translation.KRV) book.ko else book.en} $ch:$v"
         val nm = ctx.getSystemService(NotificationManager::class.java)
