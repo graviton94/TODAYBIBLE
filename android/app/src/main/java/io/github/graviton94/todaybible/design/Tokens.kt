@@ -118,7 +118,7 @@ object Tokens {
         const val toastMs = 2400
         const val fadeMs = 220
         const val typeSettleMs = 350
-        const val turnSnap = 0.25f
+        const val turnSnap = 0.2f
         const val turnTilt = 2.5f
         const val turnLift = 18.0f
         const val turnShade = 0.35f
