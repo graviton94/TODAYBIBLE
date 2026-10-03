@@ -305,4 +305,6 @@
     <string name="guide_net">needs internet</string>
     <string name="guide_voice_n">Voice %1$d · %2$s</string>
     <string name="guide_preview">Hear a sample (Psalm 23:1)</string>
+    <string name="guide_ai_sample">Compare: AI narration sample (Psalm 23)</string>
+    <string name="guide_ai_stop">Stop the sample</string>
 </resources>

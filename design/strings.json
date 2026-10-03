@@ -302,5 +302,7 @@
   "guide_q_normal": {"en": "standard", "ko": "기본 목소리"},
   "guide_net": {"en": "needs internet", "ko": "인터넷 필요"},
   "guide_voice_n": {"en": "Voice %1$d · %2$s", "ko": "목소리 %1$d · %2$s"},
-  "guide_preview": {"en": "Hear a sample (Psalm 23:1)", "ko": "미리 듣기 (시편 23:1)"}
+  "guide_preview": {"en": "Hear a sample (Psalm 23:1)", "ko": "미리 듣기 (시편 23:1)"},
+  "guide_ai_sample": {"en": "Compare: AI narration sample (Psalm 23)", "ko": "견주어 듣기: AI 낭독 견본 (시편 23편)"},
+  "guide_ai_stop": {"en": "Stop the sample", "ko": "견본 멈추기"}
 }

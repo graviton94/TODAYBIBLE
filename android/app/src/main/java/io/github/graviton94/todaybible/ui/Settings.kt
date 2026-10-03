@@ -276,4 +276,20 @@ private fun GuideVoiceSettings(s: AppState) {
         val sample = io.github.graviton94.todaybible.core.Markup.plain(s.store.book(s.translation, 18).verse(23, 1))
         guide.speak(sample, s.aloudRate(), { _, _ -> }, { })
     }
+    // 견주어 듣기: 미리 만든 AI 낭독 견본 (시편 23편, 오픈 소스 목소리)
+    if (s.korean) {
+        var player by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
+        androidx.compose.runtime.DisposableEffect(Unit) { onDispose { runCatching { player?.release() }; player = null } }
+        BookButton(stringResource(if (player != null) R.string.guide_ai_stop else R.string.guide_ai_sample), Modifier.fillMaxWidth(), quiet = true) {
+            player?.let { runCatching { it.release() }; player = null; return@BookButton }
+            guide.stop()
+            player = runCatching {
+                android.media.MediaPlayer().apply {
+                    ctx.assets.openFd("voice/ps23_ai.m4a").use { setDataSource(it.fileDescriptor, it.startOffset, it.length) }
+                    setOnCompletionListener { mp -> mp.release(); player = null }
+                    prepare(); start()
+                }
+            }.getOrNull()
+        }
+    }
 }

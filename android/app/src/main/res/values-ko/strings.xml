@@ -305,4 +305,6 @@
     <string name="guide_net">인터넷 필요</string>
     <string name="guide_voice_n">목소리 %1$d · %2$s</string>
     <string name="guide_preview">미리 듣기 (시편 23:1)</string>
+    <string name="guide_ai_sample">견주어 듣기: AI 낭독 견본 (시편 23편)</string>
+    <string name="guide_ai_stop">견본 멈추기</string>
 </resources>
