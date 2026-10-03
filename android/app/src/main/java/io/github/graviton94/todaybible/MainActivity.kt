@@ -26,6 +26,8 @@ class MainActivity : ComponentActivity() {
         if (BuildConfig.DEV_TOOLS && intent.getBooleanExtra("tb.reset", false)) store.reset()
         val s = AppState(store).also { state = it }
         if (BuildConfig.DEV_TOOLS) debugSetup(s, intent)
+        intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it }
+        if (store.reminderHour >= 0) io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
         setContent {
             val dark = when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK -> true }
             LaunchedEffect(dark) {
@@ -34,6 +36,12 @@ class MainActivity : ComponentActivity() {
             }
             TodayTheme(s.theme, s.scale) { Root(s) }
         }
+    }
+
+    // 알림을 눌러 다시 열 때: 필사 장으로
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { state?.page = it }
     }
 
     /**

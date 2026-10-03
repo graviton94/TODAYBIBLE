@@ -16,7 +16,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,6 +71,17 @@ fun SettingsPage(s: AppState) {
                 // 지금 고른 번역 · 크기로 창세기 1:1
                 Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).padding(Tokens.Space.s4)) {
                     VerseText(s, 1, s.text(0).verse(1, 1))
+                }
+            }
+            Group(stringResource(R.string.reminder)) {
+                // 안드로이드 13+: 처음 켤 때 알림 허락을 물음
+                var pending by remember { mutableIntStateOf(-1) }
+                val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (ok) s.setReminder(pending) }
+                val hours = listOf(-1, 7, 21)
+                UnderlineTabs(listOf(stringResource(R.string.reminder_off), stringResource(R.string.reminder_morning), stringResource(R.string.reminder_night)),
+                    hours.indexOf(s.reminderHour).coerceAtLeast(0)) { i ->
+                    val h = hours[i]
+                    if (h >= 0 && android.os.Build.VERSION.SDK_INT >= 33) { pending = h; ask.launch(android.Manifest.permission.POST_NOTIFICATIONS) } else s.setReminder(h)
                 }
             }
             Group(stringResource(R.string.stamp)) {

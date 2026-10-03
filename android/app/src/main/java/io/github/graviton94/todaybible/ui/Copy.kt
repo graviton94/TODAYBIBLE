@@ -42,6 +42,8 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
@@ -72,12 +74,13 @@ fun CopyPage(s: AppState) {
     val c = Theme.c; val k = s.korean
     val t = s.text(); val p = s.progress
     val fillable = t.fillable(s.chapter)
-    val next = p.nextVerse(s.translation, t, s.chapter)
+    val next = s.target?.takeIf { it in fillable && !p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) } ?: p.nextVerse(s.translation, t, s.chapter)
     val doneCount = fillable.count { p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) }
     var tab by remember { mutableIntStateOf(0) }
 
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-        RunningHead(if (k) "${s.bookName()} ${s.chapter}장" else "${s.bookName().uppercase()} ${s.chapter}", stringResource(R.string.verse_of, doneCount, fillable.size), k)
+        RunningHead(if (k) "${s.bookName()} ${s.chapter}장" else "${s.bookName().uppercase()} ${s.chapter}", stringResource(R.string.verse_of, doneCount, fillable.size), k,
+            Modifier.clickable(role = Role.Button) { s.picker = s.book })
         UnderlineTabs(listOf(stringResource(R.string.mode_type), stringResource(R.string.mode_paper), stringResource(R.string.mode_aloud)), tab) { tab = it }
         if (next == null && tab != 1) {
             ChapterDoneNote(s)
@@ -85,6 +88,33 @@ fun CopyPage(s: AppState) {
             0 -> TypeTab(s, next!!)
             1 -> PaperTab(s)
             else -> AloudTab(s, next!!)
+        }
+        if (tab != 1) ChapterLines(s, next)
+    }
+}
+
+/**
+ * 이 장 펼쳐 보기: 채운 절은 먹, 지금 쓰는 절은 붉은 줄, 아직은 흐린 먹. 빈 절을 누르면 그 절부터.
+ * 채울수록 한 장이 먹으로 차오르는 모습이 보이게.
+ */
+@Composable
+private fun ChapterLines(s: AppState, current: Int?) {
+    val c = Theme.c; val t = s.text(); val p = s.progress
+    Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s4).drawBehind {
+        drawLine(c.hair, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx())
+    }.padding(top = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+        Text(stringResource(R.string.this_chapter), style = Theme.small(), maxLines = 1)
+        t.fillable(s.chapter).forEach { v ->
+            val filled = p.isFilled(s.translation, VerseKey(s.book, s.chapter, v))
+            val now = v == current
+            val line = buildAnnotatedString {
+                withStyle(SpanStyle(fontFamily = Fonts.black, color = if (filled || now) c.rubric else c.unwritten)) { append("$v ") }
+                withStyle(SpanStyle(color = if (filled || now) c.ink else c.unwritten)) { append(Markup.plain(t.verse(s.chapter, v))) }
+            }
+            Text(line, style = Theme.body(), modifier = Modifier.fillMaxWidth()
+                .then(if (!filled && !now) Modifier.clickable(role = Role.Button) { s.target = v } else Modifier)
+                .drawBehind { if (now) drawRect(c.rubric, Offset(-Tokens.Space.s3.toPx(), 0f), androidx.compose.ui.geometry.Size(Tokens.Stroke.rule.toPx(), size.height)) }
+                .padding(vertical = Tokens.Space.s1))
         }
     }
 }
@@ -136,8 +166,13 @@ private fun TypeTab(s: AppState, verse: Int) {
     val source = s.text().verse(s.chapter, verse)
     var value by remember(s.translation, s.book, s.chapter, verse) { mutableStateOf(TextFieldValue("")) }
     val marks = TypeJudge.marks(source, value.text)
+    val haptic = LocalHapticFeedback.current
     LaunchedEffect(value.text) {
-        if (TypeJudge.done(source, value.text)) { delay(Tokens.Motion.typeSettleMs.toLong()); s.fill(listOf(verse), Mode.TYPE) }
+        if (TypeJudge.done(source, value.text)) {
+            delay(Tokens.Motion.typeSettleMs.toLong())
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            s.target = null; s.fill(listOf(verse), Mode.TYPE)
+        }
     }
     if (verse > 1) {
         val prev = s.text().verse(s.chapter, verse - 1)

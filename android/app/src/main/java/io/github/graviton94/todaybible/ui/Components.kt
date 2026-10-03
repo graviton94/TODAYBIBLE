@@ -49,10 +49,10 @@ import io.github.graviton94.todaybible.design.Tokens
 
 /** 머리줄: 왼쪽 권 · 장, 오른쪽 작은 숫자. 아래 머리줄 한 줄. */
 @Composable
-fun RunningHead(left: String, right: String, korean: Boolean) {
+fun RunningHead(left: String, right: String, korean: Boolean, modifier: Modifier = Modifier) {
     val c = Theme.c
     Row(
-        Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }
+        modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }
             .padding(bottom = Tokens.Space.s2),
         verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.SpaceBetween,
     ) {

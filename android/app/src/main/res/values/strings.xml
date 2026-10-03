@@ -95,4 +95,10 @@
     <string name="app_version">Version %1$s</string>
     <string name="weekdays">SMTWTFS</string>
     <string name="filled_n">%1$d filled</string>
+    <string name="today_streak">%1$d today · %2$d-day run</string>
+    <string name="this_chapter">This chapter</string>
+    <string name="reminder_off">Off</string>
+    <string name="reminder_morning">7 a.m.</string>
+    <string name="reminder_night">9 p.m.</string>
+    <string name="reminder_channel">Daily verse</string>
 </resources>

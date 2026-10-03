@@ -81,4 +81,17 @@ class CoreTest {
         assertTrue(Presence.weekComplete(days, sun.plusDays(3)))
         assertFalse(Presence.weekComplete(days.drop(1).toSet(), sun))
     }
+
+    @Test fun streakSkipsEmptySundays() {
+        val sat = java.time.LocalDate.of(2026, 10, 3) // 토요일
+        fun d(x: java.time.LocalDate) = x.toEpochDay()
+        // 월~토 + 지난 주 금·토, 주일(9.27)은 비어 있음
+        val days = (0L..5L).map { d(sat.minusDays(it)) }.toSet() + d(sat.minusDays(7)) + d(sat.minusDays(8))
+        assertEquals(8, Presence.streak(days, sat))
+        // 오늘 아직 안 썼으면 어제부터
+        assertEquals(7, Presence.streak(days - d(sat), sat))
+        // 평일 하루 빠지면 끊김
+        assertEquals(2, Presence.streak(days - d(sat.minusDays(2)), sat))
+        assertEquals(0, Presence.streak(emptySet(), sat))
+    }
 }

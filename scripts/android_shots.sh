@@ -17,7 +17,7 @@ adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 
 # 처음 켬 (기록 없음) → 시험 기록이 쌓인 모습
 open --ez tb.reset true --es tb.theme LIGHT; sleep 15
-open --ez tb.reset true --es tb.theme LIGHT;                       shot k01_library_empty 6
+open --ez tb.reset true --es tb.theme LIGHT;                       shot k01_first_launch 6
 open --ez tb.seed true --es tb.theme LIGHT;                        shot k02_library 6
 swipe_up;                                                          shot k03_library_books 2
 open --ei tb.picker 41;                                            shot k04_chapter_grid 4

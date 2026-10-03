@@ -92,5 +92,11 @@
   "next_chapter": {"en": "Next · %1$s %2$d", "ko": "다음 · %1$s %2$d장"},
   "app_version": {"en": "Version %1$s", "ko": "버전 %1$s"},
   "weekdays": {"en": "SMTWTFS", "ko": "일월화수목금토"},
-  "filled_n": {"en": "%1$d filled", "ko": "%1$d절을 채웠어요"}
+  "filled_n": {"en": "%1$d filled", "ko": "%1$d절을 채웠어요"},
+  "today_streak": {"en": "%1$d today · %2$d-day run", "ko": "오늘 %1$d절 · %2$d일째"},
+  "this_chapter": {"en": "This chapter", "ko": "이 장"},
+  "reminder_off": {"en": "Off", "ko": "끄기"},
+  "reminder_morning": {"en": "7 a.m.", "ko": "아침 7시"},
+  "reminder_night": {"en": "9 p.m.", "ko": "밤 9시"},
+  "reminder_channel": {"en": "Daily verse", "ko": "오늘의 한 절"}
 }

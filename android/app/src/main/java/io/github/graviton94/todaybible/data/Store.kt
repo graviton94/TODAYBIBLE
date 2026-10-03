@@ -62,6 +62,10 @@ class Store(val context: Context) {
     /** 책갈피: 마지막으로 쓰던 권 · 장 (번역마다). */
     fun bookmark(tr: Translation): Pair<Int, Int> = prefs.getInt("bm_book_${tr.id}", 40) to prefs.getInt("bm_ch_${tr.id}", 1)
     fun setBookmark(tr: Translation, book: Int, chapter: Int) = prefs.edit().putInt("bm_book_${tr.id}", book).putInt("bm_ch_${tr.id}", chapter).apply()
+    /** 매일 알림 시각 (시, -1 = 끔). */
+    var reminderHour: Int
+        get() = prefs.getInt("reminder", -1)
+        set(v) = prefs.edit().putInt("reminder", v).apply()
     var startDay: Long
         get() = prefs.getLong("start", -1)
         set(v) = prefs.edit().putLong("start", v).apply()

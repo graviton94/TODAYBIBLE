@@ -64,6 +64,11 @@ fun LibraryPage(s: AppState) {
         Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
             Text(stringResource(R.string.verses_n, filled.size), style = Theme.title(k, Tokens.Text.display))
             Text(stringResource(R.string.of_total, "%,d".format(s.translation.total)), style = Theme.small())
+            // 오늘 쓴 절 · 이어 쓴 날 (주일은 쉬어도 이어짐)
+            val today = s.today().toEpochDay()
+            val todayN = s.fills.count { it.translation == s.translation && it.epochDay == today }
+            val run = io.github.graviton94.todaybible.core.Presence.streak(p.days(), s.today())
+            if (todayN > 0 || run > 0) Text(stringResource(R.string.today_streak, todayN, run), style = Theme.small().copy(color = c.rubric), maxLines = 1)
         }
         Shelf(stringResource(R.string.old_testament), 0 until 39, s, started, doneBooks)
         Shelf(stringResource(R.string.new_testament), 39 until 66, s, started, doneBooks)

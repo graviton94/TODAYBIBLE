@@ -25,7 +25,11 @@ class AppState(val store: Store) {
     var stamp by mutableStateOf(store.stamp)
     var book by mutableStateOf(store.bookmark(store.translation).first)
     var chapter by mutableStateOf(store.bookmark(store.translation).second)
-    var page by mutableStateOf(0)
+    // 처음 켜면 바로 필사 장으로
+    var page by mutableStateOf(if (fills.isEmpty()) 1 else 0)
+    /** 이 장에서 고른 절 (없으면 다음 빈 절). */
+    var target by mutableStateOf<Int?>(null)
+    var reminderHour by mutableStateOf(store.reminderHour)
     var settingsOpen by mutableStateOf(false)
     /** 방금 마친 장 (덮개 · 조각 화면). */
     var finished by mutableStateOf<Pair<Int, Int>?>(null)
@@ -45,11 +49,12 @@ class AppState(val store: Store) {
     fun text(b: Int = book) = store.book(translation, b)
     fun locked(b: Int) = false // 평생권 연결 전까지 모두 열림 (Canon.free 로 나눌 예정)
 
-    fun open(b: Int, ch: Int) { book = b; chapter = ch; store.setBookmark(translation, b, ch); page = 1 }
+    fun open(b: Int, ch: Int) { book = b; chapter = ch; target = null; store.setBookmark(translation, b, ch); page = 1 }
     fun chooseTranslation(t: Translation) { translation = t; store.translation = t; val bm = store.bookmark(t); book = bm.first; chapter = bm.second }
     fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t }
     fun setTextScale(s: Float) { scale = s; store.textScale = s }
     fun setStampMark(s: String) { stamp = s; store.stamp = s }
+    fun setReminder(h: Int) { reminderHour = h; store.reminderHour = h; io.github.graviton94.todaybible.data.Reminder.schedule(store.context, h) }
 
     /** 절(들)을 채움. 장을 다 채우면 finished, 새 발자취가 생기면 award. */
     fun fill(verses: List<Int>, mode: Mode) {

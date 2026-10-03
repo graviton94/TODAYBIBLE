@@ -95,4 +95,10 @@
     <string name="app_version">버전 %1$s</string>
     <string name="weekdays">일월화수목금토</string>
     <string name="filled_n">%1$d절을 채웠어요</string>
+    <string name="today_streak">오늘 %1$d절 · %2$d일째</string>
+    <string name="this_chapter">이 장</string>
+    <string name="reminder_off">끄기</string>
+    <string name="reminder_morning">아침 7시</string>
+    <string name="reminder_night">밤 9시</string>
+    <string name="reminder_channel">오늘의 한 절</string>
 </resources>

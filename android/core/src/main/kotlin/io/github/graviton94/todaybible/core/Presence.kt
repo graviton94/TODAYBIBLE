@@ -13,6 +13,21 @@ object Presence {
     }
     fun weeksComplete(days: Set<Long>): Int = days.map { LocalDate.ofEpochDay(it) }.map { it.minusDays((it.dayOfWeek.value % 7).toLong()) }.toSet().count { weekComplete(days, it) }
     fun isRest(d: LocalDate) = d.dayOfWeek == DayOfWeek.SUNDAY
+    /**
+     * 이어 쓴 날 수: 오늘(아직 안 썼으면 어제)부터 거슬러 셈. 비어 있는 주일은 건너뛰고 끊지 않음.
+     */
+    fun streak(days: Set<Long>, today: LocalDate): Int {
+        var d = if (today.toEpochDay() in days) today else today.minusDays(1)
+        var n = 0
+        while (true) {
+            if (d.toEpochDay() in days) n++
+            else if (!isRest(d)) break
+            d = d.minusDays(1)
+            if (n == 0 && today.toEpochDay() - d.toEpochDay() > 2) break
+            if (today.toEpochDay() - d.toEpochDay() > 4000) break
+        }
+        return n
+    }
 }
 
 /** 교회력: 부활절(그레고리력 계산법) 기준 절기. 추수감사는 한국 = 11월 셋째 주일, 영어권 = 미국 11월 넷째 목요일. */

@@ -18,10 +18,20 @@ android {
         buildConfigField("boolean", "DEV_TOOLS", "true")
     }
 
+    // 직접 설치용 (내 폰 시험용) 고정 키: 저장소에 있는 시험 키라 비밀이 아님 (android/keystore/README.md).
+    // Play 업로드 키는 따로, GitHub Secrets 에만.
+    signingConfigs {
+        create("sideload") {
+            storeFile = file("../keystore/sideload.jks")
+            storePassword = "android"; keyAlias = "sideload"; keyPassword = "android"
+        }
+    }
+
     buildTypes {
+        debug { signingConfig = signingConfigs.getByName("sideload") }
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("sideload")
             buildConfigField("boolean", "DEV_TOOLS", "false")
         }
     }
