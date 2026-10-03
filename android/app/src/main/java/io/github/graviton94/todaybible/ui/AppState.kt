@@ -17,6 +17,9 @@ import io.github.graviton94.todaybible.design.ThemeChoice
 import java.time.LocalDate
 
 /** 화면 상태 한 곳. 기록은 Store 에 덧붙이고, 진행 · 발자취는 기록에서 다시 계산. */
+const val NARR_DONE = Float.MAX_VALUE
+const val NARR_FAIL = -1f
+
 class AppState(val store: Store) {
     val fills = mutableStateListOf<Fill>().apply { addAll(store.loadFills()) }
     var theme by mutableStateOf(store.theme)
@@ -90,19 +93,19 @@ class AppState(val store: Store) {
     var guideVoice by mutableStateOf(store.guideVoice)
     var narrator by mutableStateOf(store.narrator)
     fun chooseNarrator(v: String) { narrator = v; store.narrator = v }
-    /** 낭독 음원 내려받는 중: 권 → 0..1 (실패하면 -1). */
+    /** 낭독 음원 내려받기: 권 → 받은 MB (DONE = 다 받음, FAIL = 못 받음). */
     var narrationLoad by mutableStateOf<Pair<Int, Float>?>(null)
     fun downloadNarration(book: Int) {
-        if (narrationLoad?.second?.let { it in 0f..0.999f } == true) return
+        if (narrationLoad?.let { it.first == book && it.second >= 0f && it.second < NARR_DONE } == true) return
         val v = narrator; val ctx = store.context; narrationLoad = book to 0f
         val ui = android.os.Handler(android.os.Looper.getMainLooper())
         Thread {
             var last = 0L
-            val ok = io.github.graviton94.todaybible.data.Narration.download(ctx, v, book) { got, total ->
+            val ok = io.github.graviton94.todaybible.data.Narration.download(ctx, v, book) { got ->
                 val now = System.currentTimeMillis()
-                if (now - last > 200 && total > 0) { last = now; ui.post { narrationLoad = book to (got.toFloat() / total).coerceAtMost(0.99f) } }
+                if (now - last > 250) { last = now; ui.post { narrationLoad = book to got / 1_000_000f } }
             }
-            ui.post { narrationLoad = if (ok) book to 1f else book to -1f }
+            ui.post { narrationLoad = book to if (ok) NARR_DONE else NARR_FAIL }
         }.apply { name = "narration" }.start()
     }
     fun chooseAloudSpeed(i: Int) { aloudSpeed = i; store.aloudSpeed = i }

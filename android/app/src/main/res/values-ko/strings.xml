@@ -329,11 +329,11 @@
     <string name="hand_whole">절 전체</string>
     <string name="narr_get_hint">%1$s 낭독 목소리를 받으면 진중한 목소리와 함께 읽어요</string>
     <string name="narr_get">받기</string>
-    <string name="narr_loading">받는 중 %1$d%%</string>
-    <string name="narr_failed">받지 못했어요. 인터넷을 확인하고 다시 눌러 주세요.</string>
+    <string name="narr_loading">받는 중 · %1$s</string>
+    <string name="narr_failed">이 권은 아직 낭독이 없거나 인터넷이 안 돼요. 다시 눌러 보세요.</string>
     <string name="narr_male">진중한 남성 목소리 (미리 만든 낭독)</string>
     <string name="narr_female">차분한 여성 목소리 (미리 만든 낭독)</string>
     <string name="narr_device">폰의 읽기 목소리</string>
-    <string name="narr_preview">미리 듣기 (시편 23편)</string>
+    <string name="narr_preview">미리 듣기 (시편 23:1)</string>
     <string name="narr_usage">받아 둔 낭독 · %1$s</string>
 </resources>

@@ -289,7 +289,7 @@ private fun GuideVoiceSettings(s: AppState) {
             guide.stop()
             player = runCatching {
                 android.media.MediaPlayer().apply {
-                    ctx.assets.openFd("voice/${s.narrator}_ps23.m4a").use { setDataSource(it.fileDescriptor, it.startOffset, it.length) }
+                    ctx.assets.openFd("voice/${s.narrator}_ps23_1.m4a").use { setDataSource(it.fileDescriptor, it.startOffset, it.length) }
                     setOnCompletionListener { mp -> mp.release(); player = null }
                     prepare(); start()
                 }

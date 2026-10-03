@@ -329,11 +329,11 @@
     <string name="hand_whole">Whole verse</string>
     <string name="narr_get_hint">Get the narration for %1$s to read along with a calm voice</string>
     <string name="narr_get">Get</string>
-    <string name="narr_loading">Downloading %1$d%%</string>
-    <string name="narr_failed">Couldn\'t download. Check the internet and tap again.</string>
+    <string name="narr_loading">Downloading · %1$s</string>
+    <string name="narr_failed">Not available yet for this book, or no internet. Tap to try again.</string>
     <string name="narr_male">Steady male voice (prepared narration)</string>
     <string name="narr_female">Calm female voice (prepared narration)</string>
     <string name="narr_device">This phone\'s reading voice</string>
-    <string name="narr_preview">Hear a sample (Psalm 23)</string>
+    <string name="narr_preview">Hear a sample (Psalm 23:1)</string>
     <string name="narr_usage">Narration on this phone · %1$s</string>
 </resources>

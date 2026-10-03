@@ -441,7 +441,7 @@ private fun NarrationBanner(s: AppState, has: Boolean) {
         Text(when {
             load == null -> stringResource(R.string.narr_get_hint, s.bookName())
             load.second < 0f -> stringResource(R.string.narr_failed)
-            else -> stringResource(R.string.narr_loading, (load.second * 100).toInt())
+            else -> stringResource(R.string.narr_loading, "%.0fMB".format(load.second))
         }, style = Theme.small(), modifier = Modifier.weight(1f))
         if (load == null || load.second < 0f) BookButton(stringResource(R.string.narr_get), Modifier.width(Tokens.Size.narrButton), quiet = true) { s.downloadNarration(s.book) }
     }
