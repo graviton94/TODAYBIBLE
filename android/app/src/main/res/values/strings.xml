@@ -289,4 +289,20 @@
     <string name="candle_setting">Candlelight after 9 p.m.</string>
     <string name="cmp_pens">Pens</string>
     <string name="cmp_pens_all">+ Brush · Pencil</string>
+    <string name="aloud_fast">Brisk</string>
+    <string name="guide_together">Read along</string>
+    <string name="guide_alone">Read alone</string>
+    <string name="guide_reading">Listen first</string>
+    <string name="guide_your_turn">Now read it aloud</string>
+    <string name="guide_start">Begin reading along</string>
+    <string name="guide_again">Hear it again</string>
+    <string name="guide_settings">Reading voice</string>
+    <string name="guide_toggle">A guide voice reads each verse first, then you read it</string>
+    <string name="guide_none">This phone has no reading voice for this language yet. You can add one in the phone\'s text-to-speech settings.</string>
+    <string name="guide_install">Open text-to-speech settings</string>
+    <string name="guide_q_high">natural</string>
+    <string name="guide_q_normal">standard</string>
+    <string name="guide_net">needs internet</string>
+    <string name="guide_voice_n">Voice %1$d · %2$s</string>
+    <string name="guide_preview">Hear a sample (Psalm 23:1)</string>
 </resources>

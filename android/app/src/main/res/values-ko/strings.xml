@@ -289,4 +289,20 @@
     <string name="candle_setting">밤 9시부터 촛불빛 화면</string>
     <string name="cmp_pens">손글씨 펜</string>
     <string name="cmp_pens_all">+ 붓펜 · 연필</string>
+    <string name="aloud_fast">빠르게</string>
+    <string name="guide_together">함께 읽기</string>
+    <string name="guide_alone">혼자 읽기</string>
+    <string name="guide_reading">먼저 들려 드려요</string>
+    <string name="guide_your_turn">이제 소리 내어 읽어요</string>
+    <string name="guide_start">함께 읽기 시작</string>
+    <string name="guide_again">다시 듣기</string>
+    <string name="guide_settings">낭독 목소리</string>
+    <string name="guide_toggle">가이드 목소리가 한 절을 먼저 읽고, 이어서 내가 읽어요</string>
+    <string name="guide_none">이 폰에 한국어 읽기 목소리가 아직 없어요. 폰의 ‘텍스트 음성 변환’ 설정에서 받을 수 있어요.</string>
+    <string name="guide_install">텍스트 음성 변환 설정 열기</string>
+    <string name="guide_q_high">자연스러운 목소리</string>
+    <string name="guide_q_normal">기본 목소리</string>
+    <string name="guide_net">인터넷 필요</string>
+    <string name="guide_voice_n">목소리 %1$d · %2$s</string>
+    <string name="guide_preview">미리 듣기 (시편 23:1)</string>
 </resources>

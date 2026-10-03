@@ -68,7 +68,15 @@ fun Root(s: AppState) {
     val scope = rememberCoroutineScope()
     // 이름표 · 버튼으로 옮길 땐 ‘숨 한 번’, 손으로 넘길 땐 ‘내려앉는 종이’
     var breath by remember { mutableStateOf(false) }
-    fun turnTo(i: Int) { scope.launch { breath = true; try { pager.animateScrollToPage(i, animationSpec = androidx.compose.animation.core.tween(Tokens.Motion.pageMs)) } finally { breath = false } } }
+    // 옆 장이면 책장을 넘기듯 한 장, 멀리 뛰면 숨 한 번
+    fun turnTo(i: Int) {
+        scope.launch {
+            val far = abs(i - pager.currentPage) > 1
+            breath = far
+            try { pager.animateScrollToPage(i, animationSpec = androidx.compose.animation.core.tween(if (far) Tokens.Motion.pageMs else Tokens.Motion.turnMs, easing = androidx.compose.animation.core.FastOutSlowInEasing)) }
+            finally { breath = false }
+        }
+    }
     LaunchedEffect(s.page) { if (pager.currentPage != s.page && !pager.isScrollInProgress) turnTo(s.page) }
     LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect { s.page = it } }
     BackHandler(enabled = pager.currentPage != 0 && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null && !s.purchaseOpen && s.onboarded && !s.opening) { turnTo(0) }
@@ -80,7 +88,8 @@ fun Root(s: AppState) {
             TopBar(s)
             HorizontalPager(
                 pager, Modifier.weight(1f).fillMaxWidth(), beyondViewportPageCount = 0, userScrollEnabled = !typing,
-                flingBehavior = PagerDefaults.flingBehavior(pager, snapPositionalThreshold = Tokens.Motion.turnSnap),
+                flingBehavior = PagerDefaults.flingBehavior(pager, snapPositionalThreshold = Tokens.Motion.turnSnap,
+                    snapAnimationSpec = androidx.compose.animation.core.tween(Tokens.Motion.turnMs, easing = androidx.compose.animation.core.FastOutSlowInEasing)),
             ) { page ->
                 val incoming by remember(page) { derivedStateOf { (pager.currentPage - page) + pager.currentPageOffsetFraction < 0f } }
                 Box(Modifier.fillMaxSize().zIndex(if (incoming) 1f else 0f).pageTurn(pager, page) { breath }) {
@@ -179,7 +188,7 @@ private fun PageTabs(current: Int, onSelect: (Int) -> Unit) {
  * 이름표로 옮길 때 (breath): 지금 장이 조금 흐르며 옅어지고, 새 장이 반대편에서 스며듦.
  */
 @Composable
-private fun Modifier.pageTurn(pager: PagerState, page: Int, breath: () -> Boolean): Modifier {
+fun Modifier.pageTurn(pager: PagerState, page: Int, breath: () -> Boolean = { false }): Modifier {
     val c = Theme.c
     val d = LocalDensity.current.density
     val M = Tokens.Motion

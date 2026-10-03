@@ -75,6 +75,14 @@ class AppState(val store: Store) {
     var penSound by mutableStateOf(store.penSound)
     var paperHaptic by mutableStateOf(store.paperHaptic)
     var candle by mutableStateOf(store.candle)
+    var aloudGuide by mutableStateOf(store.aloudGuide)
+    var aloudSpeed by mutableStateOf(store.aloudSpeed)
+    var guideVoice by mutableStateOf(store.guideVoice)
+    fun flipAloudGuide() { aloudGuide = !aloudGuide; store.aloudGuide = aloudGuide }
+    fun chooseAloudSpeed(i: Int) { aloudSpeed = i; store.aloudSpeed = i }
+    fun chooseGuideVoice(n: String) { guideVoice = n; store.guideVoice = n }
+    /** 낭독 빠르기 (1 = 보통). */
+    fun aloudRate(): Float = when (aloudSpeed) { 0 -> io.github.graviton94.todaybible.design.Tokens.Motion.aloudSlow; 2 -> io.github.graviton94.todaybible.design.Tokens.Motion.aloudFast; else -> io.github.graviton94.todaybible.design.Tokens.Motion.aloudNormal }
     /** 지금 촛불빛인지 (앱으로 돌아올 때마다 다시 봄). */
     var night by mutableStateOf(false)
     /** 손글씨로 넘겨 보는 권. */

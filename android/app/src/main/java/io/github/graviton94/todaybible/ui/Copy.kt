@@ -363,6 +363,15 @@ private fun sealInline(color: androidx.compose.ui.graphics.Color): Map<String, I
         StampMark(STAMP_CROSS, color, Modifier.fillMaxSize())
     })
 
+/** 낭독 위: 함께 읽기 · 혼자 읽기, 빠르기 (천천히 · 보통 · 빠르게). */
+@Composable
+private fun AloudControls(s: AppState, guideReady: Boolean) {
+    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        if (guideReady) UnderlineTabs(listOf(stringResource(R.string.guide_together), stringResource(R.string.guide_alone)), if (s.aloudGuide) 0 else 1) { if ((it == 0) != s.aloudGuide) s.flipAloudGuide() }
+        UnderlineTabs(listOf(stringResource(R.string.aloud_slow), stringResource(R.string.aloud_normal), stringResource(R.string.aloud_fast)), s.aloudSpeed) { s.chooseAloudSpeed(it) }
+    }
+}
+
 /**
  * 낭독 (G1): 소리 내어 읽으면 알아들은 만큼 글자가 먹으로 (기기 안 음성 인식 · 녹음은 남기지 않음).
  * 다 읽으면 도장 · 진동과 함께 채워지고, 켜 둔 채로 다음 절로 이어짐.
@@ -378,11 +387,21 @@ private fun AloudTab(s: AppState, verse: Int) {
     var mic by remember { mutableStateOf(ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) }
     var on by remember { mutableStateOf(false) }          // 듣기 켜짐 (절이 바뀌어도 이어감)
     var heard by remember(verse, s.chapter, s.book) { mutableStateOf("") }
-    val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> mic = ok; if (ok) on = true }
+    val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> mic = ok; if (ok) running = true }
     // 내 목소리 남기기 (평생권): 녹음과 음성 인식이 마이크 하나를 나눠 씀 (안드로이드 13+ 는 파이프로, 그 아래는 손으로 ‘다 읽었어요’)
     val record = s.voiceOn && !s.gated()
     var pipeFailed by remember { mutableStateOf(false) }
     val recognize = canHear && (!record || (Build.VERSION.SDK_INT >= 33 && !pipeFailed))
+    // 가이드 목소리 (함께 읽기): 먼저 한 절을 차분히 들려주고, 다 들으면 마이크가 열려요
+    val main = remember { android.os.Handler(android.os.Looper.getMainLooper()) }
+    val guide = remember(k) { io.github.graviton94.todaybible.data.GuideVoice(ctx, k, s.guideVoice) }
+    DisposableEffect(guide) { onDispose { guide.release() } }
+    var guideReady by remember(guide) { mutableStateOf(false) }
+    LaunchedEffect(guide) { guide.whenReady { main.post { guideReady = guide.ready } } }
+    val useGuide = s.aloudGuide && guideReady
+    var running by remember { mutableStateOf(false) }      // 읽기가 켜져 있음 (절이 바뀌어도 이어감)
+    var spoken by remember(verse, s.chapter, s.book) { mutableIntStateOf(-1) }   // 가이드가 읽은 데까지 (-1 = 가이드가 읽는 중 아님)
+    var replay by remember { mutableIntStateOf(0) }
 
     if (canHear || record) {
         val lit = if (recognize) Recite.lit(plain, heard) else plain.length
@@ -390,6 +409,13 @@ private fun AloudTab(s: AppState, verse: Int) {
         var finished by remember(verse, s.chapter, s.book) { mutableStateOf(false) }
         fun complete() { if (finished) return; finished = true; haptic.performHapticFeedback(HapticFeedbackType.LongPress); s.fill(listOf(verse), Mode.ALOUD) }
         LaunchedEffect(done) { if (done) { delay(Tokens.Motion.typeSettleMs.toLong()); complete() } }
+        LaunchedEffect(running, verse, s.chapter, s.book, useGuide, replay) {
+            if (!running) { guide.stop(); spoken = -1; on = false; return@LaunchedEffect }
+            if (useGuide && !finished) {
+                on = false; spoken = 0
+                guide.speak(plain, s.aloudRate(), onRange = { _, e -> main.post { spoken = e } }, onDone = { main.post { spoken = -1; if (running) on = true } })
+            } else on = true
+        }
         DisposableEffect(on, verse, s.chapter, s.book, mic, record, recognize) {
             if (!on || !mic) return@DisposableEffect onDispose { }
             val session = if (record) Voice.Session(Voice.file(ctx, s.translation.id, s.book, s.chapter, verse)).also { it.start() } else null
@@ -441,33 +467,37 @@ private fun AloudTab(s: AppState, verse: Int) {
                 if (session != null) { if (finished) session.stop() else session.discard() }
             }
         }
-        VerseText(s, verse, source, lit = lit)
+        AloudControls(s, guideReady)
+        VerseText(s, verse, source, lit = if (spoken >= 0) spoken else lit)
         val micLabel = stringResource(R.string.aloud_listen)
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            Box(Modifier.size(Tokens.Size.emblem).clip(androidx.compose.foundation.shape.CircleShape).background(if (on) c.rubric else c.leather)
-                .semantics { contentDescription = micLabel }.clickable(role = Role.Button) { if (!mic) ask.launch(Manifest.permission.RECORD_AUDIO) else on = !on },
+            Box(Modifier.size(Tokens.Size.emblem).clip(androidx.compose.foundation.shape.CircleShape).background(if (running) c.rubric else c.leather)
+                .semantics { contentDescription = micLabel }.clickable(role = Role.Button) { if (!mic) ask.launch(Manifest.permission.RECORD_AUDIO) else running = !running },
                 contentAlignment = Alignment.Center) { MicMark(c.leatherInk, Modifier.size(Tokens.Size.iconMd)) }
-            Text(stringResource(when { on && record -> R.string.voice_recording; on -> R.string.aloud_listening; else -> R.string.aloud_listen }), style = Theme.label().copy(color = if (on) c.rubric else c.ink))
+            Text(stringResource(when { spoken >= 0 -> R.string.guide_reading; on && record -> R.string.voice_recording; on && useGuide -> R.string.guide_your_turn; on -> R.string.aloud_listening; useGuide -> R.string.guide_start; else -> R.string.aloud_listen }),
+                style = Theme.label().copy(color = if (running) c.rubric else c.ink))
             if (on && !recognize) BookButton(stringResource(R.string.voice_done_reading), Modifier.fillMaxWidth()) { complete() }
+            if (running && useGuide && spoken < 0) BookButton(stringResource(R.string.guide_again), Modifier.fillMaxWidth(), quiet = true) { replay++ }
             Text(stringResource(if (record) R.string.voice_keep_hint else R.string.aloud_hint), style = Theme.small().copy(textAlign = TextAlign.Center))
         }
         VoiceRow(s)
         return
     }
 
-    // 음성 인식이 없을 때: 읽는 빠르기로 밝아짐
-    var speed by remember { mutableIntStateOf(0) }
+    // 음성 인식이 없을 때: 가이드 목소리가 있으면 함께 들으며, 없으면 읽는 빠르기로 밝아짐
     var playing by remember(verse, s.chapter, s.book) { mutableStateOf(false) }
     var lit by remember(verse, s.chapter, s.book) { mutableIntStateOf(0) }
     LaunchedEffect(playing, verse) {
+        if (!playing) { guide.stop(); return@LaunchedEffect }
+        if (useGuide) { guide.speak(plain, s.aloudRate(), onRange = { _, e -> main.post { lit = e } }, onDone = { main.post { lit = plain.length; playing = false } }); return@LaunchedEffect }
         while (playing && lit < plain.length) {
-            delay(ReadingPace.delayMillis(plain[lit], k, if (speed == 0) 1f else Tokens.Motion.aloudNormal)); lit++
+            delay(ReadingPace.delayMillis(plain[lit], k, s.aloudRate())); lit++
         }
         if (lit >= plain.length) playing = false
     }
+    AloudControls(s, guideReady)
     VerseText(s, verse, source, lit = lit)
     Text(stringResource(R.string.aloud_no_mic), style = Theme.small())
-    UnderlineTabs(listOf(stringResource(R.string.aloud_slow), stringResource(R.string.aloud_normal)), speed, Modifier.padding(horizontal = Tokens.Space.s6)) { speed = it }
     if (lit >= plain.length) BookButton(stringResource(R.string.aloud_done), Modifier.fillMaxWidth()) { s.fill(listOf(verse), Mode.ALOUD) }
     else BookButton(stringResource(if (playing) R.string.aloud_pause else R.string.aloud_start), Modifier.fillMaxWidth()) { playing = !playing }
 }

@@ -133,6 +133,17 @@ class Store(val context: Context) {
         get() = prefs.getBoolean("candle", true)
         set(v) = prefs.edit().putBoolean("candle", v).apply()
 
+    /** 낭독: 가이드 목소리와 함께 읽기 · 빠르기 (0 천천히 · 1 보통 · 2 빠르게) · 고른 목소리. */
+    var aloudGuide: Boolean
+        get() = prefs.getBoolean("aloud_guide", true)
+        set(v) = prefs.edit().putBoolean("aloud_guide", v).apply()
+    var aloudSpeed: Int
+        get() = prefs.getInt("aloud_speed", 1)
+        set(v) = prefs.edit().putInt("aloud_speed", v).apply()
+    var guideVoice: String
+        get() = prefs.getString("guide_voice", "")!!
+        set(v) = prefs.edit().putString("guide_voice", v).apply()
+
     /** 형광펜 밑줄 (번역 · 절 · 그은 날). 파일 하나에 통째로. */
     data class Mark(val translation: Translation, val key: io.github.graviton94.todaybible.core.VerseKey, val epochDay: Long)
     private val marksFile get() = java.io.File(context.filesDir, "marks.tsv")

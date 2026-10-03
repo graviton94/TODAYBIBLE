@@ -28,9 +28,10 @@ object TypeJudge {
 /** 낭독 속도: 성경 낭독보다 조금 느리게. 한국어 ≈ 3.6음절/초, 영어 ≈ 2.2단어/초. 쉼표 · 마침표에서 숨. */
 object ReadingPace {
     fun delayMillis(c: Char, korean: Boolean, speed: Float = 1f): Long {
-        var ms = if (korean) (if (c == ' ') 110 else 280) else (if (c == ' ') 60 else 85)
-        if (c in ",;:") ms += 450
-        if (c in ".?!") ms += 650
+        // 소리 내어 읽는 보통 빠르기 (한국어 1초에 대여섯 음절)
+        var ms = if (korean) (if (c == ' ') 70 else 175) else (if (c == ' ') 45 else 62)
+        if (c in ",;:") ms += 280
+        if (c in ".?!") ms += 420
         return (ms / speed).toLong()
     }
 }
@@ -51,7 +52,7 @@ object Recite {
             if (j >= h.length) break
             var found = -1
             for (d in 0..LOOK) if (j + d < h.length && h[j + d] == t[i]) { found = j + d; break }
-            if (found >= 0) { j = found + 1; last = i; misses = 0 } else if (++misses > LOOK) break
+            if (found >= 0) { j = found + 1; last = i; misses = 0 } else if (++misses > SKIP) break
         }
         return if (last < 0) 0 else idx[last] + 1
     }
@@ -59,8 +60,10 @@ object Recite {
     fun done(plain: String, heard: String): Boolean {
         val n = plain.count(::keep); if (n == 0) return true
         val covered = plain.take(lit(plain, heard)).count(::keep)
-        return covered >= n - LOOK
+        return covered >= n - maxOf(LOOK, n / 12)
     }
     private const val LOOK = 3
+    /** 옛말 어미처럼 알아듣기가 자주 놓치는 글자를 몇 개까지 건너뛰어도 따라갈지. */
+    private const val SKIP = 6
 }
 

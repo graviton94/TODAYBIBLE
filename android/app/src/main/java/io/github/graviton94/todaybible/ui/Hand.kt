@@ -45,7 +45,7 @@ import androidx.compose.ui.text.withStyle
 import io.github.graviton94.todaybible.R
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.systemBarsPadding
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.zIndex
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.ui.draw.drawBehind
@@ -245,16 +245,13 @@ fun HandBookView(s: AppState, book: Int) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically) {
             RunningHead(stringResource(R.string.hand_book, s.bookName(book)), if (chapters.isEmpty()) "" else "${pager.currentPage + 1} / ${chapters.size}", k, Modifier.weight(1f))
         }
-        androidx.compose.foundation.pager.HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth(), beyondViewportPageCount = 1) { i ->
+        androidx.compose.foundation.pager.HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth(), beyondViewportPageCount = 1,
+            flingBehavior = androidx.compose.foundation.pager.PagerDefaults.flingBehavior(pager, snapPositionalThreshold = Tokens.Motion.turnSnap,
+                snapAnimationSpec = androidx.compose.animation.core.tween(Tokens.Motion.turnMs, easing = androidx.compose.animation.core.FastOutSlowInEasing))) { i ->
             val ch = chapters.getOrNull(i) ?: return@HorizontalPager
             val verses = remember(ch) { Ink.verses(ctx, s.translation.id, book, ch).mapNotNull { v -> Ink.load(Ink.file(ctx, s.translation.id, book, ch, v))?.let { v to it } } }
-            // 넘길 때 책장이 살짝 기울어요
-            val off = (pager.currentPage - i) + pager.currentPageOffsetFraction
-            Column(Modifier.fillMaxSize().graphicsLayer {
-                cameraDistance = Tokens.Motion.openCamera * density
-                transformOrigin = androidx.compose.ui.graphics.TransformOrigin(if (off > 0) 1f else 0f, 0.5f)
-                rotationY = (off * -Tokens.Motion.bookTilt).coerceIn(-Tokens.Motion.bookTilt, Tokens.Motion.bookTilt)
-            }.padding(horizontal = Tokens.Space.s5).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper)
+            // 넘길 때: 메인 장들과 같은 결 (새 장이 살짝 기운 채 들어와 내려앉음)
+            Column(Modifier.fillMaxSize().zIndex(if ((pager.currentPage - i) + pager.currentPageOffsetFraction < 0f) 1f else 0f).pageTurn(pager, i).padding(horizontal = Tokens.Space.s5).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper)
                 .verticalScroll(rememberScrollState()).padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 ChapterInitial(ch, true)
                 verses.forEach { (v, page) ->

@@ -109,6 +109,7 @@ fun SettingsPage(s: AppState) {
                 Text(stringResource(R.string.owner_note), style = Theme.small())
             }
             Group(stringResource(R.string.my_cover)) { CoverPicker(s) }
+            Group(stringResource(R.string.guide_settings)) { GuideVoiceSettings(s) }
             Group(stringResource(R.string.hand_settings)) {
                 ChoiceRow(stringResource(R.string.guide_setting), s.handGuide) { s.flipGuide() }
                 ChoiceRow(stringResource(R.string.pen_sound), s.penSound) { s.flipPenSound() }
@@ -245,4 +246,34 @@ fun NameField(s: AppState, modifier: Modifier = Modifier, onDone: (() -> Unit)? 
         modifier = modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).drawBehind { drawLine(c.inkSoft, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
         decorationBox = { inner -> Box(contentAlignment = Alignment.CenterStart) { if (name.isEmpty()) Text(stringResource(R.string.owner_hint), style = Theme.body().copy(color = c.unwritten)); inner() } },
     )
+}
+
+/** 낭독 가이드 목소리: 함께 읽기 켜기 · 이 폰의 목소리 가운데 고르기 · 미리 듣기. 목소리가 없으면 받는 곳으로. */
+@Composable
+private fun GuideVoiceSettings(s: AppState) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val main = remember { android.os.Handler(android.os.Looper.getMainLooper()) }
+    val guide = remember(s.korean) { io.github.graviton94.todaybible.data.GuideVoice(ctx, s.korean, s.guideVoice) }
+    androidx.compose.runtime.DisposableEffect(guide) { onDispose { guide.release() } }
+    var list by remember(guide) { mutableStateOf<List<android.speech.tts.Voice>>(emptyList()) }
+    var ready by remember(guide) { mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(guide) { guide.whenReady { main.post { list = guide.voices; ready = true } } }
+    ChoiceRow(stringResource(R.string.guide_toggle), s.aloudGuide) { s.flipAloudGuide() }
+    if (ready && list.isEmpty()) {
+        Text(stringResource(R.string.guide_none), style = Theme.small())
+        BookButton(stringResource(R.string.guide_install), Modifier.fillMaxWidth(), quiet = true) {
+            runCatching { ctx.startActivity(android.content.Intent("com.android.settings.TTS_SETTINGS").addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) }
+        }
+        return
+    }
+    val chosen = s.guideVoice.takeIf { n -> list.any { it.name == n } } ?: list.firstOrNull()?.name
+    list.take(4).forEachIndexed { i, v ->
+        val q = stringResource(if (v.quality >= android.speech.tts.Voice.QUALITY_HIGH) R.string.guide_q_high else R.string.guide_q_normal) +
+            (if (v.isNetworkConnectionRequired) " · " + stringResource(R.string.guide_net) else "")
+        ChoiceRow(stringResource(R.string.guide_voice_n, i + 1, q), v.name == chosen) { s.chooseGuideVoice(v.name); guide.choose(v.name) }
+    }
+    if (list.isNotEmpty()) BookButton(stringResource(R.string.guide_preview), Modifier.fillMaxWidth(), quiet = true) {
+        val sample = io.github.graviton94.todaybible.core.Markup.plain(s.store.book(s.translation, 18).verse(23, 1))
+        guide.speak(sample, s.aloudRate(), { _, _ -> }, { })
+    }
 }

@@ -124,7 +124,7 @@ object Tokens {
         const val turnShade = 0.35f
         const val turnEdge = 12.0f
         const val breathDrift = 24.0f
-        const val aloudNormal = 1.25f
+        const val aloudNormal = 1.0f
         const val sealMs = 900
         const val sealHoldMs = 1600
         const val openDrawMs = 700
@@ -133,6 +133,9 @@ object Tokens {
         const val openAngle = 100.0f
         const val openCamera = 14.0f
         const val bookTilt = 14.0f
+        const val turnMs = 520
+        const val aloudSlow = 0.85f
+        const val aloudFast = 1.3f
     }
     object Ratio {
         const val plateAspect = 0.766f

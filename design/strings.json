@@ -286,5 +286,21 @@
   "paper_haptic": {"en": "Feel the paper grain", "ko": "종이 결 진동"},
   "candle_setting": {"en": "Candlelight after 9 p.m.", "ko": "밤 9시부터 촛불빛 화면"},
   "cmp_pens": {"en": "Pens", "ko": "손글씨 펜"},
-  "cmp_pens_all": {"en": "+ Brush · Pencil", "ko": "+ 붓펜 · 연필"}
+  "cmp_pens_all": {"en": "+ Brush · Pencil", "ko": "+ 붓펜 · 연필"},
+  "aloud_fast": {"en": "Brisk", "ko": "빠르게"},
+  "guide_together": {"en": "Read along", "ko": "함께 읽기"},
+  "guide_alone": {"en": "Read alone", "ko": "혼자 읽기"},
+  "guide_reading": {"en": "Listen first", "ko": "먼저 들려 드려요"},
+  "guide_your_turn": {"en": "Now read it aloud", "ko": "이제 소리 내어 읽어요"},
+  "guide_start": {"en": "Begin reading along", "ko": "함께 읽기 시작"},
+  "guide_again": {"en": "Hear it again", "ko": "다시 듣기"},
+  "guide_settings": {"en": "Reading voice", "ko": "낭독 목소리"},
+  "guide_toggle": {"en": "A guide voice reads each verse first, then you read it", "ko": "가이드 목소리가 한 절을 먼저 읽고, 이어서 내가 읽어요"},
+  "guide_none": {"en": "This phone has no reading voice for this language yet. You can add one in the phone's text-to-speech settings.", "ko": "이 폰에 한국어 읽기 목소리가 아직 없어요. 폰의 ‘텍스트 음성 변환’ 설정에서 받을 수 있어요."},
+  "guide_install": {"en": "Open text-to-speech settings", "ko": "텍스트 음성 변환 설정 열기"},
+  "guide_q_high": {"en": "natural", "ko": "자연스러운 목소리"},
+  "guide_q_normal": {"en": "standard", "ko": "기본 목소리"},
+  "guide_net": {"en": "needs internet", "ko": "인터넷 필요"},
+  "guide_voice_n": {"en": "Voice %1$d · %2$s", "ko": "목소리 %1$d · %2$s"},
+  "guide_preview": {"en": "Hear a sample (Psalm 23:1)", "ko": "미리 듣기 (시편 23:1)"}
 }
