@@ -2,24 +2,38 @@ name: Narration
 on:
   workflow_dispatch:
     inputs:
+      voice: { description: "M5 or F5", default: "M5" }
+      only: { description: "one job as book:from:to:part (empty = whole Bible)", default: "" }
       tag: { description: "release tag", default: "narration-v1" }
 jobs:
-  release:
+  plan:
     runs-on: ubuntu-latest
     permissions: { contents: write }
+    outputs: { jobs: "${{ steps.p.outputs.jobs }}" }
     steps:
-      - run: gh release view "${{ inputs.tag }}" -R "${{ github.repository }}" >/dev/null 2>&1 || gh release create "${{ inputs.tag }}" -R "${{ github.repository }}" --title "낭독 음원 ${{ inputs.tag }}" --notes "Supertonic 3 (Supertone, OpenRAIL-M)로 만든 개역한글 낭독. 권마다 목소리마다 zip 하나."
+      - uses: actions/checkout@v4
+      - id: p
+        run: |
+          if [ -n "${{ inputs.only }}" ]; then IFS=: read b f t p <<< "${{ inputs.only }}"
+            echo "jobs=[{\"voice\":\"${{ inputs.voice }}\",\"book\":$b,\"from\":$f,\"to\":$t,\"part\":$p}]" >> $GITHUB_OUTPUT
+          else python3 - <<'PY' >> $GITHUB_OUTPUT
+          import json, subprocess, sys, os
+          out = subprocess.run([sys.executable, "-c", "exec(open('scripts/narrate.py').read().split('import numpy')[0].replace('sys.argv[1] == \"--plan\"','True'))"], capture_output=True, text=True).stdout
+          j = [x for x in json.loads(out) if x["voice"] == os.environ["V"]]
+          print("jobs=" + json.dumps(j))
+          PY
+          fi
+        env: { V: "${{ inputs.voice }}" }
+      - run: gh release view "${{ inputs.tag }}" -R "${{ github.repository }}" >/dev/null 2>&1 || gh release create "${{ inputs.tag }}" -R "${{ github.repository }}" --title "낭독 음원 ${{ inputs.tag }}" --notes "Supertonic 3 (Supertone, OpenRAIL-M)로 만든 개역한글 낭독. 권 · 장 묶음 · 목소리마다 zip 하나 (m5_19_1.zip …)."
         env: { GH_TOKEN: "${{ github.token }}" }
-  book:
-    needs: release
+  part:
+    needs: plan
     runs-on: ubuntu-latest
     permissions: { contents: write }
     strategy:
       fail-fast: false
-      max-parallel: 20
-      matrix:
-        voice: [M5, F5]
-        book: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66]
+      max-parallel: 16
+      matrix: { job: "${{ fromJson(needs.plan.outputs.jobs) }}" }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -28,17 +42,17 @@ jobs:
         with: { path: /tmp/st/assets, key: supertonic3-aafc6e3 }
       - name: Get Supertonic 3
         run: |
-          [ -d /tmp/st/py ] || git clone -q --depth 1 https://github.com/supertone-oss-archive/supertonic.git /tmp/st-src
-          mkdir -p /tmp/st && cp -rn /tmp/st-src/py /tmp/st/ 2>/dev/null || true
+          git clone -q --depth 1 https://github.com/supertone-oss-archive/supertonic.git /tmp/st-src
+          mkdir -p /tmp/st && cp -r /tmp/st-src/py /tmp/st/
           pip install -q huggingface_hub -r /tmp/st/py/requirements.txt
           [ -f /tmp/st/assets/voice_styles/M5.json ] || hf download supertone-oss-archive/supertonic-3 --revision aafc6e32416a594460b32413efc49d7fe4ce6d46 --local-dir /tmp/st/assets
           sudo apt-get install -y -qq ffmpeg >/dev/null
       - name: Narrate
-        run: python scripts/narrate.py /tmp/st/py /tmp/st/assets ${{ matrix.voice }} ${{ matrix.book }} out
+        run: python scripts/narrate.py /tmp/st/py /tmp/st/assets ${{ matrix.job.voice }} ${{ matrix.job.book }} ${{ matrix.job.from }} ${{ matrix.job.to }} ${{ matrix.job.part }} out
       - name: Upload to release
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          n=$(printf "%s_%02d" "$(echo ${{ matrix.voice }} | tr A-Z a-z)" ${{ matrix.book }})
+          n=$(printf "%s_%02d_%d" "$(echo ${{ matrix.job.voice }} | tr A-Z a-z)" ${{ matrix.job.book }} ${{ matrix.job.part }})
           (cd out/$n && zip -q -0 ../$n.zip *.m4a)
           ls -la out/$n.zip
           gh release upload "${{ inputs.tag }}" out/$n.zip --clobber -R "${{ github.repository }}"
