@@ -3,7 +3,8 @@ on:
   workflow_dispatch:
     inputs:
       voice: { description: "M5 or F5", default: "M5" }
-      only: { description: "one job as book:from:to:part (empty = whole Bible)", default: "" }
+      only: { description: "one job as book:from:to:part (empty = by books)", default: "" }
+      books: { description: "books to narrate, e.g. 19,41 (empty = whole Bible)", default: "" }
       tag: { description: "release tag", default: "narration-v1" }
 jobs:
   plan:
@@ -19,11 +20,12 @@ jobs:
           else python3 - <<'PY' >> $GITHUB_OUTPUT
           import json, subprocess, sys, os
           out = subprocess.run([sys.executable, "-c", "exec(open('scripts/narrate.py').read().split('import numpy')[0].replace('sys.argv[1] == \"--plan\"','True'))"], capture_output=True, text=True).stdout
-          j = [x for x in json.loads(out) if x["voice"] == os.environ["V"]]
+          books = {int(b) for b in os.environ.get("BOOKS", "").split(",") if b.strip()}
+          j = [x for x in json.loads(out) if x["voice"] == os.environ["V"] and (not books or x["book"] in books)]
           print("jobs=" + json.dumps(j))
           PY
           fi
-        env: { V: "${{ inputs.voice }}" }
+        env: { V: "${{ inputs.voice }}", BOOKS: "${{ inputs.books }}" }
       - run: gh release view "${{ inputs.tag }}" -R "${{ github.repository }}" >/dev/null 2>&1 || gh release create "${{ inputs.tag }}" -R "${{ github.repository }}" --title "낭독 음원 ${{ inputs.tag }}" --notes "Supertonic 3 (Supertone, OpenRAIL-M)로 만든 개역한글 낭독. 권 · 장 묶음 · 목소리마다 zip 하나 (m5_19_1.zip …)."
         env: { GH_TOKEN: "${{ github.token }}" }
   part:
