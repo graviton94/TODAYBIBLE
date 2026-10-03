@@ -122,7 +122,7 @@
   "goal_left_chapter": {"en": "Finish a chapter for today's stamp", "ko": "한 장을 마치면 오늘 도장"},
   "goal_done": {"en": "Today's portion is done", "ko": "오늘 분량을 채웠어요"},
   "continue_ref": {"en": "Continue · %1$s", "ko": "이어 쓰기 · %1$s"},
-  "continue": {"en": "Continue", "ko": "이어 쓰기"},
+  "continue_now": {"en": "Continue", "ko": "이어 쓰기"},
   "next_plate": {"en": "%2$d verses to “%1$s”", "ko": "‘%1$s’까지 %2$d절"},
   "plate_where": {"en": "%1$s · %2$d of %3$d pieces", "ko": "%1$s · 조각 %2$d / %3$d"},
   "feast_today": {"en": "Today is %1$s", "ko": "오늘은 %1$s"},

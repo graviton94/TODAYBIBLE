@@ -87,7 +87,7 @@ fun HomePage(s: AppState) {
             val v = next ?: t.fillable(s.chapter).first()
             Text(stringResource(R.string.continue_ref, "${s.bookName()} ${s.chapter}:$v"), style = Theme.small().copy(color = c.rubric), maxLines = 1)
             Text(Markup.plain(t.verse(s.chapter, v)), style = Theme.body().copy(color = c.inkSoft), maxLines = 3, overflow = TextOverflow.Ellipsis)
-            BookButton(stringResource(R.string.continue), Modifier.fillMaxWidth()) { s.open(s.book, s.chapter) }
+            BookButton(stringResource(R.string.continue_now), Modifier.fillMaxWidth()) { s.open(s.book, s.chapter) }
         }
         // 이번 주 도장 (주일부터)
         WeekStamps(s)

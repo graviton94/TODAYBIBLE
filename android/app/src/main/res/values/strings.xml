@@ -124,7 +124,7 @@
     <string name="goal_left_chapter">Finish a chapter for today\'s stamp</string>
     <string name="goal_done">Today\'s portion is done</string>
     <string name="continue_ref">Continue · %1$s</string>
-    <string name="continue">Continue</string>
+    <string name="continue_now">Continue</string>
     <string name="next_plate">%2$d verses to “%1$s”</string>
     <string name="plate_where">%1$s · %2$d of %3$d pieces</string>
     <string name="feast_today">Today is %1$s</string>

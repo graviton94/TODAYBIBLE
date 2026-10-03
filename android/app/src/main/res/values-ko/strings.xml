@@ -124,7 +124,7 @@
     <string name="goal_left_chapter">한 장을 마치면 오늘 도장</string>
     <string name="goal_done">오늘 분량을 채웠어요</string>
     <string name="continue_ref">이어 쓰기 · %1$s</string>
-    <string name="continue">이어 쓰기</string>
+    <string name="continue_now">이어 쓰기</string>
     <string name="next_plate">‘%1$s’까지 %2$d절</string>
     <string name="plate_where">%1$s · 조각 %2$d / %3$d</string>
     <string name="feast_today">오늘은 %1$s</string>
