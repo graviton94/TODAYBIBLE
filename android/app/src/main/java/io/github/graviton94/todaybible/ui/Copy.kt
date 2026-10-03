@@ -387,6 +387,7 @@ private fun AloudTab(s: AppState, verse: Int) {
     var mic by remember { mutableStateOf(ContextCompat.checkSelfPermission(ctx, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) }
     var on by remember { mutableStateOf(false) }          // 듣기 켜짐 (절이 바뀌어도 이어감)
     var heard by remember(verse, s.chapter, s.book) { mutableStateOf("") }
+    var running by remember { mutableStateOf(false) }      // 읽기가 켜져 있음 (절이 바뀌어도 이어감)
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> mic = ok; if (ok) running = true }
     // 내 목소리 남기기 (평생권): 녹음과 음성 인식이 마이크 하나를 나눠 씀 (안드로이드 13+ 는 파이프로, 그 아래는 손으로 ‘다 읽었어요’)
     val record = s.voiceOn && !s.gated()
@@ -399,7 +400,6 @@ private fun AloudTab(s: AppState, verse: Int) {
     var guideReady by remember(guide) { mutableStateOf(false) }
     LaunchedEffect(guide) { guide.whenReady { main.post { guideReady = guide.ready } } }
     val useGuide = s.aloudGuide && guideReady
-    var running by remember { mutableStateOf(false) }      // 읽기가 켜져 있음 (절이 바뀌어도 이어감)
     var spoken by remember(verse, s.chapter, s.book) { mutableIntStateOf(-1) }   // 가이드가 읽은 데까지 (-1 = 가이드가 읽는 중 아님)
     var replay by remember { mutableIntStateOf(0) }
 
