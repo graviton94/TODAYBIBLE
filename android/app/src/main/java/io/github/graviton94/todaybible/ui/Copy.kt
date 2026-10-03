@@ -112,7 +112,7 @@ private fun ChapterLines(s: AppState, current: Int?) {
                 withStyle(SpanStyle(color = if (filled || now) c.ink else c.unwritten)) { append(Markup.plain(t.verse(s.chapter, v))) }
             }
             Text(line, style = Theme.body(), modifier = Modifier.fillMaxWidth()
-                .then(if (!filled && !now) Modifier.clickable(role = Role.Button) { s.target = v } else Modifier)
+                .then(if (!filled && !now) Modifier.clickable(role = Role.Button) { s.target = v } else if (filled) Modifier.clickable(role = Role.Button) { s.shareVerse = v } else Modifier)
                 .drawBehind { if (now) drawRect(c.rubric, Offset(-Tokens.Space.s3.toPx(), 0f), androidx.compose.ui.geometry.Size(Tokens.Stroke.rule.toPx(), size.height)) }
                 .padding(vertical = Tokens.Space.s1))
         }
@@ -246,4 +246,21 @@ private fun AloudTab(s: AppState, verse: Int) {
     UnderlineTabs(listOf(stringResource(R.string.aloud_slow), stringResource(R.string.aloud_normal)), speed, Modifier.padding(horizontal = Tokens.Space.s6)) { speed = it }
     if (lit >= plain.length) BookButton(stringResource(R.string.aloud_done), Modifier.fillMaxWidth()) { s.fill(listOf(verse), Mode.ALOUD) }
     else BookButton(stringResource(if (playing) R.string.aloud_pause else R.string.aloud_start), Modifier.fillMaxWidth()) { playing = !playing }
+}
+
+/** 채운 절을 누르면: 나누기 카드 미리보기 + 나누기. */
+@Composable
+fun ShareVerseSheet(s: AppState, v: Int) {
+    val ctx = LocalContext.current; val k = s.korean
+    val ref = "${s.bookName()} ${s.chapter}:$v"
+    val plate = s.store.plateFor(s.book, s.chapter)?.id ?: s.store.plates.getOrNull((s.book + s.chapter) % s.store.plates.size.coerceAtLeast(1))?.id
+    val text = s.text().verse(s.chapter, v)
+    val bmp = remember(s.book, s.chapter, v) { Cards.verse(ctx, k, ref, text, plate) }
+    BookSheet({ s.shareVerse = null }) {
+        Image(bmp.asImageBitmap(), ref, Modifier.fillMaxWidth(Tokens.Ratio.plateWidth).aspectRatio(Tokens.Px.shareW / Tokens.Px.shareH).clip(RoundedCornerShape(Tokens.Radius.chip)))
+        Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            BookButton(stringResource(R.string.close), Modifier.weight(1f), quiet = true) { s.shareVerse = null }
+            BookButton(stringResource(R.string.share), Modifier.weight(1f)) { Cards.share(ctx, bmp, "verse"); s.shareVerse = null }
+        }
+    }
 }

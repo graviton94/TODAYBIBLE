@@ -101,4 +101,19 @@
     <string name="reminder_morning">7 a.m.</string>
     <string name="reminder_night">9 p.m.</string>
     <string name="reminder_channel">Daily verse</string>
+    <string name="lifetime">Lifetime</string>
+    <string name="lifetime_head">Open the whole Bible</string>
+    <string name="benefit_books">All 66 books · 1,189 chapters</string>
+    <string name="benefit_plates">Every plate in the album</string>
+    <string name="benefit_once">Pay once, keep it for life</string>
+    <string name="free_books">Genesis, Psalms, Proverbs and Mark are free</string>
+    <string name="buy_lifetime">Get lifetime · %1$s</string>
+    <string name="restore">Restore purchase</string>
+    <string name="not_ready">Purchases aren\'t available here yet</string>
+    <string name="owned">Lifetime is active</string>
+    <string name="pay_note">Paid through Google Play</string>
+    <string name="share_verse">Share this verse</string>
+    <string name="widget_name">Today\'s verse</string>
+    <string name="widget_desc">The next verse to copy and this week\'s stamps</string>
+    <string name="widget_empty">Open the app to begin</string>
 </resources>

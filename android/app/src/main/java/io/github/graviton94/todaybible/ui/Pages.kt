@@ -95,6 +95,8 @@ fun Root(s: AppState) {
         }
         if (s.settingsOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { SettingsPage(s) }
         s.finished?.let { (b, ch) -> FinishedPage(s, b, ch) }
+        if (s.purchaseOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PurchasePage(s) }
+        s.shareVerse?.let { v -> ShareVerseSheet(s, v) }
         s.picker?.let { b -> BookSheet({ s.picker = null }) { ChapterGrid(s, b) { ch -> s.picker = null; s.open(b, ch) } } }
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
         // 토스트: 이름표 위에 잠깐

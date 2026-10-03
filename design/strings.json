@@ -98,5 +98,20 @@
   "reminder_off": {"en": "Off", "ko": "끄기"},
   "reminder_morning": {"en": "7 a.m.", "ko": "아침 7시"},
   "reminder_night": {"en": "9 p.m.", "ko": "밤 9시"},
-  "reminder_channel": {"en": "Daily verse", "ko": "오늘의 한 절"}
+  "reminder_channel": {"en": "Daily verse", "ko": "오늘의 한 절"},
+  "lifetime": {"en": "Lifetime", "ko": "평생권"},
+  "lifetime_head": {"en": "Open the whole Bible", "ko": "성경 전체를 펼쳐요"},
+  "benefit_books": {"en": "All 66 books · 1,189 chapters", "ko": "66권 · 1,189장 전체"},
+  "benefit_plates": {"en": "Every plate in the album", "ko": "화첩 판화 모두"},
+  "benefit_once": {"en": "Pay once, keep it for life", "ko": "한 번 결제, 평생"},
+  "free_books": {"en": "Genesis, Psalms, Proverbs and Mark are free", "ko": "창세기 · 시편 · 잠언 · 마가복음은 무료예요"},
+  "buy_lifetime": {"en": "Get lifetime · %1$s", "ko": "평생권 받기 · %1$s"},
+  "restore": {"en": "Restore purchase", "ko": "구매 복원"},
+  "not_ready": {"en": "Purchases aren't available here yet", "ko": "지금은 결제할 수 없어요"},
+  "owned": {"en": "Lifetime is active", "ko": "평생권을 쓰고 있어요"},
+  "pay_note": {"en": "Paid through Google Play", "ko": "Google Play로 결제해요"},
+  "share_verse": {"en": "Share this verse", "ko": "이 절 나누기"},
+  "widget_name": {"en": "Today's verse", "ko": "오늘의 한 절"},
+  "widget_desc": {"en": "The next verse to copy and this week's stamps", "ko": "다음에 옮겨 쓸 한 절과 이번 주 도장"},
+  "widget_empty": {"en": "Open the app to begin", "ko": "앱을 열어 시작해요"}
 }

@@ -92,12 +92,13 @@ fun LibraryPage(s: AppState) {
             Canon.inGroup(group).forEach { b ->
                 val n = filled.count { VerseKey(it).book == b.index }
                 Row(
-                    Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clickable { s.picker = b.index }
+                    Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clickable { if (s.locked(b.index)) s.purchaseOpen = true else s.picker = b.index }
                         .drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(if (k) b.ko else b.en, style = Theme.body(), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                    if (b.index in doneBooks) StampMark(STAMP_CROSS, c.giltText, Modifier.size(Tokens.Size.iconSm))
+                    if (s.locked(b.index)) LockMark(c.unwritten, Modifier.size(Tokens.Size.lock))
+                    else if (b.index in doneBooks) StampMark(STAMP_CROSS, c.giltText, Modifier.size(Tokens.Size.iconSm))
                     else Text(if (n > 0) stringResource(R.string.verses_n, n) else if (k) "${b.chapters}장" else "${b.chapters} ch.", style = Theme.small(), maxLines = 1)
                 }
             }

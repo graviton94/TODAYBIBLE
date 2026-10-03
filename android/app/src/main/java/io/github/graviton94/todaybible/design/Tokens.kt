@@ -58,6 +58,15 @@ object Tokens {
         val edgeShade = 8.dp
         val toastMinH = 48.dp
         val sheetMaxGrid = 420.dp
+        val widgetPad = 16.dp
+        val lock = 14.dp
+        val coverW = 132.dp
+        val cardEdge = 22.dp
+        val cardBandGap = 5.dp
+        val cardPad = 64.dp
+        val cardMark = 22.dp
+        val cardMedal = 120.dp
+        val cardGap = 24.dp
     }
     object Text {
         val verse = 21.sp
@@ -72,6 +81,12 @@ object Tokens {
         val initialLg = 64.sp
         val typed = 18.sp
         val typedEn = 19.sp
+        val cardVerse = 26.sp
+        val cardVerseEn = 27.sp
+        val cardVerseMin = 15.sp
+        val cardRef = 15.sp
+        val cardFoot = 12.sp
+        val cardName = 28.sp
     }
     object Motion {
         const val inkMs = 600
@@ -117,5 +132,14 @@ object Tokens {
     object Tracking {
         const val head = 0.06f
         const val headEn = 0.08f
+    }
+    object Px {
+        const val shareW = 1080.0f
+        const val shareH = 1350.0f
+        const val shareDensity = 2.75f
+        const val plateFaint = 0.12f
+        const val cardFill = 0.55f
+        const val cardPlate = 0.62f
+        const val medalTop = 0.24f
     }
 }

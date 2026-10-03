@@ -97,6 +97,9 @@ fun SettingsPage(s: AppState) {
                     }
                 }
             }
+            Group(stringResource(R.string.lifetime)) {
+                ChoiceRow(stringResource(if (s.lifetime.owned) R.string.owned else R.string.lifetime_head), s.lifetime.owned) { s.purchaseOpen = true }
+            }
             Group(stringResource(R.string.about)) {
                 Text(stringResource(R.string.about_text), style = Theme.small())
                 Text(stringResource(R.string.app_version, BuildConfig.VERSION_NAME), style = Theme.small())

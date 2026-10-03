@@ -101,4 +101,19 @@
     <string name="reminder_morning">아침 7시</string>
     <string name="reminder_night">밤 9시</string>
     <string name="reminder_channel">오늘의 한 절</string>
+    <string name="lifetime">평생권</string>
+    <string name="lifetime_head">성경 전체를 펼쳐요</string>
+    <string name="benefit_books">66권 · 1,189장 전체</string>
+    <string name="benefit_plates">화첩 판화 모두</string>
+    <string name="benefit_once">한 번 결제, 평생</string>
+    <string name="free_books">창세기 · 시편 · 잠언 · 마가복음은 무료예요</string>
+    <string name="buy_lifetime">평생권 받기 · %1$s</string>
+    <string name="restore">구매 복원</string>
+    <string name="not_ready">지금은 결제할 수 없어요</string>
+    <string name="owned">평생권을 쓰고 있어요</string>
+    <string name="pay_note">Google Play로 결제해요</string>
+    <string name="share_verse">이 절 나누기</string>
+    <string name="widget_name">오늘의 한 절</string>
+    <string name="widget_desc">다음에 옮겨 쓸 한 절과 이번 주 도장</string>
+    <string name="widget_empty">앱을 열어 시작해요</string>
 </resources>

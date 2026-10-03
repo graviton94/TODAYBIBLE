@@ -37,6 +37,18 @@ adb shell input tap 540 1810;                                      shot k16_fini
 open --es tb.finished 41:2;                                        shot k18_finished_plain 4
 open --es tb.award OLIVE;                                          shot k19_award 4
 open --ei tb.page 1 --ei tb.toast 35;                               shot k21_toast 1.5
+# 평생권 · 잠금 · 나누기 · 위젯/카드 그림
+open --ez tb.lock true --es tb.price ₩29,900;                       shot p01_library_locked 5
+swipe_up;                                                          shot p02_library_locked_list 2
+open --ez tb.purchase true --es tb.price ₩29,900;                  shot p03_purchase 4
+open --ez tb.purchase true;                                        shot p04_purchase_not_ready 4
+open --ez tb.purchase true --ez tb.owned true;                     shot p05_purchase_owned 4
+open --ei tb.page 1 --ei tb.share 5;                               shot p06_share_sheet 5
+open --ei tb.page 1; swipe_up; swipe_up;                           shot p07_chapter_lines 2
+open --ez tb.cardShots true
+C=/sdcard/Android/data/$P/files/cards
+for i in $(seq 1 45); do adb shell ls $C/done >/dev/null 2>&1 && break; sleep 2; done
+mkdir -p "$OUT/cards"; adb pull $C/. "$OUT/cards/" >/dev/null 2>&1; rm -f "$OUT/cards/done"; ls "$OUT/cards"
 # 책장 넘김 도중
 open --ei tb.page 0; adb shell input swipe 900 1200 450 1200 1200 & sleep 0.8; adb exec-out screencap -p > "$OUT/k20_turning.png"; wait; echo "shot k20_turning"
 # 다크 · 영어(KJV) · 큰 글자 · 작은 화면
@@ -57,6 +69,8 @@ swipe_up; swipe_up; swipe_up;                                      shot e05_mile
 open --ez tb.settings true;                                        shot e06_settings 4
 open --es tb.finished 42:15;                                       shot e07_finished 4
 open --es tb.award LAMP;                                           shot e08_award 4
+open --ez tb.purchase true --es tb.price \$29.99;                   shot e09_purchase 4
+open --ez tb.cardShots true; sleep 12; mkdir -p "$OUT/cards_en"; adb pull /sdcard/Android/data/$P/files/cards/. "$OUT/cards_en/" >/dev/null 2>&1
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 open --es tb.tr KRV --es tb.scale 1.3 --ei tb.page 1;              shot x01_large_copy 5
 open --ei tb.page 0;                                               shot x02_large_library 4

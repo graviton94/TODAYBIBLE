@@ -30,6 +30,13 @@ class AppState(val store: Store) {
     /** 이 장에서 고른 절 (없으면 다음 빈 절). */
     var target by mutableStateOf<Int?>(null)
     var reminderHour by mutableStateOf(store.reminderHour)
+    /** 평생권 (Google Play). */
+    val lifetime = io.github.graviton94.todaybible.data.Lifetime(store.context)
+    var purchaseOpen by mutableStateOf(false)
+    /** 나누기 시트에 띄운 절 (이 장). */
+    var shareVerse by mutableStateOf<Int?>(null)
+    /** 캡처용: Play 없이도 잠금 보이기. */
+    var forceLock = false
     var settingsOpen by mutableStateOf(false)
     /** 방금 마친 장 (덮개 · 조각 화면). */
     var finished by mutableStateOf<Pair<Int, Int>?>(null)
@@ -47,9 +54,14 @@ class AppState(val store: Store) {
     val progress: Progress get() = Progress(fills.toList())
     fun today(): LocalDate = fixedToday ?: LocalDate.now()
     fun text(b: Int = book) = store.book(translation, b)
-    fun locked(b: Int) = false // 평생권 연결 전까지 모두 열림 (Canon.free 로 나눌 예정)
+    /** 무료 네 권 밖은 평생권이 있어야 열림. Play 에 닿지 않는 곳(직접 설치 등)에서는 잠그지 않음. */
+    fun locked(b: Int) = b !in Canon.free && !lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)
+    private fun widgets() { val ctx = store.context; Thread { runCatching { io.github.graviton94.todaybible.widget.VerseWidget.refresh(ctx) } }.start() }
 
-    fun open(b: Int, ch: Int) { book = b; chapter = ch; target = null; store.setBookmark(translation, b, ch); page = 1 }
+    fun open(b: Int, ch: Int) {
+        if (locked(b)) { purchaseOpen = true; return }
+        book = b; chapter = ch; target = null; store.setBookmark(translation, b, ch); page = 1; widgets()
+    }
     fun chooseTranslation(t: Translation) { translation = t; store.translation = t; val bm = store.bookmark(t); book = bm.first; chapter = bm.second }
     fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t }
     fun setTextScale(s: Float) { scale = s; store.textScale = s }
@@ -63,7 +75,7 @@ class AppState(val store: Store) {
         val new = verses.map { VerseKey(book, chapter, it) }.filter { it.raw !in already }.map { Fill(tr, it, mode, day, now) }
         if (new.isEmpty()) return
         if (store.startDay < 0) store.startDay = day
-        store.append(new); fills.addAll(new)
+        store.append(new); fills.addAll(new); widgets()
         val t = text()
         if (progress.chapterDone(tr, t, chapter)) finished = book to chapter
         else if (mode != Mode.TYPE) toast = store.context.getString(io.github.graviton94.todaybible.R.string.filled_n, new.size)

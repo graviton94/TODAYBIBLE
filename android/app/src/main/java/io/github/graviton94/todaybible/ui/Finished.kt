@@ -84,6 +84,10 @@ fun FinishedPage(s: AppState, book: Int, chapter: Int, lifted: Boolean = false) 
         } else if (nb != book || nc != chapter) {
             BookButton(stringResource(R.string.next_chapter, s.bookName(nb), nc), Modifier.fillMaxWidth()) { close(); s.open(nb, nc) }
         }
+        val ctx = LocalContext.current
+        if (plate != null && veil.value >= 1f) BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
+            Cards.share(ctx, Cards.plate(ctx, k, plate.id, if (k) plate.ko else plate.en, if (k) "${s.bookName(book)} ${chapter}장" else "${s.bookName(book)} $chapter"), "plate")
+        }
         BookButton(stringResource(R.string.close), Modifier.fillMaxWidth(), quiet = true) { close() }
     }
 }
@@ -136,8 +140,7 @@ fun AwardCard(s: AppState, m: Milestone) {
         Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             BookButton(stringResource(R.string.close), Modifier.weight(1f), quiet = true) { s.award = null }
             BookButton(stringResource(R.string.share), Modifier.weight(1f)) {
-                val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, "$name · $rule\n${ctx.getString(R.string.app_name)}")
-                ctx.startActivity(Intent.createChooser(send, null))
+                Cards.share(ctx, Cards.milestone(ctx, k, m, name, rule), "milestone")
             }
         }
     }

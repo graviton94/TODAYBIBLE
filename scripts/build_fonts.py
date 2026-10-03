@@ -20,7 +20,7 @@ SRC = {
     "EBGaramond[wght].ttf": "ebgaramond/EBGaramond%5Bwght%5D.ttf", "EBGaramond-Italic[wght].ttf": "ebgaramond/EBGaramond-Italic%5Bwght%5D.ttf",
     "IMFeENsc28P.ttf": "imfellenglishsc/IMFeENsc28P.ttf", "UnifrakturMaguntia-Book.ttf": "unifrakturmaguntia/UnifrakturMaguntia-Book.ttf",
 }
-LATIN = "".join(chr(c) for c in range(0x20, 0x7F)) + "‘’“”–—…·¶✠❦✝ΑΩÆæ"
+LATIN = "".join(chr(c) for c in range(0x20, 0x7F)) + "‘’“”–—…·¶✠❦✝ΑΩÆæ₩€£¥"
 
 def fetch():
     os.makedirs(CACHE, exist_ok=True)

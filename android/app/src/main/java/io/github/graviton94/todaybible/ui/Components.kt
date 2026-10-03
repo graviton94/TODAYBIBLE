@@ -238,3 +238,17 @@ fun DrawScope.stamp(mark: String, color: Color, at: Offset = center, side: Float
 fun StampMark(mark: String, color: Color, modifier: Modifier = Modifier) {
     Box(modifier.drawBehind { stamp(mark, color) })
 }
+
+/** 자물쇠 (가는 선): 평생권으로 열리는 권 표시. */
+@Composable
+fun LockMark(color: Color, modifier: Modifier = Modifier) {
+    Box(modifier.drawBehind {
+        val w = Tokens.Stroke.giltFine.toPx() * 1.5f; val bw = size.width * 0.8f; val bh = size.height * 0.5f
+        val x = (size.width - bw) / 2; val y = size.height - bh
+        drawRoundRect(color, Offset(x, y), Size(bw, bh), CornerRadius(w))
+        val r = bw * 0.32f
+        drawArc(color, 180f, 180f, false, Offset(size.width / 2 - r, y - r), Size(r * 2, r * 2), style = Stroke(w))
+        drawLine(color, Offset(size.width / 2 - r, y - 0.5f), Offset(size.width / 2 - r, y - r * 0.2f), w)
+        drawLine(color, Offset(size.width / 2 + r, y - 0.5f), Offset(size.width / 2 + r, y - r * 0.2f), w)
+    })
+}

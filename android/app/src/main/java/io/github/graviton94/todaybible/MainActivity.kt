@@ -25,6 +25,7 @@ class MainActivity : ComponentActivity() {
         val store = Store(applicationContext)
         if (BuildConfig.DEV_TOOLS && intent.getBooleanExtra("tb.reset", false)) store.reset()
         val s = AppState(store).also { state = it }
+        s.lifetime.connect()
         if (BuildConfig.DEV_TOOLS) debugSetup(s, intent)
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it }
         if (store.reminderHour >= 0) io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
@@ -36,6 +37,25 @@ class MainActivity : ComponentActivity() {
             }
             TodayTheme(s.theme, s.scale) { Root(s) }
         }
+    }
+
+    /** 캡처용: 위젯 (라이트 · 다크) · 나누기 카드 셋을 앱 폴더에 그림 파일로. */
+    private fun cardShots(s: AppState) {
+        val dir = java.io.File(getExternalFilesDir(null), "cards").apply { mkdirs() }
+        fun save(name: String, b: android.graphics.Bitmap) = java.io.File(dir, "$name.png").outputStream().use { b.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+        val day = s.today()
+        runCatching {
+            save("widget_light", io.github.graviton94.todaybible.widget.VerseWidget.bitmap(this, 360, 170, false, day))
+            save("widget_dark", io.github.graviton94.todaybible.widget.VerseWidget.bitmap(this, 360, 170, true, day))
+            val k = s.korean; val now = day.atTime(7, 12)
+            val ref = if (k) "${s.bookName(0)} 1:1" else "${s.bookName(0)} 1:1"
+            save("card_verse", io.github.graviton94.todaybible.ui.Cards.verse(this, k, ref, s.store.book(s.translation, 0).verse(1, 1), "noah", now))
+            val long = s.store.book(s.translation, 18).verse(23, 4)
+            save("card_verse_long", io.github.graviton94.todaybible.ui.Cards.verse(this, k, if (k) "${s.bookName(18)} 23:4" else "${s.bookName(18)} 23:4", long, "sermon", now))
+            save("card_plate", io.github.graviton94.todaybible.ui.Cards.plate(this, k, "noah", if (k) "홍수" else "The Deluge", if (k) "${s.bookName(0)} 7장" else "${s.bookName(0)} 7", now))
+            save("card_milestone", io.github.graviton94.todaybible.ui.Cards.milestone(this, k, Milestone.OLIVE, io.github.graviton94.todaybible.ui.milestoneName(this, Milestone.OLIVE), io.github.graviton94.todaybible.ui.milestoneRule(this, Milestone.OLIVE), now))
+        }.onFailure { java.io.File(dir, "error.txt").writeText(it.stackTraceToString()) }
+        java.io.File(dir, "done").writeText("ok")
     }
 
     // 알림을 눌러 다시 열 때: 필사 장으로
@@ -61,6 +81,11 @@ class MainActivity : ComponentActivity() {
         i.getStringExtra("tb.finished")?.split(':')?.let { s.finished = it[0].toInt() - 1 to it[1].toInt() }
         s.award = i.getStringExtra("tb.award")?.let { Milestone.valueOf(it) }
         s.picker = i.getIntExtra("tb.picker", 0).takeIf { it > 0 }?.minus(1)
+        if (i.getBooleanExtra("tb.lock", false)) s.forceLock = true
+        s.lifetime.debugSet(if (i.hasExtra("tb.owned")) i.getBooleanExtra("tb.owned", false) else null, i.getStringExtra("tb.price"))
+        s.purchaseOpen = i.getBooleanExtra("tb.purchase", false)
+        s.shareVerse = i.getIntExtra("tb.share", 0).takeIf { it > 0 }
+        if (i.getBooleanExtra("tb.cardShots", false)) Thread { cardShots(s) }.start()
         s.toast = i.getIntExtra("tb.toast", 0).takeIf { it > 0 }?.let { getString(R.string.filled_n, it) }
     }
 }
