@@ -235,5 +235,7 @@
   "backup_export": {"en": "Save records to a file", "ko": "기록을 파일로 내보내기"},
   "backup_import": {"en": "Restore from a file", "ko": "파일에서 되살리기"},
   "backup_done": {"en": "Records restored", "ko": "기록을 되살렸어요"},
-  "backup_bad": {"en": "This file can't be read", "ko": "읽을 수 없는 파일이에요"}
+  "backup_bad": {"en": "This file can't be read", "ko": "읽을 수 없는 파일이에요"},
+  "find_hint": {"en": "Go to · John 3:16", "ko": "장절 찾기 · 요 3:16"},
+  "find_none": {"en": "No such passage", "ko": "그런 장절을 찾지 못했어요"}
 }

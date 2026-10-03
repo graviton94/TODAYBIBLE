@@ -238,4 +238,6 @@
     <string name="backup_import">Restore from a file</string>
     <string name="backup_done">Records restored</string>
     <string name="backup_bad">This file can\'t be read</string>
+    <string name="find_hint">Go to · John 3:16</string>
+    <string name="find_none">No such passage</string>
 </resources>

@@ -70,6 +70,7 @@ fun LibraryPage(s: AppState) {
             val run = io.github.graviton94.todaybible.core.Presence.streak(p.days(), s.today())
             if (todayN > 0 || run > 0) Text(stringResource(R.string.today_streak, todayN, run), style = Theme.small().copy(color = c.rubric), maxLines = 1)
         }
+        FindBox(s)
         Shelf(stringResource(R.string.old_testament), 0 until 39, s, started, doneBooks)
         Shelf(stringResource(R.string.new_testament), 39 until 66, s, started, doneBooks)
 
@@ -169,4 +170,30 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
             }
         }
     }
+}
+
+/** 장절 찾기: "요 3:16" 처럼 쓰고 들어가면 그 절로. */
+@Composable
+private fun FindBox(s: AppState) {
+    val c = Theme.c; val ctx = androidx.compose.ui.platform.LocalContext.current
+    var q by remember { mutableStateOf("") }
+    fun go() {
+        val r = io.github.graviton94.todaybible.core.Reference.parse(q)
+        if (r == null) { s.toast = ctx.getString(R.string.find_none); return }
+        val (b, ch, v) = r
+        s.open(b, ch)
+        if (v != null && v in s.text(b).fillable(ch)) s.target = v
+        q = ""
+    }
+    androidx.compose.foundation.text.BasicTextField(
+        value = q, onValueChange = { q = it }, singleLine = true, textStyle = Theme.body(),
+        cursorBrush = androidx.compose.ui.graphics.SolidColor(c.rubric),
+        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Go),
+        keyboardActions = androidx.compose.foundation.text.KeyboardActions(onGo = { go() }),
+        modifier = Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).padding(horizontal = Tokens.Space.s4),
+        decorationBox = { inner -> Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.heightIn(min = Tokens.Size.row)) {
+            if (q.isEmpty()) Text(stringResource(R.string.find_hint), style = Theme.body().copy(color = c.unwritten), maxLines = 1)
+            inner()
+        } },
+    )
 }

@@ -53,3 +53,33 @@ value class VerseKey(val raw: Int) {
 
 /** 번역. total = 채울 수 있는 절 수 (CoreTest 가 본문에서 확인). */
 enum class Translation(val id: String, val total: Int) { KRV("krv", 31084), KJV("kjv", 31102) }
+
+/** 장절 찾기: "요 3:16", "요한복음 3장 16절", "John 3:16", "ps23" 같은 글을 (권, 장, 절?) 로. */
+object Reference {
+    /** 한국 교회에서 흔히 쓰는 약칭 (권 순서대로). */
+    private val koShort = listOf("창", "출", "레", "민", "신", "수", "삿", "룻", "삼상", "삼하", "왕상", "왕하", "대상", "대하", "스", "느", "에", "욥", "시", "잠", "전", "아", "사", "렘", "애", "겔", "단",
+        "호", "욜", "암", "옵", "욘", "미", "나", "합", "습", "학", "슥", "말", "마", "막", "눅", "요", "행", "롬", "고전", "고후", "갈", "엡", "빌", "골", "살전", "살후", "딤전", "딤후", "딛", "몬",
+        "히", "약", "벧전", "벧후", "요일", "요이", "요삼", "유", "계")
+    private val enShort = mapOf("ps" to 18, "psa" to 18, "psalm" to 18, "prov" to 19, "jn" to 42, "mk" to 40, "mt" to 39, "lk" to 41, "rev" to 65, "gen" to 0, "ex" to 1, "rom" to 44)
+
+    fun parse(raw: String): Triple<Int, Int, Int?>? {
+        val q = raw.trim().lowercase().replace("장", ":").replace("편", ":").replace("절", "").replace(Regex("\\s+"), " ")
+        val m = Regex("^([1-3]?\\s?[^0-9:]+?)\\s*(\\d+)(?:\\s*[:. ]\\s*(\\d+))?\\s*:?$").find(q) ?: return null
+        val name = m.groupValues[1].replace(" ", "")
+        val ch = m.groupValues[2].toInt(); val v = m.groupValues[3].toIntOrNull()
+        val book = find(name) ?: return null
+        if (ch < 1 || ch > Canon.books[book].chapters) return null
+        return Triple(book, ch, v)
+    }
+
+    private fun find(name: String): Int? {
+        Canon.books.firstOrNull { it.ko.replace(" ", "") == name }?.let { return it.index }
+        koShort.indexOf(name).takeIf { it >= 0 }?.let { return it }
+        enShort[name]?.let { return it }
+        Canon.books.firstOrNull { it.osis.lowercase() == name || it.en.lowercase().replace(" ", "") == name }?.let { return it.index }
+        // 앞부분만 (예: "요한복", "genes", "matth")
+        if (name.length >= 2) Canon.books.firstOrNull { it.ko.replace(" ", "").startsWith(name) || it.en.lowercase().replace(" ", "").startsWith(name) }?.let { return it.index }
+        return null
+    }
+}
+

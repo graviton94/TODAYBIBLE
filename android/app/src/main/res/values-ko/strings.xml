@@ -238,4 +238,6 @@
     <string name="backup_import">파일에서 되살리기</string>
     <string name="backup_done">기록을 되살렸어요</string>
     <string name="backup_bad">읽을 수 없는 파일이에요</string>
+    <string name="find_hint">장절 찾기 · 요 3:16</string>
+    <string name="find_none">그런 장절을 찾지 못했어요</string>
 </resources>

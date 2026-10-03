@@ -131,5 +131,19 @@ class CoreTest {
         assertFalse(Recite.done(v, "여호와는 나의 목자시니"))
         assertTrue(Recite.done("And he goeth up into a mountain", "and he goes up into a mountain"))
     }
+
+    @Test fun referenceParsing() {
+        assertEquals(Triple(42, 3, 16), Reference.parse("요 3:16"))
+        assertEquals(Triple(42, 3, 16), Reference.parse("요한복음 3장 16절"))
+        assertEquals(Triple(42, 3, 16), Reference.parse("John 3:16"))
+        assertEquals(Triple(18, 23, null), Reference.parse("시 23"))
+        assertEquals(Triple(18, 23, null), Reference.parse("ps23"))
+        assertEquals(Triple(45, 13, 4), Reference.parse("고전 13:4"))
+        assertEquals(Triple(61, 4, 8), Reference.parse("요일 4:8"))
+        assertEquals(Triple(8, 17, null), Reference.parse("삼상 17장"))
+        assertEquals(Triple(0, 1, 1), Reference.parse("Genesis 1:1"))
+        assertEquals(null, Reference.parse("요 30:1"))
+        assertEquals(null, Reference.parse("안녕"))
+    }
 }
 
