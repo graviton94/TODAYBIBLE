@@ -141,10 +141,13 @@ private fun PlateGallery(s: AppState) {
     }
 }
 
+/** 판화 그림. small = 화첩 · 오늘 화면의 작은 그림 (4분의 1로 읽어 메모리를 아낌). */
 @Composable
-fun rememberPlate(id: String): ImageBitmap? {
+fun rememberPlate(id: String, small: Boolean = false): ImageBitmap? {
     val ctx = LocalContext.current
-    return remember(id) { runCatching { ctx.assets.open("plates/$id.jpg").use { BitmapFactory.decodeStream(it)?.asImageBitmap() } }.getOrNull() }
+    return remember(id, small) {
+        runCatching { ctx.assets.open("plates/$id.jpg").use { BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = if (small) 4 else 1 })?.asImageBitmap() } }.getOrNull()
+    }
 }
 
 @Composable
@@ -153,7 +156,7 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
     val f = plateFraction(s, p); val n = Pieces.revealed(f)
     val order = remember(p.id) { Pieces.order(p.id.hashCode()) }
     val shown = order.take(n).toSet()
-    val img = rememberPlate(p.id)
+    val img = rememberPlate(p.id, small = true)
     Column(modifier.clickable(role = Role.Button) { s.plateView = p }, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
         Box(
             Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper)

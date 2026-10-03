@@ -101,7 +101,7 @@ fun HomePage(s: AppState) {
         s.nextPlate()?.let { (pl, left) ->
             val f = s.progress.chapterFraction(s.translation, s.store.book(s.translation, pl.book), pl.chapter)
             val n = Pieces.revealed(f); val order = remember(pl.id) { Pieces.order(pl.id.hashCode()) }.take(n).toSet()
-            val img = rememberPlate(pl.id)
+            val img = rememberPlate(pl.id, small = true)
             Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.plateView = pl }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 Box(Modifier.width(Tokens.Size.initialHome).aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.frame)).background(c.paper).drawWithContent {
                     drawContent()
