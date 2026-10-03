@@ -114,7 +114,7 @@ fun CopyPage(s: AppState) {
     val doneCount = fillable.count { p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) }
     // 낭독 · 타자 · 손글씨 (교인 인터뷰: 낭독을 가장 많이 씀). 마지막에 고른 방식으로 열려요.
     var tab by remember { mutableIntStateOf(s.store.copyTab) }
-    LaunchedEffect(s.aloudNow) { if (s.aloudNow) { tab = 0; s.store.copyTab = 0 } }
+    LaunchedEffect(s.aloudNow) { if (s.aloudNow) { tab = 0; s.store.copyTab = 0; if (next == null) s.aloudNow = false } }
 
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
@@ -602,10 +602,12 @@ private fun AloudTab(s: AppState, verse: Int) {
                 // 교독 · 인도 차례: 가이드가 읽은 절도 읽은 것으로 채우고, 녹음을 켰으면 가이드 목소리도 그 절 자리에 남겨 장 전체가 이어지게
                 guideTurn && !finished -> {
                     on = false; spoken = 0
+                    val atB = s.book; val atC = s.chapter
                     guide.speak(plain, s.aloudRate(), onRange = { _, e -> main.post { spoken = e } }, onDone = {
                         main.post {
                             spoken = -1
-                            if (!running) return@post
+                            // 다른 장 · 절로 옮겼으면 지난 소리의 끝은 무시
+                            if (!running || s.book != atB || s.chapter != atC || finished) return@post
                             if (record) {
                                 val target = Voice.file(ctx, s.translation.id, s.book, s.chapter, verse)
                                 // 미리 만든 음원은 내 녹음과 같은 결이라 그대로, 폰 목소리는 파일로 만들어 바꿔서
@@ -625,6 +627,14 @@ private fun AloudTab(s: AppState, verse: Int) {
                 }
                 else -> on = true
             }
+            // 절 · 장 · 방식이 바뀌거나 화면을 떠나면 가이드 소리도 멈춤
+            try { kotlinx.coroutines.awaitCancellation() } finally { guide.stop() }
+        }
+        // 앱을 내리면 읽기를 멈춤 (마이크 · 녹음 · 가이드)
+        val owner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+        DisposableEffect(owner) {
+            val obs = androidx.lifecycle.LifecycleEventObserver { _, e -> if (e == androidx.lifecycle.Lifecycle.Event.ON_STOP) running = false }
+            owner.lifecycle.addObserver(obs); onDispose { owner.lifecycle.removeObserver(obs) }
         }
         // 소리 내어 읽은 시간 (U2)
         DisposableEffect(running) {
@@ -632,7 +642,7 @@ private fun AloudTab(s: AppState, verse: Int) {
             val t0 = System.currentTimeMillis()
             onDispose { val secs = ((System.currentTimeMillis() - t0) / 1000).toInt(); if (secs in 3..3600) s.addAloud(secs) }
         }
-        DisposableEffect(on, verse, s.chapter, s.book, mic, record, recognize, retry) {
+        DisposableEffect(on, verse, s.chapter, s.book, mic, record, retry) {
             if (!on || !mic) return@DisposableEffect onDispose { }
             val session = if (record) Voice.Session(Voice.file(ctx, s.translation.id, s.book, s.chapter, verse)).also { it.start() } else null
             var rec: SpeechRecognizer? = null
@@ -665,7 +675,7 @@ private fun AloudTab(s: AppState, verse: Int) {
                         when {
                             e == SpeechRecognizer.ERROR_NO_MATCH || e == SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> r.startListening(intent())
                             session != null -> pipeFailed = true   // 녹음은 이어가고, 손으로 마침
-                            else -> on = false
+                            else -> { on = false; running = false }
                         }
                     }
                     override fun onReadyForSpeech(p: Bundle?) {}
@@ -779,15 +789,14 @@ private fun VoiceRow(s: AppState) {
         scope.launch {
             val name = "${s.bookName().replace(' ', '_')}_${s.chapter}"
             val out = java.io.File(ctx.cacheDir, "share/$name.${if (video) "mp4" else "m4a"}")
-            val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            val ok = try { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                 if (!video) Voice.exportAudio(parts.map { it.second }, out)
                 else {
                     val t = s.text(); val plate = s.store.plateFor(s.book, s.chapter)?.id
                     val frames = parts.map { (v, f) -> Cards.verse(ctx, k, "${s.bookName()} ${s.chapter}:$v", t.verse(s.chapter, v), plate) to Voice.durationMs(f) * 1000 }
                     Voice.exportVideo(frames, parts.map { it.second }, out).also { frames.forEach { it.first.recycle() } }
                 }
-            }
-            s.exporting = false
+            } } finally { s.exporting = false }
             if (ok) {
                 val uri = androidx.core.content.FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", out)
                 val send = Intent(Intent.ACTION_SEND).setType(if (video) "video/mp4" else "audio/mp4").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -806,7 +815,7 @@ private fun VoiceRow(s: AppState) {
                 var i = 0
                 fun next() {
                     if (i >= parts.size) { player?.release(); player = null; return }
-                    val mp = android.media.MediaPlayer(); mp.setDataSource(parts[i++].second.path); mp.prepare()
+                    val mp = runCatching { android.media.MediaPlayer().apply { setDataSource(parts[i++].second.path); prepare() } }.getOrNull() ?: return next()
                     mp.setOnCompletionListener { it.release(); next() }; player = mp; mp.start()
                 }
                 next()
@@ -823,11 +832,10 @@ private fun VoiceRow(s: AppState) {
                 val audio = java.io.File(ctx.cacheDir, "share/$name.m4a")
                 val title = if (s.ownerName.isNotBlank()) ctx.getString(R.string.gift_title_named, s.ownerName, s.bookName(), s.chapter) else ctx.getString(R.string.gift_title, s.bookName(), s.chapter)
                 val sec = (total / 1000).toInt()
-                val card = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                val card = try { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                     if (!Voice.exportAudio(parts.map { it.second }, audio)) null
                     else Cards.year(ctx, k, title, stringResource0(ctx, R.string.duration_ms, sec / 60, sec % 60), listOf(ctx.getString(R.string.voice_chapter, parts.size, ctx.getString(R.string.duration_ms, sec / 60, sec % 60))))
-                }
-                s.exporting = false
+                } } finally { s.exporting = false }
                 if (card == null) return@launch
                 val img = java.io.File(ctx.cacheDir, "share/$name.png").also { f -> f.outputStream().use { card.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) } }
                 fun uri(f: java.io.File) = androidx.core.content.FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", f)

@@ -25,7 +25,9 @@ class GuideVoice(ctx: Context, private val korean: Boolean, private val preferre
     private var tts: TextToSpeech? = null
     @Volatile var ready = false; private set
     @Volatile var voices: List<Voice> = emptyList(); private set
-    private var onReady: (() -> Unit)? = null
+    /** 준비를 기다리는 쪽들 (성공이든 실패든 준비가 끝나면 모두 불러요). */
+    private val waiters = java.util.concurrent.CopyOnWriteArrayList<() -> Unit>()
+    @Volatile private var settled = false
     @Volatile private var curId: String? = null
     @Volatile private var curRange: ((Int, Int) -> Unit)? = null
     @Volatile private var curDone: (() -> Unit)? = null
@@ -33,8 +35,8 @@ class GuideVoice(ctx: Context, private val korean: Boolean, private val preferre
 
     init {
         tts = TextToSpeech(ctx.applicationContext) { status ->
-            val t = tts ?: return@TextToSpeech
-            if (status != TextToSpeech.SUCCESS) return@TextToSpeech
+            val t = tts
+            if (t == null || status != TextToSpeech.SUCCESS) { settle(); return@TextToSpeech }
             val lang = if (korean) "ko" else "en"
             voices = runCatching { t.voices.orEmpty().filter { it.locale.language == lang && !it.features.orEmpty().contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED) } }
                 .getOrDefault(emptyList())
@@ -51,11 +53,13 @@ class GuideVoice(ctx: Context, private val korean: Boolean, private val preferre
                 override fun onStop(u: String?, interrupted: Boolean) { u?.let { pending.remove(it) }?.invoke(false) }
             })
             ready = pick != null || t.isLanguageAvailable(if (korean) Locale.KOREAN else Locale.ENGLISH) >= TextToSpeech.LANG_AVAILABLE
-            onReady?.invoke()
+            settle()
         }
     }
 
-    fun whenReady(f: () -> Unit) { if (ready) f() else onReady = f }
+    private fun settle() { settled = true; val w = waiters.toList(); waiters.clear(); w.forEach { it() } }
+    /** 준비가 끝나면 (쓸 수 있든 없든) f. 쓸 수 있는지는 ready 로. */
+    fun whenReady(f: () -> Unit) { if (settled) f() else { waiters.add(f); if (settled && waiters.remove(f)) f() } }
 
     /** 지금 쓰는 목소리 이름 (설정에 남김). */
     val current: String? get() = runCatching { tts?.voice?.name }.getOrNull()
@@ -91,16 +95,17 @@ class GuideVoice(ctx: Context, private val korean: Boolean, private val preferre
                 return
             }
         }
-        val t = tts ?: return onDone()
+        val t = tts?.takeIf { ready } ?: return onDone()
         t.setSpeechRate(rate * BASE_RATE)
         val id = "v${System.nanoTime()}"
         curId = id; curRange = onRange; curDone = onDone
-        t.speak(text, TextToSpeech.QUEUE_FLUSH, Bundle(), id)
+        // 엔진이 받지 못하면 기다리지 않고 바로 끝난 것으로
+        if (t.speak(text, TextToSpeech.QUEUE_FLUSH, Bundle(), id) != TextToSpeech.SUCCESS) { curId = null; onDone() }
     }
 
     /** 같은 목소리 · 빠르기로 WAV 파일 만들기 (교독 녹음용). 다 되면 onDone(성공). */
     fun synthesize(text: String, rate: Float, out: java.io.File, onDone: (Boolean) -> Unit) {
-        val t = tts ?: return onDone(false)
+        val t = tts?.takeIf { ready } ?: return onDone(false)
         t.setSpeechRate(rate * BASE_RATE)
         val id = "f${System.nanoTime()}"
         pending[id] = onDone
@@ -109,7 +114,8 @@ class GuideVoice(ctx: Context, private val korean: Boolean, private val preferre
     }
 
     private fun stopPlayer() { ticker?.let { ui.removeCallbacks(it) }; ticker = null; runCatching { player?.release() }; player = null }
-    fun stop() { curId = null; stopPlayer(); runCatching { tts?.stop() } }
+    /** 멈춤. 교독 녹음용 파일을 만드는 중이면 그것은 마저 끝내게 둬요. */
+    fun stop() { curId = null; stopPlayer(); if (pending.isEmpty()) runCatching { tts?.stop() } }
     fun release() { stopPlayer(); runCatching { tts?.stop(); tts?.shutdown() }; tts = null }
 
     companion object {

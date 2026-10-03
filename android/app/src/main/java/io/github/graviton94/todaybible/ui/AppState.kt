@@ -104,6 +104,7 @@ class AppState(val store: Store) {
         Thread {
             val ok = io.github.graviton94.todaybible.data.Narration.fetch(ctx, v, book, chapter)
             ui.post {
+                if (narrator != v) return@post   // 그새 목소리를 바꿨으면 이 결과는 버림
                 narration = narration + (key to if (ok) 1 else -1)
                 if (ok && prefetchNext && chapter < io.github.graviton94.todaybible.core.Canon.books[book].chapters) fetchNarration(book, chapter + 1, prefetchNext = false)
             }

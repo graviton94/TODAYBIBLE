@@ -23,17 +23,26 @@ object Narration {
     fun usage(ctx: Context): Long = File(ctx.filesDir, "narration").walkTopDown().filter { it.isFile }.sumOf { it.length() }
 
     /** 한 장 받기 (뒤에서 부름, 수백 KB). 받은 뒤 전체가 CAP 을 넘으면 오래 안 쓴 장부터 지워요. */
-    fun fetch(ctx: Context, voice: String, book: Int, chapter: Int): Boolean = runCatching {
+    private val locks = java.util.concurrent.ConcurrentHashMap<String, Any>()
+    fun fetch(ctx: Context, voice: String, book: Int, chapter: Int): Boolean =
+        // 같은 장을 앱과 듣기가 동시에 받지 않게
+        synchronized(locks.getOrPut("$voice/$book/$chapter") { Any() }) { fetchOnce(ctx, voice, book, chapter) }
+
+    private fun fetchOnce(ctx: Context, voice: String, book: Int, chapter: Int): Boolean = runCatching {
         if (has(ctx, voice, book, chapter)) return true
         val d = dir(ctx, voice, book); d.mkdirs()
         val conn = open(URL("$BASE/${voice}_%02d_c%03d.zip".format(book + 1, chapter))) ?: return false
+        var n = 0
         ZipInputStream(conn.inputStream.buffered()).use { z ->
             while (true) {
                 val e = z.nextEntry ?: break
+                n++
                 if (e.isDirectory || e.name.contains("..") || e.name.contains('/')) continue
                 val tmp = File(d, e.name + ".part"); tmp.outputStream().use { z.copyTo(it) }; tmp.renameTo(File(d, e.name))
             }
         }
+        conn.disconnect()
+        if (n == 0) return false
         mark(ctx, voice, book, chapter).writeText("ok")
         trim(ctx, keep = mark(ctx, voice, book, chapter))
         true

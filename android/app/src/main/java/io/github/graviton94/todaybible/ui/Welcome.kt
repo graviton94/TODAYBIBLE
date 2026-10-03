@@ -234,7 +234,11 @@ private fun FirstReading(s: AppState, onRead: () -> Unit) {
         r.setRecognitionListener(object : android.speech.RecognitionListener {
             override fun onPartialResults(b: android.os.Bundle?) { b?.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { heard = "$base $it" } }
             override fun onResults(b: android.os.Bundle?) { b?.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { heard = "$base $it" }; base = heard; if (alive && !done) r.startListening(intent()) }
-            override fun onError(e: Int) { if (alive && !done) r.startListening(intent()) }
+            override fun onError(e: Int) {
+                if (!alive || done) return
+                // 말이 없었을 때만 다시 듣기 (권한 · 네트워크 · 바쁨 같은 오류는 멈추고 ‘다 읽었어요’로)
+                if (e == android.speech.SpeechRecognizer.ERROR_NO_MATCH || e == android.speech.SpeechRecognizer.ERROR_SPEECH_TIMEOUT) r.startListening(intent()) else listening = false
+            }
             override fun onReadyForSpeech(p: android.os.Bundle?) {}
             override fun onBeginningOfSpeech() {}
             override fun onRmsChanged(v: Float) {}

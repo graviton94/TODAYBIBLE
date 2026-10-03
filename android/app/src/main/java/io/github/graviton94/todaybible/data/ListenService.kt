@@ -45,6 +45,9 @@ class ListenService : Service() {
     private var guide: GuideVoice? = null
     private var book = 0; private var chapter = 1; private var verse = 1; private var rate = 1f
     private var token = 0
+    // 화면이 꺼져도 절 사이 쉼 · 다음 장 받기 동안 멈추지 않게
+    private var wake: android.os.PowerManager.WakeLock? = null
+    private var wifi: android.net.wifi.WifiManager.WifiLock? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -53,6 +56,8 @@ class ListenService : Service() {
         book = intent?.getIntExtra("b", 0) ?: 0; chapter = intent?.getIntExtra("c", 1) ?: 1
         verse = intent?.getIntExtra("v", 1) ?: 1; rate = intent?.getFloatExtra("r", 1f) ?: 1f
         foreground()
+        if (wake == null) wake = getSystemService(android.os.PowerManager::class.java)?.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "harubible:listen")?.apply { setReferenceCounted(false); acquire(3 * 60 * 60 * 1000L) }
+        if (wifi == null) wifi = runCatching { applicationContext.getSystemService(android.net.wifi.WifiManager::class.java)?.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "harubible:listen")?.apply { setReferenceCounted(false); acquire() } }.getOrNull()
         token++
         play(token)
         return START_NOT_STICKY
@@ -102,7 +107,7 @@ class ListenService : Service() {
                         }.getOrNull() ?: run { after(); null }
                     } else {
                         val g = guide ?: GuideVoice(this, korean, store.guideVoice).also { guide = it }
-                        g.whenReady { ui.post { if (t == token) g.speak(Markup.plain(text.verse(chapter, v)), rate, { _, _ -> }, { ui.post { after() } }) } }
+                        g.whenReady { ui.post { if (t == token) { if (!g.ready) finish() else g.speak(Markup.plain(text.verse(chapter, v)), rate, { _, _ -> }, { ui.post { after() } }) } } }
                     }
                 }
                 step(0)
@@ -122,6 +127,7 @@ class ListenService : Service() {
         runCatching { player?.release() }; player = null
         guide?.release(); guide = null
         _now.value = null
+        runCatching { wake?.release() }; wake = null; runCatching { wifi?.release() }; wifi = null
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE) else @Suppress("DEPRECATION") stopForeground(true)
         stopSelf()
     }
