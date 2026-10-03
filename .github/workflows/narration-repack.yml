@@ -1,0 +1,19 @@
+name: Narration repack
+# 예전 장 묶음 zip (m5_19_1.zip) 을 장마다 하나 (m5_19_c023.zip) 로 다시 싸고, 묶음 파일은 지워요.
+on: workflow_dispatch
+jobs:
+  repack:
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - env: { GH_TOKEN: "${{ github.token }}", R: "${{ github.repository }}" }
+        run: |
+          mkdir w && cd w
+          for a in $(gh release view narration-v1 -R $R --json assets -q '.assets[].name' | grep -E '^(m5|f5)_[0-9]{2}_[0-9]+\.zip$'); do
+            gh release download narration-v1 -R $R -p "$a"
+            base=${a%_*}; d=x_${a%.zip}; mkdir $d && unzip -q "$a" -d $d
+            for ch in $(ls $d | sed 's/_.*//' | sort -un); do n=$(printf "%s_c%03d" $base $ch); (cd $d && zip -q -0 ../$n.zip ${ch}_*.m4a); done
+            gh release upload narration-v1 -R $R ${base}_c*.zip --clobber && gh release delete-asset narration-v1 "$a" -R $R -y
+            rm -rf $d "$a" ${base}_c*.zip
+          done
+          gh release view narration-v1 -R $R --json assets -q '.assets | length'

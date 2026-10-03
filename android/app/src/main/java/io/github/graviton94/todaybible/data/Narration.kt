@@ -17,37 +17,39 @@ object Narration {
 
     fun dir(ctx: Context, voice: String, book: Int) = File(ctx.filesDir, "narration/$voice/${book + 1}")
     fun file(ctx: Context, voice: String, book: Int, chapter: Int, verse: Int) = File(dir(ctx, voice, book), "${chapter}_$verse.m4a")
-    fun has(ctx: Context, voice: String, book: Int) = File(dir(ctx, voice, book), ".done").exists()
+    private fun mark(ctx: Context, voice: String, book: Int, chapter: Int) = File(dir(ctx, voice, book), ".c$chapter")
+    /** 이 장의 음원이 폰에 있는지. 쓸 때마다 표시를 새로 해 두어 오래 안 쓴 장부터 지워요. */
+    fun has(ctx: Context, voice: String, book: Int, chapter: Int) = mark(ctx, voice, book, chapter).let { m -> m.exists().also { if (it) m.setLastModified(System.currentTimeMillis()) } }
     fun usage(ctx: Context): Long = File(ctx.filesDir, "narration").walkTopDown().filter { it.isFile }.sumOf { it.length() }
-    fun remove(ctx: Context, voice: String, book: Int) { dir(ctx, voice, book).deleteRecursively() }
 
-    /**
-     * 한 권 내려받기 (뒤에서 부름): 큰 권은 장 묶음 여러 개 (m5_19_1.zip, m5_19_2.zip …) — 없는 묶음이 나올 때까지 차례로.
-     * progress(지금까지 받은 바이트). 하나도 못 받으면 false.
-     */
-    fun download(ctx: Context, voice: String, book: Int, progress: (Long) -> Unit): Boolean = runCatching {
-        val d = dir(ctx, voice, book); d.deleteRecursively(); d.mkdirs()
-        var got = 0L; var part = 1
-        while (true) {
-            val conn = open(URL("$BASE/${voice}_%02d_%d.zip".format(book + 1, part))) ?: break
-            val tmp = File(d, ".part")
-            conn.inputStream.use { input -> tmp.outputStream().use { out ->
-                val buf = ByteArray(64 * 1024)
-                while (true) { val n = input.read(buf); if (n < 0) break; out.write(buf, 0, n); got += n; progress(got) }
-            } }
-            ZipInputStream(tmp.inputStream().buffered()).use { z ->
-                while (true) {
-                    val e = z.nextEntry ?: break
-                    if (e.isDirectory || e.name.contains("..") || e.name.contains('/')) continue
-                    File(d, e.name).outputStream().use { z.copyTo(it) }
-                }
+    /** 한 장 받기 (뒤에서 부름, 수백 KB). 받은 뒤 전체가 CAP 을 넘으면 오래 안 쓴 장부터 지워요. */
+    fun fetch(ctx: Context, voice: String, book: Int, chapter: Int): Boolean = runCatching {
+        if (has(ctx, voice, book, chapter)) return true
+        val d = dir(ctx, voice, book); d.mkdirs()
+        val conn = open(URL("$BASE/${voice}_%02d_c%03d.zip".format(book + 1, chapter))) ?: return false
+        ZipInputStream(conn.inputStream.buffered()).use { z ->
+            while (true) {
+                val e = z.nextEntry ?: break
+                if (e.isDirectory || e.name.contains("..") || e.name.contains('/')) continue
+                val tmp = File(d, e.name + ".part"); tmp.outputStream().use { z.copyTo(it) }; tmp.renameTo(File(d, e.name))
             }
-            tmp.delete(); part++
         }
-        if (part == 1) { d.deleteRecursively(); return false }
-        File(d, ".done").writeText("ok")
+        mark(ctx, voice, book, chapter).writeText("ok")
+        trim(ctx, keep = mark(ctx, voice, book, chapter))
         true
     }.getOrDefault(false)
+
+    private const val CAP = 50L * 1024 * 1024
+    private fun trim(ctx: Context, keep: File) {
+        var total = usage(ctx); if (total <= CAP) return
+        val marks = File(ctx.filesDir, "narration").walkTopDown().filter { it.isFile && it.name.startsWith(".c") && it != keep }.sortedBy { it.lastModified() }
+        for (m in marks) {
+            if (total <= CAP) break
+            val ch = m.name.removePrefix(".c")
+            m.parentFile?.listFiles { f -> f.name.startsWith("${ch}_") }?.forEach { total -= it.length(); it.delete() }
+            m.delete()
+        }
+    }
 
     /** 릴리스 파일 열기 (다른 주소로 넘겨주면 따라감). 없으면 null. */
     private fun open(start: URL): HttpURLConnection? {

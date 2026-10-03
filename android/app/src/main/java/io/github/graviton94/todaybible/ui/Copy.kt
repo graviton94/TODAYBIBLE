@@ -430,20 +430,15 @@ private fun sealInline(color: androidx.compose.ui.graphics.Color): Map<String, I
         StampMark(STAMP_CROSS, color, Modifier.fillMaxSize())
     })
 
-/** 이 권의 낭독 음원이 아직 없으면: 받기 (권마다 한 번, 와이파이에서 권해요). */
+/** 이 장 낭독 목소리를 받는 중이거나 못 받았을 때 한 줄. */
 @Composable
-private fun NarrationBanner(s: AppState, has: Boolean) {
-    if (has || !s.korean || s.narrator == io.github.graviton94.todaybible.data.Narration.DEVICE) return
+private fun NarrationBanner(s: AppState, loading: Boolean, failed: Boolean) {
+    if (!loading && !failed) return
     val c = Theme.c
-    val load = s.narrationLoad?.takeIf { it.first == s.book }
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s3),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-        Text(when {
-            load == null -> stringResource(R.string.narr_get_hint, s.bookName())
-            load.second < 0f -> stringResource(R.string.narr_failed)
-            else -> stringResource(R.string.narr_loading, "%.0fMB".format(load.second))
-        }, style = Theme.small(), modifier = Modifier.weight(1f))
-        if (load == null || load.second < 0f) BookButton(stringResource(R.string.narr_get), Modifier.width(Tokens.Size.narrButton), quiet = true) { s.downloadNarration(s.book) }
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        Text(stringResource(if (loading) R.string.narr_loading else R.string.narr_failed), style = Theme.small().copy(color = if (failed) c.rubric else c.inkSoft), modifier = Modifier.weight(1f))
+        if (failed) Text(stringResource(R.string.narr_retry), style = Theme.small().copy(color = c.rubric),
+            modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.narration = s.narration - "${s.book}:${s.chapter}"; s.fetchNarration(s.book, s.chapter) })
     }
 }
 
@@ -520,12 +515,16 @@ private fun AloudTab(s: AppState, verse: Int) {
     val main = remember { android.os.Handler(android.os.Looper.getMainLooper()) }
     val guide = remember(k, s.narrator) { io.github.graviton94.todaybible.data.GuideVoice(ctx, k, s.guideVoice, s.narrator) }
     DisposableEffect(guide) { onDispose { guide.release() } }
-    // 미리 만든 낭독 음원을 받은 권이면 폰 목소리가 없어도 함께 읽기 · 교독을 쓸 수 있어요
-    val loaded = s.narrationLoad
-    val narratedBook = remember(s.narrator, s.book, loaded) { k && s.narrator != io.github.graviton94.todaybible.data.Narration.DEVICE && io.github.graviton94.todaybible.data.Narration.has(ctx, s.narrator, s.book) }
+    // 낭독 목소리 (M5 · F5): 지금 장 음원만 받아 둬요 (수백 KB). 폰 목소리는 받을 수 없을 때만 대신.
+    val N = io.github.graviton94.todaybible.data.Narration
+    val wantNarr = k && s.narrator != N.DEVICE
+    LaunchedEffect(wantNarr, s.narrator, s.book, s.chapter) { if (wantNarr) s.fetchNarration(s.book, s.chapter) }
+    val narr = if (wantNarr) s.narrationState(s.book, s.chapter) else null
+    val narrLoading = wantNarr && (narr == null || narr == 0)
+    val narratedBook = narr == 1
     var ttsReady by remember(guide) { mutableStateOf(false) }
     LaunchedEffect(guide) { guide.whenReady { main.post { ttsReady = guide.ready } } }
-    val guideReady = ttsReady || narratedBook
+    val guideReady = narratedBook || narrLoading || ttsReady
     val voiceFile = remember(verse, s.chapter, s.book, narratedBook) { guide.narrated(s.book, s.chapter, verse) }
     // 0 함께 읽기 · 1 교독 · 2 혼자 읽기 (가이드 목소리가 없으면 혼자)
     val mode = if (guideReady) s.aloudMode else 2
@@ -547,8 +546,9 @@ private fun AloudTab(s: AppState, verse: Int) {
         var retry by remember(verse, s.chapter, s.book) { mutableIntStateOf(0) }
         LaunchedEffect(done) { if (done) { delay(Tokens.Motion.typeSettleMs.toLong()); if (missed.isEmpty()) complete() else review = true } }
         LaunchedEffect(review, hold) { if (review && !hold) { delay(Tokens.Motion.reviewMs.toLong()); complete() } }
-        LaunchedEffect(running, verse, s.chapter, s.book, mode, replay) {
+        LaunchedEffect(running, verse, s.chapter, s.book, mode, replay, narrLoading) {
             if (!running) { guide.stop(); spoken = -1; on = false; return@LaunchedEffect }
+            if (narrLoading && mode != 2) { on = false; return@LaunchedEffect }   // 목소리 받는 동안 잠깐 기다림
             when {
                 // 교독 · 인도 차례: 가이드가 읽은 절도 읽은 것으로 채우고, 녹음을 켰으면 가이드 목소리도 그 절 자리에 남겨 장 전체가 이어지게
                 guideTurn && !finished -> {
@@ -634,7 +634,7 @@ private fun AloudTab(s: AppState, verse: Int) {
                 if (session != null) { if (finished) session.stop() else session.discard() }
             }
         }
-        NarrationBanner(s, narratedBook)
+        NarrationBanner(s, narrLoading, narr == -1)
         AloudControls(s, guideReady)
         val at = if (spoken >= 0) spoken else lit
         if (s.aloudBig) AloudLines(s, verse, plain, at, if (review) missed else emptyList(), guiding = spoken >= 0)
@@ -675,7 +675,7 @@ private fun AloudTab(s: AppState, verse: Int) {
         }
         if (lit >= plain.length) playing = false
     }
-    NarrationBanner(s, narratedBook)
+    NarrationBanner(s, narrLoading, narr == -1)
     AloudControls(s, guideReady)
     VerseText(s, verse, source, lit = lit)
     Text(stringResource(R.string.aloud_no_mic), style = Theme.small())

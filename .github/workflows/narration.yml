@@ -51,10 +51,13 @@ jobs:
           sudo apt-get install -y -qq ffmpeg >/dev/null
       - name: Narrate
         run: python scripts/narrate.py /tmp/st/py /tmp/st/assets ${{ matrix.job.voice }} ${{ matrix.job.book }} ${{ matrix.job.from }} ${{ matrix.job.to }} ${{ matrix.job.part }} out
-      - name: Upload to release
+      - name: Upload to release (one zip per chapter)
         env: { GH_TOKEN: "${{ github.token }}" }
         run: |
-          n=$(printf "%s_%02d_%d" "$(echo ${{ matrix.job.voice }} | tr A-Z a-z)" ${{ matrix.job.book }} ${{ matrix.job.part }})
-          (cd out/$n && zip -q -0 ../$n.zip *.m4a)
-          ls -la out/$n.zip
-          gh release upload "${{ inputs.tag }}" out/$n.zip --clobber -R "${{ github.repository }}"
+          v=$(echo ${{ matrix.job.voice }} | tr A-Z a-z); b=$(printf "%02d" ${{ matrix.job.book }})
+          src=out/${v}_${b}_${{ matrix.job.part }}
+          for ch in $(ls $src | sed 's/_.*//' | sort -un); do
+            n=$(printf "%s_%s_c%03d" $v $b $ch); (cd $src && zip -q -0 ../$n.zip ${ch}_*.m4a)
+          done
+          ls out/*.zip | wc -l
+          gh release upload "${{ inputs.tag }}" out/*.zip --clobber -R "${{ github.repository }}"

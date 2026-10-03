@@ -325,13 +325,12 @@
   "reminder_aloud": {"en": "Read along", "ko": "함께 읽기"},
   "hand_phrase": {"en": "One phrase", "ko": "구절만"},
   "hand_whole": {"en": "Whole verse", "ko": "절 전체"},
-  "narr_get_hint": {"en": "Get the narration for %1$s to read along with a calm voice", "ko": "%1$s 낭독 목소리를 받으면 진중한 목소리와 함께 읽어요"},
-  "narr_get": {"en": "Get", "ko": "받기"},
-  "narr_loading": {"en": "Downloading · %1$s", "ko": "받는 중 · %1$s"},
-  "narr_failed": {"en": "Not available yet for this book, or no internet. Tap to try again.", "ko": "이 권은 아직 낭독이 없거나 인터넷이 안 돼요. 다시 눌러 보세요."},
+  "narr_loading": {"en": "Getting this chapter's reading voice…", "ko": "이 장 낭독 목소리를 받는 중이에요"},
+  "narr_failed": {"en": "Couldn't get the reading voice, so the phone's voice reads instead.", "ko": "낭독 목소리를 받지 못해 폰 목소리로 대신 읽어요."},
   "narr_male": {"en": "Steady male voice (prepared narration)", "ko": "진중한 남성 목소리 (미리 만든 낭독)"},
   "narr_female": {"en": "Calm female voice (prepared narration)", "ko": "차분한 여성 목소리 (미리 만든 낭독)"},
-  "narr_device": {"en": "This phone's reading voice", "ko": "폰의 읽기 목소리"},
+  "narr_device": {"en": "Phone's voice (only when the reading voice can't be used)", "ko": "폰 목소리 (낭독 목소리를 못 쓸 때만)"},
   "narr_preview": {"en": "Hear a sample (Psalm 23:1)", "ko": "미리 듣기 (시편 23:1)"},
-  "narr_usage": {"en": "Narration on this phone · %1$s", "ko": "받아 둔 낭독 · %1$s"}
+  "narr_usage": {"en": "Narration on this phone · %1$s", "ko": "받아 둔 낭독 · %1$s"},
+  "narr_retry": {"en": "Try again", "ko": "다시 받기"}
 }

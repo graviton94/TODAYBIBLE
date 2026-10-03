@@ -295,7 +295,7 @@ private fun GuideVoiceSettings(s: AppState) {
                 }
             }.getOrNull()
         }
-        val used = remember(s.narrationLoad) { N.usage(ctx) }
+        val used = remember(s.narration) { N.usage(ctx) }
         if (used > 0) Text(stringResource(R.string.narr_usage, "%.0fMB".format(used / 1_000_000f)), style = Theme.small())
     }
 }
