@@ -1,0 +1,65 @@
+name: List Doré plates
+# 위키미디어 공용에서 도레 『성경』 판화 목록을 모아 art/dore/list.tsv 로 (이 환경은 위키미디어에 닿지 않아 Actions 로)
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Query Commons
+        run: |
+          python3 - <<'PY'
+          import json, urllib.parse, urllib.request
+          UA={"User-Agent":"HaruBible/0.1 (https://github.com/graviton94/TODAYBIBLE)"}
+          API="https://commons.wikimedia.org/w/api.php?"
+          def get(**p):
+              p.update(format="json")
+              return json.load(urllib.request.urlopen(urllib.request.Request(API+urllib.parse.urlencode(p),headers=UA),timeout=60))
+          seen={}
+          def members(cat, depth=0):
+              cont={}
+              while True:
+                  r=get(action="query",list="categorymembers",cmtitle=cat,cmlimit="500",cmtype="file|subcat",**cont)
+                  for m in r["query"]["categorymembers"]:
+                      t=m["title"]
+                      if t.startswith("Category:"):
+                          if depth<1: members(t,depth+1)
+                      else: seen.setdefault(t,cat)
+                  if "continue" in r: cont=r["continue"]
+                  else: break
+          cats=["Category:The Holy Bible (Gustave Doré)","Category:Doré's English Bible","Category:Bible illustrations by Gustave Doré","Category:La Grande Bible de Tours","Category:Gustave Doré - The Holy Bible"]
+          found=[]
+          for c in cats:
+              try:
+                  r=get(action="query",list="categorymembers",cmtitle=c,cmlimit="1")
+                  n=len(r["query"]["categorymembers"]); found.append(f"{c}\t{n}")
+                  if n: members(c)
+              except Exception as e: found.append(f"{c}\terror {e}")
+          # 검색으로도
+          for q in ["Gustave Doré The Holy Bible Plate","Dore Bible illustration","Doré La Grande Bible de Tours"]:
+              off=0
+              for _ in range(6):
+                  r=get(action="query",list="search",srsearch=q,srnamespace="6",srlimit="50",sroffset=str(off))
+                  for m in r["query"]["search"]: seen.setdefault(m["title"],"search:"+q)
+                  if "continue" not in r: break
+                  off=r["continue"]["sroffset"]
+          # 크기 · 설명
+          titles=sorted(seen)
+          out=open("art/dore/list.tsv","w")
+          out.write("# title\tsource\twidth\theight\n")
+          for i in range(0,len(titles),50):
+              r=get(action="query",titles="|".join(titles[i:i+50]),prop="imageinfo",iiprop="size")
+              for p in r["query"]["pages"].values():
+                  ii=(p.get("imageinfo") or [{}])[0]
+                  out.write(f"{p['title']}\t{seen.get(p['title'],'')}\t{ii.get('width','')}\t{ii.get('height','')}\n")
+          open("art/dore/categories.tsv","w").write("\n".join(found)+"\n")
+          print(len(titles),"files")
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add art/dore && git commit -m "Doré plate list" && git push || echo "nothing"
