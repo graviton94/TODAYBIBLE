@@ -102,36 +102,35 @@ fun Opening(s: AppState, onDone: () -> Unit) {
             Text(Markup.plain(t.verse(s.chapter, v)), style = Theme.body().copy(textAlign = TextAlign.Center), maxLines = 4, overflow = TextOverflow.Ellipsis)
             Text("${s.bookName()} ${s.chapter}:$v", style = Theme.small().copy(color = c.rubric))
         }
-        // 표지: 왼쪽 가장자리를 축으로 넘어감. 넘어가는 동안 오른쪽에 책장 두께
+        // 표지: 왼쪽 가장자리를 축으로 넘어감. 금박은 시스템 막대 안쪽에 그려 잘리지 않게
         Box(Modifier.fillMaxSize().graphicsLayer {
             transformOrigin = TransformOrigin(0f, 0.5f); cameraDistance = Tokens.Motion.openCamera * density
             rotationY = -Tokens.Motion.openAngle * turn.value; alpha = if (turn.value > 0.85f) (1f - turn.value) / 0.15f else 1f
-        }.background(c.leather).drawBehind {
-            val e = Tokens.Size.veilEdge.toPx() * 1.6f; val g = Tokens.Size.veilBandGap.toPx(); val w = Tokens.Stroke.gilt.toPx()
-            val p = draw.value
-            // 위아래 금선 두 줄: 가운데서 양옆으로 그어짐
-            val half = (size.width - 2 * e) / 2 * p; val cx = size.width / 2
-            for (y in listOf(e, e + g, size.height - e, size.height - e - g)) drawLine(c.gilt, Offset(cx - half, y), Offset(cx + half, y), w)
-            // 안쪽 금박 테: 나중에 나타남
-            val inset = size.width * Tokens.Ratio.veilInset + e
-            drawRoundRect(c.gilt.copy(alpha = ((p - 0.4f) / 0.6f).coerceIn(0f, 1f)), Offset(inset, inset + g * 2), Size(size.width - inset * 2, size.height - (inset + g * 2) * 2),
-                CornerRadius(Tokens.Radius.frame.toPx()), style = Stroke(Tokens.Stroke.giltFine.toPx()))
-            // 네 귀퉁이 장식 (작은 ✠)
-            val m = Tokens.Size.iconSm.toPx(); val o = inset + m
-            if (p > 0.6f) listOf(Offset(o, o + g * 2), Offset(size.width - o, o + g * 2), Offset(o, size.height - o - g * 2), Offset(size.width - o, size.height - o - g * 2))
-                .forEach { stamp(STAMP_CROSS, c.gilt.copy(alpha = ((p - 0.6f) / 0.4f).coerceIn(0f, 1f)), it, m) }
-        }.drawWithContent {
-            drawContent()
-            // 제목 위로 빛 한 줄이 스침 (평평한 띠, 그라데이션 없음)
-            if (shine.value in 0.001f..0.999f) {
-                val bw = size.width * Tokens.Ratio.shineWidth
-                val x = -bw + (size.width + bw) * shine.value
-                drawRect(c.leatherInk.copy(alpha = Tokens.Alpha.shine), Offset(x, size.height * 0.36f), Size(bw, size.height * 0.28f))
-            }
-        }, contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-                StampMark(STAMP_CROSS, c.gilt.copy(alpha = draw.value), Modifier.size(Tokens.Size.emblem))
-                Text(stringResource(R.string.app_name), style = Theme.title(k, Tokens.Text.display).copy(color = c.gilt.copy(alpha = draw.value)))
+        }.background(c.leather)) {
+            // 금박이 빛을 받는 순간: 금빛이 잠깐 밝아졌다 돌아옴 (띠 · 그라데이션 없이)
+            val glint = kotlin.math.sin(shine.value * Math.PI).toFloat()
+            val gold = androidx.compose.ui.graphics.lerp(c.gilt, c.leatherInk, glint * Tokens.Alpha.shine * 3f)
+            Box(Modifier.fillMaxSize().systemBarsPadding().drawBehind {
+                val e = Tokens.Size.veilEdge.toPx(); val g = Tokens.Size.veilBandGap.toPx(); val w = Tokens.Stroke.gilt.toPx()
+                val p = draw.value
+                // 위아래 금선 두 줄: 가운데서 양옆으로 그어짐
+                val half = (size.width - 2 * e) / 2 * p; val cx = size.width / 2
+                for (y in listOf(e, e + g, size.height - e, size.height - e - g)) drawLine(gold, Offset(cx - half, y), Offset(cx + half, y), w)
+                // 안쪽 금박 테: 선이 다 그어진 뒤 나타남
+                val inset = size.width * Tokens.Ratio.veilInset + e
+                val a = ((p - 0.4f) / 0.6f).coerceIn(0f, 1f)
+                drawRoundRect(gold.copy(alpha = a), Offset(inset, inset + g * 2), Size(size.width - inset * 2, size.height - (inset + g * 2) * 2),
+                    CornerRadius(Tokens.Radius.frame.toPx()), style = Stroke(Tokens.Stroke.giltFine.toPx()))
+                // 네 귀퉁이 작은 ✠
+                val m = Tokens.Size.iconSm.toPx(); val o = inset + m
+                val ca = ((p - 0.6f) / 0.4f).coerceIn(0f, 1f)
+                listOf(Offset(o, o + g * 2), Offset(size.width - o, o + g * 2), Offset(o, size.height - o - g * 2), Offset(size.width - o, size.height - o - g * 2))
+                    .forEach { stamp(STAMP_CROSS, gold.copy(alpha = ca), it, m) }
+            }, contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+                    StampMark(STAMP_CROSS, gold.copy(alpha = draw.value), Modifier.size(Tokens.Size.emblem))
+                    Text(stringResource(R.string.app_name), style = Theme.title(k, Tokens.Text.display).copy(color = gold.copy(alpha = draw.value)))
+                }
             }
         }
     }
