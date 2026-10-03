@@ -92,7 +92,7 @@ fun LibraryPage(s: AppState) {
             Canon.inGroup(group).forEach { b ->
                 val n = filled.count { VerseKey(it).book == b.index }
                 Row(
-                    Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clickable { if (s.locked(b.index)) s.purchaseOpen = true else s.picker = b.index }
+                    Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clickable { if (s.locked(b.index)) { s.peekBook = b.index; s.purchaseOpen = true } else s.picker = b.index }
                         .drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -103,7 +103,7 @@ fun LibraryPage(s: AppState) {
                 }
             }
         }
-        BookButton(stringResource(R.string.continue_at, s.bookName(), s.chapter), Modifier.fillMaxWidth()) { s.page = 1 }
+        BookButton(stringResource(R.string.continue_at, s.bookName(), s.chapter), Modifier.fillMaxWidth()) { s.open(s.book, s.chapter) }
     }
 
 }
@@ -144,6 +144,7 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         Text(s.bookName(b), style = Theme.title(s.korean))
         Text(stringResource(R.string.choose_chapter), style = Theme.small())
+        if (p.bookDone(s.translation, t)) BookButton(stringResource(R.string.my_bible_pdf), Modifier.fillMaxWidth(), quiet = true) { s.requestPdf(b) }
         Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             (1..t.chapterCount).chunked(6).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
@@ -151,14 +152,15 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
                         val f = p.chapterFraction(s.translation, t, ch)
                         val plate = s.store.plateFor(b, ch) != null
                         Box(
-                            Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (f >= 1f) c.ink else c.paper)
+                            Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (f >= 1f) c.leather else c.paper)
                                 .drawBehind {
+                                    if (f >= 1f) giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = false)
                                     if (f in 0.0001f..0.9999f) drawRoundRect(c.rubric, style = Stroke(Tokens.Stroke.rule.toPx()), cornerRadius = CornerRadius(Tokens.Radius.chip.toPx()))
                                     if (plate) { val d = Tokens.Size.plateDot.toPx(); drawCircle(c.gilt, d / 2, Offset(size.width - d - Tokens.Space.s1.toPx(), d + Tokens.Space.s1.toPx())) }
                                 }
                                 .clickable(role = Role.Button) { onPick(ch) },
                             contentAlignment = Alignment.Center,
-                        ) { Text("$ch", style = Theme.label().copy(color = if (f >= 1f) c.leaf else c.ink)) }
+                        ) { Text("$ch", style = if (f >= 1f) Theme.number().copy(fontSize = Tokens.Text.gridInitial, color = c.gilt) else Theme.label()) }
                     }
                     repeat(6 - row.size) { Box(Modifier.weight(1f)) }
                 }

@@ -6,6 +6,7 @@
 - Noto Serif KR 500 · 700: 개역한글 본문 + 앱 문자열에 나오는 글자 (+ 라틴 기본)
 - Song Myung: 표제 한글 (앱 문자열 + 권 이름)
 - EB Garamond 500 · 600 · 이탤릭 500: KJV 본문 (라틴 전체)
+- Nanum Pen Script: 필사 노트의 내 글씨
 - IM Fell English SC: 머리줄 · 장절 표기, UnifrakturMaguntia: 블랙레터 표제 · 장 번호 (라틴만)
 """
 import glob, json, os, sys, urllib.request
@@ -19,6 +20,7 @@ SRC = {
     "NotoSerifKR[wght].ttf": "notoserifkr/NotoSerifKR%5Bwght%5D.ttf", "SongMyung-Regular.ttf": "songmyung/SongMyung-Regular.ttf",
     "EBGaramond[wght].ttf": "ebgaramond/EBGaramond%5Bwght%5D.ttf", "EBGaramond-Italic[wght].ttf": "ebgaramond/EBGaramond-Italic%5Bwght%5D.ttf",
     "IMFeENsc28P.ttf": "imfellenglishsc/IMFeENsc28P.ttf", "UnifrakturMaguntia-Book.ttf": "unifrakturmaguntia/UnifrakturMaguntia-Book.ttf",
+    "NanumPenScript-Regular.ttf": "nanumpenscript/NanumPenScript-Regular.ttf",
 }
 LATIN = "".join(chr(c) for c in range(0x20, 0x7F)) + "‘’“”–—…·¶✠❦✝ΑΩÆæ₩€£¥"
 
@@ -67,6 +69,8 @@ def main():
         "garamond_italic.ttf": make("EBGaramond-Italic[wght].ttf", "garamond_italic.ttf", allLatin, 500),
         "fell_sc.ttf": make("IMFeENsc28P.ttf", "fell_sc.ttf", allLatin),
         "blackletter.ttf": make("UnifrakturMaguntia-Book.ttf", "blackletter.ttf", allLatin),
+        # 필사 노트의 손글씨 (한글 + 라틴)
+        "pen.ttf": make("NanumPenScript-Regular.ttf", "pen.ttf", ko + allLatin),
     }
     print(len(ko), "Korean+UI chars;", {k: f"{v/1024:.0f}KB" for k, v in sizes.items()})
 

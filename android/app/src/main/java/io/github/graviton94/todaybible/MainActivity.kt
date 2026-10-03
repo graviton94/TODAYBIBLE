@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
         val s = AppState(store).also { state = it }
         s.lifetime.connect()
         if (BuildConfig.DEV_TOOLS) debugSetup(s, intent)
-        intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it }
+        intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; s.opening = false }
         if (store.reminderHour >= 0) io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
         setContent {
             val dark = when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK -> true }
@@ -54,6 +54,8 @@ class MainActivity : ComponentActivity() {
             save("card_verse_long", io.github.graviton94.todaybible.ui.Cards.verse(this, k, if (k) "${s.bookName(18)} 23:4" else "${s.bookName(18)} 23:4", long, "sermon", now))
             save("card_plate", io.github.graviton94.todaybible.ui.Cards.plate(this, k, "noah", if (k) "홍수" else "The Deluge", if (k) "${s.bookName(0)} 7장" else "${s.bookName(0)} 7", now))
             save("card_milestone", io.github.graviton94.todaybible.ui.Cards.milestone(this, k, Milestone.OLIVE, io.github.graviton94.todaybible.ui.milestoneName(this, Milestone.OLIVE), io.github.graviton94.todaybible.ui.milestoneRule(this, Milestone.OLIVE), now))
+            // 나의 성경 PDF (창세기, 쓴 절만 날짜)
+            io.github.graviton94.todaybible.ui.MyBible.make(this, s.store, s.translation, 0).copyTo(java.io.File(dir, "my_bible.pdf"), overwrite = true)
         }.onFailure { java.io.File(dir, "error.txt").writeText(it.stackTraceToString()) }
         java.io.File(dir, "done").writeText("ok")
     }
@@ -82,8 +84,15 @@ class MainActivity : ComponentActivity() {
         s.award = i.getStringExtra("tb.award")?.let { Milestone.valueOf(it) }
         s.picker = i.getIntExtra("tb.picker", 0).takeIf { it > 0 }?.minus(1)
         if (i.getBooleanExtra("tb.lock", false)) s.forceLock = true
+        if (i.getBooleanExtra("tb.onboard", false)) { s.onboarded = false; s.store.onboarded = false }
+        s.opening = i.getBooleanExtra("tb.opening", false)
+        if (i.hasExtra("tb.goal")) s.setGoal(i.getIntExtra("tb.goal", 5))
+        if (i.hasExtra("tb.notebook")) { if (s.notebook != i.getBooleanExtra("tb.notebook", false)) s.toggleNotebook() }
+        s.plateView = i.getStringExtra("tb.plate")?.let { id -> s.store.plates.firstOrNull { it.id == id } }
+        s.peekBook = i.getIntExtra("tb.peek", 0).takeIf { it > 0 }?.minus(1)?.also { s.purchaseOpen = true }
+        if (i.hasExtra("tb.welcomeStep")) s.welcomeStep = i.getIntExtra("tb.welcomeStep", 0)
         s.lifetime.debugSet(if (i.hasExtra("tb.owned")) i.getBooleanExtra("tb.owned", false) else null, i.getStringExtra("tb.price"))
-        s.purchaseOpen = i.getBooleanExtra("tb.purchase", false)
+        if (i.getBooleanExtra("tb.purchase", false)) s.purchaseOpen = true
         s.shareVerse = i.getIntExtra("tb.share", 0).takeIf { it > 0 }
         if (i.getBooleanExtra("tb.cardShots", false)) Thread { cardShots(s) }.start()
         s.toast = i.getIntExtra("tb.toast", 0).takeIf { it > 0 }?.let { getString(R.string.filled_n, it) }

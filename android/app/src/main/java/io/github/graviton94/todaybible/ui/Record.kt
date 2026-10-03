@@ -151,7 +151,7 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
     val order = remember(p.id) { Pieces.order(p.id.hashCode()) }
     val shown = order.take(n).toSet()
     val img = rememberPlate(p.id)
-    Column(modifier.clickable(role = Role.Button) { s.open(p.book, p.chapter) }, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+    Column(modifier.clickable(role = Role.Button) { s.plateView = p }, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
         Box(
             Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper)
                 .drawWithContent {

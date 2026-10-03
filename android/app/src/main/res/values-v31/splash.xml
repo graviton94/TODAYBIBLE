@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 시스템 시작 화면: 가죽 위 금박 십자 → 앱의 표지 넘김으로 이어짐 -->
+<resources>
+    <style name="Theme.TodayBible.Splash" parent="Theme.TodayBible">
+        <item name="android:windowSplashScreenBackground">@color/icon_leather</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_cross</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">@color/icon_leather</item>
+    </style>
+</resources>

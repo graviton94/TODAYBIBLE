@@ -11,7 +11,7 @@ import io.github.graviton94.todaybible.design.ThemeChoice
 import java.io.File
 
 /** 판화 하나: 그 장면이 나오는 장. */
-data class Plate(val id: String, val book: Int, val chapter: Int, val ko: String, val en: String)
+data class Plate(val id: String, val book: Int, val chapter: Int, val ko: String, val en: String, val verse: Int, val byKo: String, val byEn: String)
 
 /**
  * 기기 안 저장. 필사 기록은 덮어쓰지 않고 한 줄씩 덧붙이기만 함 (fills.tsv). 설정은 SharedPreferences.
@@ -29,7 +29,7 @@ class Store(val context: Context) {
     val plates: List<Plate> by lazy {
         context.assets.open("plates/plates.tsv").bufferedReader().readLines().filter { it.isNotBlank() && !it.startsWith("#") }.mapNotNull { l ->
             val p = l.split('\t'); val b = io.github.graviton94.todaybible.core.Canon.byOsis(p[1]) ?: return@mapNotNull null
-            Plate(p[0], b.index, p[2].toInt(), p[3], p[4])
+            Plate(p[0], b.index, p[2].toInt(), p[3], p[4], p.getOrNull(5)?.toIntOrNull() ?: 1, p.getOrElse(6) { "" }, p.getOrElse(7) { "" })
         }
     }
     fun plateFor(book: Int, chapter: Int): Plate? = plates.firstOrNull { it.book == book && it.chapter == chapter }
@@ -66,6 +66,18 @@ class Store(val context: Context) {
     var reminderHour: Int
         get() = prefs.getInt("reminder", -1)
         set(v) = prefs.edit().putInt("reminder", v).apply()
+    /** 오늘의 분량 (절 수, -1 = 하루 한 장). */
+    var dailyGoal: Int
+        get() = prefs.getInt("goal", 5)
+        set(v) = prefs.edit().putInt("goal", v).apply()
+    /** 처음 소개를 마쳤는지. */
+    var onboarded: Boolean
+        get() = prefs.getBoolean("onboarded", false)
+        set(v) = prefs.edit().putBoolean("onboarded", v).apply()
+    /** 필사 화면을 노트로 볼지. */
+    var notebook: Boolean
+        get() = prefs.getBoolean("notebook", false)
+        set(v) = prefs.edit().putBoolean("notebook", v).apply()
     var startDay: Long
         get() = prefs.getLong("start", -1)
         set(v) = prefs.edit().putLong("start", v).apply()

@@ -59,19 +59,19 @@ import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sin
 
-/** 앱 뼈대: 서재 · 필사 · 기록 세 장을 책장처럼 넘김. 설정 · 장 마침 · 발자취는 그 위에. */
+/** 앱 뼈대: 오늘 · 필사 · 서재 · 기록 네 장을 책장처럼 넘김. 설정 · 장 마침 · 발자취 · 판화는 그 위에. 처음엔 소개, 켤 때마다 표지 넘김. */
 @OptIn(ExperimentalFoundationApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun Root(s: AppState) {
     val c = Theme.c
-    val pager = rememberPagerState(initialPage = s.page) { 3 }
+    val pager = rememberPagerState(initialPage = s.page) { 4 }
     val scope = rememberCoroutineScope()
     // 이름표 · 버튼으로 옮길 땐 ‘숨 한 번’, 손으로 넘길 땐 ‘내려앉는 종이’
     var breath by remember { mutableStateOf(false) }
     fun turnTo(i: Int) { scope.launch { breath = true; try { pager.animateScrollToPage(i, animationSpec = androidx.compose.animation.core.tween(Tokens.Motion.pageMs)) } finally { breath = false } } }
     LaunchedEffect(s.page) { if (pager.currentPage != s.page && !pager.isScrollInProgress) turnTo(s.page) }
     LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect { s.page = it } }
-    BackHandler(enabled = pager.currentPage != 0 && !s.settingsOpen && s.finished == null && s.award == null) { turnTo(0) }
+    BackHandler(enabled = pager.currentPage != 0 && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && !s.purchaseOpen && s.onboarded && !s.opening) { turnTo(0) }
     // 옮겨 쓰는 동안 (키보드가 떠 있으면) 옆으로 넘어가지 않게
     val typing = WindowInsets.isImeVisible && pager.currentPage == 1
 
@@ -85,8 +85,9 @@ fun Root(s: AppState) {
                 val incoming by remember(page) { derivedStateOf { (pager.currentPage - page) + pager.currentPageOffsetFraction < 0f } }
                 Box(Modifier.fillMaxSize().zIndex(if (incoming) 1f else 0f).pageTurn(pager, page) { breath }) {
                     when (page) {
-                        0 -> LibraryPage(s)
+                        0 -> HomePage(s)
                         1 -> CopyPage(s)
+                        2 -> LibraryPage(s)
                         else -> RecordPage(s)
                     }
                 }
@@ -97,6 +98,14 @@ fun Root(s: AppState) {
         s.finished?.let { (b, ch) -> FinishedPage(s, b, ch) }
         if (s.purchaseOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PurchasePage(s) }
         s.shareVerse?.let { v -> ShareVerseSheet(s, v) }
+        s.plateView?.let { pl -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PlatePage(s, pl) } }
+        // 나의 성경 PDF: 만들어서 나누기 창으로
+        val ctx = androidx.compose.ui.platform.LocalContext.current
+        LaunchedEffect(s.pdfBook) {
+            val b = s.pdfBook ?: return@LaunchedEffect
+            val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { MyBible.make(ctx, s.store, s.translation, b) }.getOrNull() }
+            s.pdfBook = null; f?.let { MyBible.share(ctx, it) }
+        }
         s.picker?.let { b -> BookSheet({ s.picker = null }) { ChapterGrid(s, b) { ch -> s.picker = null; s.open(b, ch) } } }
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
         // 토스트: 이름표 위에 잠깐
@@ -104,6 +113,8 @@ fun Root(s: AppState) {
             LaunchedEffect(msg) { kotlinx.coroutines.delay(Tokens.Motion.toastMs.toLong()); s.toast = null }
             Box(Modifier.fillMaxSize().navigationBarsPadding().padding(bottom = Tokens.Size.touch + Tokens.Space.s4, start = Tokens.Space.s5, end = Tokens.Space.s5), contentAlignment = Alignment.BottomCenter) { BookToast(msg) }
         }
+        if (!s.onboarded) Welcome(s)
+        else if (s.opening) Opening(s) { s.opening = false }
     }
 }
 
@@ -139,7 +150,7 @@ private fun Gear(modifier: Modifier) {
 @Composable
 private fun PageTabs(current: Int, onSelect: (Int) -> Unit) {
     val c = Theme.c
-    val names = listOf(stringResource(R.string.page_library), stringResource(R.string.page_copy), stringResource(R.string.page_record))
+    val names = listOf(stringResource(R.string.page_today), stringResource(R.string.page_copy), stringResource(R.string.page_library), stringResource(R.string.page_record))
     Row(Modifier.fillMaxWidth().background(c.paper).navigationBarsPadding().drawBehind {
         drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx())
     }) {

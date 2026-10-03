@@ -73,6 +73,7 @@ fun SettingsPage(s: AppState) {
                     VerseText(s, 1, s.text(0).verse(1, 1))
                 }
             }
+            Group(stringResource(R.string.daily_goal)) { GoalChooser(s, title = false) }
             Group(stringResource(R.string.reminder)) {
                 // 안드로이드 13+: 처음 켤 때 알림 허락을 물음
                 var pending by remember { mutableIntStateOf(-1) }

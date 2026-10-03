@@ -252,3 +252,20 @@ fun LockMark(color: Color, modifier: Modifier = Modifier) {
         drawLine(color, Offset(size.width / 2 + r, y - 0.5f), Offset(size.width / 2 + r, y - r * 0.2f), w)
     })
 }
+
+/**
+ * 장 첫머리 글자: 아직이면 붉은 블랙레터 장 번호, 마친 장이면 금박 머리글자
+ * (가죽 네모 · 안쪽 금박 테 · 금빛 숫자). 중세 필사본처럼 마칠 때마다 하나씩 생김.
+ */
+@Composable
+fun ChapterInitial(chapter: Int, done: Boolean, modifier: Modifier = Modifier, box: androidx.compose.ui.unit.Dp = Tokens.Size.initialBox) {
+    val c = Theme.c
+    if (!done) {
+        Text("$chapter", style = Theme.number().copy(fontSize = Tokens.Text.initial), modifier = modifier)
+        return
+    }
+    Box(modifier.size(box).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.leather).drawBehind { giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = false) },
+        contentAlignment = Alignment.Center) {
+        Text("$chapter", style = Theme.number().copy(fontSize = Tokens.Text.initialBox * (box / Tokens.Size.initialBox), color = c.gilt), maxLines = 1)
+    }
+}

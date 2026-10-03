@@ -6,11 +6,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** 한 테마의 재료 색. */
-data class Palette(val paper: Color, val leaf: Color, val ink: Color, val inkSoft: Color, val unwritten: Color, val hair: Color, val rubric: Color, val gilt: Color, val giltText: Color, val leather: Color, val leatherDeep: Color, val leatherInk: Color, val shade: Color, val scrim: Color)
+data class Palette(val paper: Color, val leaf: Color, val ink: Color, val inkSoft: Color, val unwritten: Color, val hair: Color, val rubric: Color, val gilt: Color, val giltText: Color, val leather: Color, val leatherDeep: Color, val leatherInk: Color, val shade: Color, val scrim: Color, val penInk: Color, val noteLine: Color)
 
 object Tokens {
-    val light = Palette(paper = Color(0xFFECE2CC), leaf = Color(0xFFF7F1E3), ink = Color(0xFF2A2119), inkSoft = Color(0xFF5C4E3E), unwritten = Color(0xFF76674F), hair = Color(0x2E2A2119), rubric = Color(0xFF8C2117), gilt = Color(0xFFA07B36), giltText = Color(0xFF7A5C24), leather = Color(0xFF4A1913), leatherDeep = Color(0xFF3A120E), leatherInk = Color(0xFFEBDAB1), shade = Color(0x242A2119), scrim = Color(0x661A120C))
-    val dark = Palette(paper = Color(0xFF15110D), leaf = Color(0xFF201A14), ink = Color(0xFFEEE4D0), inkSoft = Color(0xFFBFB09A), unwritten = Color(0xFF9A8D78), hair = Color(0x2EEEE4D0), rubric = Color(0xFFD46B5C), gilt = Color(0xFFC7A35D), giltText = Color(0xFFD6B672), leather = Color(0xFF5A1F18), leatherDeep = Color(0xFF46170F), leatherInk = Color(0xFFEEDDB4), shade = Color(0x66000000), scrim = Color(0xA0000000))
+    val light = Palette(paper = Color(0xFFECE2CC), leaf = Color(0xFFF7F1E3), ink = Color(0xFF2A2119), inkSoft = Color(0xFF5C4E3E), unwritten = Color(0xFF76674F), hair = Color(0x2E2A2119), rubric = Color(0xFF8C2117), gilt = Color(0xFFA07B36), giltText = Color(0xFF7A5C24), leather = Color(0xFF4A1913), leatherDeep = Color(0xFF3A120E), leatherInk = Color(0xFFEBDAB1), shade = Color(0x242A2119), scrim = Color(0x661A120C), penInk = Color(0xFF1F2A44), noteLine = Color(0x291F2A44))
+    val dark = Palette(paper = Color(0xFF15110D), leaf = Color(0xFF201A14), ink = Color(0xFFEEE4D0), inkSoft = Color(0xFFBFB09A), unwritten = Color(0xFF9A8D78), hair = Color(0x2EEEE4D0), rubric = Color(0xFFD46B5C), gilt = Color(0xFFC7A35D), giltText = Color(0xFFD6B672), leather = Color(0xFF5A1F18), leatherDeep = Color(0xFF46170F), leatherInk = Color(0xFFEEDDB4), shade = Color(0x66000000), scrim = Color(0xA0000000), penInk = Color(0xFFC9D3EE), noteLine = Color(0x29C9D3EE))
     object Space {
         val s1 = 4.dp
         val s2 = 8.dp
@@ -67,6 +67,10 @@ object Tokens {
         val cardMark = 22.dp
         val cardMedal = 120.dp
         val cardGap = 24.dp
+        val noteMargin = 44.dp
+        val initialBox = 56.dp
+        val initialHome = 44.dp
+        val hiddenField = 1.dp
     }
     object Text {
         val verse = 21.sp
@@ -87,6 +91,10 @@ object Tokens {
         val cardRef = 15.sp
         val cardFoot = 12.sp
         val cardName = 28.sp
+        val pen = 23.sp
+        val penLine = 34.sp
+        val initialBox = 30.sp
+        val gridInitial = 20.sp
     }
     object Motion {
         const val inkMs = 600
@@ -102,6 +110,13 @@ object Tokens {
         const val turnEdge = 12.0f
         const val breathDrift = 24.0f
         const val aloudNormal = 1.25f
+        const val sealMs = 900
+        const val sealHoldMs = 1600
+        const val openDrawMs = 700
+        const val openShineMs = 650
+        const val openHoldMs = 900
+        const val openAngle = 100.0f
+        const val openCamera = 14.0f
     }
     object Ratio {
         const val plateAspect = 0.766f
@@ -112,6 +127,9 @@ object Tokens {
         const val photoAspect = 1.3333f
         const val scaleLarge = 1.15f
         const val scaleLarger = 1.3f
+        const val shineWidth = 0.18f
+        const val welcomeArt = 1.25f
+        const val initialFinish = 1.25f
     }
     object Alpha {
         const val faint = 0.5f
@@ -120,6 +138,9 @@ object Tokens {
         const val rest = 0.75f
         const val handle = 0.7f
         const val frame = 0.85f
+        const val nib = 0.14f
+        const val shine = 0.22f
+        const val peek = 0.93f
     }
     object Leading {
         const val verse = 1.8f

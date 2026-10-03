@@ -47,6 +47,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.graviton94.todaybible.R
+import io.github.graviton94.todaybible.core.Markup
 import io.github.graviton94.todaybible.core.Milestone
 import io.github.graviton94.todaybible.data.Plate
 import io.github.graviton94.todaybible.design.Theme
@@ -67,12 +68,20 @@ fun FinishedPage(s: AppState, book: Int, chapter: Int, lifted: Boolean = false) 
             .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4),
     ) {
-        Text("$chapter", style = Theme.initial().copy(textAlign = TextAlign.Center))
+        // 마친 장의 금박 머리글자
+        ChapterInitial(chapter, done = true, box = Tokens.Size.emblem * Tokens.Ratio.initialFinish)
         Text(stringResource(R.string.chapter_done, s.bookName(book), chapter), style = Theme.title(k).copy(textAlign = TextAlign.Center))
         if (plate != null) {
             PlateUnderVeil(s, plate, veil.value, Modifier.fillMaxWidth(Tokens.Ratio.plateWidth))
-            Text(if (veil.value >= 1f) (if (k) plate.ko else plate.en) else stringResource(R.string.veil_hint),
-                style = Theme.small().copy(textAlign = TextAlign.Center), maxLines = 1)
+            if (veil.value < 1f) Text(stringResource(R.string.veil_hint), style = Theme.small().copy(textAlign = TextAlign.Center), maxLines = 1)
+            else Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                // 판화 설명: 제목 · 그 장면의 말씀 · 출처
+                val t = s.store.book(s.translation, plate.book)
+                Text(if (k) plate.ko else plate.en, style = Theme.title(k).copy(textAlign = TextAlign.Center))
+                Text(Markup.plain(t.verse(plate.chapter, plate.verse)), style = Theme.body().copy(textAlign = TextAlign.Center))
+                Text("${s.bookName(plate.book)} ${plate.chapter}:${plate.verse}", style = Theme.small().copy(color = c.rubric))
+                Text(if (k) plate.byKo else plate.byEn, style = Theme.small().copy(textAlign = TextAlign.Center))
+            }
         } else {
             Box(Modifier.padding(vertical = Tokens.Space.s5).size(Tokens.Size.emblem)) { StampMark(STAMP_CROSS, c.gilt, Modifier.fillMaxSize()) }
         }

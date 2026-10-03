@@ -49,3 +49,28 @@ object ChurchYear {
         else { val thu = first.plusDays(((DayOfWeek.THURSDAY.value - first.dayOfWeek.value + 7) % 7).toLong()); thu.plusWeeks(3) }
     }
 }
+
+/** 교회력에서 앱이 챙기는 날 (그날 쓰면 받는 발자취와 짝). */
+enum class Feast(val milestone: Milestone) { PALM(Milestone.HOSANNA), EASTER(Milestone.TOMB), PENTECOST(Milestone.FIRE), THANKSGIVING(Milestone.FIRSTFRUITS), CHRISTMAS(Milestone.STAR) }
+
+object Feasts {
+    fun dateOf(f: Feast, y: Int, korea: Boolean): LocalDate = when (f) {
+        Feast.PALM -> ChurchYear.palmSunday(y); Feast.EASTER -> ChurchYear.easter(y); Feast.PENTECOST -> ChurchYear.pentecost(y)
+        Feast.THANKSGIVING -> ChurchYear.thanksgiving(y, korea); Feast.CHRISTMAS -> ChurchYear.christmas(y)
+    }
+    /** 오늘부터 다가오는 날들 (오늘 포함, 가까운 순). */
+    fun upcoming(today: LocalDate, korea: Boolean, count: Int = 4): List<Pair<Feast, LocalDate>> =
+        (today.year..today.year + 1).flatMap { y -> Feast.entries.map { it to dateOf(it, y, korea) } }
+            .filter { !it.second.isBefore(today) }.sortedBy { it.second }.take(count)
+}
+
+/** 오늘의 분량: 절 수 (CHAPTER = 하루 한 장). */
+object Goal {
+    const val CHAPTER = -1
+    val choices = listOf(1, 5, 10, CHAPTER)
+    /** 분량을 채웠는지: 절이면 오늘 쓴 절 수, 장이면 오늘 마친 장이 있는지. */
+    fun met(goal: Int, todayVerses: Int, todayChapters: Int): Boolean = if (goal == CHAPTER) todayChapters > 0 else todayVerses >= goal
+    /** 이 분량이면 몇 날이 걸리는지 (절 수 기준, 장이면 장 수). */
+    fun days(goal: Int, verses: Int, chapters: Int): Int = if (goal == CHAPTER) chapters else (verses + goal - 1) / goal
+}
+

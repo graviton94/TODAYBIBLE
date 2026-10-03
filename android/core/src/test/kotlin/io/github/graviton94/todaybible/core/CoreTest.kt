@@ -94,4 +94,17 @@ class CoreTest {
         assertEquals(2, Presence.streak(days - d(sat.minusDays(2)), sat))
         assertEquals(0, Presence.streak(emptySet(), sat))
     }
+
+    @Test fun feastsAndGoal() {
+        val up = Feasts.upcoming(LocalDate.of(2027, 3, 1), korea = true)
+        assertEquals(Feast.PALM to LocalDate.of(2027, 3, 21), up[0])
+        assertEquals(Feast.EASTER to LocalDate.of(2027, 3, 28), up[1])
+        assertEquals(Feast.PENTECOST to LocalDate.of(2027, 5, 16), up[2])
+        assertEquals(Feast.THANKSGIVING to LocalDate.of(2027, 11, 21), up[3])
+        // 오늘이 성탄절이면 맨 앞
+        assertEquals(Feast.CHRISTMAS, Feasts.upcoming(LocalDate.of(2026, 12, 25), true)[0].first)
+        assertTrue(Goal.met(5, 5, 0)); assertFalse(Goal.met(5, 4, 0)); assertTrue(Goal.met(Goal.CHAPTER, 0, 1))
+        assertEquals(136, Goal.days(5, 678, 16))
+    }
 }
+

@@ -23,6 +23,7 @@ object Fonts {
     val garamond = FontFamily(Font(R.font.garamond_medium, FontWeight.Medium), Font(R.font.garamond_semibold, FontWeight.SemiBold), Font(R.font.garamond_italic, FontWeight.Medium, FontStyle.Italic))
     val fell = FontFamily(Font(R.font.fell_sc))
     val black = FontFamily(Font(R.font.blackletter))
+    val pen = FontFamily(Font(R.font.pen))
 }
 
 val LocalPalette = staticCompositionLocalOf { Tokens.light }

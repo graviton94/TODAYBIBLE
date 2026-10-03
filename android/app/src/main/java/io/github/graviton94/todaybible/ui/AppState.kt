@@ -25,8 +25,21 @@ class AppState(val store: Store) {
     var stamp by mutableStateOf(store.stamp)
     var book by mutableStateOf(store.bookmark(store.translation).first)
     var chapter by mutableStateOf(store.bookmark(store.translation).second)
-    // 처음 켜면 바로 필사 장으로
-    var page by mutableStateOf(if (fills.isEmpty()) 1 else 0)
+    /** 0 오늘 · 1 필사 · 2 서재 · 3 기록. */
+    var page by mutableStateOf(0)
+    var onboarded by mutableStateOf(store.onboarded)
+    /** 켤 때 표지 넘김 (처음 소개 뒤로는 매번). */
+    var opening by mutableStateOf(store.onboarded)
+    var dailyGoal by mutableStateOf(store.dailyGoal)
+    var notebook by mutableStateOf(store.notebook)
+    /** 크게 보는 판화. */
+    var plateView by mutableStateOf<io.github.graviton94.todaybible.data.Plate?>(null)
+    /** 나의 성경 PDF 를 만들 권. */
+    var pdfBook by mutableStateOf<Int?>(null)
+    /** 평생권 화면에서 미리 보여 줄 잠긴 권. */
+    var peekBook by mutableStateOf<Int?>(null)
+    /** 처음 소개의 몇째 장. */
+    var welcomeStep by mutableStateOf(0)
     /** 이 장에서 고른 절 (없으면 다음 빈 절). */
     var target by mutableStateOf<Int?>(null)
     var reminderHour by mutableStateOf(store.reminderHour)
@@ -59,13 +72,42 @@ class AppState(val store: Store) {
     private fun widgets() { val ctx = store.context; Thread { runCatching { io.github.graviton94.todaybible.widget.VerseWidget.refresh(ctx) } }.start() }
 
     fun open(b: Int, ch: Int) {
-        if (locked(b)) { purchaseOpen = true; return }
+        if (locked(b)) { peekBook = b; purchaseOpen = true; return }
         book = b; chapter = ch; target = null; store.setBookmark(translation, b, ch); page = 1; widgets()
     }
     fun chooseTranslation(t: Translation) { translation = t; store.translation = t; val bm = store.bookmark(t); book = bm.first; chapter = bm.second }
     fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t }
     fun setTextScale(s: Float) { scale = s; store.textScale = s }
     fun setStampMark(s: String) { stamp = s; store.stamp = s }
+    /** 나의 성경 PDF: 평생권이 필요하면 평생권 화면으로. */
+    fun requestPdf(b: Int) { if (!lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)) purchaseOpen = true else pdfBook = b }
+    fun setGoal(g: Int) { dailyGoal = g; store.dailyGoal = g }
+    fun toggleNotebook() { notebook = !notebook; store.notebook = notebook }
+    fun finishOnboarding(startBook: Int, startChapter: Int) {
+        onboarded = true; store.onboarded = true
+        book = startBook; chapter = startChapter; target = null; store.setBookmark(translation, startBook, startChapter); page = 1
+    }
+
+    /** 오늘 쓴 절 (이 번역). */
+    fun todayVerses(): Int { val d = today().toEpochDay(); return fills.count { it.translation == translation && it.epochDay == d } }
+    /** 오늘 마친 장 수: 오늘 쓴 절이 있는 장 가운데 다 찬 장. */
+    fun todayChapters(): Int {
+        val d = today().toEpochDay(); val p = progress
+        return fills.filter { it.translation == translation && it.epochDay == d }.map { it.key.book to it.key.chapter }.toSet()
+            .count { (b, c) -> p.chapterDone(translation, store.book(translation, b), c) }
+    }
+    fun goalMet() = io.github.graviton94.todaybible.core.Goal.met(dailyGoal, todayVerses(), todayChapters())
+
+    /** 다음 판화: 지금 권에서 이 장 뒤로 가장 가까운 것, 없으면 가장 많이 쓴 (아직 다 안 찬) 것. 남은 절 수와 함께. */
+    fun nextPlate(): Pair<io.github.graviton94.todaybible.data.Plate, Int>? {
+        val p = progress
+        fun left(pl: io.github.graviton94.todaybible.data.Plate): Int { val t = store.book(translation, pl.book); return t.fillable(pl.chapter).count { !p.isFilled(translation, VerseKey(pl.book, pl.chapter, it)) } }
+        val open = store.plates.filter { !locked(it.book) && left(it) > 0 }
+        val here = open.filter { it.book == book && it.chapter >= chapter }.minByOrNull { it.chapter }
+        val pick = here ?: open.maxByOrNull { p.chapterFraction(translation, store.book(translation, it.book), it.chapter) } ?: return null
+        return pick to left(pick)
+    }
+
     fun setReminder(h: Int) { reminderHour = h; store.reminderHour = h; io.github.graviton94.todaybible.data.Reminder.schedule(store.context, h) }
 
     /** 절(들)을 채움. 장을 다 채우면 finished, 새 발자취가 생기면 award. */
@@ -77,7 +119,9 @@ class AppState(val store: Store) {
         if (store.startDay < 0) store.startDay = day
         store.append(new); fills.addAll(new); widgets()
         val t = text()
+        val wasMet = io.github.graviton94.todaybible.core.Goal.met(dailyGoal, todayVerses() - new.size, 0)
         if (progress.chapterDone(tr, t, chapter)) finished = book to chapter
+        else if (!wasMet && goalMet()) toast = store.context.getString(io.github.graviton94.todaybible.R.string.goal_done)
         else if (mode != Mode.TYPE) toast = store.context.getString(io.github.graviton94.todaybible.R.string.filled_n, new.size)
         checkMilestones()
     }
@@ -120,6 +164,7 @@ class AppState(val store: Store) {
         if (store.startDay < 0) store.startDay = days.first().toEpochDay()
         store.append(new); fills.addAll(new)
         checkMilestones(); award = null
+        onboarded = true; store.onboarded = true; opening = false
         open(40, 3); page = 0
     }
 

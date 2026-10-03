@@ -1,6 +1,6 @@
-# 판화 → 장면이 나오는 장. 이름<TAB>권(osis)<TAB>장<TAB>제목(한)<TAB>제목(영)
-noah	Gen	7	홍수	The Deluge
-moses_sea	Exod	14	홍해	The Egyptians Drowned in the Red Sea
-nativity	Luke	2	목자들의 경배	The Adoration of the Shepherds
-prodigal	Luke	15	돌아온 아들	The Prodigal Son
-sermon	Matt	5	산상수훈	The Sermon on the Mount
+# 판화 → 장면이 나오는 장. 이름<TAB>권(osis)<TAB>장<TAB>제목(한)<TAB>제목(영)<TAB>장면의 절<TAB>출처(한)<TAB>출처(영)
+noah	Gen	7	홍수	The Deluge	23	귀스타브 도레 · 『성경』 판화, 1866	Gustave Doré · La Sainte Bible, 1866
+moses_sea	Exod	14	홍해	The Egyptians Drowned in the Red Sea	28	귀스타브 도레 · 『성경』 판화, 1866	Gustave Doré · La Sainte Bible, 1866
+nativity	Luke	2	목자들의 경배	The Adoration of the Shepherds	16	작자 미상 · 러시아 화보 잡지 판화, 1886	Unknown engraver · Zhivopisnoye obozreniye, 1886
+prodigal	Luke	15	돌아온 아들	The Prodigal Son	20	귀스타브 도레 · 『성경』 판화, 1866	Gustave Doré · La Sainte Bible, 1866
+sermon	Matt	5	산상수훈	The Sermon on the Mount	1	귀스타브 도레 · 『성경』 판화, 1866	Gustave Doré · La Sainte Bible, 1866
