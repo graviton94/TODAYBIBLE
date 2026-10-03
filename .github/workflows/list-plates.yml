@@ -53,6 +53,7 @@ jobs:
                   if "continue" not in r: break
                   off=r["continue"]["sroffset"]
           # 크기 · 설명
+          import os; os.makedirs("art/dore", exist_ok=True)
           titles=sorted(seen)
           out=open("art/dore/list.tsv","w")
           out.write("# title\tsource\twidth\theight\n")
