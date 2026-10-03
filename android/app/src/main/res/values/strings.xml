@@ -358,4 +358,8 @@
     <string name="feedback_bad_label">[Hard or confusing]</string>
     <string name="feedback_good_label">[Liked]</string>
     <string name="feedback_subject">Today Bible feedback</string>
+    <string name="mybook">My Bible</string>
+    <string name="mybook_named">%1$s\'s Bible</string>
+    <string name="mybook_count">%1$s verses copied · %2$s%% of the whole Bible</string>
+    <string name="aloud_big_setting">Large single line while reading</string>
 </resources>

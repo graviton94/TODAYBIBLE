@@ -355,5 +355,9 @@
   "feedback_send": {"en": "Send by KakaoTalk, message …", "ko": "카카오톡 · 문자로 보내기"},
   "feedback_bad_label": {"en": "[Hard or confusing]", "ko": "[불편했던 점]"},
   "feedback_good_label": {"en": "[Liked]", "ko": "[좋았던 점]"},
-  "feedback_subject": {"en": "Today Bible feedback", "ko": "하루의 성경 의견"}
+  "feedback_subject": {"en": "Today Bible feedback", "ko": "하루의 성경 의견"},
+  "mybook": {"en": "My Bible", "ko": "나의 성경"},
+  "mybook_named": {"en": "%1$s's Bible", "ko": "%1$s님의 성경"},
+  "mybook_count": {"en": "%1$s verses copied · %2$s%% of the whole Bible", "ko": "%1$s절 옮겨 썼어요 · 온 성경의 %2$s%%"},
+  "aloud_big_setting": {"en": "Large single line while reading", "ko": "읽을 때 큰 글씨 한 줄로"}
 }

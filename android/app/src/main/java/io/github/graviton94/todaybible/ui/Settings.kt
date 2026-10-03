@@ -262,6 +262,9 @@ private fun GuideVoiceSettings(s: AppState) {
     var ready by remember(guide) { mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(guide) { guide.whenReady { main.post { list = guide.voices; ready = true } } }
     Text(stringResource(R.string.guide_toggle), style = Theme.small())
+    // 읽는 빠르기 · 큰 글씨 한 줄
+    UnderlineTabs(listOf(stringResource(R.string.aloud_slow), stringResource(R.string.aloud_normal), stringResource(R.string.aloud_fast)), s.aloudSpeed) { s.chooseAloudSpeed(it) }
+    ChoiceRow(stringResource(R.string.aloud_big_setting), s.aloudBig) { s.flipAloudBig() }
     if (ready && list.isEmpty()) {
         Text(stringResource(R.string.guide_none), style = Theme.small())
         BookButton(stringResource(R.string.guide_install), Modifier.fillMaxWidth(), quiet = true) {

@@ -25,6 +25,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -68,6 +69,7 @@ fun HomePage(s: AppState) {
             Text(stringResource(when { h in 4..11 -> R.string.hi_morning; h in 12..17 -> R.string.hi_day; else -> R.string.hi_evening }, s.ownerName),
                 style = Theme.title(k), maxLines = 1)
         }
+        MyBookCard(s)
         // 오늘의 분량
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
             val goal = s.effectiveGoal()
@@ -203,5 +205,31 @@ fun PlanSheet(s: AppState) {
             }
         }
         BookButton(stringResource(R.string.plan_none), Modifier.fillMaxWidth(), quiet = true) { s.choosePlan(null) }
+    }
+}
+
+/**
+ * 나의 성경 한 권: 앱이 바라는 단 하나. 표지 가죽 색 작은 책과 지금까지 옮긴 절 · 온 성경 가운데 얼마인지.
+ * 누르면 서재로.
+ */
+@Composable
+private fun MyBookCard(s: AppState) {
+    val c = Theme.c; val k = s.korean
+    val filled = s.progress.filled(s.translation).size
+    val total = s.translation.total
+    val frac = (filled.toFloat() / total).coerceIn(0f, 1f)
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).clickable(role = Role.Button) { s.page = 2 }
+        .padding(Tokens.Space.s4), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+        // 작은 가죽 책: 금박 테 · 채운 만큼 아래에서 금빛이 차오름
+        Box(Modifier.size(Tokens.Size.bookW, Tokens.Size.bookH).clip(RoundedCornerShape(Tokens.Radius.chip)).background(s.coverColor())
+            .drawBehind {
+                drawRect(c.gilt.copy(alpha = Tokens.Alpha.shine), Offset(0f, size.height * (1f - frac)), Size(size.width, size.height * frac))
+                giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = true)
+            }, contentAlignment = Alignment.Center) { StampMark(STAMP_CROSS, c.gilt, Modifier.size(Tokens.Size.iconSm)) }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+            Text(if (s.ownerName.isNotBlank()) stringResource(R.string.mybook_named, s.ownerName) else stringResource(R.string.mybook), style = Theme.title(k), maxLines = 1)
+            Text(stringResource(R.string.mybook_count, "%,d".format(filled), "%.1f".format(frac * 100)), style = Theme.small().copy(color = c.inkSoft), maxLines = 1)
+            Box(Modifier.fillMaxWidth().height(Tokens.Stroke.rule).background(c.hair)) { Box(Modifier.fillMaxWidth(frac.coerceAtLeast(0.01f)).height(Tokens.Stroke.rule).background(c.gilt)) }
+        }
     }
 }

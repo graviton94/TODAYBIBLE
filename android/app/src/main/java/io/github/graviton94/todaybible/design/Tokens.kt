@@ -81,6 +81,8 @@ object Tokens {
         val aloudBars = 84.dp
         val gridCell = 34.dp
         val narrButton = 96.dp
+        val bookW = 44.dp
+        val bookH = 60.dp
     }
     object Text {
         val verse = 21.sp

@@ -358,4 +358,8 @@
     <string name="feedback_bad_label">[불편했던 점]</string>
     <string name="feedback_good_label">[좋았던 점]</string>
     <string name="feedback_subject">하루의 성경 의견</string>
+    <string name="mybook">나의 성경</string>
+    <string name="mybook_named">%1$s님의 성경</string>
+    <string name="mybook_count">%1$s절 옮겨 썼어요 · 온 성경의 %2$s%%</string>
+    <string name="aloud_big_setting">읽을 때 큰 글씨 한 줄로</string>
 </resources>

@@ -480,15 +480,8 @@ private fun NarrationBanner(s: AppState, loading: Boolean, failed: Boolean) {
 /** 낭독 위: 함께 읽기 · 혼자 읽기, 빠르기 (천천히 · 보통 · 빠르게). */
 @Composable
 private fun AloudControls(s: AppState, guideReady: Boolean) {
-    val c = Theme.c
-    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        if (guideReady) UnderlineTabs(listOf(stringResource(R.string.resp_mode), stringResource(R.string.listen_mode), stringResource(R.string.guide_alone)), s.aloudMode) { s.chooseAloudMode(it) }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            UnderlineTabs(listOf(stringResource(R.string.aloud_slow), stringResource(R.string.aloud_normal), stringResource(R.string.aloud_fast)), s.aloudSpeed, Modifier.weight(1f)) { s.chooseAloudSpeed(it) }
-            Text(stringResource(R.string.aloud_big), style = Theme.small().copy(color = if (s.aloudBig) c.rubric else c.inkSoft), maxLines = 1,
-                modifier = Modifier.padding(start = Tokens.Space.s3).heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Switch) { s.flipAloudBig() })
-        }
-    }
+    // 화면에는 읽는 방식만. 빠르기 · 큰 글씨는 설정 › 낭독으로 (처음엔 보통 · 큰 글씨)
+    if (guideReady) UnderlineTabs(listOf(stringResource(R.string.resp_mode), stringResource(R.string.listen_mode), stringResource(R.string.guide_alone)), s.aloudMode) { s.chooseAloudMode(it) }
 }
 
 /**
