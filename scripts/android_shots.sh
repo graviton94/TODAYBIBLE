@@ -101,6 +101,18 @@ open --es tb.finished 1:7 --es tb.reflect "'물이 걷히고 다시 시작하게
 adb shell input tap 540 1810; sleep 3; swipe_up;                   shot g10_finished_reflect 2
 open --es tb.listen "41:3" --ez tb.listenPlay true;                shot g11_listen_controls 6
 adb shell am startservice -a stop -n $P/.data.ListenService >/dev/null 2>&1 || true
+# 기도 · 한영 대조 · 낭독 받아 두기 · 태블릿
+open --es tb.prayer morning;                                       shot h11_prayer_morning 4
+swipe_up;                                                          shot h12_prayer_more 2
+open --ez tb.prayers true --ei tb.page 1;                          shot h13_prayer_list 4
+open --es tb.prayer lords --ef tb.scale 1.6;                       shot h14_prayer_huge 4
+open --es tb.listen "43:3" --ez tb.parallel true --ef tb.scale 1.0; shot h15_parallel 4
+open --es tb.listen "43:3" --ez tb.parallel false;                 sleep 1
+open --ei tb.picker 19;                                            shot h16_keep_narration 4
+adb shell wm size 1600x2560; adb shell wm density 320
+open --ei tb.page 2 --ei tb.copyTab 2;                             shot h17_tablet_hand 5
+open --ei tb.page 0;                                               shot h18_tablet_today 4
+adb shell wm size reset; adb shell wm density reset
 # 아주 크게 (B3): 새 화면들을 큰 글씨로
 open --ef tb.scale 1.6 --ez tb.seed true;                          shot x06_huge_today 5
 open --ef tb.scale 1.6 --es tb.today 2026-10-04 --ez tb.sermonOpen true; shot x07_huge_sermon 4

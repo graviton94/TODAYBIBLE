@@ -200,7 +200,7 @@ class AppState(val store: Store) {
     var prayerOpen by mutableStateOf<String?>(null)
     var prayersOpen by mutableStateOf(false)
     var prayerReminder by mutableIntStateOf(store.prayerReminder)
-    fun setPrayerReminder(m: Int) { prayerReminder = m; store.prayerReminder = m; Thread { io.github.graviton94.todaybible.data.PrayerReminder.schedule(store.context) }.start() }
+    fun choosePrayerReminder(m: Int) { prayerReminder = m; store.prayerReminder = m; Thread { io.github.graviton94.todaybible.data.PrayerReminder.schedule(store.context) }.start() }
     private var prayedIds by mutableStateOf(store.prayedOn(java.time.LocalDate.now().toEpochDay()))
     fun prayed(id: String) = id in prayedIds && store.prayedOn(today().toEpochDay()).contains(id)
     fun markPrayed(id: String) { val d = today().toEpochDay(); prayedIds = store.prayedOn(d) + id; store.setPrayed(d, prayedIds) }

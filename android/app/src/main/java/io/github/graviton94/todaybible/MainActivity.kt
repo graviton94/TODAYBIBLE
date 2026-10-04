@@ -163,6 +163,9 @@ class MainActivity : ComponentActivity() {
             io.github.graviton94.todaybible.data.ListenService.start(this, b, c, 1, s.aloudRate())
             android.os.Handler(mainLooper).postDelayed({ io.github.graviton94.todaybible.data.ListenService.setTimer(this, 30) }, 2500)
         }
+        i.getStringExtra("tb.prayer")?.let { s.prayerOpen = it }
+        if (i.getBooleanExtra("tb.prayers", false)) s.prayersOpen = true
+        if (i.hasExtra("tb.parallel") && s.parallel != i.getBooleanExtra("tb.parallel", false)) s.flipParallel()
         if (i.getBooleanExtra("tb.sermonOpen", false)) s.sermonOpen = s.today().toEpochDay()
         i.getStringExtra("tb.reflect")?.let { t -> s.finished?.let { (b, c) -> s.setReflection(b, c, t) } }
         s.toast = i.getIntExtra("tb.toast", 0).takeIf { it > 0 }?.let { getString(R.string.filled_n, it) }
