@@ -77,10 +77,10 @@ fun FinishedPage(s: AppState, book: Int, chapter: Int, lifted: Boolean = false) 
             else Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                 // 판화 설명: 제목 · 그 장면의 말씀 · 출처
                 val t = s.store.book(s.translation, plate.book)
-                Text(if (k) plate.ko else plate.en, style = Theme.title(k).copy(textAlign = TextAlign.Center))
+                Text(s.plateName(plate), style = Theme.title(k).copy(textAlign = TextAlign.Center))
                 Text(Markup.plain(t.verse(plate.chapter, plate.verse)), style = Theme.body().copy(textAlign = TextAlign.Center))
                 Text("${s.bookName(plate.book)} ${plate.chapter}:${plate.verse}", style = Theme.small().copy(color = c.rubric))
-                Text(if (k) plate.byKo else plate.byEn, style = Theme.small().copy(textAlign = TextAlign.Center))
+                Text(s.plateBy(plate), style = Theme.small().copy(textAlign = TextAlign.Center))
             }
         } else {
             Box(Modifier.padding(vertical = Tokens.Space.s5).size(Tokens.Size.emblem)) { StampMark(STAMP_CROSS, c.gilt, Modifier.fillMaxSize()) }
@@ -95,7 +95,7 @@ fun FinishedPage(s: AppState, book: Int, chapter: Int, lifted: Boolean = false) 
         }
         val ctx = LocalContext.current
         if (plate != null && veil.value >= 1f) BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
-            Cards.share(s, ctx, Cards.plate(ctx, k, plate.id, if (k) plate.ko else plate.en, if (k) "${s.bookName(book)} ${chapter}장" else "${s.bookName(book)} $chapter"), "plate")
+            Cards.share(s, ctx, Cards.plate(ctx, k, plate.id, s.plateName(plate), s.chapterRef(book, chapter)), "plate")
         }
         BookButton(stringResource(R.string.close), Modifier.fillMaxWidth(), quiet = true) { close() }
     }
@@ -132,7 +132,7 @@ private fun PlateUnderVeil(s: AppState, p: Plate, t: Float, modifier: Modifier) 
                 if (t > 0f) drawRect(c.shade, Offset(0f, h + y), Size(w, Tokens.Size.edgeShade.toPx() * (1f - t)))
             },
     ) {
-        if (img != null) Image(img, if (s.korean) p.ko else p.en, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+        if (img != null) Image(img, s.plateName(p), Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
     }
 }
 

@@ -68,8 +68,6 @@ import io.github.graviton94.todaybible.design.Theme
 import io.github.graviton94.todaybible.design.Tokens
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 /**
  * 여는 순간 (F1): 가죽 표지에 금박 테가 그어지고 · 제목에 빛이 한 번 스친 뒤 · 표지가 왼쪽을 축으로 넘어가며
@@ -103,7 +101,7 @@ fun Opening(s: AppState, onDone: () -> Unit) {
                 drawLine(c.gilt, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.giltFine.toPx())
                 drawLine(c.gilt, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.giltFine.toPx())
             })
-            Text(s.today().format(DateTimeFormatter.ofPattern(if (k) "yyyy년 M월 d일 EEEE" else "EEEE, d MMMM yyyy", if (k) Locale.KOREAN else Locale.ENGLISH)), style = Theme.small())
+            Text(fmtDate(R.string.fmt_date_full, s.today()), style = Theme.small())
             Text(Markup.plain(t.verse(s.chapter, v)), style = Theme.body().copy(textAlign = TextAlign.Center), maxLines = 4, overflow = TextOverflow.Ellipsis)
             Text("${s.bookName()} ${s.chapter}:$v", style = Theme.small().copy(color = c.rubric))
         }
@@ -232,7 +230,7 @@ private fun FirstReading(s: AppState, onRead: () -> Unit) {
         val r = android.speech.SpeechRecognizer.createSpeechRecognizer(ctx); var alive = true; var base = ""
         fun intent() = android.content.Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
             .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, if (k) "ko-KR" else "en-US")
+            .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, s.speechTag)
             .putExtra(android.speech.RecognizerIntent.EXTRA_PARTIAL_RESULTS, true).putExtra(android.speech.RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
         r.setRecognitionListener(object : android.speech.RecognitionListener {
             override fun onPartialResults(b: android.os.Bundle?) { b?.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION)?.firstOrNull()?.let { heard = "$base $it" } }
@@ -356,7 +354,7 @@ private fun WelcomeArt(s: AppState, i: Int) {
             Row(Modifier.clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leaf).padding(Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                 Box(Modifier.size(Tokens.Size.iconMd).clip(CircleShape).background(c.leather), contentAlignment = Alignment.Center) { StampMark(STAMP_CROSS, c.gilt, Modifier.size(Tokens.Size.lock)) }
                 val t = s.store.book(s.translation, 18)
-                Column { Text(if (k) "${s.bookName(18)} 23:1" else "${s.bookName(18)} 23:1", style = Theme.small().copy(color = c.ink)); Text(Markup.plain(t.verse(23, 1)), style = Theme.small(), maxLines = 2) }
+                Column { Text("${s.bookName(18)} 23:1", style = Theme.small().copy(color = c.ink)); Text(Markup.plain(t.verse(23, 1)), style = Theme.small(), maxLines = 2) }
             }
         }
     }

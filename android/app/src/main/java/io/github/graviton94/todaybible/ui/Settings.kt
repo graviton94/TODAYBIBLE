@@ -105,7 +105,7 @@ fun SettingsPage(s: AppState) {
                 if (on) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     val h = s.reminderHour
                     BookButton("−", Modifier.width(Tokens.Size.touch), quiet = true) { turnOn((h + 23) % 24) }
-                    Text(hourLabel(h, s.korean), style = Theme.title(s.korean), textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+                    Text(fmtDate(R.string.fmt_hour, java.time.LocalTime.of(h, 0)), style = Theme.title(s.korean), textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
                     BookButton("+", Modifier.width(Tokens.Size.touch), quiet = true) { turnOn((h + 1) % 24) }
                 }
             }
@@ -182,7 +182,7 @@ fun SettingsPage(s: AppState) {
                     Text(stringResource(R.string.backup_drive_note), style = Theme.small())
                 } else {
                     val last = if (at > 0) java.time.Instant.ofEpochMilli(at).atZone(java.time.ZoneId.systemDefault())
-                        .format(java.time.format.DateTimeFormatter.ofPattern(if (s.korean) "M월 d일 H:mm" else "d MMM H:mm")) else "–"
+                        .let { Lang.date(ctx0, R.string.fmt_md_time, it) } else "–"
                     Text(stringResource(R.string.backup_on, last), style = Theme.small().copy(color = c.inkSoft))
                     Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                         BookButton(stringResource(R.string.backup_now), Modifier.weight(1f), quiet = true) { keepNow(where) }
@@ -371,10 +371,6 @@ private fun Feedback(s: AppState) {
     }
 }
 
-/** 정각 시각 이름: 오전 7시 · 오후 9시 · 밤 12시 (7 a.m.). */
-fun hourLabel(h: Int, korean: Boolean): String =
-    if (korean) when (h) { 0 -> "밤 12시"; 12 -> "낮 12시"; in 1..11 -> "오전 ${h}시"; else -> "오후 ${h - 12}시" }
-    else when (h) { 0 -> "12 a.m."; 12 -> "12 p.m."; in 1..11 -> "$h a.m."; else -> "${h - 12} p.m." }
 
 /** 설정 맨 아래 한 줄 묶음: 앱 소개 · 개인정보 처리방침 · 출처와 라이선스 · 문의하기, 그 아래 판 · 만든 이. */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)

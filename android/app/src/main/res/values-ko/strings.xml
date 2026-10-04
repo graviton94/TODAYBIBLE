@@ -568,4 +568,23 @@
     <string name="credit_fonts_d">Noto Serif KR, 송명, 나눔손글씨 펜, EB Garamond, IM Fell English SC, UnifrakturMaguntia — SIL Open Font License 1.1.</string>
     <string name="credit_code">오픈소스 소프트웨어</string>
     <string name="credit_code_d">Kotlin, AndroidX, Jetpack Compose — Apache License 2.0. Google Play 결제 라이브러리 — Android SDK 라이선스.</string>
+    <string name="ref_chapter">%1$s %2$d장</string>
+    <string name="speech_lang">ko-KR</string>
+    <string name="fmt_date_day">M월 d일 EEEE</string>
+    <string name="fmt_date_full">yyyy년 M월 d일 EEEE</string>
+    <string name="fmt_month">yyyy년 M월</string>
+    <string name="fmt_md">M월 d일</string>
+    <string name="fmt_ymd">yyyy. M. d</string>
+    <string name="fmt_md_time">M월 d일 H:mm</string>
+    <string name="fmt_hour">a h시</string>
+    <string name="fmt_card_time">yyyy. M. d · a h:mm</string>
+    <string name="fmt_margin_md">M.d</string>
+    <string name="group_law">율법서</string>
+    <string name="group_history">역사서</string>
+    <string name="group_poetry">시가서</string>
+    <string name="group_prophets">선지서</string>
+    <string name="group_gospels">복음서</string>
+    <string name="group_acts">사도행전</string>
+    <string name="group_epistles">서신서</string>
+    <string name="group_revelation">계시록</string>
 </resources>

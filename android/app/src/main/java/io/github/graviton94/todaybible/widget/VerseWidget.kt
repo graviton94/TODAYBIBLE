@@ -36,6 +36,7 @@ import io.github.graviton94.todaybible.design.Fonts
 import io.github.graviton94.todaybible.design.ThemeChoice
 import io.github.graviton94.todaybible.design.Tokens
 import io.github.graviton94.todaybible.ui.Cards
+import io.github.graviton94.todaybible.ui.Lang
 import io.github.graviton94.todaybible.ui.stamp
 import java.time.LocalDate
 
@@ -84,13 +85,13 @@ class VerseWidget : AppWidgetProvider() {
             val v = p.nextVerse(tr, text, ch)
             val done = fillable.count { p.isFilled(tr, io.github.graviton94.todaybible.core.VerseKey(b, ch, it)) }
             val days = p.days(); val todayN = fills.count { it.translation == tr && it.epochDay == today.toEpochDay() }
-            val name = if (korean) Canon.books[b].ko else Canon.books[b].en
+            val name = Canon.books[b].let { if (korean) it.ko else it.en }
             val phrase = LineBreak.Paragraph.copy(wordBreak = LineBreak.WordBreak.Phrase)
             return Cards.render(ctx, (wDp * d).toInt(), (hDp * d).toInt(), density) { m ->
                 val pad = Tokens.Size.widgetPad.toPx(); val w = size.width - 2 * pad
                 drawRoundRect(c.leaf, cornerRadius = CornerRadius(Tokens.Radius.page.toPx()))
                 // 머리줄
-                val head = m.measure(if (korean) "$name ${ch}장" else "${name.uppercase()} $ch", TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.fell, fontWeight = FontWeight.Bold,
+                val head = m.measure(Lang.chapterRef(ctx, tr, name, ch).uppercase(Lang.locale(tr)), TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.fell, fontWeight = FontWeight.Bold,
                     fontSize = Tokens.Text.small, letterSpacing = Tokens.Tracking.head.em, color = c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = (w * 0.7f).toInt()))
                 drawText(head, topLeft = Offset(pad, pad))
                 val count = m.measure("$done / ${fillable.size}", TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = c.inkSoft))

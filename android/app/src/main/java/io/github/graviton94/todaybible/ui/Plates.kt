@@ -51,7 +51,7 @@ fun PlatePage(s: AppState, p: Plate) {
     val f = s.plateFraction(p)
     val n = Pieces.revealed(f); val shown = remember(p.id) { Pieces.order(p.id.hashCode()) }.take(n).toSet()
     val img = rememberPlate(p.id)
-    val ref = if (k) "${s.bookName(p.book)} ${p.chapter}:${p.verse}" else "${s.bookName(p.book)} ${p.chapter}:${p.verse}"
+    val ref = "${s.bookName(p.book)} ${p.chapter}:${p.verse}"
     val backLabel = stringResource(R.string.back)
     Column(Modifier.fillMaxSize().background(c.leaf)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
@@ -69,23 +69,23 @@ fun PlatePage(s: AppState, p: Plate) {
                     for (y in 1 until Pieces.ROWS) drawLine(c.hair, Offset(0f, y * h), Offset(size.width, y * h), Tokens.Stroke.hair.toPx())
                 }
             }, contentAlignment = Alignment.Center) {
-                if (img != null) Image(img, if (k) p.ko else p.en, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                if (img != null) Image(img, s.plateName(p), Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 if (n == 0) Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                     StampMark(STAMP_CROSS, c.unwritten.copy(alpha = Tokens.Alpha.faint), Modifier.size(Tokens.Size.emblem))
                     Text(stringResource(R.string.plate_locked), style = Theme.small())
                 }
             }
-            Text(if (k) p.ko else p.en, style = Theme.title(k))
+            Text(s.plateName(p), style = Theme.title(k))
             // 그 장면의 말씀
             Column(Modifier.drawBehind { drawRect(c.rubric, Offset(0f, 0f), Size(Tokens.Stroke.rule.toPx(), size.height)) }.padding(start = Tokens.Space.s4),
                 verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                 Text(Markup.plain(t.verse(p.chapter, p.verse)), style = Theme.body())
                 Text(ref, style = Theme.small().copy(color = c.rubric))
             }
-            Text(if (k) p.byKo else p.byEn, style = Theme.small())
+            Text(s.plateBy(p), style = Theme.small())
             if (n < Pieces.COUNT) BookButton(stringResource(R.string.continue_at, s.bookName(p.book), p.chapter), Modifier.fillMaxWidth()) { s.plateView = null; s.open(p.book, p.chapter) }
             else BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
-                Cards.share(s, ctx, Cards.plate(ctx, k, p.id, if (k) p.ko else p.en, if (k) "${s.bookName(p.book)} ${p.chapter}장" else "${s.bookName(p.book)} ${p.chapter}"), "plate")
+                Cards.share(s, ctx, Cards.plate(ctx, k, p.id, s.plateName(p), s.chapterRef(p.book, p.chapter)), "plate")
             }
         }
     }

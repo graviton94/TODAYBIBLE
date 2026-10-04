@@ -33,7 +33,6 @@ import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
-import java.time.format.DateTimeFormatter
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.animateColorAsState
@@ -125,7 +124,7 @@ fun CopyPage(s: AppState) {
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                RunningHead(if (k) "${s.bookName()} ${s.chapter}장" else "${s.bookName().uppercase()} ${s.chapter}", stringResource(R.string.verse_of, doneCount, fillable.size), k,
+                RunningHead(s.chapterRef(), stringResource(R.string.verse_of, doneCount, fillable.size), k,
                     Modifier.weight(1f).clickable(role = Role.Button) { s.picker = s.book })
                 // 이 장 책갈피
                 val marked = s.isBookmarked(s.book, s.chapter)
@@ -619,7 +618,7 @@ private fun AloudTab(s: AppState, verse: Int) {
                 val r = SpeechRecognizer.createSpeechRecognizer(ctx); rec = r
                 fun intent(): Intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
                     .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE, if (k) "ko-KR" else "en-US")
+                    .putExtra(RecognizerIntent.EXTRA_LANGUAGE, s.speechTag)
                     .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
                     .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
                     .apply {

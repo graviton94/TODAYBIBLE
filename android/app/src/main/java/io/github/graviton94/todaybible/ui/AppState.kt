@@ -368,4 +368,11 @@ class AppState(val store: Store) {
         return if (ch < t.chapterCount) b to ch + 1 else if (b < 65) b + 1 to 1 else b to ch
     }
     fun bookName(b: Int = book) = if (korean) Canon.books[b].ko else Canon.books[b].en
+    /** 그림 이름 · 화가 (번역의 언어로; 이름은 자료에 두 말로 들어 있어요). */
+    fun plateName(p: io.github.graviton94.todaybible.data.Plate) = if (korean) p.ko else p.en
+    fun plateBy(p: io.github.graviton94.todaybible.data.Plate) = if (korean) p.byKo else p.byEn
+    /** 권 · 장 표기 (번역의 언어로, strings.json 의 ref_chapter). */
+    fun chapterRef(b: Int = book, ch: Int = chapter) = Lang.chapterRef(store.context, translation, bookName(b), ch)
+    /** 음성 인식 언어 (번역을 따라). */
+    val speechTag: String get() = Lang.speechTag(store.context, translation)
 }

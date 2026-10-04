@@ -57,11 +57,11 @@ class MainActivity : ComponentActivity() {
             save("widget_goal_dark", io.github.graviton94.todaybible.widget.GoalWidget().draw(this, 110, 110, true))
             save("widget_hand", io.github.graviton94.todaybible.widget.HandWidget.bitmap(this, 360, 170, false, day))
             val k = s.korean; val now = day.atTime(7, 12)
-            val ref = if (k) "${s.bookName(0)} 1:1" else "${s.bookName(0)} 1:1"
+            val ref = "${s.bookName(0)} 1:1"
             save("card_verse", io.github.graviton94.todaybible.ui.Cards.verse(this, k, ref, s.store.book(s.translation, 0).verse(1, 1), "noah", now))
             val long = s.store.book(s.translation, 18).verse(23, 4)
-            save("card_verse_long", io.github.graviton94.todaybible.ui.Cards.verse(this, k, if (k) "${s.bookName(18)} 23:4" else "${s.bookName(18)} 23:4", long, "sermon", now))
-            save("card_plate", io.github.graviton94.todaybible.ui.Cards.plate(this, k, "noah", if (k) "홍수" else "The Deluge", if (k) "${s.bookName(0)} 7장" else "${s.bookName(0)} 7", now))
+            save("card_verse_long", io.github.graviton94.todaybible.ui.Cards.verse(this, k, "${s.bookName(18)} 23:4", long, "sermon", now))
+            save("card_plate", io.github.graviton94.todaybible.ui.Cards.plate(this, k, "noah", s.plateName(s.store.plates.first { it.id == "noah" }), s.chapterRef(0, 7), now))
             save("card_milestone", io.github.graviton94.todaybible.ui.Cards.milestone(this, k, Milestone.OLIVE, io.github.graviton94.todaybible.ui.milestoneName(this, Milestone.OLIVE), io.github.graviton94.todaybible.ui.milestoneRule(this, Milestone.OLIVE), now))
             // 나의 성경 PDF (창세기, 쓴 절만 날짜)
             io.github.graviton94.todaybible.ui.MyBible.make(this, s.store, s.translation, 0).copyTo(java.io.File(dir, "my_bible.pdf"), overwrite = true)

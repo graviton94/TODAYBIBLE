@@ -128,7 +128,7 @@ private fun CalendarPanel(s: AppState, days: Set<Long>) {
             val canBack = if (yearView) month.year > first.year else month > first
             val canNext = if (yearView) month.year < today.year else month < YearMonth.from(today)
             CalArrow("‹", canBack) { month = if (yearView) month.minusYears(1) else month.minusMonths(1); picked = null }
-            Text(if (yearView) stringResource(R.string.cal_year_n, month.year) else month.atDay(1).format(DateTimeFormatter.ofPattern(if (k) "yyyy년 M월" else "MMMM yyyy", loc)),
+            Text(if (yearView) stringResource(R.string.cal_year_n, month.year) else fmtDate(R.string.fmt_month, month.atDay(1)),
                 style = Theme.head(k), textAlign = TextAlign.Center, modifier = Modifier.weight(1f), maxLines = 1)
             CalArrow("›", canNext) { month = if (yearView) month.plusYears(1).let { if (it > YearMonth.from(today)) YearMonth.from(today) else it } else month.plusMonths(1); picked = null }
         }
@@ -216,7 +216,7 @@ private fun DayVerses(s: AppState, d: LocalDate) {
     val e = d.toEpochDay()
     val byCh = s.fills.filter { it.translation == s.translation && it.epochDay == e }.groupBy { it.key.book to it.key.chapter }
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        Text(d.format(DateTimeFormatter.ofPattern(if (s.korean) "M월 d일" else "d MMM")), style = Theme.label())
+        Text(fmtDate(R.string.fmt_md, d), style = Theme.label())
         byCh.forEach { (bc, f) ->
             val vs = f.map { it.key.verse }.sorted()
             Text(stringResource(R.string.day_line, s.bookName(bc.first), bc.second, if (vs.size > 1) "${vs.first()}–${vs.last()}" else "${vs.first()}", vs.size),
@@ -297,11 +297,11 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
                 },
             contentAlignment = Alignment.Center,
         ) {
-            if (img != null) Image(img, if (k) p.ko else p.en, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+            if (img != null) Image(img, s.plateName(p), Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
             if (n == 0) Canvas(Modifier.size(Tokens.Size.icon)) { stamp(STAMP_CROSS, c.unwritten.copy(alpha = Tokens.Alpha.faint)) }
         }
         // 세 줄로 좁으니 제목 한 줄 · 조각 수 한 줄 (권 · 장은 누르면 크게 보는 화면에)
-        Text(if (k) p.ko else p.en, style = Theme.small().copy(color = c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(s.plateName(p), style = Theme.small().copy(color = c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text("$n/${Pieces.COUNT}", style = Theme.small().copy(color = if (n == Pieces.COUNT) c.giltText else c.inkSoft), maxLines = 1)
     }
 }
@@ -310,7 +310,7 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
 @Composable
 private fun MilestoneList(s: AppState, list: List<Milestone>) {
     val c = Theme.c; val ctx = LocalContext.current
-    val fmt = DateTimeFormatter.ofPattern(if (s.korean) "yyyy. M. d" else "d MMM yyyy", if (s.korean) java.util.Locale.KOREAN else java.util.Locale.ENGLISH)
+    val fmt = DateTimeFormatter.ofPattern(androidx.compose.ui.res.stringResource(R.string.fmt_ymd), java.util.Locale.getDefault())
     Column(Modifier.coach("rec_miles")) {
         list.forEach { m ->
             val day = s.earned[m]
@@ -360,7 +360,7 @@ private fun Stats(s: AppState) {
         stringResource(R.string.letters_n, "%,d".format(letters)) to stringResource(R.string.stat_letters),
         stringResource(R.string.chapters_n, chapters) to stringResource(R.string.stat_chapters),
         stringResource(R.string.days_n, longest) to stringResource(R.string.stat_longest),
-        (hour?.let { java.time.LocalTime.of(it, 0).format(DateTimeFormatter.ofPattern(if (k) "a h시" else "h a", if (k) java.util.Locale.KOREAN else java.util.Locale.ENGLISH)) } ?: "–") to stringResource(R.string.stat_hour),
+        (hour?.let { fmtDate(R.string.fmt_hour, java.time.LocalTime.of(it, 0)) } ?: "–") to stringResource(R.string.stat_hour),
         stringResource(R.string.stat_modes, pct(io.github.graviton94.todaybible.core.Mode.TYPE), pct(io.github.graviton94.todaybible.core.Mode.PAPER), pct(io.github.graviton94.todaybible.core.Mode.ALOUD)) to "",
     )
     Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
@@ -390,7 +390,7 @@ private fun MarkList(s: AppState) {
     val c = Theme.c; val k = s.korean
     var all by remember { mutableStateOf(false) }
     val list = s.marks.filter { it.translation == s.translation }.sortedByDescending { it.epochDay }
-    val fmt = java.time.format.DateTimeFormatter.ofPattern(if (k) "M월 d일" else "d MMM")
+    val fmt = java.time.format.DateTimeFormatter.ofPattern(androidx.compose.ui.res.stringResource(R.string.fmt_md), java.util.Locale.getDefault())
     Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         (if (all) list else list.take(MARKS_SHOWN)).forEach { m ->
             val v = m.key
@@ -427,7 +427,7 @@ private fun YearCard(s: AppState, year: Int) {
     val days = inYear.map { it.epochDay }.toSet()
     val topBook = inYear.groupingBy { it.key.book }.eachCount().maxByOrNull { it.value }?.key ?: 0
     val first = inYear.minBy { it.atMillis }
-    val fmt = java.time.format.DateTimeFormatter.ofPattern(if (k) "M월 d일" else "d MMM")
+    val fmt = java.time.format.DateTimeFormatter.ofPattern(androidx.compose.ui.res.stringResource(R.string.fmt_md), java.util.Locale.getDefault())
     val plates = s.store.plates.count { s.plateFraction(it) >= 1f }
     val title = if (s.ownerName.isNotBlank()) stringResource(R.string.year_title_named, s.ownerName, year) else stringResource(R.string.year_title, year)
     val big = stringResource(R.string.year_big, "%,d".format(verses))

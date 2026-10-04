@@ -568,4 +568,23 @@
     <string name="credit_fonts_d">Noto Serif KR, Song Myung, Nanum Pen Script, EB Garamond, IM Fell English SC, UnifrakturMaguntia — SIL Open Font License 1.1.</string>
     <string name="credit_code">Open-source software</string>
     <string name="credit_code_d">Kotlin, AndroidX and Jetpack Compose — Apache License 2.0. Google Play Billing Library — Android Software Development Kit License.</string>
+    <string name="ref_chapter">%1$s %2$d</string>
+    <string name="speech_lang">en-US</string>
+    <string name="fmt_date_day">EEEE, MMMM d</string>
+    <string name="fmt_date_full">EEEE, MMMM d, yyyy</string>
+    <string name="fmt_month">MMMM yyyy</string>
+    <string name="fmt_md">MMM d</string>
+    <string name="fmt_ymd">MMM d, yyyy</string>
+    <string name="fmt_md_time">MMM d, h:mm a</string>
+    <string name="fmt_hour">h a</string>
+    <string name="fmt_card_time">MMM d, yyyy · h:mm a</string>
+    <string name="fmt_margin_md">M/d</string>
+    <string name="group_law">Law</string>
+    <string name="group_history">History</string>
+    <string name="group_poetry">Poetry</string>
+    <string name="group_prophets">Prophets</string>
+    <string name="group_gospels">Gospels</string>
+    <string name="group_acts">Acts</string>
+    <string name="group_epistles">Epistles</string>
+    <string name="group_revelation">Revelation</string>
 </resources>

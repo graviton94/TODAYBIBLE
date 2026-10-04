@@ -42,8 +42,6 @@ import io.github.graviton94.todaybible.design.Palette
 import io.github.graviton94.todaybible.design.Tokens
 import java.io.File
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 /**
  * 앱 밖으로 나가는 그림 (나누기 카드 · 위젯): 앱과 같은 토큰 · 글꼴로 비트맵에 그림.
@@ -61,7 +59,7 @@ object Cards {
     private val phrase = LineBreak.Paragraph.copy(wordBreak = LineBreak.WordBreak.Phrase)
     private fun shareDensity() = Density(Tokens.Px.shareDensity, 1f)
     private fun stamp(korean: Boolean, now: LocalDateTime): String =
-        now.format(DateTimeFormatter.ofPattern(if (korean) "yyyy. M. d · a h:mm" else "d MMM yyyy · h:mm a", if (korean) Locale.KOREAN else Locale.ENGLISH))
+        Lang.date(ctx, io.github.graviton94.todaybible.R.string.fmt_card_time, now)
 
     /** 종이 + 바깥 금선 두 줄 테 (덮개와 같은 문법). */
     private fun DrawScope.paperFrame(c: Palette) {
@@ -113,7 +111,7 @@ object Cards {
         val pad = Tokens.Size.cardPad.toPx(); val width = (size.width - 2 * pad).toInt()
         val t = m.measure(buildAnnotatedString {
             withStyle(SpanStyle(color = c.inkSoft)) { append(stamp(korean, now)) }
-            withStyle(SpanStyle(color = c.giltText)) { append(if (korean) "  ·  하루의 성경" else "  ·  Today Bible") }
+            withStyle(SpanStyle(color = c.giltText)) { append("  ·  " + Lang.content(ctx, korean).getString(io.github.graviton94.todaybible.R.string.app_name)) }
         }, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardFoot, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1, overflow = TextOverflow.Ellipsis)
         drawText(t, topLeft = Offset(pad, size.height - Tokens.Size.cardPad.toPx() - t.size.height))
     }

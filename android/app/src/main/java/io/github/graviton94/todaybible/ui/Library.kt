@@ -43,11 +43,10 @@ import io.github.graviton94.todaybible.core.VerseKey
 import io.github.graviton94.todaybible.design.Theme
 import io.github.graviton94.todaybible.design.Tokens
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 private val groupNames = mapOf(
-    Group.LAW to ("율법서" to "Law"), Group.HISTORY to ("역사서" to "History"), Group.POETRY to ("시가서" to "Poetry"), Group.PROPHETS to ("선지서" to "Prophets"),
-    Group.GOSPELS to ("복음서" to "Gospels"), Group.ACTS to ("사도행전" to "Acts"), Group.EPISTLES to ("서신서" to "Epistles"), Group.REVELATION to ("계시록" to "Revelation"),
+    Group.LAW to R.string.group_law, Group.HISTORY to R.string.group_history, Group.POETRY to R.string.group_poetry, Group.PROPHETS to R.string.group_prophets,
+    Group.GOSPELS to R.string.group_gospels, Group.ACTS to R.string.group_acts, Group.EPISTLES to R.string.group_epistles, Group.REVELATION to R.string.group_revelation,
 )
 
 /** 권마다 쓴 정도 (뒤에서 셈): 다 쓴 장 · 쓴 절 · 전체 절 · 쓰다 멈춘 첫 장. */
@@ -122,7 +121,7 @@ fun LibraryPage(s: AppState) {
             }
         }
         Group.entries.filter { g -> Canon.inGroup(g).firstOrNull()?.let { (it.index >= 39) == newT } == true }.forEach { g ->
-            Text(if (k) groupNames[g]!!.first else groupNames[g]!!.second, style = Theme.small().copy(color = c.rubric))
+            Text(stringResource(groupNames.getValue(g)), style = Theme.small().copy(color = c.rubric))
             Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                 Canon.inGroup(g).forEach { b ->
                     val st = states[b.index]

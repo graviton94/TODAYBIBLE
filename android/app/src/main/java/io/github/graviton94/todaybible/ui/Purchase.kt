@@ -86,7 +86,7 @@ private fun Peek(s: AppState, b: Int) {
     val t = s.store.book(s.translation, b)
     Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper)) {
         Column(Modifier.padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            RunningHead(if (k) "${s.bookName(b)} 1장" else "${s.bookName(b).uppercase()} 1", "", k)
+            RunningHead(s.chapterRef(b, 1), "", k)
             t.fillable(1).take(3).forEach { v -> VerseText(s, v, t.verse(1, v)) }
         }
         Column(Modifier.matchParentSize().padding(top = Tokens.Size.coverW).background(c.leaf.copy(alpha = Tokens.Alpha.peek)),

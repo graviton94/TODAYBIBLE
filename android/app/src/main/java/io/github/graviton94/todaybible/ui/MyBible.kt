@@ -53,7 +53,7 @@ object MyBible {
             val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = title; textSize = 30f; color = c.ink.toArgb(); textAlign = Paint.Align.CENTER }
             cv.drawText(name, W / 2f, H * 0.42f, tp)
             val days = firstDay.values
-            val fmt = DateTimeFormatter.ofPattern("yyyy. M. d")
+            val fmt = DateTimeFormatter.ofPattern(Lang.content(ctx, tr).getString(R.string.fmt_ymd), Lang.locale(tr))
             val sub = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 10f; color = c.inkSoft.toArgb(); textAlign = Paint.Align.CENTER }
             cv.drawText(ctx.getString(R.string.my_bible_cover), W / 2f, H * 0.42f + 28f, sub)
             if (owner.isNotBlank()) cv.drawText(owner, W / 2f, H * 0.42f + 60f, TextPaint(tp).apply { textSize = 13f; color = c.giltText.toArgb() })
@@ -73,7 +73,7 @@ object MyBible {
         val head = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 7.5f; color = c.inkSoft.toArgb(); letterSpacing = 0.06f }
         val folio = TextPaint(head).apply { textAlign = Paint.Align.CENTER }
         val chap = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = black; textSize = 30f; color = c.rubric.toArgb() }
-        val md = DateTimeFormatter.ofPattern("M.d")
+        val md = DateTimeFormatter.ofPattern(Lang.content(ctx, tr).getString(R.string.fmt_margin_md), Lang.locale(tr))
         val wb = W - BIND
         val gutter = 16f; val colW = (wb - 2 * M - gutter - 26).toInt()
         fun open(): PdfDocument.Page { val p = newPage(); p.canvas.drawColor(c.leaf.toArgb()); p.canvas.translate(if (pageNo % 2 == 1) BIND.toFloat() else 0f, 0f); return p }
@@ -109,7 +109,7 @@ object MyBible {
         run {
             val p = open(); val cv = p.canvas
             val days = firstDay.values
-            val fmt = DateTimeFormatter.ofPattern("yyyy. M. d")
+            val fmt = DateTimeFormatter.ofPattern(Lang.content(ctx, tr).getString(R.string.fmt_ymd), Lang.locale(tr))
             val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 10f; color = c.inkSoft.toArgb(); textAlign = Paint.Align.CENTER }
             if (days.isNotEmpty()) {
                 val who = if (owner.isBlank()) ctx.getString(R.string.colophon_me) else ctx.getString(R.string.colophon_named, owner)
@@ -152,12 +152,12 @@ object MyBible {
         val head = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 8f; color = c.inkSoft.toArgb() }
         val num = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 9f; color = c.rubric.toArgb() }
         val rule = Paint().apply { color = c.noteLine.toArgb(); strokeWidth = 0.4f }
-        val md = DateTimeFormatter.ofPattern("M. d")
+        val md = DateTimeFormatter.ofPattern(Lang.content(ctx, tr).getString(R.string.fmt_margin_md), Lang.locale(tr))
         val gutter = 30f; val left = M + gutter; val w = W - M - left
         var pg = page(); var y = M.toFloat()
         for ((b, ch) in chapters) {
             if (y > M + 1f) { doc.finishPage(pg); pg = page(); y = M.toFloat() }
-            pg.canvas.drawText("${name(b)} ${if (korean) "${ch}장" else "$ch"}", M.toFloat(), y, head); y += 14f
+            pg.canvas.drawText(Lang.chapterRef(ctx, tr, name(b), ch), M.toFloat(), y, head); y += 14f
             for (v in io.github.graviton94.todaybible.data.Ink.verses(ctx, tr.id, b, ch)) {
                 val ink = io.github.graviton94.todaybible.data.Ink.load(io.github.graviton94.todaybible.data.Ink.file(ctx, tr.id, b, ch, v)) ?: continue
                 val line = ink.line * w

@@ -46,9 +46,7 @@ import io.github.graviton94.todaybible.core.Pieces
 import io.github.graviton94.todaybible.core.Presence
 import io.github.graviton94.todaybible.design.Theme
 import io.github.graviton94.todaybible.design.Tokens
-import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import java.util.Locale
 
 /**
  * 오늘 (첫 화면, B1): 오늘의 분량 고리 · 이어 쓸 한 절 · 이번 주 도장 · 다음 판화까지 남은 절 · 다가오는 교회력.
@@ -63,7 +61,7 @@ fun HomePage(s: AppState) {
     val verses = s.todayVerses(); val met = s.goalMet()
     val t = s.text(); val next = s.progress.nextVerse(s.translation, t, s.chapter)
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
-        RunningHead(today.format(DateTimeFormatter.ofPattern(if (k) "M월 d일 EEEE" else "EEEE, d MMMM", if (k) Locale.KOREAN else Locale.ENGLISH)),
+        RunningHead(fmtDate(R.string.fmt_date_day, today),
             if (run > 0) stringResource(R.string.day_n, run) else "", k)
         // 부를 이름이 있으면 때에 맞는 인사 한 줄
         if (s.ownerName.isNotBlank()) {
@@ -117,8 +115,8 @@ fun HomePage(s: AppState) {
                     for (i in 0 until Pieces.COUNT) if (i !in order) drawRect(c.paper.copy(alpha = Tokens.Alpha.veilPiece), Offset((i % Pieces.COLS) * w, (i / Pieces.COLS) * h), Size(w + 1f, h + 1f))
                 }) { if (img != null) Image(img, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
                 Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.next_plate, if (k) pl.ko else pl.en, left), style = Theme.label(), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(stringResource(R.string.plate_where, if (k) "${s.bookName(pl.book)} ${pl.chapter}장" else "${s.bookName(pl.book)} ${pl.chapter}", n, Pieces.COUNT), style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.next_plate, s.plateName(pl), left), style = Theme.label(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.plate_where, s.chapterRef(pl.book, pl.chapter), n, Pieces.COUNT), style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }

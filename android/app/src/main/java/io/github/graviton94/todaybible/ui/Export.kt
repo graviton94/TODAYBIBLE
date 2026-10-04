@@ -45,7 +45,7 @@ data class ExportJob(val files: List<File>, val mime: String, val title: String)
  * 인터넷으로 우리 쪽에 보내는 것은 없어요. 메일도 폰의 메일 앱이 보내요.
  */
 object Export {
-    const val FOLDER = "하루의 성경"
+    fun folder(ctx: Context) = ctx.getString(R.string.app_name)
     fun uri(ctx: Context, f: File): Uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", f)
 
     private fun sendIntent(ctx: Context, job: ExportJob): Intent {
@@ -78,7 +78,7 @@ object Export {
             val values = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, f.name)
                 put(MediaStore.MediaColumns.MIME_TYPE, mimeOf(f, job.mime))
-                put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/$FOLDER")
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/${folder(ctx)}")
             }
             val u = ctx.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return@runCatching
             ctx.contentResolver.openOutputStream(u)?.use { out -> f.inputStream().use { it.copyTo(out) } }
@@ -110,7 +110,7 @@ fun ExportSheet(s: AppState, job: ExportJob) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     var to by remember { mutableStateOf(s.store.mailTo) }
     fun close() { s.exportJob = null }
-    fun saved(n: Int) { s.toast = if (n > 0) ctx.getString(R.string.export_saved, Export.FOLDER) else ctx.getString(R.string.export_failed); if (n > 0) close() }
+    fun saved(n: Int) { s.toast = if (n > 0) ctx.getString(R.string.export_saved, Export.folder(ctx)) else ctx.getString(R.string.export_failed); if (n > 0) close() }
     val tree = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { u -> if (u != null) saved(Export.saveToTree(ctx, job, u)) }
     BookSheet({ close() }) {
         Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
