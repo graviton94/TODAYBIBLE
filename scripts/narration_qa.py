@@ -35,24 +35,31 @@ def cer(a, b):
             p, d[j] = d[j], min(d[j] + 1, d[j - 1] + 1, p + (x != y))
     return d[len(b)] / max(1, len(a))
 cache = {}
-for k in range(n):
-    v = voices[k % len(voices)]
-    b, c, vs = random.choice(keys)
-    name = f"{v}_{b:02d}_c{c:03d}.zip"
-    if name not in listed: continue
-    if name not in cache: cache[name] = urllib.request.urlopen(f"{PUBLIC}/narration/{name}", timeout=60).read()
-    z = zipfile.ZipFile(io.BytesIO(cache[name]))
-    m4a = z.read(f"{c}_{vs}.m4a")
-    tmp = tempfile.mkdtemp(); src = os.path.join(tmp, "a.m4a"); open(src, "wb").write(m4a)
-    pcm = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", src, "-f", "f32le", "-ac", "1", "-ar", "16000", "-"], capture_output=True, check=True).stdout
-    a = np.frombuffer(pcm, dtype=np.float32)
-    dur = len(a) / 16000
-    tail = float(np.sqrt(np.mean(a[-1600:] ** 2))) if len(a) > 1600 else 1.0
-    peak = float(np.abs(a).max()) if len(a) else 0.0
-    segs, _ = model.transcribe(a, language="ko", beam_size=1)
-    heard = " ".join(s.text for s in segs)
-    t = text[(b, c, vs)]
-    report["samples"].append({"voice": v, "ref": f"{b}:{c}:{vs}", "sec": round(dur, 2), "sec_per_char": round(dur / max(1, len(norm(t))), 3),
-                              "tail_rms": round(tail, 4), "peak": round(peak, 3), "cer": round(cer(t, heard), 3), "text": t, "heard": heard.strip()})
-    print(report["samples"][-1]["ref"], v, report["samples"][-1]["cer"], flush=True)
-json.dump(report, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+def save(): json.dump(report, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+save()
+try:
+  for k in range(n):
+      v = voices[k % len(voices)]
+      b, c, vs = random.choice(keys)
+      name = f"{v}_{b:02d}_c{c:03d}.zip"
+      if name not in listed: continue
+      if name not in cache:
+          req = urllib.request.Request(f"{PUBLIC}/narration/{name}", headers={"User-Agent": "Mozilla/5.0 (narration-qa)"})
+          cache[name] = urllib.request.urlopen(req, timeout=60).read()
+      z = zipfile.ZipFile(io.BytesIO(cache[name]))
+      m4a = z.read(f"{c}_{vs}.m4a")
+      tmp = tempfile.mkdtemp(); src = os.path.join(tmp, "a.m4a"); open(src, "wb").write(m4a)
+      pcm = subprocess.run(["ffmpeg", "-loglevel", "error", "-i", src, "-f", "f32le", "-ac", "1", "-ar", "16000", "-"], capture_output=True, check=True).stdout
+      a = np.frombuffer(pcm, dtype=np.float32)
+      dur = len(a) / 16000
+      tail = float(np.sqrt(np.mean(a[-1600:] ** 2))) if len(a) > 1600 else 1.0
+      peak = float(np.abs(a).max()) if len(a) else 0.0
+      segs, _ = model.transcribe(a, language="ko", beam_size=1)
+      heard = " ".join(s.text for s in segs)
+      t = text[(b, c, vs)]
+      report["samples"].append({"voice": v, "ref": f"{b}:{c}:{vs}", "sec": round(dur, 2), "sec_per_char": round(dur / max(1, len(norm(t))), 3),
+                                "tail_rms": round(tail, 4), "peak": round(peak, 3), "cer": round(cer(t, heard), 3), "text": t, "heard": heard.strip()})
+      print(report["samples"][-1]["ref"], v, report["samples"][-1]["cer"], flush=True)
+except Exception as e:
+    import traceback; report["error"] = traceback.format_exc()
+save()

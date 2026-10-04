@@ -26,9 +26,13 @@ jobs:
       - name: List bucket
         run: aws s3 ls "s3://${{ secrets.CF_R2_BUCKET }}/narration/" --endpoint-url "https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com" > list.txt; wc -l list.txt
       - name: Check
-        run: LIST=list.txt python scripts/narration_qa.py "${{ inputs.voices }}" "${{ inputs.samples }}" qa.json
-      - name: Publish result
+        continue-on-error: true
         run: |
-          mkdir pub && cp qa.json pub/ && cd pub
+          set -o pipefail
+          LIST=list.txt python scripts/narration_qa.py "${{ inputs.voices }}" "${{ inputs.samples }}" qa.json 2>&1 | tee qa.log
+      - name: Publish result
+        if: always()
+        run: |
+          mkdir pub && cp qa.log pub/ && (cp qa.json pub/ || true) && head -3 list.txt > pub/list_head.txt && wc -l < list.txt > pub/list_count.txt && cd pub
           git init -q && git checkout -q -b narration-qa && git add . && git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "narration QA"
           git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" narration-qa
