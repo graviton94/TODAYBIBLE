@@ -185,7 +185,7 @@ fun Root(s: AppState) {
         }
         if (calm) CoachOverlay(s, screen)
         if (!s.onboarded) Welcome(s)
-        else if (s.opening) Opening(s) { s.opening = false }
+        else if (s.opening) { if (s.firstOfDay) IntroCover(s) { s.opening = false } else IntroDaily(s) { s.opening = false } }
         // 토스트: 이름표 위에 잠깐
         s.toast?.let { msg ->
             LaunchedEffect(msg) { kotlinx.coroutines.delay(Tokens.Motion.toastMs.toLong()); s.toast = null }

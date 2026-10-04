@@ -669,4 +669,9 @@
     <string name="parallel_short">한 · 영</string>
     <string name="gift_code">교회에서 받은 선물 코드가 있으세요? Play에서 쓰기 ›</string>
     <string name="prayer_back">‹ 뒤로</string>
+    <string name="intro_caps">BIBLE BY HAND</string>
+    <string name="intro_cover_caps">HOLY BIBLE</string>
+    <string name="intro_tap_enter">눌러서 들어가기</string>
+    <string name="intro_tap_open">눌러서 펼치기</string>
+    <string name="intro_tap_start">눌러서 시작하기</string>
 </resources>

@@ -666,5 +666,10 @@
   "keep_wifi": {"en": "Please connect to Wi-Fi first", "ko": "와이파이에 연결한 뒤 받아 주세요"},
   "parallel_short": {"en": "KO · EN", "ko": "한 · 영"},
   "gift_code": {"en": "Got a gift code from your church? Redeem it on Google Play ›", "ko": "교회에서 받은 선물 코드가 있으세요? Play에서 쓰기 ›"},
-  "prayer_back": {"en": "‹ Back", "ko": "‹ 뒤로"}
+  "prayer_back": {"en": "‹ Back", "ko": "‹ 뒤로"},
+  "intro_caps": {"en": "BIBLE BY HAND", "ko": "BIBLE BY HAND"},
+  "intro_cover_caps": {"en": "HOLY BIBLE", "ko": "HOLY BIBLE"},
+  "intro_tap_enter": {"en": "Tap to enter", "ko": "눌러서 들어가기"},
+  "intro_tap_open": {"en": "Tap to open", "ko": "눌러서 펼치기"},
+  "intro_tap_start": {"en": "Tap to begin", "ko": "눌러서 시작하기"}
 }

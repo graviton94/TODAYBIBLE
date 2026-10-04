@@ -669,4 +669,9 @@
     <string name="parallel_short">KO · EN</string>
     <string name="gift_code">Got a gift code from your church? Redeem it on Google Play ›</string>
     <string name="prayer_back">‹ Back</string>
+    <string name="intro_caps">BIBLE BY HAND</string>
+    <string name="intro_cover_caps">HOLY BIBLE</string>
+    <string name="intro_tap_enter">Tap to enter</string>
+    <string name="intro_tap_open">Tap to open</string>
+    <string name="intro_tap_start">Tap to begin</string>
 </resources>

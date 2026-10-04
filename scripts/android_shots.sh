@@ -18,10 +18,14 @@ adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # 처음 한 번: 소개 일곱 장
 open --ez tb.reset true --es tb.theme LIGHT; sleep 15
 for i in 0 1 2; do open --ez tb.reset true --es tb.theme LIGHT --ei tb.welcomeStep $i; shot w0${i}_welcome 4; done
-# 여는 순간: 금박 테 → 빛 → 표지 넘김 → 속표지
+# 여는 순간: A 금박 새김 (매일) · C 표지 넘김 (하루 첫 열기). 눌러야 들어가요
 open --ez tb.seed true --es tb.theme LIGHT; sleep 4
-adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --ez tb.opening true >/dev/null
-sleep 0.9; snap o01_cover; sleep 0.6; snap o02_shine; sleep 0.6; snap o03_turning; sleep 0.9; snap o04_title_page
+adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro A >/dev/null
+sleep 1.2; snap o01_daily_drawing; sleep 2.6; snap o02_daily_ready
+adb shell input tap 540 1200; sleep 1.5; snap o03_daily_entered
+adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro C >/dev/null
+sleep 3; snap o04_cover; adb shell input tap 540 1200; sleep 0.7; snap o05_cover_turning; sleep 3.5; snap o06_title_page
+adb shell input tap 540 1200; sleep 1.5; snap o07_cover_entered
 # 오늘 · 필사 (책 · 노트) · 서재 · 기록
 open --es tb.owner 은혜;                                             shot h01_today 5
 swipe_up;                                                          shot h02_today_more 2
@@ -44,7 +48,7 @@ open --ez tb.settings true;                                        shot s01_sett
 swipe_up;                                                          shot s02_settings_cover 2
 open --ez tb.planSheet true;                                       shot p01_plan_sheet 4
 open --es tb.plan mark30;                                          shot p02_today_plan 5
-open --es tb.cover navy --es tb.owner 김은혜 --ez tb.opening true; sleep 2.3; snap p03_cover_navy_name
+open --es tb.cover navy --es tb.owner 김은혜 --es tb.intro C; sleep 3; snap p03_cover_navy_name
 open --es tb.plan none --es tb.cover burgundy --es tb.owner ""
 open --ei tb.page 2 --ei tb.copyTab 0;                             shot p04_aloud_mic 3
 open --ei tb.page 2 --ei tb.copyTab 0 --ez tb.voice true;          shot p05_aloud_voice 3
@@ -127,8 +131,10 @@ open --ef tb.scale 1.0
 open --es tb.theme DARK;                                           shot d01_today 5
 open --ei tb.page 2;                                               shot d02_copy_grid 4
 open --es tb.plate noah;                                           shot d04_plate 4
-adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --ez tb.opening true >/dev/null
-sleep 1.4; snap d05_opening; sleep 1.6; snap d06_opening_title
+adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro A >/dev/null
+sleep 3.8; snap d05_daily
+adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro C >/dev/null
+sleep 3; adb shell input tap 540 1200; sleep 4.2; snap d06_title_page
 open --es tb.theme LIGHT
 # 영어 (KJV): 실제로 쳐 보기
 adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null

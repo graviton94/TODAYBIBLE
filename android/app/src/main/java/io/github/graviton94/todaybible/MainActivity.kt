@@ -135,6 +135,8 @@ class MainActivity : ComponentActivity() {
         if (i.getBooleanExtra("tb.lock", false)) s.forceLock = true
         if (i.getBooleanExtra("tb.onboard", false)) { s.onboarded = false; s.store.onboarded = false }
         s.opening = i.getBooleanExtra("tb.opening", false)
+        // 여는 순간 캡처: A 금박 새김 · C 표지 넘김
+        i.getStringExtra("tb.intro")?.let { s.firstOfDay = it == "C"; s.opening = true }
         if (i.hasExtra("tb.goal")) s.setGoal(i.getIntExtra("tb.goal", 5))
         // 필사 탭: 캡처는 따로 말하지 않으면 타자로 (예전 장면 그대로)
         if (i.extras?.keySet()?.any { it.startsWith("tb.") } == true) s.store.copyTab = i.getIntExtra("tb.copyTab", 1)
