@@ -42,8 +42,8 @@ open --es tb.finished 1:7;                                         shot f01_fini
 adb shell input tap 540 1810;                                      shot f02_finished_lifted 3
 swipe_up;                                                          shot f03_finished_text 2
 open --es tb.award OLIVE;                                          shot a01_award 4
-open --ez tb.lock true --es tb.price ₩29,900 --ez tb.purchase true; shot e01_purchase_compare 4
-open --ez tb.lock true --es tb.price ₩29,900 --ei tb.peek 43;      shot e02_purchase_peek 4
+open --ez tb.lock true --es tb.price ₩14,900 --ez tb.purchase true; shot e01_purchase_compare 4
+open --ez tb.lock true --es tb.price ₩14,900 --ei tb.peek 43;      shot e02_purchase_peek 4
 open --ez tb.settings true;                                        shot s01_settings 4
 swipe_up;                                                          shot s02_settings_cover 2
 open --ez tb.planSheet true;                                       shot p01_plan_sheet 4
@@ -52,7 +52,7 @@ open --es tb.cover navy --es tb.owner 김은혜 --es tb.intro C; sleep 7; snap p
 open --es tb.plan none --es tb.cover burgundy --es tb.owner ""
 open --ei tb.page 2 --ei tb.copyTab 0;                             shot p04_aloud_mic 3
 open --ei tb.page 2 --ei tb.copyTab 0 --ez tb.voice true;          shot p05_aloud_voice 3
-open --ez tb.settings true; swipe_up; swipe_up;                    shot p06_settings_voice 2
+open --ez tb.settings true --es tb.section set_listen;              shot p06_settings_voice 3
 # 손글씨: 빈 공책 → 몇 획 그은 공책
 open --ei tb.page 2 --ei tb.copyTab 2;                             shot p07_hand_empty 3
 for st in "180 1000 300 1000" "240 960 240 1040" "200 1060 290 1080" "340 990 420 990" "380 990 370 1090" "370 1040 430 1050" "470 980 470 1100" "520 1000 620 1000" "570 960 560 1100" "520 1060 610 1060"; do adb shell input swipe $st 180; done
