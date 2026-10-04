@@ -1,0 +1,20 @@
+name: Net check
+# 낭독 음원 주소가 폰 (안드로이드 기본 UA) 에서 받아지는지 확인. 결과는 net-check 가지에.
+on: workflow_dispatch
+permissions: { contents: write }
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          B="${{ vars.CF_R2_PUBLIC_URL }}/narration"
+          {
+            for f in m5_19_c023.zip f5_43_c003.zip en_m5_43_c003.zip; do
+              for ua in "Dalvik/2.1.0 (Linux; U; Android 14; SM-S918N Build/UP1A.231005.007)" "okhttp/4.12.0" "Mozilla/5.0"; do
+                echo "$f | $ua | $(curl -s -o /dev/null -w '%{http_code} %{size_download} %{content_type}' -A "$ua" "$B/$f")"
+              done
+            done
+            echo "no UA | $(curl -s -o /dev/null -w '%{http_code}' -H 'User-Agent:' "$B/m5_19_c023.zip")"
+            curl -sI -A "Dalvik/2.1.0" "$B/m5_19_c023.zip" | head -20
+          } > out.txt 2>&1; cat out.txt
+          mkdir pub && cp out.txt pub/ && cd pub && git init -q && git checkout -q -b net-check && git add . && git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm net && git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" net-check
