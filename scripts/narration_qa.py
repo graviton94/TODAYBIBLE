@@ -26,8 +26,10 @@ print({v: len(m) for v, m in report["missing"].items()}, "of", len(chapters), fl
 
 from faster_whisper import WhisperModel  # noqa: E402
 model = WhisperModel("small", device="cpu", compute_type="int8")
-random.seed(7)
+random.seed(int(os.environ.get("SEED", "7")))
 keys = list(text)
+# 아직 올라가지 않은 장은 빼고 고름 (낭독을 만드는 중에도 표본 수를 채우게)
+have = {v: [k for k in keys if f"{v}_{k[0]:02d}_c{k[1]:03d}.zip" in listed] for v in voices}
 def norm(s): return re.sub(r"[^a-z0-9]", "", s.lower()) if english else re.sub(r"[^가-힣0-9]", "", s)
 def cer(a, b):
     a, b = norm(a), norm(b)
@@ -43,7 +45,8 @@ save()
 try:
   for k in range(n):
       v = voices[k % len(voices)]
-      b, c, vs = random.choice(keys)
+      if not have[v]: continue
+      b, c, vs = random.choice(have[v])
       name = f"{v}_{b:02d}_c{c:03d}.zip"
       if name not in listed: continue
       if name not in cache:

@@ -5,6 +5,7 @@ on:
     inputs:
       voices: { description: "voices", default: "m5,f5" }
       samples: { description: "random verses", default: "100" }
+      seed: { description: "random seed (바꾸면 다른 절들)", default: "7" }
 permissions: { contents: write }
 jobs:
   qa:
@@ -29,7 +30,7 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          LIST=list.txt python scripts/narration_qa.py "${{ inputs.voices }}" "${{ inputs.samples }}" qa.json 2>&1 | tee qa.log
+          SEED="${{ inputs.seed }}" LIST=list.txt python scripts/narration_qa.py "${{ inputs.voices }}" "${{ inputs.samples }}" qa.json 2>&1 | tee qa.log
       - name: Publish result
         if: always()
         run: |
