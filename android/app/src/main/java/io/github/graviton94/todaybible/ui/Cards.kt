@@ -58,8 +58,9 @@ object Cards {
 
     private val phrase = LineBreak.Paragraph.copy(wordBreak = LineBreak.WordBreak.Phrase)
     private fun shareDensity() = Density(Tokens.Px.shareDensity, 1f)
-    private fun stamp(korean: Boolean, now: LocalDateTime): String =
-        Lang.date(ctx, io.github.graviton94.todaybible.R.string.fmt_card_time, now)
+    /** 카드의 날짜 · 앱 이름은 본문(번역)의 언어로. */
+    private fun stamp(ctx: Context, korean: Boolean, now: LocalDateTime): String =
+        Lang.date(Lang.content(ctx, korean), io.github.graviton94.todaybible.R.string.fmt_card_time, now)
 
     /** 종이 + 바깥 금선 두 줄 테 (덮개와 같은 문법). */
     private fun DrawScope.paperFrame(c: Palette) {
@@ -102,15 +103,15 @@ object Cards {
             drawText(lay, topLeft = Offset(pad, top))
             val ref = m.measure(reference, TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.fell, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.cardRef, letterSpacing = Tokens.Tracking.head.em, color = c.rubric, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width))
             drawText(ref, topLeft = Offset(pad, top + lay.size.height + Tokens.Size.cardGap.toPx()))
-            footer(m, c, korean, now)
+            footer(ctx, m, c, korean, now)
         }
     }
 
     /** 맨 아래: 나눈 날짜와 시각 · 앱 이름. */
-    private fun DrawScope.footer(m: TextMeasurer, c: Palette, korean: Boolean, now: LocalDateTime) {
+    private fun DrawScope.footer(ctx: Context, m: TextMeasurer, c: Palette, korean: Boolean, now: LocalDateTime) {
         val pad = Tokens.Size.cardPad.toPx(); val width = (size.width - 2 * pad).toInt()
         val t = m.measure(buildAnnotatedString {
-            withStyle(SpanStyle(color = c.inkSoft)) { append(stamp(korean, now)) }
+            withStyle(SpanStyle(color = c.inkSoft)) { append(stamp(ctx, korean, now)) }
             withStyle(SpanStyle(color = c.giltText)) { append("  ·  " + Lang.content(ctx, korean).getString(io.github.graviton94.todaybible.R.string.app_name)) }
         }, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardFoot, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1, overflow = TextOverflow.Ellipsis)
         drawText(t, topLeft = Offset(pad, size.height - Tokens.Size.cardPad.toPx() - t.size.height))
@@ -136,7 +137,7 @@ object Cards {
                 drawText(t, topLeft = Offset(pad, y))
                 drawText(r, topLeft = Offset(pad, y + t.size.height + Tokens.Space.s2.toPx()))
             }
-            footer(m, c, korean, now)
+            footer(ctx, m, c, korean, now)
         }
     }
 
@@ -154,7 +155,7 @@ object Cards {
             drawText(n, topLeft = Offset(pad, top + d + Tokens.Size.cardGap.toPx()))
             val r = tm.measure(rule, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardRef, color = c.inkSoft, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1, overflow = TextOverflow.Ellipsis)
             drawText(r, topLeft = Offset(pad, top + d + Tokens.Size.cardGap.toPx() + n.size.height + Tokens.Space.s2.toPx()))
-            footer(tm, c, korean, now)
+            footer(ctx, tm, c, korean, now)
         }
     }
 
@@ -173,7 +174,7 @@ object Cards {
                 val r = tm.measure(l, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardRef, color = c.inkSoft, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 drawText(r, topLeft = Offset(pad, y)); y += r.size.height + Tokens.Space.s2.toPx()
             }
-            footer(tm, c, korean, now)
+            footer(ctx, tm, c, korean, now)
         }
     }
 
