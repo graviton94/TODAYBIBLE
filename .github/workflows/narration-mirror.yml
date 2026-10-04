@@ -1,0 +1,37 @@
+name: Narration mirror
+# 낭독 음원을 GitHub 릴리스에도 둬요 (r2.dev 가 막히는 통신망 대비). 목소리 · 구약/신약마다 릴리스 하나 (파일 1,000개 한도 안).
+# 태그: narr-<목소리>-ot / narr-<목소리>-nt  (예: narr-m5-ot). 앱은 R2 → 이 릴리스 순서로 받아요.
+on: workflow_dispatch
+permissions: { contents: write }
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        voice: [m5, f5, en_m5, en_f5]
+        part: [ot, nt]
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Download this voice and testament from R2
+        run: |
+          E="https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com"; B="s3://${{ secrets.CF_R2_BUCKET }}/narration/"
+          mkdir z
+          if [ "${{ matrix.part }}" = ot ]; then seq -f "%02g" 1 39 > books; else seq -f "%02g" 40 66 > books; fi
+          args=(--exclude "*")
+          while read bb; do args+=(--include "${{ matrix.voice }}_${bb}_c*.zip"); done < books
+          aws s3 cp "$B" z --recursive --only-show-errors --endpoint-url "$E" "${args[@]}"
+          ls z | wc -l; du -sh z
+      - name: Publish release
+        run: |
+          T="narr-${{ matrix.voice }}-${{ matrix.part }}"
+          gh release view "$T" -R "${{ github.repository }}" >/dev/null 2>&1 || gh release create "$T" -R "${{ github.repository }}" --title "낭독 ${{ matrix.voice }} ${{ matrix.part }}" --notes "앱 낭독 음원 (R2 와 같은 파일)" --latest=false
+          ls z/*.zip | xargs -n 100 gh release upload "$T" -R "${{ github.repository }}" --clobber
+          echo "assets: $(gh release view "$T" -R "${{ github.repository }}" --json assets --jq '.assets | length')"
