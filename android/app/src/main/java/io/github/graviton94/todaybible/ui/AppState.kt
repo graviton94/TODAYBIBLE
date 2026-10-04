@@ -37,7 +37,7 @@ class AppState(val store: Store) {
     /** 켤 때 표지 넘김 (처음 소개 뒤로는 매번). */
     /** 여는 순간: 켤 때마다 (동작 줄이기를 켠 폰은 빼고). 하루 첫 열기면 표지 넘김, 아니면 금박 새김. */
     var firstOfDay = store.openedDay != java.time.LocalDate.now().toEpochDay()
-    var opening by mutableStateOf(store.onboarded && android.provider.Settings.Global.getFloat(store.context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f)
+    var opening by mutableStateOf(android.provider.Settings.Global.getFloat(store.context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f)
     var dailyGoal by mutableStateOf(store.dailyGoal)
     var notebook by mutableStateOf(store.notebook)
     /** 크게 보는 판화. */

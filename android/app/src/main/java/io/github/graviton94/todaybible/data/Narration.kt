@@ -27,7 +27,13 @@ object Narration {
     fun file(ctx: Context, voice: String, book: Int, chapter: Int, verse: Int) = File(dir(ctx, voice, book), "${chapter}_$verse.m4a")
     private fun mark(ctx: Context, voice: String, book: Int, chapter: Int) = File(dir(ctx, voice, book), ".c$chapter")
     /** 이 장의 음원이 폰에 있는지. 쓸 때마다 표시를 새로 해 두어 오래 안 쓴 장부터 지워요. */
-    fun has(ctx: Context, voice: String, book: Int, chapter: Int) = mark(ctx, voice, book, chapter).let { m -> m.exists().also { if (it) m.setLastModified(System.currentTimeMillis()) } }
+    fun has(ctx: Context, voice: String, book: Int, chapter: Int): Boolean {
+        val m = mark(ctx, voice, book, chapter)
+        if (!m.exists()) return false
+        // 표시만 있고 음원이 없으면 (예전 판에서 받은 것 · 지워진 것) 다시 받게
+        if (dir(ctx, voice, book).listFiles { f -> f.name.startsWith("${chapter}_") && f.name.endsWith(".m4a") }.isNullOrEmpty()) { m.delete(); return false }
+        m.setLastModified(System.currentTimeMillis()); return true
+    }
     fun usage(ctx: Context): Long = File(ctx.filesDir, "narration").walkTopDown().filter { it.isFile }.sumOf { it.length() }
 
     /** 한 장 받기 (뒤에서 부름, 수백 KB). 받은 뒤 전체가 CAP 을 넘으면 오래 안 쓴 장부터 지워요. */
@@ -40,7 +46,7 @@ object Narration {
         if (has(ctx, voice, book, chapter)) return true
         val d = dir(ctx, voice, book); d.mkdirs()
         val name = "${voice}_%02d_c%03d.zip".format(book + 1, chapter)
-        val conn = bases.firstNotNullOfOrNull { open(URL("$it/$name")) } ?: return false
+        val conn = bases.firstNotNullOfOrNull { open(URL("$it/$name")) } ?: run { android.util.Log.w("Narration", "no source for $name (${bases.joinToString()})"); return false }
         var n = 0
         ZipInputStream(conn.inputStream.buffered()).use { z ->
             while (true) {
@@ -51,11 +57,12 @@ object Narration {
             }
         }
         conn.disconnect()
-        if (n == 0) return false
+        if (n == 0) { android.util.Log.w("Narration", "empty zip $name"); return false }
         mark(ctx, voice, book, chapter).writeText("ok")
+        android.util.Log.i("Narration", "got $name ($n files)")
         trim(ctx, keep = mark(ctx, voice, book, chapter))
         true
-    }.getOrDefault(false)
+    }.getOrElse { android.util.Log.w("Narration", "fetch $voice $book:$chapter failed", it); false }
 
     /**
      * 권 통째로 받아 두기 (I3): 인터넷 없는 곳에서도 듣게. 받아 둔 권은 자동 정리에서 빠져요.
@@ -93,7 +100,7 @@ object Narration {
             val conn = (url.openConnection() as HttpURLConnection).apply { instanceFollowRedirects = false; connectTimeout = 15_000; readTimeout = 30_000 }
             val code = conn.responseCode
             if (code in 300..399 && hops++ < 5) { url = URL(url, conn.getHeaderField("Location")); conn.disconnect(); continue }
-            if (code != 200) { conn.disconnect(); return null }
+            if (code != 200) { android.util.Log.w("Narration", "$url -> $code"); conn.disconnect(); return null }
             return conn
         }
     }

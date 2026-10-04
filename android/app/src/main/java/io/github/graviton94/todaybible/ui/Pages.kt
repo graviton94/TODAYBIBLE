@@ -184,8 +184,9 @@ fun Root(s: AppState) {
             else -> "record"
         }
         if (calm) CoachOverlay(s, screen)
-        if (!s.onboarded) Welcome(s)
-        else if (s.opening) { if (s.firstOfDay) IntroCover(s) { s.opening = false } else IntroDaily(s) { s.opening = false } }
+        // 여는 순간이 먼저, 처음 설치했으면 그다음에 첫 안내
+        if (s.opening) { if (s.firstOfDay) IntroCover(s) { s.opening = false } else IntroDaily(s) { s.opening = false } }
+        else if (!s.onboarded) Welcome(s)
         // 토스트: 이름표 위에 잠깐
         s.toast?.let { msg ->
             LaunchedEffect(msg) { kotlinx.coroutines.delay(Tokens.Motion.toastMs.toLong()); s.toast = null }
