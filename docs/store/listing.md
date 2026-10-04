@@ -82,5 +82,5 @@ Texts: King James Version (1611), Korean Revised Version (1961). Engravings: Gus
 ## 아직 채울 것
 
 - 개인정보 처리방침 주소: GitHub Pages 를 켜면 `https://graviton94.github.io/TODAYBIBLE/privacy/` (저장소 Settings › Pages › Branch: main, 폴더 /docs)
-- 문의 메일: 방침 페이지의 `{{CONTACT_EMAIL}}` 자리 (직접 넣어 주세요)
+- 문의 메일: ruahn49@gmail.com (방침 페이지 · 앱 설정 맨 아래에 표시)
 - 스토어 그림: 휴대폰 화면 8장 (한국어 · 영어 따로), 그래픽 이미지 1024×500

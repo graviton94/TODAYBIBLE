@@ -551,4 +551,21 @@
     <string name="feedback_crash_label">[오류 기록]</string>
     <string name="cal_prev">이전</string>
     <string name="cal_next">다음</string>
+    <string name="foot_about">앱 소개</string>
+    <string name="foot_privacy">개인정보 처리방침</string>
+    <string name="foot_credits">출처와 라이선스</string>
+    <string name="foot_contact">문의하기</string>
+    <string name="foot_line">하루의 성경 %1$s · © 2026 graviton94</string>
+    <string name="about_us">하루의 성경은 하루 한 장씩 소리 내어 읽고, 타자와 손글씨로 옮겨 쓰며 성경 한 권을 내 것으로 만드는 앱이에요. 계정 · 광고 · 분석 도구가 없고, 쓰신 기록은 폰 안에만 있어요. 나이와 상관없이 교회에 다니는 분들을 위해 개인 개발자가 만들었어요.</string>
+    <string name="about_contact">문의 · 제안: %1$s</string>
+    <string name="credit_text">성경 본문</string>
+    <string name="credit_text_d">개역한글(1961) — 저작권 보호 기간이 끝난 판. King James Version(1611) — 공개 도메인(영국은 왕실 특허). 본문은 CrossWire SWORD 모듈에서.</string>
+    <string name="credit_art">판화</string>
+    <string name="credit_art_d">귀스타브 도레, 성경 삽화 (1866) — 공개 도메인, Wikimedia Commons에서.</string>
+    <string name="credit_voice">낭독 목소리</string>
+    <string name="credit_voice_d">Supertone의 Supertonic 3 (OpenRAIL-M 라이선스)으로 만든 음원.</string>
+    <string name="credit_fonts">글꼴</string>
+    <string name="credit_fonts_d">Noto Serif KR, 송명, 나눔손글씨 펜, EB Garamond, IM Fell English SC, UnifrakturMaguntia — SIL Open Font License 1.1.</string>
+    <string name="credit_code">오픈소스 소프트웨어</string>
+    <string name="credit_code_d">Kotlin, AndroidX, Jetpack Compose — Apache License 2.0. Google Play 결제 라이브러리 — Android SDK 라이선스.</string>
 </resources>

@@ -548,5 +548,22 @@
   "feedback_crash": {"en": "Also send the recent error record (device and error lines only)", "ko": "최근 오류 기록도 함께 보내기 (기기 · 오류 줄만 담겨요)"},
   "feedback_crash_label": {"en": "[Error record]", "ko": "[오류 기록]"},
   "cal_prev": {"en": "Previous", "ko": "이전"},
-  "cal_next": {"en": "Next", "ko": "다음"}
+  "cal_next": {"en": "Next", "ko": "다음"},
+  "foot_about": {"en": "About", "ko": "앱 소개"},
+  "foot_privacy": {"en": "Privacy policy", "ko": "개인정보 처리방침"},
+  "foot_credits": {"en": "Sources & licenses", "ko": "출처와 라이선스"},
+  "foot_contact": {"en": "Contact", "ko": "문의하기"},
+  "foot_line": {"en": "Today Bible %1$s · © 2026 graviton94", "ko": "하루의 성경 %1$s · © 2026 graviton94"},
+  "about_us": {"en": "Today Bible helps you make the whole Bible your own, one chapter a day — reading it aloud, typing it and writing it by hand. There are no accounts, ads or analytics; what you write stays on your phone. Made by an independent developer for churchgoers of every age.", "ko": "하루의 성경은 하루 한 장씩 소리 내어 읽고, 타자와 손글씨로 옮겨 쓰며 성경 한 권을 내 것으로 만드는 앱이에요. 계정 · 광고 · 분석 도구가 없고, 쓰신 기록은 폰 안에만 있어요. 나이와 상관없이 교회에 다니는 분들을 위해 개인 개발자가 만들었어요."},
+  "about_contact": {"en": "Questions and suggestions: %1$s", "ko": "문의 · 제안: %1$s"},
+  "credit_text": {"en": "Bible texts", "ko": "성경 본문"},
+  "credit_text_d": {"en": "Korean Revised Version (개역한글, 1961) — its copyright term has ended. King James Version (1611) — public domain (Crown patent in the UK). Texts from the CrossWire SWORD modules.", "ko": "개역한글(1961) — 저작권 보호 기간이 끝난 판. King James Version(1611) — 공개 도메인(영국은 왕실 특허). 본문은 CrossWire SWORD 모듈에서."},
+  "credit_art": {"en": "Engravings", "ko": "판화"},
+  "credit_art_d": {"en": "Gustave Doré, illustrations for the Bible (1866) — public domain, via Wikimedia Commons.", "ko": "귀스타브 도레, 성경 삽화 (1866) — 공개 도메인, Wikimedia Commons에서."},
+  "credit_voice": {"en": "Narration", "ko": "낭독 목소리"},
+  "credit_voice_d": {"en": "Recorded with Supertonic 3 by Supertone, under the OpenRAIL-M license.", "ko": "Supertone의 Supertonic 3 (OpenRAIL-M 라이선스)으로 만든 음원."},
+  "credit_fonts": {"en": "Fonts", "ko": "글꼴"},
+  "credit_fonts_d": {"en": "Noto Serif KR, Song Myung, Nanum Pen Script, EB Garamond, IM Fell English SC, UnifrakturMaguntia — SIL Open Font License 1.1.", "ko": "Noto Serif KR, 송명, 나눔손글씨 펜, EB Garamond, IM Fell English SC, UnifrakturMaguntia — SIL Open Font License 1.1."},
+  "credit_code": {"en": "Open-source software", "ko": "오픈소스 소프트웨어"},
+  "credit_code_d": {"en": "Kotlin, AndroidX and Jetpack Compose — Apache License 2.0. Google Play Billing Library — Android Software Development Kit License.", "ko": "Kotlin, AndroidX, Jetpack Compose — Apache License 2.0. Google Play 결제 라이브러리 — Android SDK 라이선스."}
 }

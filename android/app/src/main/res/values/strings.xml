@@ -551,4 +551,21 @@
     <string name="feedback_crash_label">[Error record]</string>
     <string name="cal_prev">Previous</string>
     <string name="cal_next">Next</string>
+    <string name="foot_about">About</string>
+    <string name="foot_privacy">Privacy policy</string>
+    <string name="foot_credits">Sources &amp; licenses</string>
+    <string name="foot_contact">Contact</string>
+    <string name="foot_line">Today Bible %1$s · © 2026 graviton94</string>
+    <string name="about_us">Today Bible helps you make the whole Bible your own, one chapter a day — reading it aloud, typing it and writing it by hand. There are no accounts, ads or analytics; what you write stays on your phone. Made by an independent developer for churchgoers of every age.</string>
+    <string name="about_contact">Questions and suggestions: %1$s</string>
+    <string name="credit_text">Bible texts</string>
+    <string name="credit_text_d">Korean Revised Version (개역한글, 1961) — its copyright term has ended. King James Version (1611) — public domain (Crown patent in the UK). Texts from the CrossWire SWORD modules.</string>
+    <string name="credit_art">Engravings</string>
+    <string name="credit_art_d">Gustave Doré, illustrations for the Bible (1866) — public domain, via Wikimedia Commons.</string>
+    <string name="credit_voice">Narration</string>
+    <string name="credit_voice_d">Recorded with Supertonic 3 by Supertone, under the OpenRAIL-M license.</string>
+    <string name="credit_fonts">Fonts</string>
+    <string name="credit_fonts_d">Noto Serif KR, Song Myung, Nanum Pen Script, EB Garamond, IM Fell English SC, UnifrakturMaguntia — SIL Open Font License 1.1.</string>
+    <string name="credit_code">Open-source software</string>
+    <string name="credit_code_d">Kotlin, AndroidX and Jetpack Compose — Apache License 2.0. Google Play Billing Library — Android Software Development Kit License.</string>
 </resources>

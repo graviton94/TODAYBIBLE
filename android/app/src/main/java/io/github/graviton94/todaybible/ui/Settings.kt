@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -194,10 +195,8 @@ fun SettingsPage(s: AppState) {
             Group(stringResource(R.string.coach_again_h)) {
                 ChoiceRow(stringResource(R.string.coach_again), false) { s.coachReset(); s.settingsOpen = false; s.toast = ctx0.getString(R.string.coach_again_done) }
             }
-            Group(stringResource(R.string.about)) {
-                Text(stringResource(R.string.about_text), style = Theme.small())
-                Text(stringResource(R.string.app_version, BuildConfig.VERSION_NAME), style = Theme.small())
-            }
+            // 맨 아래: 여느 앱처럼 앱 소개 · 개인정보 처리방침 · 출처와 라이선스 · 문의, 판 번호
+            Footer(s)
         }
     }
 }
@@ -376,3 +375,49 @@ private fun Feedback(s: AppState) {
 fun hourLabel(h: Int, korean: Boolean): String =
     if (korean) when (h) { 0 -> "밤 12시"; 12 -> "낮 12시"; in 1..11 -> "오전 ${h}시"; else -> "오후 ${h - 12}시" }
     else when (h) { 0 -> "12 a.m."; 12 -> "12 p.m."; in 1..11 -> "$h a.m."; else -> "${h - 12} p.m." }
+
+/** 설정 맨 아래 한 줄 묶음: 앱 소개 · 개인정보 처리방침 · 출처와 라이선스 · 문의하기, 그 아래 판 · 만든 이. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun Footer(s: AppState) {
+    val c = Theme.c; val ctx = androidx.compose.ui.platform.LocalContext.current
+    var sheet by remember { mutableStateOf(0) }   // 1 앱 소개 · 2 출처와 라이선스
+    fun open(url: String) { runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)) } }
+    fun mail() {
+        val i = android.content.Intent(android.content.Intent.ACTION_SENDTO, android.net.Uri.parse("mailto:" + io.github.graviton94.todaybible.data.Links.CONTACT_EMAIL))
+            .putExtra(android.content.Intent.EXTRA_SUBJECT, ctx.getString(R.string.feedback_subject))
+        if (runCatching { ctx.startActivity(i) }.isFailure) s.toast = ctx.getString(R.string.export_no_mail)
+    }
+    Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s5), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1, Alignment.CenterHorizontally)) {
+            @Composable fun link(text: String, onClick: () -> Unit) = Text(text, style = Theme.small().copy(color = c.ink, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline), maxLines = 1,
+                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button, onClick = onClick).padding(horizontal = Tokens.Space.s2))
+            link(stringResource(R.string.foot_about)) { sheet = 1 }
+            link(stringResource(R.string.foot_privacy)) { open(io.github.graviton94.todaybible.data.Links.PRIVACY) }
+            link(stringResource(R.string.foot_credits)) { sheet = 2 }
+            link(stringResource(R.string.foot_contact)) { mail() }
+        }
+        Text(stringResource(R.string.foot_line, BuildConfig.VERSION_NAME), style = Theme.small().copy(color = c.inkSoft, textAlign = androidx.compose.ui.text.style.TextAlign.Center))
+    }
+    if (sheet != 0) BookSheet({ sheet = 0 }) {
+        Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid * 2).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            if (sheet == 1) {
+                Text(stringResource(R.string.foot_about), style = Theme.title(s.korean))
+                Text(stringResource(R.string.about_us), style = Theme.body())
+                Text(stringResource(R.string.about_contact, io.github.graviton94.todaybible.data.Links.CONTACT_EMAIL), style = Theme.body().copy(color = c.rubric),
+                    modifier = Modifier.clickable(role = Role.Button) { mail() })
+                Text(io.github.graviton94.todaybible.data.Links.SITE, style = Theme.small().copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline),
+                    modifier = Modifier.clickable(role = Role.Button) { open(io.github.graviton94.todaybible.data.Links.SITE) })
+            } else {
+                Text(stringResource(R.string.foot_credits), style = Theme.title(s.korean))
+                listOf(R.string.credit_text to R.string.credit_text_d, R.string.credit_art to R.string.credit_art_d, R.string.credit_voice to R.string.credit_voice_d,
+                    R.string.credit_fonts to R.string.credit_fonts_d, R.string.credit_code to R.string.credit_code_d).forEach { (h, d) ->
+                    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                        Text(stringResource(h), style = Theme.label())
+                        Text(stringResource(d), style = Theme.small())
+                    }
+                }
+            }
+        }
+    }
+}
