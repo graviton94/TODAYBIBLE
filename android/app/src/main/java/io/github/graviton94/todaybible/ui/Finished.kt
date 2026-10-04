@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -61,10 +62,12 @@ fun FinishedPage(s: AppState, book: Int, chapter: Int, lifted: Boolean = false) 
     val plate = s.store.plateFor(book, chapter)
     val veil = remember(book, chapter) { Animatable(if (lifted) 1f else 0f) }
     val scope = rememberCoroutineScope()
-    fun close() { s.finished = null }
+    // 마음에 남은 한 줄: 닫거나 다음 장으로 갈 때 남겨요
+    var line by remember(book, chapter) { mutableStateOf(s.reflection(book, chapter)?.text ?: "") }
+    fun close() { s.setReflection(book, chapter, line); s.finished = null }
     BackHandler { close() }
     Column(
-        Modifier.fillMaxSize().background(c.leaf).systemBarsPadding().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize().background(c.leaf).systemBarsPadding().imePadding().verticalScroll(rememberScrollState())
             .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4),
     ) {
@@ -79,12 +82,13 @@ fun FinishedPage(s: AppState, book: Int, chapter: Int, lifted: Boolean = false) 
                 val t = s.store.book(s.translation, plate.book)
                 Text(s.plateName(plate), style = Theme.title(k).copy(textAlign = TextAlign.Center))
                 Text(Markup.plain(t.verse(plate.chapter, plate.verse)), style = Theme.body().copy(textAlign = TextAlign.Center))
-                Text("${s.bookName(plate.book)} ${plate.chapter}:${plate.verse}", style = Theme.small().copy(color = c.rubric))
+                Text(stringResource(R.string.ref_verse, s.bookName(plate.book), plate.chapter, plate.verse), style = Theme.small().copy(color = c.rubric))
                 Text(s.plateBy(plate), style = Theme.small().copy(textAlign = TextAlign.Center))
             }
         } else {
             Box(Modifier.padding(vertical = Tokens.Space.s5).size(Tokens.Size.emblem)) { StampMark(STAMP_CROSS, c.gilt, Modifier.fillMaxSize()) }
         }
+        if (plate == null || veil.value >= 1f) ReflectionField(s, book, chapter, line) { line = it }
         val (nb, nc) = remember(book, chapter) { s.nextChapter(book, chapter) }
         if (plate != null && veil.value < 1f) {
             BookButton(stringResource(R.string.lift_veil), Modifier.fillMaxWidth(), enabled = !veil.isRunning) {

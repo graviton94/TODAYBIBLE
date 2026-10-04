@@ -188,6 +188,7 @@ fun MarksSheet(s: AppState) {
                     Text(stringResource(R.string.ref_verse, s.bookName(v.book), v.chapter, v.verse), style = Theme.small(), maxLines = 1)
                 }
             }
+            MemoryList(s) { s.marksOpen = false }
         }
     }
 }

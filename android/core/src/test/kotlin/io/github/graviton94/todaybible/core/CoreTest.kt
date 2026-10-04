@@ -208,4 +208,13 @@ class CoreTest {
         assertTrue(Search.find(kjv, "   ").isEmpty())
         assertEquals(3, Search.find(kjv, "the", limit = 3).size)
     }
+
+    @Test fun memorizeHidesLettersOnly() {
+        val v = "여호와는 나의 목자시니, 내가"
+        assertEquals(listOf("여호와는", "나의", "목자시니,", "내가"), Memorize.words(v, 0).map { it.shown })
+        assertEquals(listOf("여○○○", "나○", "목○○○,", "내○"), Memorize.words(v, 1).map { it.shown })
+        assertEquals(listOf("○○○○", "○○", "○○○○,", "○○"), Memorize.words(v, 2).map { it.shown })
+        assertEquals("T__", Memorize.words("The LORD", 1)[0].shown)
+        assertFalse(Memorize.words(v, 0)[0].hidden)
+    }
 }

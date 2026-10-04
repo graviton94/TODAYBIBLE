@@ -79,7 +79,10 @@ object MyBible {
         fun open(): PdfDocument.Page { val p = newPage(); p.canvas.drawColor(c.leaf.toArgb()); p.canvas.translate(if (pageNo % 2 == 1) BIND.toFloat() else 0f, 0f); return p }
         fun close(p: PdfDocument.Page) { p.canvas.drawText("${pageNo - 2}", wb / 2f, H - M / 2f, folio); doc.finishPage(p) }
         var pg = open(); var y = M.toFloat() + 14f
-        fun header(ch: Int) { pg.canvas.drawText("$name $ch", M.toFloat(), M.toFloat(), head); pg.canvas.drawLine(M.toFloat(), M + 4f, (wb - M).toFloat(), M + 4f, Paint().apply { color = c.hair.toArgb(); strokeWidth = 0.4f }) }
+        // 장마다 남긴 묵상 한 줄 (A4): 그 장 끝에 금빛 기울임으로
+        val lines = store.loadNotes().filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.REFLECTION && it.translation == tr && it.book == book }.associateBy { it.chapter }
+        val reflect = TextPaint(body).apply { textSize = 9f; color = c.giltText.toArgb(); textSkewX = -0.18f }
+        fun header(ch: Int) { pg.canvas.drawText(Lang.chapterRef(ctx, tr, name, ch), M.toFloat(), M.toFloat(), head); pg.canvas.drawLine(M.toFloat(), M + 4f, (wb - M).toFloat(), M + 4f, Paint().apply { color = c.hair.toArgb(); strokeWidth = 0.4f }) }
         header(1)
         for (ch in 1..text.chapterCount) {
             if (y > H - M - 60) { close(pg); pg = open(); header(ch); y = M + 14f }
@@ -101,6 +104,13 @@ object MyBible {
                 cv.drawText("$v", M.toFloat(), base, num.apply { textAlign = Paint.Align.LEFT })
                 firstDay[VerseKey(book, ch, v).raw]?.let { d -> cv.drawText(LocalDate.ofEpochDay(d).format(md), (wb - M).toFloat() - 18f, base, margin) }
                 y += lay.height + 5f
+            }
+            lines[ch]?.let { n ->
+                val t = "— " + n.text
+                val lay = StaticLayout.Builder.obtain(t, 0, t.length, reflect, colW).setLineSpacing(0f, 1.2f).setIncludePad(false).build()
+                if (y + lay.height > H - M) { close(pg); pg = open(); header(ch); y = M + 14f }
+                pg.canvas.save(); pg.canvas.translate(M + gutter, y + 2f); lay.draw(pg.canvas); pg.canvas.restore()
+                y += lay.height + 6f
             }
             y += 8f
         }

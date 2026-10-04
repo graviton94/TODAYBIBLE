@@ -593,5 +593,20 @@
   "listen_speed": {"en": "Speed · %1$s", "ko": "빠르기 · %1$s"},
   "listen_timer": {"en": "Sleep timer · %1$s", "ko": "잠들기 · %1$s"},
   "timer_min": {"en": "%1$d min", "ko": "%1$d분"},
-  "timer_chapter": {"en": "End of chapter", "ko": "이 장 끝까지"}
+  "timer_chapter": {"en": "End of chapter", "ko": "이 장 끝까지"},
+  "reflect_title": {"en": "One line that stayed with you (optional)", "ko": "마음에 남은 한 줄 (적지 않아도 돼요)"},
+  "reflect_hint": {"en": "A word, a thought, a prayer", "ko": "낱말 하나, 생각 하나, 짧은 기도"},
+  "memory_title": {"en": "Kept in heart", "ko": "마음에 새기는 말씀"},
+  "memory_on": {"en": "Keep in heart", "ko": "마음에 새기기"},
+  "memory_off": {"en": "Let go", "ko": "새기기 그만"},
+  "memory_added": {"en": "Kept in heart. Find it under Bookmarks.", "ko": "마음에 새기는 말씀에 담았어요. 책갈피 창에서 볼 수 있어요."},
+  "memory_removed": {"en": "Let it go from your list", "ko": "목록에서 내려놓았어요"},
+  "memory_none": {"en": "Tap a verse while reading and choose Keep in heart.", "ko": "읽다가 절을 누르고 ‘마음에 새기기’를 고르세요."},
+  "memory_hint": {"en": "Read it slowly a few times. Then hide a little and say it again.", "ko": "천천히 몇 번 읽어 보세요. 그다음 조금 가리고 다시 되뇌어요."},
+  "memory_peek": {"en": "Tap a hidden word to peek. There is no score.", "ko": "가려진 낱말은 누르면 보여요. 맞고 틀림은 없어요."},
+  "memory_hide": {"en": "Hide a little", "ko": "조금 가려 보기"},
+  "memory_more": {"en": "Hide more", "ko": "더 가려 보기"},
+  "memory_show": {"en": "Show all again", "ko": "다시 다 보기"},
+  "memory_read": {"en": "Read in context", "ko": "앞뒤 함께 읽기"},
+  "memory_remove": {"en": "Let go of this verse", "ko": "이 말씀 내려놓기"}
 }

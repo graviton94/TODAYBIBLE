@@ -167,6 +167,35 @@ class AppState(val store: Store) {
     /** 손글씨로 넘겨 보는 권. */
     var handBook by mutableStateOf<Int?>(null)
 
+    /** 마음에 새기는 말씀 (A3): 시험이 아니라 곁에 두고 되뇌는 구절. */
+    var memory by mutableStateOf(store.loadMemory())
+    var memoryOpen by mutableStateOf<io.github.graviton94.todaybible.core.VerseKey?>(null)
+    fun isMemory(k: io.github.graviton94.todaybible.core.VerseKey) = memory.any { it.translation == translation && it.key == k }
+    fun toggleMemory(k: io.github.graviton94.todaybible.core.VerseKey) {
+        memory = if (isMemory(k)) memory.filterNot { it.translation == translation && it.key == k }
+        else memory + io.github.graviton94.todaybible.data.Store.Mark(translation, k, today().toEpochDay())
+        val list = memory; Thread { runCatching { store.saveMemory(list) } }.start()
+    }
+
+    /** 묵상 한 줄 (A4) · 설교 노트 (A2). */
+    var notes by mutableStateOf(store.loadNotes())
+    private fun saveNotes(list: List<io.github.graviton94.todaybible.data.Store.Note>) { notes = list; Thread { runCatching { store.saveNotes(list) } }.start() }
+    fun reflection(b: Int, ch: Int) = notes.firstOrNull { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.REFLECTION && it.translation == translation && it.book == b && it.chapter == ch }
+    fun setReflection(b: Int, ch: Int, text: String) {
+        val t = text.trim(); val old = reflection(b, ch)
+        if (t == (old?.text ?: "")) return
+        val rest = notes.filterNot { it === old }
+        saveNotes(if (t.isEmpty()) rest else rest + io.github.graviton94.todaybible.data.Store.Note(io.github.graviton94.todaybible.data.Store.NoteKind.REFLECTION, translation, b, ch, 0, 0, today().toEpochDay(), t))
+    }
+    fun sermons() = notes.filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.SERMON }.sortedByDescending { it.epochDay }
+    fun sermonOn(day: Long) = notes.firstOrNull { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.SERMON && it.epochDay == day }
+    /** 그날의 설교 노트를 새로 쓰거나 바꿈 (하루 하나). 글이 비고 본문도 없으면 지움. */
+    fun putSermon(n: io.github.graviton94.todaybible.data.Store.Note) {
+        val rest = notes.filterNot { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.SERMON && it.epochDay == n.epochDay }
+        saveNotes(if (n.text.isBlank() && n.from == 0) rest else rest + n)
+    }
+    var sermonOpen by mutableStateOf<Long?>(null)
+
     fun isMarked(k: io.github.graviton94.todaybible.core.VerseKey) = marks.any { it.translation == translation && it.key == k }
     fun toggleMark(k: io.github.graviton94.todaybible.core.VerseKey) {
         marks = if (isMarked(k)) marks.filterNot { it.translation == translation && it.key == k }

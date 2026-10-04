@@ -596,4 +596,19 @@
     <string name="listen_timer">Sleep timer · %1$s</string>
     <string name="timer_min">%1$d min</string>
     <string name="timer_chapter">End of chapter</string>
+    <string name="reflect_title">One line that stayed with you (optional)</string>
+    <string name="reflect_hint">A word, a thought, a prayer</string>
+    <string name="memory_title">Kept in heart</string>
+    <string name="memory_on">Keep in heart</string>
+    <string name="memory_off">Let go</string>
+    <string name="memory_added">Kept in heart. Find it under Bookmarks.</string>
+    <string name="memory_removed">Let it go from your list</string>
+    <string name="memory_none">Tap a verse while reading and choose Keep in heart.</string>
+    <string name="memory_hint">Read it slowly a few times. Then hide a little and say it again.</string>
+    <string name="memory_peek">Tap a hidden word to peek. There is no score.</string>
+    <string name="memory_hide">Hide a little</string>
+    <string name="memory_more">Hide more</string>
+    <string name="memory_show">Show all again</string>
+    <string name="memory_read">Read in context</string>
+    <string name="memory_remove">Let go of this verse</string>
 </resources>

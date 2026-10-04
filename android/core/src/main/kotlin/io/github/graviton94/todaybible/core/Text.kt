@@ -71,3 +71,22 @@ object Search {
         return out
     }
 }
+
+/** 마음에 새기기 (A3): 낱말을 조금씩 가려 보며 되뇌어요. 맞고 틀림은 없어요. */
+object Memorize {
+    data class Word(val text: String, val shown: String) { val hidden get() = text != shown }
+    const val LEVELS = 3
+    /** level 0 = 다 보임 · 1 = 첫 글자만 · 2 = 자리만. 문장부호는 늘 보여요. 한글은 ○, 그 밖은 _ 로 가려요. */
+    fun words(plain: String, level: Int): List<Word> = plain.split(' ').filter { it.isNotEmpty() }.map { w ->
+        if (level <= 0) Word(w, w) else {
+            var seen = 0
+            Word(w, buildString {
+                for (ch in w) {
+                    if (!ch.isLetterOrDigit()) { append(ch); continue }
+                    seen++
+                    append(if (level == 1 && seen == 1) ch else if (ch in '가'..'힣') '○' else '_')
+                }
+            })
+        }
+    }
+}

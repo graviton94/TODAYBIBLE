@@ -226,5 +226,34 @@ class Store(val context: Context) {
         tmp.writeText(marks.joinToString("") { "${it.translation.name}\t${it.key.raw}\t${it.epochDay}\n" }); tmp.renameTo(f)
     }
 
+    /** 마음에 새기는 말씀 (번역 · 절 · 담은 날). */
+    private val memoryFile get() = java.io.File(context.filesDir, "memory.tsv")
+    fun loadMemory(): List<Mark> = readMarks(memoryFile)
+    fun saveMemory(list: List<Mark>) = writeMarks(memoryFile, list)
+
+    /**
+     * 내가 적은 글: 장마다 묵상 한 줄 (REFLECTION, 절 범위 없음) · 주일 설교 노트 (SERMON, 본문 절 범위).
+     * 한 줄 = 종류 · 번역 · 권 · 장 · 처음 절 · 끝 절 · 날 · 글 (줄바꿈은 \n 으로).
+     */
+    enum class NoteKind { REFLECTION, SERMON }
+    data class Note(val kind: NoteKind, val translation: Translation, val book: Int, val chapter: Int, val from: Int, val to: Int, val epochDay: Long, val text: String)
+    private val notesFile get() = java.io.File(context.filesDir, "notes.tsv")
+    fun loadNotes(): List<Note> = runCatching {
+        notesFile.takeIf { it.exists() }?.readLines()?.mapNotNull { l ->
+            val p = l.split('\t', limit = 8); if (p.size < 8) null
+            else runCatching { Note(NoteKind.valueOf(p[0]), Translation.valueOf(p[1]), p[2].toInt(), p[3].toInt(), p[4].toInt(), p[5].toInt(), p[6].toLong(), unescape(p[7])) }.getOrNull()
+        }.orEmpty()
+    }.getOrDefault(emptyList())
+    fun saveNotes(list: List<Note>) {
+        val tmp = java.io.File(notesFile.path + ".tmp")
+        tmp.writeText(list.joinToString("") { "${it.kind.name}\t${it.translation.name}\t${it.book}\t${it.chapter}\t${it.from}\t${it.to}\t${it.epochDay}\t${escape(it.text)}\n" }); tmp.renameTo(notesFile)
+    }
+    private fun escape(t: String) = t.replace("\\", "\\\\").replace("\n", "\\n").replace('\t', ' ').replace("\r", "")
+    private fun unescape(t: String): String {
+        val b = StringBuilder(); var i = 0
+        while (i < t.length) { val ch = t[i]; if (ch == '\\' && i + 1 < t.length) { b.append(if (t[i + 1] == 'n') '\n' else t[i + 1]); i += 2 } else { b.append(ch); i++ } }
+        return b.toString()
+    }
+
     private fun defaultTranslation() = if (java.util.Locale.getDefault().language == "ko") Translation.KRV else Translation.KJV
 }

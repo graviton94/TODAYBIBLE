@@ -95,6 +95,15 @@ fun HomePage(s: AppState) {
         }
         // 이번 주 도장 (주일부터)
         WeekStamps(s)
+        // 마음에 새기는 말씀: 날마다 하나씩 돌아가며 곁에 (누르면 되뇌기)
+        s.memory.filter { it.translation == s.translation }.sortedBy { it.key.raw }.takeIf { it.isNotEmpty() }?.let { list ->
+            val m = list[Math.floorMod(today.toEpochDay(), list.size.toLong()).toInt()].key
+            Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.memoryOpen = m }, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                Text(stringResource(R.string.memory_title), style = Theme.small().copy(color = c.rubric), maxLines = 1)
+                Text(Markup.plain(s.store.book(s.translation, m.book).verse(m.chapter, m.verse)), style = Theme.verse(k), maxLines = 3, overflow = TextOverflow.Ellipsis)
+                Text(stringResource(R.string.ref_verse, s.bookName(m.book), m.chapter, m.verse), style = Theme.small(), maxLines = 1)
+            }
+        }
         // 절기가 다가오면: 절기 읽기 계획 권하기 (한 줄)
         io.github.graviton94.todaybible.core.Plans.seasonal(today)?.takeIf { it.first != s.plan?.id }?.let { (id, start) ->
             val left = ChronoUnit.DAYS.between(today, start).toInt()

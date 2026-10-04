@@ -596,4 +596,19 @@
     <string name="listen_timer">잠들기 · %1$s</string>
     <string name="timer_min">%1$d분</string>
     <string name="timer_chapter">이 장 끝까지</string>
+    <string name="reflect_title">마음에 남은 한 줄 (적지 않아도 돼요)</string>
+    <string name="reflect_hint">낱말 하나, 생각 하나, 짧은 기도</string>
+    <string name="memory_title">마음에 새기는 말씀</string>
+    <string name="memory_on">마음에 새기기</string>
+    <string name="memory_off">새기기 그만</string>
+    <string name="memory_added">마음에 새기는 말씀에 담았어요. 책갈피 창에서 볼 수 있어요.</string>
+    <string name="memory_removed">목록에서 내려놓았어요</string>
+    <string name="memory_none">읽다가 절을 누르고 ‘마음에 새기기’를 고르세요.</string>
+    <string name="memory_hint">천천히 몇 번 읽어 보세요. 그다음 조금 가리고 다시 되뇌어요.</string>
+    <string name="memory_peek">가려진 낱말은 누르면 보여요. 맞고 틀림은 없어요.</string>
+    <string name="memory_hide">조금 가려 보기</string>
+    <string name="memory_more">더 가려 보기</string>
+    <string name="memory_show">다시 다 보기</string>
+    <string name="memory_read">앞뒤 함께 읽기</string>
+    <string name="memory_remove">이 말씀 내려놓기</string>
 </resources>

@@ -124,6 +124,10 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
                     (if (s.isMarked(key)) R.string.mark_off else R.string.mark_on) to { s.toggleMark(key) },
                     R.string.bookmark to { s.toggleBookmark(book, ch, v) },
                     R.string.share to { s.shareVerse = key },
+                    (if (s.isMemory(key)) R.string.memory_off else R.string.memory_on) to {
+                        val adding = !s.isMemory(key); s.toggleMemory(key)
+                        s.toast = ctx.getString(if (adding) R.string.memory_added else R.string.memory_removed)
+                    },
                     R.string.listen_here to { ListenService.start(ctx, book, ch, v, s.aloudRate()) },
                 ).forEach { (id, go) ->
                     Box(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Button) { go(); picked = null }, contentAlignment = Alignment.Center) {
