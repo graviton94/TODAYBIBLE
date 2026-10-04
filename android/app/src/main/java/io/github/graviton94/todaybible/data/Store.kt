@@ -193,16 +193,21 @@ class Store(val context: Context) {
 
     /** 형광펜 밑줄 (번역 · 절 · 그은 날). 파일 하나에 통째로. */
     data class Mark(val translation: Translation, val key: io.github.graviton94.todaybible.core.VerseKey, val epochDay: Long)
+    private val bookmarksFile get() = java.io.File(context.filesDir, "bookmarks.tsv")
+    fun loadBookmarks(): List<Mark> = readMarks(bookmarksFile)
+    fun saveBookmarks(list: List<Mark>) = writeMarks(bookmarksFile, list)
     private val marksFile get() = java.io.File(context.filesDir, "marks.tsv")
-    fun loadMarks(): List<Mark> = runCatching {
-        marksFile.takeIf { it.exists() }?.readLines()?.mapNotNull { l ->
+    fun loadMarks(): List<Mark> = readMarks(marksFile)
+    fun saveMarks(marks: List<Mark>) = writeMarks(marksFile, marks)
+    private fun readMarks(f: java.io.File): List<Mark> = runCatching {
+        f.takeIf { it.exists() }?.readLines()?.mapNotNull { l ->
             val p = l.split('\t'); if (p.size < 3) null
             else runCatching { Mark(Translation.valueOf(p[0]), io.github.graviton94.todaybible.core.VerseKey(p[1].toInt()), p[2].toLong()) }.getOrNull()
         }.orEmpty()
     }.getOrDefault(emptyList())
-    fun saveMarks(marks: List<Mark>) {
-        val tmp = java.io.File(marksFile.path + ".tmp")
-        tmp.writeText(marks.joinToString("") { "${it.translation.name}\t${it.key.raw}\t${it.epochDay}\n" }); tmp.renameTo(marksFile)
+    private fun writeMarks(f: java.io.File, marks: List<Mark>) {
+        val tmp = java.io.File(f.path + ".tmp")
+        tmp.writeText(marks.joinToString("") { "${it.translation.name}\t${it.key.raw}\t${it.epochDay}\n" }); tmp.renameTo(f)
     }
 
     private fun defaultTranslation() = if (java.util.Locale.getDefault().language == "ko") Translation.KRV else Translation.KJV

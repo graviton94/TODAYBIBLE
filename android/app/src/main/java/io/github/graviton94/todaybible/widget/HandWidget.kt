@@ -50,7 +50,7 @@ class HandWidget : AppWidgetProvider() {
             val hDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 150).coerceAtLeast(110)
             val views = RemoteViews(ctx.packageName, R.layout.widget_verse)
             views.setImageViewBitmap(R.id.widget_image, runCatching { bitmap(ctx, wDp, hDp, VerseWidget.dark(ctx)) }.getOrNull())
-            val open = Intent(ctx, MainActivity::class.java).putExtra("page", 1).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            val open = Intent(ctx, MainActivity::class.java).putExtra("page", io.github.graviton94.todaybible.ui.AppState.COPY).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             views.setOnClickPendingIntent(R.id.widget_image, PendingIntent.getActivity(ctx, 4, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             runCatching { m.updateAppWidget(id, views) }
         }

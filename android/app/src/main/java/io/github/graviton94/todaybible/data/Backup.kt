@@ -12,7 +12,7 @@ import java.util.zip.ZipOutputStream
  * 되살리기는 같은 파일에서. 구글 자동 백업과 따로, 손으로 간직하는 사본.
  */
 object Backup {
-    private val files = listOf("fills.tsv", "earned.tsv", "marks.tsv", "aloud.tsv")
+    private val files = listOf("fills.tsv", "earned.tsv", "marks.tsv", "aloud.tsv", "bookmarks.tsv")
     private val dirs = listOf("ink", "voice")
 
     fun write(ctx: Context, out: File): File {

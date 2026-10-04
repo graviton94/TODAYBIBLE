@@ -218,7 +218,7 @@ private fun MyBookCard(s: AppState) {
     val filled = s.progress.filled(s.translation).size
     val total = s.translation.total
     val frac = (filled.toFloat() / total).coerceIn(0f, 1f)
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).clickable(role = Role.Button) { s.page = 2 }
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).clickable(role = Role.Button) { s.page = AppState.BIBLE }
         .padding(Tokens.Space.s4), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         // 작은 가죽 책: 금박 테 · 채운 만큼 아래에서 금빛이 차오름
         Box(Modifier.size(Tokens.Size.bookW, Tokens.Size.bookH).clip(RoundedCornerShape(Tokens.Radius.chip)).background(s.coverColor())

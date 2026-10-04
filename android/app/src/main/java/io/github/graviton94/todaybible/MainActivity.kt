@@ -95,7 +95,7 @@ class MainActivity : ComponentActivity() {
         val b = i.getIntExtra("at_b", -1); val c = i.getIntExtra("at_c", -1); val v = i.getIntExtra("at_v", -1)
         s.opening = false
         if (b >= 0 && c > 0) { s.open(b, c); if (v > 0) s.target = v }
-        s.store.copyTab = 0; s.page = 1; s.aloudNow = true
+        s.store.copyTab = 0; s.page = io.github.graviton94.todaybible.ui.AppState.COPY; s.aloudNow = true
     }
 
     /**
@@ -106,7 +106,7 @@ class MainActivity : ComponentActivity() {
         i.getStringExtra("tb.today")?.let { s.fixedToday = LocalDate.parse(it) }
         if (i.extras?.keySet()?.any { it.startsWith("tb.") } == true) { s.nightOverride = i.getBooleanExtra("tb.night", false); s.checkNight() }
         i.getStringExtra("tb.mark")?.let { r -> r.split(',').forEach { v -> s.toggleMark(io.github.graviton94.todaybible.core.VerseKey(s.book, s.chapter, v.trim().toInt())) } }
-        i.getStringExtra("tb.listen")?.split(':')?.let { s.listenAt = it[0].toInt() - 1 to it[1].toInt() }
+        i.getStringExtra("tb.listen")?.split(':')?.let { s.read(it[0].toInt() - 1, it[1].toInt()) }
         if (i.hasExtra("tb.aloudMode")) s.chooseAloudMode(i.getIntExtra("tb.aloudMode", 0))
         if (i.hasExtra("tb.aloudBig")) { if (s.aloudBig != i.getBooleanExtra("tb.aloudBig", true)) s.flipAloudBig() }
         if (i.hasExtra("tb.typeView")) s.chooseTypeView(i.getIntExtra("tb.typeView", 0))

@@ -309,7 +309,7 @@ private fun MarkList(s: AppState) {
     Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         (if (all) list else list.take(MARKS_SHOWN)).forEach { m ->
             val v = m.key
-            Column(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { s.open(v.book, v.chapter); s.target = v.verse; s.page = 1 }
+            Column(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { s.open(v.book, v.chapter); s.target = v.verse; s.page = AppState.COPY }
                 .padding(vertical = Tokens.Space.s1), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                 Text(io.github.graviton94.todaybible.core.Markup.plain(s.store.book(s.translation, v.book).verse(v.chapter, v.verse)),
                     style = Theme.body().copy(background = c.mark), maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)

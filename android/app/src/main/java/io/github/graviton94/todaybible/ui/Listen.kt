@@ -1,6 +1,7 @@
 package io.github.graviton94.todaybible.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,87 +13,171 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.em
 import io.github.graviton94.todaybible.R
-import io.github.graviton94.todaybible.core.Canon
 import io.github.graviton94.todaybible.core.Markup
+import io.github.graviton94.todaybible.core.VerseKey
 import io.github.graviton94.todaybible.data.ListenService
 import io.github.graviton94.todaybible.design.Fonts
 import io.github.graviton94.todaybible.design.Theme
 import io.github.graviton94.todaybible.design.Tokens
 
 /**
- * 듣기 (책 읽어 주기): 장 전체를 한 쪽처럼 펼쳐 두고, 낭독 목소리가 절과 절 사이를 짧게 이어 읽어요.
- * 지금 읽는 절은 먹빛, 나머지는 옅게, 화면은 읽는 곳을 따라가요. 화면을 꺼도 계속 · 장이 끝나면 다음 장.
- * 듣기만 한 절은 채우지 않아요 (필사는 내가 읽어야).
+ * 성경 읽기 (웹북): 장 전체를 책처럼 펼쳐 읽고, 옆으로 밀면 앞 · 다음 장.
+ * 절을 누르면 아래에 [형광펜 · 책갈피 · 보내기 · 여기부터 듣기]. 아래 띠는 [듣기] [이 장 필사하기].
+ * 듣는 중이면 읽는 절에 붉은 줄이 서고 화면이 따라가요 (화면을 꺼도 계속 · 장이 끝나면 다음 장).
+ * 듣기 · 읽기만 한 절은 채우지 않아요 (필사는 내가 써야).
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ListenReader(s: AppState, book: Int, chapter: Int) {
+fun BibleReader(s: AppState, book: Int, chapter: Int) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     BackHandler { s.listenAt = null }
     val now by ListenService.now.collectAsState()
-    // 듣는 중이면 목소리가 있는 곳을 따라가요
-    val b = now?.book ?: book; val ch = now?.chapter ?: chapter
-    val t = s.text(b)
-    val verses = t.fillable(ch)
-    val list = rememberLazyListState()
-    LaunchedEffect(now?.verse, ch) { now?.verse?.let { v -> verses.indexOf(v).takeIf { it >= 0 }?.let { list.animateScrollToItem((it - 1).coerceAtLeast(0)) } } }
-    // 아래 쪽으로 눌림 · 밀기가 새지 않게
-    Column(Modifier.fillMaxSize().background(c.leaf).clickable(androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, null) {}.systemBarsPadding()) {
-        Box(Modifier.padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) {
-            RunningHead(stringResource(R.string.listen_head, s.bookName(b), ch), stringResource(R.string.listen_mode), k)
-        }
-        LazyColumn(state = list, modifier = Modifier.weight(1f).fillMaxWidth(),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3),
-            verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            item { ChapterInitial(ch, false, Modifier.padding(bottom = Tokens.Space.s1)) }
-            items(verses, key = { it }) { v ->
-                val here = now?.verse == v
-                Text(buildAnnotatedString {
-                    withStyle(SpanStyle(fontFamily = Fonts.black, color = c.rubric, fontSize = Tokens.Leading.verseNumber.em)) { append("$v ") }
-                    withStyle(SpanStyle(color = if (now == null || here) c.ink else c.inkSoft, background = if (here) c.mark else androidx.compose.ui.graphics.Color.Unspecified)) { append(Markup.plain(t.verse(ch, v))) }
-                }, style = Theme.verse(k), modifier = Modifier.fillMaxWidth().clickable(role = Role.Button) {
-                    // 누른 절부터 듣기
-                    ListenService.start(ctx, b, ch, v, s.aloudRate())
-                })
+    val count = s.text(book).chapterCount
+    val pager = rememberPagerState(initialPage = (chapter - 1).coerceIn(0, count - 1)) { count }
+    // 목소리가 다음 장으로 넘어가면 따라가요
+    LaunchedEffect(now?.book, now?.chapter) { now?.let { n -> if (n.book == book && n.chapter != pager.currentPage + 1) pager.animateScrollToPage(n.chapter - 1) } }
+    LaunchedEffect(chapter) { if (pager.currentPage != chapter - 1) pager.animateScrollToPage(chapter - 1) }
+    LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect { if (it + 1 != s.listenAt?.second) s.listenAt = book to it + 1 } }
+    var picked by remember(book) { mutableStateOf<Int?>(null) }
+    val ch = pager.currentPage + 1
+    LaunchedEffect(ch) { picked = null }
+    val playing = now?.let { it.book == book && it.chapter == ch } == true
+
+    Column(Modifier.fillMaxSize().background(c.leaf)) {
+        // 머리: ‹ 목록 · 권 장 (‹ ›) · 책갈피
+        Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.read_back), style = Theme.small().copy(color = c.rubric), maxLines = 1,
+                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.listenAt = null }.padding(horizontal = Tokens.Space.s2))
+            Row(Modifier.weight(1f), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                Arrow(left = true, enabled = ch > 1) { s.listenAt = book to ch - 1 }
+                Text(stringResource(R.string.listen_head, s.bookName(book), ch), style = Theme.head(k), maxLines = 1,
+                    modifier = Modifier.clickable(role = Role.Button) { s.pickToRead = true; s.picker = book }.padding(horizontal = Tokens.Space.s1))
+                Arrow(left = false, enabled = ch < count) { s.listenAt = book to ch + 1 }
+            }
+            val marked = s.isBookmarked(book, ch)
+            Row(Modifier.heightIn(min = Tokens.Size.tab).clickable(role = Role.Button) { s.toggleBookmark(book, ch, picked ?: 1) }.padding(horizontal = Tokens.Space.s2),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                Ribbon(if (marked) c.rubric else c.inkSoft, marked, Modifier.size(Tokens.Size.iconSm))
+                Text(stringResource(R.string.bookmark), style = Theme.small().copy(color = if (marked) c.rubric else c.inkSoft), maxLines = 1)
             }
         }
-        // 아래: 앞 장 · 듣기/멈추기 · 다음 장
-        Row(Modifier.fillMaxWidth().padding(Tokens.Space.s4), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            BookButton(stringResource(R.string.listen_prev), Modifier.weight(1f), quiet = true, enabled = ch > 1) {
-                s.listenAt = b to ch - 1; if (now != null) ListenService.start(ctx, b, ch - 1, 1, s.aloudRate())
-            }
-            val label = stringResource(if (now != null) R.string.listen_stop else R.string.listen_start)
-            Box(Modifier.size(Tokens.Size.emblem).clip(CircleShape).background(if (now != null) c.rubric else c.leather)
-                .semantics { contentDescription = label }.clickable(role = Role.Button) {
-                    if (now != null) ListenService.stop(ctx) else ListenService.start(ctx, b, ch, verses.firstOrNull() ?: 1, s.aloudRate())
-                }, contentAlignment = Alignment.Center) { PlayMark(c.leatherInk, now != null, Modifier.size(Tokens.Size.iconMd)) }
-            BookButton(stringResource(R.string.listen_next), Modifier.weight(1f), quiet = true, enabled = ch < Canon.books[b].chapters) {
-                s.listenAt = b to ch + 1; if (now != null) ListenService.start(ctx, b, ch + 1, 1, s.aloudRate())
+        // 장 넘김: 옆으로 확실히 밀 때만 (위아래 읽기가 먼저)
+        val base = LocalViewConfiguration.current
+        val wide = remember(base) { object : ViewConfiguration by base { override val touchSlop: Float get() = base.touchSlop * Tokens.Motion.sideSlop } }
+        CompositionLocalProvider(LocalViewConfiguration provides wide) {
+            HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth(), beyondViewportPageCount = 0) { page ->
+                CompositionLocalProvider(LocalViewConfiguration provides base) {
+                    ChapterText(s, book, page + 1, now?.takeIf { it.book == book && it.chapter == page + 1 }?.verse,
+                        picked.takeIf { page + 1 == ch }, s.readVerse.takeIf { page + 1 == chapter }) { v -> picked = if (picked == v) null else v }
+                }
             }
         }
-        Text(stringResource(R.string.listen_hint), style = Theme.small(), modifier = Modifier.padding(start = Tokens.Space.s5, end = Tokens.Space.s5, bottom = Tokens.Space.s3).heightIn(min = Tokens.Size.hiddenField))
+        // 절을 골랐으면: 형광펜 · 책갈피 · 보내기 · 여기부터 듣기
+        picked?.let { v ->
+            val key = VerseKey(book, ch, v)
+            Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s2).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leather)) {
+                listOf<Pair<Int, () -> Unit>>(
+                    (if (s.isMarked(key)) R.string.mark_off else R.string.mark_on) to { s.toggleMark(key) },
+                    R.string.bookmark to { s.toggleBookmark(book, ch, v) },
+                    R.string.share to { s.shareVerse = key },
+                    R.string.listen_here to { ListenService.start(ctx, book, ch, v, s.aloudRate()) },
+                ).forEach { (id, go) ->
+                    Box(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Button) { go(); picked = null }, contentAlignment = Alignment.Center) {
+                        Text(stringResource(id), style = Theme.small().copy(color = c.leatherInk, textAlign = androidx.compose.ui.text.style.TextAlign.Center), maxLines = 2)
+                    }
+                }
+            }
+        }
+        // 아래 띠: 듣기 · 이 장 필사하기
+        Row(Modifier.fillMaxWidth().background(c.paper).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            BookButton(stringResource(if (playing) R.string.listen_stop else R.string.listen_start), Modifier.weight(1f)) {
+                if (playing) ListenService.stop(ctx) else ListenService.start(ctx, book, ch, s.text(book).fillable(ch).firstOrNull() ?: 1, s.aloudRate())
+            }
+            BookButton(stringResource(R.string.copy_this), Modifier.weight(1f), quiet = true) { ListenService.stop(ctx); s.open(book, ch) }
+        }
     }
 }
 
+@Composable
+private fun ChapterText(s: AppState, book: Int, ch: Int, voiceAt: Int?, picked: Int?, jump: Int?, onTap: (Int) -> Unit) {
+    val c = Theme.c; val k = s.korean
+    val t = s.text(book); val verses = t.fillable(ch)
+    val list = rememberLazyListState()
+    // 첫 칸은 장 머리글자라 절 자리는 하나 뒤
+    LaunchedEffect(voiceAt) { voiceAt?.let { v -> verses.indexOf(v).takeIf { it >= 0 }?.let { list.animateScrollToItem(it) } } }
+    LaunchedEffect(jump) { jump?.let { v -> verses.indexOf(v).takeIf { it >= 0 }?.let { list.scrollToItem(it + 1); s.readVerse = null } } }
+    val filled = s.progress.filled(s.translation)
+    LazyColumn(state = list, modifier = Modifier.fillMaxSize(),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3),
+        verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        item { ChapterInitial(ch, false, Modifier.padding(bottom = Tokens.Space.s1)) }
+        items(verses, key = { it }) { v ->
+            val key = VerseKey(book, ch, v)
+            val marked = s.isMarked(key)
+            val dim = voiceAt != null && voiceAt != v
+            Text(buildAnnotatedString {
+                withStyle(SpanStyle(fontFamily = Fonts.black, color = c.rubric, fontSize = Tokens.Leading.verseNumber.em)) { append("$v ") }
+                withStyle(SpanStyle(color = if (dim) c.inkSoft else c.ink, background = if (marked) c.mark else androidx.compose.ui.graphics.Color.Unspecified)) { append(Markup.plain(t.verse(ch, v))) }
+            }, style = Theme.verse(k), modifier = Modifier.fillMaxWidth()
+                .drawBehind {
+                    // 고른 절 · 듣는 절: 왼쪽 붉은 줄 / 내가 쓴 절: 금빛 점
+                    if (v == picked || v == voiceAt) drawRect(c.rubric, Offset(-Tokens.Space.s3.toPx(), 0f), Size(Tokens.Stroke.rule.toPx(), size.height))
+                    else if (key.raw in filled) drawCircle(c.gilt, Tokens.Size.dot.toPx() / 2, Offset(-Tokens.Space.s3.toPx(), Tokens.Size.dot.toPx() * 1.5f))
+                }
+                .clickable(role = Role.Button) { onTap(v) })
+        }
+        item { Text(stringResource(R.string.read_hint), style = Theme.small(), modifier = Modifier.padding(top = Tokens.Space.s4)) }
+    }
+}
+
+@Composable
+private fun Arrow(left: Boolean, enabled: Boolean, onClick: () -> Unit) {
+    val c = Theme.c
+    Box(Modifier.size(Tokens.Size.tab).clickable(enabled = enabled, role = Role.Button, onClick = onClick), contentAlignment = Alignment.Center) {
+        Text(if (left) "‹" else "›", style = Theme.title(true).copy(color = if (enabled) c.ink else c.hair))
+    }
+}
+
+/** 책갈피 리본. */
+@Composable
+fun Ribbon(color: androidx.compose.ui.graphics.Color, filled: Boolean, modifier: Modifier) {
+    androidx.compose.foundation.Canvas(modifier) {
+        val w = size.width * 0.62f; val x = (size.width - w) / 2; val h = size.height
+        val p = Path().apply { moveTo(x, 0f); lineTo(x + w, 0f); lineTo(x + w, h); lineTo(x + w / 2, h * 0.72f); lineTo(x, h); close() }
+        if (filled) drawPath(p, color) else drawPath(p, color, style = androidx.compose.ui.graphics.drawscope.Stroke(Tokens.Stroke.rule.toPx()))
+    }
+}

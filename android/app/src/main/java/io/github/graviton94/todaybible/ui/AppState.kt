@@ -19,6 +19,11 @@ import java.time.LocalDate
 
 /** 화면 상태 한 곳. 기록은 Store 에 덧붙이고, 진행 · 발자취는 기록에서 다시 계산. */
 class AppState(val store: Store) {
+    companion object {
+        /** 아래 이름표 차례: 오늘 · 성경 · 필사 · 기록. */
+        const val TODAY = 0; const val BIBLE = 1; const val COPY = 2; const val RECORD = 3
+    }
+
     val fills = mutableStateListOf<Fill>().apply { addAll(store.loadFills()) }
     var theme by mutableStateOf(store.theme)
     var translation by mutableStateOf(store.translation)
@@ -55,7 +60,7 @@ class AppState(val store: Store) {
     val lifetime = io.github.graviton94.todaybible.data.Lifetime(store.context)
     var purchaseOpen by mutableStateOf(false)
     /** 나누기 시트에 띄운 절 (이 장). */
-    var shareVerse by mutableStateOf<Int?>(null)
+    var shareVerse by mutableStateOf<io.github.graviton94.todaybible.core.VerseKey?>(null)
     /** 캡처용: Play 없이도 잠금 보이기. */
     var forceLock = false
     var settingsOpen by mutableStateOf(false)
@@ -118,7 +123,29 @@ class AppState(val store: Store) {
     /** 지금 촛불빛인지 (앱으로 돌아올 때마다 다시 봄). */
     var night by mutableStateOf(false)
     /** 듣기 화면 (권, 장). */
+    /** 성경 탭에서 읽고 있는 (권, 장). null 이면 책 목록. */
     var listenAt by mutableStateOf<Pair<Int, Int>?>(null)
+    /** 읽기 화면에서 처음 보여 줄 절 (장절 찾기 · 책갈피). */
+    var readVerse by mutableStateOf<Int?>(null)
+    /** 장 고르기가 읽기용인지 (성경 탭) 필사용인지. */
+    var pickToRead by mutableStateOf(false)
+    /** 책갈피 · 형광펜 모아 보기. */
+    var marksOpen by mutableStateOf(false)
+    var bookmarks by mutableStateOf(store.loadBookmarks())
+    fun isBookmarked(b: Int, ch: Int) = bookmarks.any { it.translation == translation && it.key.book == b && it.key.chapter == ch }
+    /** 이 장 책갈피 꽂기 · 빼기 (한 장에 하나, 꽂은 절 기억). */
+    fun toggleBookmark(b: Int, ch: Int, v: Int = 1) {
+        val had = isBookmarked(b, ch)
+        bookmarks = bookmarks.filterNot { it.translation == translation && it.key.book == b && it.key.chapter == ch } +
+            (if (had) emptyList() else listOf(io.github.graviton94.todaybible.data.Store.Mark(translation, io.github.graviton94.todaybible.core.VerseKey(b, ch, v), today().toEpochDay())))
+        val list = bookmarks; Thread { runCatching { store.saveBookmarks(list) } }.start()
+        toast = store.context.getString(if (had) io.github.graviton94.todaybible.R.string.bookmark_off else io.github.graviton94.todaybible.R.string.bookmark_on, "${bookName(b)} $ch")
+    }
+    /** 성경 탭의 읽기 화면으로. */
+    fun read(b: Int, ch: Int, v: Int? = null) {
+        if (locked(b)) { peekBook = b; purchaseOpen = true; return }
+        listenAt = b to ch; readVerse = v; page = BIBLE
+    }
     /** 녹음을 지우고 다시 읽을 절 (권, 장, 절). 채운 절이라도 낭독에서 다시 열어요. */
     var reread by mutableStateOf<Triple<Int, Int, Int>?>(null)
     /** 녹음 파일이 바뀌면 올림 (지우기 · 모두 지우기 뒤에 목록을 다시 읽게). */
@@ -166,7 +193,7 @@ class AppState(val store: Store) {
 
     fun open(b: Int, ch: Int) {
         if (locked(b)) { peekBook = b; purchaseOpen = true; return }
-        book = b; chapter = ch; target = null; store.setBookmark(translation, b, ch); page = 1; widgets()
+        book = b; chapter = ch; target = null; store.setBookmark(translation, b, ch); page = COPY; widgets()
     }
     fun chooseTranslation(t: Translation) { translation = t; store.translation = t; val bm = store.bookmark(t); book = bm.first; chapter = bm.second; widgets() }
     fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t; widgets() }
@@ -184,7 +211,7 @@ class AppState(val store: Store) {
     fun chooseTypeView(v: Int) { typeView = v; store.typeView = v; notebook = v == 1; store.notebook = notebook }
     fun finishOnboarding(startBook: Int, startChapter: Int) {
         onboarded = true; store.onboarded = true
-        book = startBook; chapter = startChapter; target = null; store.setBookmark(translation, startBook, startChapter); page = 1
+        book = startBook; chapter = startChapter; target = null; store.setBookmark(translation, startBook, startChapter); page = COPY
     }
 
     /** 오늘 쓴 절 (이 번역). */

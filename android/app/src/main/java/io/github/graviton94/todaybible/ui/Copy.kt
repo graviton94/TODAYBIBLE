@@ -110,6 +110,7 @@ import java.io.File
 
 @Composable
 fun CopyPage(s: AppState) {
+    val ctx0 = LocalContext.current
     val k = s.korean
     val t = s.text(); val p = s.progress
     val fillable = t.fillable(s.chapter)
@@ -124,8 +125,14 @@ fun CopyPage(s: AppState) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 RunningHead(if (k) "${s.bookName()} ${s.chapter}장" else "${s.bookName().uppercase()} ${s.chapter}", stringResource(R.string.verse_of, doneCount, fillable.size), k,
                     Modifier.weight(1f).clickable(role = Role.Button) { s.picker = s.book })
-                // 듣기: 이 장을 책 읽어 주듯 이어서
-                Row(Modifier.heightIn(min = Tokens.Size.tab).clip(RoundedCornerShape(Tokens.Radius.chip)).background(Theme.c.paper).clickable(role = Role.Button) { s.listenAt = s.book to s.chapter }
+                // 이 장 책갈피
+                val marked = s.isBookmarked(s.book, s.chapter)
+                Box(Modifier.size(Tokens.Size.tab).clickable(role = Role.Button) { s.toggleBookmark(s.book, s.chapter, next ?: 1) }
+                    .semantics { contentDescription = ctx0.getString(R.string.bookmark) }, contentAlignment = Alignment.Center) {
+                    Ribbon(if (marked) Theme.c.rubric else Theme.c.inkSoft, marked, Modifier.size(Tokens.Size.iconSm))
+                }
+                // 듣기: 성경 탭에서 이 장을 책 읽어 주듯 이어서
+                Row(Modifier.heightIn(min = Tokens.Size.tab).clip(RoundedCornerShape(Tokens.Radius.chip)).background(Theme.c.paper).clickable(role = Role.Button) { s.read(s.book, s.chapter); io.github.graviton94.todaybible.data.ListenService.start(ctx0, s.book, s.chapter, 1, s.aloudRate()) }
                     .padding(horizontal = Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                     PlayMark(Theme.c.rubric, false, Modifier.size(Tokens.Size.iconSm))
                     Text(stringResource(R.string.listen_mode), style = Theme.small().copy(color = Theme.c.ink), maxLines = 1)
@@ -235,7 +242,7 @@ private fun BookView(s: AppState, current: Int?, marks: List<TypeJudge.Mark>, se
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
         item { ChapterInitial(s.chapter, chapterDone, Modifier.padding(bottom = Tokens.Space.s1)) }
         items(fillable, key = { it }) { v ->
-            val key = VerseKey(s.book, s.chapter, v)
+            val key = at
             val filled = p.isFilled(s.translation, key)
             val text = t.verse(s.chapter, v)
             val on = s.isMarked(key)
@@ -243,7 +250,7 @@ private fun BookView(s: AppState, current: Int?, marks: List<TypeJudge.Mark>, se
             Box(Modifier.combinedClickable(role = Role.Button, onLongClick = {
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress); s.toggleMark(key)
                 s.toast = ctx.getString(if (on) R.string.mark_removed else R.string.mark_added)
-            }) { when { v == current -> onWrite(); filled -> s.shareVerse = v; else -> s.target = v } }) {
+            }) { when { v == current -> onWrite(); filled -> s.shareVerse = VerseKey(s.book, s.chapter, v); else -> s.target = v } }) {
                 when {
                     v == current -> VerseText(s, v, text, marks = marks, marked = on)
                     filled -> VerseText(s, v, text, sealed = v == sealed, marked = on)
@@ -562,7 +569,7 @@ private fun AloudTab(s: AppState, verse: Int) {
     }
     // 듣기와 낭독은 함께 하지 않아요: 듣기를 열면 읽기를 멈추고, 읽기를 켜면 듣기를 멈춰요 (낭독 목소리를 내 목소리로 알아듣지 않게)
     val listening = io.github.graviton94.todaybible.data.ListenService.now.collectAsState().value != null
-    LaunchedEffect(s.listenAt, listening) { if (s.listenAt != null || listening) running = false }
+    LaunchedEffect(listening) { if (listening) running = false }
     LaunchedEffect(running) { if (running && io.github.graviton94.todaybible.data.ListenService.now.value != null) io.github.graviton94.todaybible.data.ListenService.stop(ctx) }
     // 아침 알림 ‘함께 읽기’로 열었으면 곧바로 시작 (Y1)
     LaunchedEffect(s.aloudNow) { if (s.aloudNow) { s.aloudNow = false; if (mic) running = true else ask.launch(Manifest.permission.RECORD_AUDIO) } }
@@ -770,16 +777,17 @@ private fun MicMark(color: androidx.compose.ui.graphics.Color, modifier: Modifie
 
 /** 채운 절을 누르면: 나누기 카드 미리보기 + 나누기. */
 @Composable
-fun ShareVerseSheet(s: AppState, v: Int) {
+fun ShareVerseSheet(s: AppState, at: VerseKey) {
     val ctx = LocalContext.current; val k = s.korean
-    val ref = "${s.bookName()} ${s.chapter}:$v"
-    val plate = s.store.plateFor(s.book, s.chapter)?.id ?: s.store.plates.getOrNull((s.book + s.chapter) % s.store.plates.size.coerceAtLeast(1))?.id
-    val text = s.text().verse(s.chapter, v)
-    val bmp = remember(s.book, s.chapter, v) { Cards.verse(ctx, k, ref, text, plate) }
+    val b = at.book; val ch = at.chapter; val v = at.verse
+    val ref = "${s.bookName(b)} $ch:$v"
+    val plate = s.store.plateFor(b, ch)?.id ?: s.store.plates.getOrNull((b + ch) % s.store.plates.size.coerceAtLeast(1))?.id
+    val text = s.text(b).verse(ch, v)
+    val bmp = remember(b, ch, v) { Cards.verse(ctx, k, ref, text, plate) }
     BookSheet({ s.shareVerse = null }) {
         Image(bmp.asImageBitmap(), ref, Modifier.fillMaxWidth(Tokens.Ratio.plateWidth).aspectRatio(Tokens.Px.shareW / Tokens.Px.shareH).clip(RoundedCornerShape(Tokens.Radius.chip)))
         Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            val key = VerseKey(s.book, s.chapter, v)
+            val key = at
             BookButton(stringResource(if (s.isMarked(key)) R.string.mark_off else R.string.mark_on), Modifier.weight(1f), quiet = true) { s.toggleMark(key) }
             BookButton(stringResource(R.string.share), Modifier.weight(1f)) { Cards.share(ctx, bmp, "verse"); s.shareVerse = null }
         }

@@ -60,6 +60,7 @@ object Tokens {
         val edgeShade = 8.dp
         val toastMinH = 48.dp
         val sheetMaxGrid = 420.dp
+        val bar = 4.dp
         val widgetPad = 16.dp
         val lock = 14.dp
         val coverW = 132.dp
@@ -122,6 +123,7 @@ object Tokens {
         val ebony = Color(0xFF1E1915)
     }
     object Motion {
+        const val sideSlop = 2.5f
         const val inkMs = 600
         const val veilMs = 1400
         const val pageMs = 420

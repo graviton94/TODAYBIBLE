@@ -98,9 +98,9 @@ fun Root(s: AppState) {
             s.page = it
         }
     }
-    BackHandler(enabled = pager.currentPage != 0 && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null && s.listenAt == null && !s.purchaseOpen && s.onboarded && !s.opening) { val to = trail.removeLastOrNull()?.takeIf { it != pager.currentPage } ?: 0; backing = true; s.page = to; turnTo(to) }
+    BackHandler(enabled = pager.currentPage != 0 && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null && !(s.listenAt != null && pager.currentPage == AppState.BIBLE) && !s.purchaseOpen && s.onboarded && !s.opening) { val to = trail.removeLastOrNull()?.takeIf { it != pager.currentPage } ?: 0; backing = true; s.page = to; turnTo(to) }
     // 옮겨 쓰는 동안 (키보드가 떠 있으면) 아래 이름표는 숨김
-    val typing = WindowInsets.isImeVisible && pager.currentPage == 1
+    val typing = WindowInsets.isImeVisible && pager.currentPage == AppState.COPY
 
     Box(Modifier.fillMaxSize().background(c.paper)) {
         Column(Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
@@ -116,8 +116,8 @@ fun Root(s: AppState) {
                 Box(Modifier.fillMaxSize().zIndex(if (incoming) 1f else 0f).pageTurn(pager, page) { breath }) {
                     when (page) {
                         0 -> HomePage(s)
-                        1 -> CopyPage(s)
-                        2 -> LibraryPage(s)
+                        AppState.BIBLE -> LibraryPage(s)
+                        AppState.COPY -> CopyPage(s)
                         else -> RecordPage(s)
                     }
                 }
@@ -129,7 +129,7 @@ fun Root(s: AppState) {
         if (s.purchaseOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PurchasePage(s) }
         s.shareVerse?.let { v -> ShareVerseSheet(s, v) }
         s.handBook?.let { b -> HandBookView(s, b) }
-        s.listenAt?.let { (b, ch) -> ListenReader(s, b, ch) }
+        if (s.marksOpen) MarksSheet(s)
         s.plateView?.let { pl -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PlatePage(s, pl) } }
         // 나의 성경 PDF: 만들어서 나누기 창으로
         val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -144,7 +144,7 @@ fun Root(s: AppState) {
             val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { MyBible.notes(ctx, s.store, s.translation, b.takeIf { it >= 0 }) }.getOrNull() }
             s.notesBook = null; f?.let { MyBible.share(ctx, it) }
         }
-        s.picker?.let { b -> BookSheet({ s.picker = null }) { ChapterGrid(s, b) { ch -> s.picker = null; s.open(b, ch) } } }
+        s.picker?.let { b -> BookSheet({ s.picker = null; s.pickToRead = false }) { ChapterGrid(s, b) { ch -> s.picker = null; if (s.pickToRead) s.read(b, ch) else s.open(b, ch); s.pickToRead = false } } }
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
         if (!s.onboarded) Welcome(s)
         else if (s.opening) Opening(s) { s.opening = false }
@@ -188,7 +188,7 @@ private fun Gear(modifier: Modifier) {
 @Composable
 private fun PageTabs(current: Int, onSelect: (Int) -> Unit) {
     val c = Theme.c
-    val names = listOf(stringResource(R.string.page_today), stringResource(R.string.page_copy), stringResource(R.string.page_library), stringResource(R.string.page_record))
+    val names = listOf(stringResource(R.string.page_today), stringResource(R.string.page_library), stringResource(R.string.page_copy), stringResource(R.string.page_record))
     Row(Modifier.fillMaxWidth().background(c.paper).navigationBarsPadding().drawBehind {
         drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx())
     }) {

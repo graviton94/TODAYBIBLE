@@ -66,7 +66,7 @@ class ListenService : Service() {
     private fun foreground() {
         val nm = getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, getString(R.string.listen_channel), NotificationManager.IMPORTANCE_LOW))
-        val open = PendingIntent.getActivity(this, 5, Intent(this, MainActivity::class.java).putExtra("page", 1).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP), PendingIntent.FLAG_IMMUTABLE)
+        val open = PendingIntent.getActivity(this, 5, Intent(this, MainActivity::class.java).putExtra("page", io.github.graviton94.todaybible.ui.AppState.COPY).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP), PendingIntent.FLAG_IMMUTABLE)
         val stop = PendingIntent.getService(this, 6, Intent(this, ListenService::class.java).setAction("stop"), PendingIntent.FLAG_IMMUTABLE)
         val store = Store(this)
         val name = Canon.books[book].let { if (store.translation == io.github.graviton94.todaybible.core.Translation.KRV) it.ko else it.en }

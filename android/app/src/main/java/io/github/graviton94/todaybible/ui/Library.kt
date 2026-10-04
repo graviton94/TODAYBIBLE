@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -49,90 +50,143 @@ private val groupNames = mapOf(
     Group.GOSPELS to ("복음서" to "Gospels"), Group.ACTS to ("사도행전" to "Acts"), Group.EPISTLES to ("서신서" to "Epistles"), Group.REVELATION to ("계시록" to "Revelation"),
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun LibraryPage(s: AppState) {
-    val c = Theme.c; val k = s.korean
-    val p = s.progress; val filled = p.filled(s.translation)
-    val started = filled.map { VerseKey(it).book }.toSet()
-    val doneBooks = remember(filled.size, s.translation) { started.filter { p.bookDone(s.translation, s.text(it)) }.toSet() }
-    var group by remember { mutableStateOf(Canon.books[s.book].group) }
-    val since = if (s.store.startDay >= 0) LocalDate.ofEpochDay(s.store.startDay).format(DateTimeFormatter.ofPattern(if (k) "yyyy. M. d" else "d MMM yyyy")) else null
-
-    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-        RunningHead(stringResource(R.string.my_bible), since?.let { stringResource(R.string.since, it) } ?: "", k)
-        Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-            Text(stringResource(R.string.verses_n, filled.size), style = Theme.title(k, Tokens.Text.display))
-            Text(stringResource(R.string.of_total, "%,d".format(s.translation.total)), style = Theme.small())
-            // 오늘 쓴 절 · 이어 쓴 날 (주일은 쉬어도 이어짐)
-            val today = s.today().toEpochDay()
-            val todayN = s.fills.count { it.translation == s.translation && it.epochDay == today }
-            val run = io.github.graviton94.todaybible.core.Presence.streak(p.days(), s.today())
-            if (todayN > 0 || run > 0) Text(stringResource(R.string.today_streak, todayN, run), style = Theme.small().copy(color = c.rubric), maxLines = 1)
-        }
-        FindBox(s)
-        Shelf(stringResource(R.string.old_testament), 0 until 39, s, started, doneBooks)
-        Shelf(stringResource(R.string.new_testament), 39 until 66, s, started, doneBooks)
-
-        // 묶음 색인 → 그 묶음의 권 목록
-        Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            Group.entries.chunked(4).forEach { row ->
-                Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                    row.forEach { g ->
-                        val on = g == group
-                        Box(
-                            Modifier.weight(1f).heightIn(min = Tokens.Size.tab).clip(RoundedCornerShape(Tokens.Radius.chip))
-                                .background(if (on) c.leather else c.paper).clickable(role = Role.Tab) { group = g },
-                            contentAlignment = Alignment.Center,
-                        ) { Text(if (k) groupNames[g]!!.first else groupNames[g]!!.second, style = Theme.small().copy(color = if (on) c.leatherInk else c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                    }
-                }
-            }
-        }
-        Column {
-            Canon.inGroup(group).forEach { b ->
-                val n = filled.count { VerseKey(it).book == b.index }
-                Row(
-                    Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clickable { if (s.locked(b.index)) { s.peekBook = b.index; s.purchaseOpen = true } else s.picker = b.index }
-                        .drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(if (k) b.ko else b.en, style = Theme.body(), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                    if (s.locked(b.index)) LockMark(c.unwritten, Modifier.size(Tokens.Size.lock))
-                    else if (b.index in doneBooks) StampMark(STAMP_CROSS, c.giltText, Modifier.size(Tokens.Size.iconSm))
-                    else Text(if (n > 0) stringResource(R.string.verses_n, n) else if (k) "${b.chapters}장" else "${b.chapters} ch.", style = Theme.small(), maxLines = 1)
-                }
-            }
-        }
-        BookButton(stringResource(R.string.continue_at, s.bookName(), s.chapter), Modifier.fillMaxWidth()) { s.open(s.book, s.chapter) }
-    }
-
+/** 권마다 쓴 정도 (뒤에서 셈): 다 쓴 장 · 쓴 절 · 전체 절 · 쓰다 멈춘 첫 장. */
+private data class BookState(val doneChapters: Int, val verses: Int, val total: Int, val partial: Int?, val lastAt: Long) {
+    val done get() = total > 0 && verses >= total
+    val fraction get() = if (total == 0) 0f else verses / total.toFloat()
 }
 
-/** 책장 한 칸: 권마다 책등 하나. 높이 = 장 수(로그), 다 쓴 권 = 금박 띠, 쓰는 권 = 붉은 가죽, 시작 안 한 권 = 빈 자리. */
+/**
+ * 성경 탭: 고른 장이 있으면 읽기 화면, 없으면 서재.
+ * 서재 = 이어 쓰던 책 · 내 책갈피와 형광펜 · 장절 찾기 · 구약/신약 칸 · 갈래별 권 (한 줄 소개 · 진행).
+ * 권을 누르면 장 고르기 → 읽기 화면 (곧바로 필사로 가지 않아요).
+ */
 @Composable
-private fun Shelf(label: String, range: IntRange, s: AppState, started: Set<Int>, done: Set<Int>) {
-    val c = Theme.c
-    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text(label, style = Theme.head(s.korean))
-            Text("${range.count { it in done }} / ${range.count()}", style = Theme.small())
+fun LibraryPage(s: AppState) {
+    s.listenAt?.let { (b, ch) -> BibleReader(s, b, ch); return }
+    val c = Theme.c; val k = s.korean; val ctx = androidx.compose.ui.platform.LocalContext.current
+    val p = s.progress; val filled = p.filled(s.translation)
+    // 시작한 권만 본문을 읽어 셈 (뒤에서)
+    val states by androidx.compose.runtime.produceState(emptyMap<Int, BookState>(), filled.size, s.translation) {
+        val tr = s.translation; val fills = s.fills.toList()
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            filled.map { VerseKey(it).book }.toSet().associateWith { b ->
+                val t = s.store.book(tr, b)
+                val chapters = (1..t.chapterCount).map { p.chapterFraction(tr, t, it) }
+                BookState(chapters.count { it >= 1f }, filled.count { VerseKey(it).book == b }, t.fillableTotal,
+                    chapters.indexOfFirst { it > 0f && it < 1f }.takeIf { it >= 0 }?.plus(1),
+                    fills.filter { it.translation == tr && it.key.book == b }.maxOfOrNull { it.atMillis } ?: 0L)
+            }
         }
-        Row(
-            Modifier.fillMaxWidth().height(Tokens.Size.shelf).drawBehind { val b = Tokens.Size.shelfBase.toPx(); drawRect(c.inkSoft, Offset(0f, size.height - b), Size(size.width, b)) }.padding(bottom = Tokens.Size.shelfBase),
-            horizontalArrangement = Arrangement.spacedBy(Tokens.Size.spineGap), verticalAlignment = Alignment.Bottom,
-        ) {
-            range.forEach { i ->
-                val ch = Canon.books[i].chapters
-                val h = (0.45f + 0.55f * (kotlin.math.ln(ch.toFloat()) / kotlin.math.ln(150f))).coerceIn(0.4f, 1f)
-                val state = when { i in done -> 2; i == s.book -> 3; i in started -> 1; else -> 0 }
-                Box(Modifier.weight(1f).fillMaxHeight(h).drawBehind {
-                    when (state) {
-                        0 -> drawRect(c.hair, style = Stroke(Tokens.Stroke.hair.toPx()))
-                        else -> drawRect(if (state == 3) c.rubric else c.leather)
+    }
+    var newT by remember { mutableStateOf(s.book >= 39) }
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+        RunningHead(stringResource(R.string.my_bible), stringResource(R.string.lib_count, filled.size, "%,d".format(s.translation.total)), k)
+        // 이어 쓰던 책 (최근 순, 셋까지)
+        val going = states.filter { !it.value.done }.entries.sortedByDescending { it.value.lastAt }.take(3)
+        if (going.isNotEmpty()) Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            Text(stringResource(R.string.lib_going), style = Theme.small().copy(color = c.rubric))
+            going.forEach { (b, st) ->
+                val at = st.partial ?: (s.store.book(s.translation, b).let { t -> (1..t.chapterCount).firstOrNull { p.chapterFraction(s.translation, t, it) < 1f } } ?: 1)
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).clickable(role = Role.Button) { s.read(b, at) }
+                    .padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(s.bookName(b), style = Theme.head(k), maxLines = 1, modifier = Modifier.weight(1f))
+                        Text(stringResource(R.string.lib_ch_of, st.doneChapters, Canon.books[b].chapters), style = Theme.small(), maxLines = 1)
                     }
-                    if (state == 2) { val y = size.height * 0.16f; drawRect(c.gilt, Offset(size.width * 0.18f, y), Size(size.width * 0.64f, Tokens.Stroke.gilt.toPx())); drawRect(c.gilt, Offset(size.width * 0.18f, y + (Tokens.Size.bandGap + Tokens.Stroke.rule).toPx()), Size(size.width * 0.64f, Tokens.Stroke.gilt.toPx())) }
-                })
+                    Progress(st.fraction)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (st.partial != null) stringResource(R.string.lib_partial, st.partial) else stringResource(R.string.lib_next, at), style = Theme.small().copy(color = c.inkSoft), maxLines = 1, modifier = Modifier.weight(1f))
+                        Text(stringResource(R.string.continue_short), style = Theme.small().copy(color = c.rubric), maxLines = 1,
+                            modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.open(b, at) }.padding(start = Tokens.Space.s3))
+                    }
+                }
+            }
+        }
+        // 내 책갈피 · 형광펜
+        val nb = s.bookmarks.count { it.translation == s.translation }; val nm = s.marks.count { it.translation == s.translation }
+        Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).clickable(role = Role.Button) { s.marksOpen = true }
+            .padding(horizontal = Tokens.Space.s4), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            Ribbon(c.rubric, true, Modifier.size(Tokens.Size.iconSm))
+            Text(stringResource(R.string.lib_marks, nb, nm), style = Theme.body(), maxLines = 1, modifier = Modifier.weight(1f))
+            Text("›", style = Theme.title(k).copy(color = c.inkSoft))
+        }
+        FindBox(s)
+        // 구약 · 신약
+        Row(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
+            listOf(false to stringResource(R.string.old_count), true to stringResource(R.string.new_count)).forEach { (nt, label) ->
+                val on = newT == nt
+                Box(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Tab) { newT = nt }.drawBehind {
+                    if (on) drawRect(c.rubric, Offset(0f, size.height - Tokens.Stroke.rule.toPx()), Size(size.width, Tokens.Stroke.rule.toPx()))
+                }, contentAlignment = Alignment.Center) { Text(label, style = Theme.label().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1) }
+            }
+        }
+        Group.entries.filter { g -> Canon.inGroup(g).firstOrNull()?.let { (it.index >= 39) == newT } == true }.forEach { g ->
+            Text(if (k) groupNames[g]!!.first else groupNames[g]!!.second, style = Theme.small().copy(color = c.rubric))
+            Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                Canon.inGroup(g).forEach { b ->
+                    val st = states[b.index]
+                    val aboutId = remember(b.index) { ctx.resources.getIdentifier("about_%02d".format(b.index + 1), "string", ctx.packageName) }
+                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper)
+                        .clickable(role = Role.Button) { if (s.locked(b.index)) { s.peekBook = b.index; s.purchaseOpen = true } else { s.pickToRead = true; s.picker = b.index } }
+                        .padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                            Text(if (k) b.ko else b.en, style = Theme.head(k), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                            when {
+                                s.locked(b.index) -> LockMark(c.unwritten, Modifier.size(Tokens.Size.lock))
+                                st?.done == true -> { StampMark(STAMP_CROSS, c.giltText, Modifier.size(Tokens.Size.iconSm)); Text(stringResource(R.string.lib_done), style = Theme.small().copy(color = c.giltText), maxLines = 1) }
+                                st != null -> Text(stringResource(R.string.lib_ch_of, st.doneChapters, b.chapters), style = Theme.small(), maxLines = 1)
+                                else -> Text(stringResource(R.string.lib_chapters, b.chapters), style = Theme.small().copy(color = c.unwritten), maxLines = 1)
+                            }
+                        }
+                        if (aboutId != 0) Text(stringResource(aboutId), style = Theme.small().copy(color = c.inkSoft), maxLines = 2)
+                        if (st != null && !st.done) {
+                            Progress(st.fraction)
+                            Text(stringResource(R.string.lib_verses, st.verses, st.total) + (st.partial?.let { " · " + stringResource(R.string.lib_partial, it) } ?: ""), style = Theme.small().copy(color = c.rubric), maxLines = 1)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** 가는 진행 막대. */
+@Composable
+private fun Progress(f: Float) {
+    val c = Theme.c
+    Box(Modifier.fillMaxWidth().height(Tokens.Size.bar).clip(RoundedCornerShape(Tokens.Size.bar)).background(c.hair)) {
+        Box(Modifier.fillMaxWidth(f.coerceIn(0f, 1f)).height(Tokens.Size.bar).background(c.rubric))
+    }
+}
+
+/** 책갈피 · 형광펜 모아 보기: 누르면 그 자리를 읽기 화면에서. */
+@Composable
+fun MarksSheet(s: AppState) {
+    val c = Theme.c; val k = s.korean
+    BookSheet({ s.marksOpen = false }) {
+        val bm = s.bookmarks.filter { it.translation == s.translation }.sortedByDescending { it.epochDay }
+        val hl = s.marks.filter { it.translation == s.translation }.sortedByDescending { it.epochDay }
+        Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid * 2).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            Text(stringResource(R.string.bookmark), style = Theme.title(k))
+            if (bm.isEmpty()) Text(stringResource(R.string.marks_none_bm), style = Theme.small())
+            bm.forEach { m ->
+                Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clickable(role = Role.Button) { s.marksOpen = false; s.read(m.key.book, m.key.chapter, m.key.verse) },
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                    Ribbon(c.rubric, true, Modifier.size(Tokens.Size.iconSm))
+                    Text(stringResource(R.string.listen_head, s.bookName(m.key.book), m.key.chapter), style = Theme.body(), modifier = Modifier.weight(1f))
+                }
+            }
+            Text(stringResource(R.string.marks_title), style = Theme.title(k), modifier = Modifier.padding(top = Tokens.Space.s3))
+            if (hl.isEmpty()) Text(stringResource(R.string.marks_none_hl), style = Theme.small())
+            hl.forEach { m ->
+                val v = m.key
+                Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.marksOpen = false; s.read(v.book, v.chapter, v.verse) }.padding(vertical = Tokens.Space.s1),
+                    verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                    Text(io.github.graviton94.todaybible.core.Markup.plain(s.store.book(s.translation, v.book).verse(v.chapter, v.verse)),
+                        style = Theme.body().copy(background = c.mark), maxLines = 3, overflow = TextOverflow.Ellipsis)
+                    Text("${s.bookName(v.book)} ${v.chapter}:${v.verse}", style = Theme.small(), maxLines = 1)
+                }
             }
         }
     }
@@ -145,6 +199,7 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         Text(s.bookName(b), style = Theme.title(s.korean))
         Text(stringResource(R.string.choose_chapter), style = Theme.small())
+        Text(stringResource(R.string.grid_legend), style = Theme.small().copy(color = c.inkSoft))
         if (p.bookDone(s.translation, t)) BookButton(stringResource(R.string.my_bible_pdf), Modifier.fillMaxWidth(), quiet = true) { s.requestPdf(b) }
         val ctx = androidx.compose.ui.platform.LocalContext.current
         if (io.github.graviton94.todaybible.data.Ink.chapters(ctx, s.translation.id, b).isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
@@ -184,8 +239,7 @@ private fun FindBox(s: AppState) {
         val r = io.github.graviton94.todaybible.core.Reference.parse(q)
         if (r == null) { s.toast = ctx.getString(R.string.find_none); return }
         val (b, ch, v) = r
-        s.open(b, ch)
-        if (v != null && v in s.text(b).fillable(ch)) s.target = v
+        s.read(b, ch, v?.takeIf { it in s.text(b).fillable(ch) })
         q = ""
     }
     androidx.compose.foundation.text.BasicTextField(
