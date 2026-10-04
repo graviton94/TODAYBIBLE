@@ -74,6 +74,10 @@ fun SettingsPage(s: AppState) {
                     ChoiceRow(stringResource(R.string.tr_kjv), s.translation == Translation.KJV) { s.chooseTranslation(Translation.KJV) }
                 }
             }
+            Group(stringResource(R.string.simple_h)) {
+                ChoiceRow(stringResource(R.string.simple_mode), s.simple) { s.flipSimple() }
+                Text(stringResource(R.string.simple_hint), style = Theme.small())
+            }
             Group(stringResource(R.string.text_size)) {
                 UnderlineTabs(listOf(stringResource(R.string.size_regular), stringResource(R.string.size_large), stringResource(R.string.size_larger), stringResource(R.string.size_huge)),
                     SCALES.indexOfFirst { kotlin.math.abs(it - s.scale) < 0.01f }.coerceAtLeast(0)) { s.setTextScale(SCALES[it]) }

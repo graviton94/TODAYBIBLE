@@ -107,6 +107,11 @@ class CoreTest {
         assertEquals(136, Goal.days(5, 678, 16))
         assertTrue(Goal.met(Goal.CHAPTER, 30, 0)); assertFalse(Goal.met(Goal.TWO, 10, 1)); assertTrue(Goal.met(Goal.TWO, 3, 2))
         assertEquals(8, Goal.days(Goal.TWO, 678, 16))
+        // 2026 부활절 4월 5일 → 재의 수요일 2월 18일, 종려주일 3월 29일, 대림절 첫 주일 11월 29일
+        assertEquals("lent40" to java.time.LocalDate.of(2026, 2, 18), Plans.seasonal(java.time.LocalDate.of(2026, 2, 14)))
+        assertEquals("holy8", Plans.seasonal(java.time.LocalDate.of(2026, 3, 27))?.first)
+        assertEquals("advent24" to java.time.LocalDate.of(2026, 11, 29), Plans.seasonal(java.time.LocalDate.of(2026, 11, 25)))
+        assertEquals(null, Plans.seasonal(java.time.LocalDate.of(2026, 7, 1)))
     }
 
     @Test fun longestStreakAndPlans() {

@@ -105,7 +105,23 @@ object Plans {
         Plan("prov31", whole(19), 31),
         Plan("ps365", whole(18), 365),
         Plan("nt365", (39..65).flatMap { whole(it) }, 365),
+        // 교회력 계획: 사순절 40일 (마가복음 · 누가복음 22–24 · 요한복음 12–21), 고난주간 8일, 대림절 24일
+        Plan("lent40", whole(40) + (22..24).map { 41 to it } + (12..21).map { 42 to it }, 40),
+        Plan("holy8", listOf(39 to 21) + (13..17).map { 42 to it } + (26..28).map { 39 to it }, 8),
+        Plan("advent24", listOf(9, 11, 40, 53, 60, 61).map { 22 to it } + listOf(39 to 1, 39 to 2, 41 to 1, 41 to 2, 42 to 1), 24),
     )
+    /** 절기 계획을 권할 때: 시작 이레 전부터 시작 사흘 뒤까지. (계획 id, 시작 날) */
+    fun seasonal(today: LocalDate): Pair<String, LocalDate>? {
+        for (y in listOf(today.year, today.year + 1)) {
+            val easter = ChurchYear.easter(y)
+            val christmas = ChurchYear.christmas(y)
+            val advent = christmas.minusDays((christmas.dayOfWeek.value % 7).toLong() + 21)
+            for ((id, start) in listOf("lent40" to easter.minusDays(46), "holy8" to easter.minusDays(7), "advent24" to advent)) {
+                if (!today.isBefore(start.minusDays(7)) && !today.isAfter(start.plusDays(3))) return id to start
+            }
+        }
+        return null
+    }
     fun byId(id: String?) = all.firstOrNull { it.id == id }
     /** 오늘 몇째 날인지 (1부터, 날 수를 넘으면 마지막 날). */
     fun day(start: Long, today: LocalDate): Int = (today.toEpochDay() - start + 1).toInt().coerceIn(1, Int.MAX_VALUE)

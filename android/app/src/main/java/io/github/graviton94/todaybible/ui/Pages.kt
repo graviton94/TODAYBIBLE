@@ -141,6 +141,27 @@ fun Root(s: AppState) {
             s.pdfBook = null; f?.let { s.exportJob = ExportJob(listOf(it), "application/pdf", ctx.getString(R.string.export_title_pdf, s.bookName(b))) }
         }
         if (s.planOpen) PlanSheet(s)
+        // 내 목소리 한 권: 장마다 절 녹음을 차례로 이어 소리 파일 하나 + 표지 카드
+        LaunchedEffect(s.audiobookBook) {
+            val b = s.audiobookBook ?: return@LaunchedEffect
+            s.exporting = true; s.toast = ctx.getString(R.string.exporting)
+            val job = try { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching {
+                val V = io.github.graviton94.todaybible.data.Voice
+                val files = (1..s.store.book(s.translation, b).chapterCount).flatMap { ch -> V.verses(ctx, s.translation.id, b, ch).map { it.second } }
+                if (files.isEmpty()) return@runCatching null
+                val name = s.bookName(b)
+                val audio = java.io.File(ctx.cacheDir, "share/${name.replace(' ', '_')}_${ctx.getString(R.string.audiobook_file)}.m4a")
+                if (!V.exportAudio(files, audio)) return@runCatching null
+                val secs = (files.sumOf { V.durationMs(it) } / 1000).toInt()
+                val title = if (s.ownerName.isNotBlank()) ctx.getString(R.string.audiobook_title_named, s.ownerName, name) else ctx.getString(R.string.audiobook_title, name)
+                val dur = ctx.getString(R.string.duration_hm, secs / 3600, secs / 60 % 60)
+                val card = Cards.year(ctx, s.korean, title, dur, listOf(ctx.getString(R.string.audiobook_verses, files.size)))
+                val img = java.io.File(ctx.cacheDir, "share/${name.replace(' ', '_')}_cover.png").also { f -> f.outputStream().use { card.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) } }
+                ExportJob(listOf(audio, img), "*/*", title)
+            }.getOrNull() } } finally { s.exporting = false }
+            s.audiobookBook = null
+            if (job != null) s.exportJob = job else s.toast = ctx.getString(R.string.export_failed)
+        }
         LaunchedEffect(s.notesBook) {
             val b = s.notesBook ?: return@LaunchedEffect
             val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { MyBible.notes(ctx, s.store, s.translation, b.takeIf { it >= 0 }) }.getOrNull() }

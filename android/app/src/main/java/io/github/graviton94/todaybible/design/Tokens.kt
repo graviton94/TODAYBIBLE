@@ -61,6 +61,7 @@ object Tokens {
         val toastMinH = 48.dp
         val sheetMaxGrid = 420.dp
         val bar = 4.dp
+        val bigAction = 76.dp
         val widgetPad = 16.dp
         val lock = 14.dp
         val coverW = 132.dp

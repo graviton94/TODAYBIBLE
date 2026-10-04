@@ -130,6 +130,9 @@ class Store(val context: Context) {
         get() = prefs.getLong("posted_day", -1)
         set(v) = prefs.edit().putLong("posted_day", v).apply()
     /** 내보내기 메일의 받는 사람 (이 폰에만). */
+    var simple: Boolean
+        get() = prefs.getBoolean("simple", false)
+        set(v) = prefs.edit().putBoolean("simple", v).apply()
     var mailTo: String
         get() = prefs.getString("mail_to", "").orEmpty()
         set(v) = prefs.edit().putString("mail_to", v).apply()

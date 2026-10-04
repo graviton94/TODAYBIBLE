@@ -22,11 +22,13 @@ import java.time.format.DateTimeFormatter
 
 /**
  * 나의 성경 (D2): 내가 옮겨 쓴 한 권을 PDF 로. 표지 (금선 테 · 권 이름 · 쓴 기간) 다음에
- * 본문 (장마다 붉은 장 번호 · 절마다 바깥 여백에 처음 쓴 날짜). A5, 인쇄해 간직하거나 선물.
+ * 본문 (장마다 붉은 장 번호 · 절마다 바깥 여백에 처음 쓴 날짜). A5 인쇄 · 제본용: 표지 뒷면 비움, 묶는 쪽 여백, 쪽 번호, 맺음 쪽.
  */
 object MyBible {
     private const val W = 420; private const val H = 595 // A5 (pt)
     private const val M = 42
+    /** 제본 여백 (pt): 묶이는 쪽에 더 둠. */
+    private const val BIND = 14
 
     fun make(ctx: Context, store: Store, tr: Translation, book: Int, owner: String = store.ownerName): File {
         val korean = tr == Translation.KRV
@@ -61,19 +63,26 @@ object MyBible {
             doc.finishPage(pg)
         }
 
-        // 본문
+        // 표지 뒷면은 비워 두어 본문이 오른쪽 쪽에서 시작 (제본)
+        run { val pg = newPage(); pg.canvas.drawColor(c.leaf.toArgb()); doc.finishPage(pg) }
+
+        // 본문: 제본 쪽 (오른쪽 쪽은 왼쪽, 왼쪽 쪽은 오른쪽) 여백을 BIND 만큼 더 둠 · 아래 가운데 쪽 번호
         val body = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 10.5f; color = c.ink.toArgb() }
         val num = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = black; textSize = 10.5f; color = c.rubric.toArgb() }
         val margin = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 6.5f; color = c.giltText.toArgb() }
         val head = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 7.5f; color = c.inkSoft.toArgb(); letterSpacing = 0.06f }
+        val folio = TextPaint(head).apply { textAlign = Paint.Align.CENTER }
         val chap = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = black; textSize = 30f; color = c.rubric.toArgb() }
         val md = DateTimeFormatter.ofPattern("M.d")
-        val gutter = 16f; val colW = (W - 2 * M - gutter - 26).toInt()
-        var pg = newPage(); var y = M.toFloat() + 14f
-        fun header(ch: Int) { pg.canvas.drawColor(c.leaf.toArgb()); pg.canvas.drawText("$name $ch", M.toFloat(), M.toFloat(), head); pg.canvas.drawLine(M.toFloat(), M + 4f, (W - M).toFloat(), M + 4f, Paint().apply { color = c.hair.toArgb(); strokeWidth = 0.4f }) }
+        val wb = W - BIND
+        val gutter = 16f; val colW = (wb - 2 * M - gutter - 26).toInt()
+        fun open(): PdfDocument.Page { val p = newPage(); p.canvas.drawColor(c.leaf.toArgb()); p.canvas.translate(if (pageNo % 2 == 1) BIND.toFloat() else 0f, 0f); return p }
+        fun close(p: PdfDocument.Page) { p.canvas.drawText("${pageNo - 2}", wb / 2f, H - M / 2f, folio); doc.finishPage(p) }
+        var pg = open(); var y = M.toFloat() + 14f
+        fun header(ch: Int) { pg.canvas.drawText("$name $ch", M.toFloat(), M.toFloat(), head); pg.canvas.drawLine(M.toFloat(), M + 4f, (wb - M).toFloat(), M + 4f, Paint().apply { color = c.hair.toArgb(); strokeWidth = 0.4f }) }
         header(1)
         for (ch in 1..text.chapterCount) {
-            if (y > H - M - 60) { doc.finishPage(pg); pg = newPage(); header(ch); y = M + 14f }
+            if (y > H - M - 60) { close(pg); pg = open(); header(ch); y = M + 14f }
             pg.canvas.drawText("$ch", M.toFloat(), y + 26f, chap); y += 38f
             for (v in text.fillable(ch)) {
                 val s = Markup.plain(text.verse(ch, v))
@@ -84,18 +93,31 @@ object MyBible {
                         if (android.os.Build.VERSION.SDK_INT >= 33) setLineBreakConfig(android.graphics.text.LineBreakConfig.Builder()
                             .setLineBreakWordStyle(android.graphics.text.LineBreakConfig.LINE_BREAK_WORD_STYLE_PHRASE).build())
                     }.build()
-                if (y + lay.height > H - M) { doc.finishPage(pg); pg = newPage(); header(ch); y = M + 14f }
+                if (y + lay.height > H - M) { close(pg); pg = open(); header(ch); y = M + 14f }
                 val cv = pg.canvas
                 cv.save(); cv.translate(M + gutter, y); lay.draw(cv); cv.restore()
                 // 절 번호 · 쓴 날짜는 첫 줄과 같은 줄에
                 val base = y + lay.getLineBaseline(0)
                 cv.drawText("$v", M.toFloat(), base, num.apply { textAlign = Paint.Align.LEFT })
-                firstDay[VerseKey(book, ch, v).raw]?.let { d -> cv.drawText(LocalDate.ofEpochDay(d).format(md), (W - M).toFloat() - 18f, base, margin) }
+                firstDay[VerseKey(book, ch, v).raw]?.let { d -> cv.drawText(LocalDate.ofEpochDay(d).format(md), (wb - M).toFloat() - 18f, base, margin) }
                 y += lay.height + 5f
             }
             y += 8f
         }
-        doc.finishPage(pg)
+        close(pg)
+        // 맺음 쪽: 누가 언제부터 언제까지 옮겨 썼는지
+        run {
+            val p = open(); val cv = p.canvas
+            val days = firstDay.values
+            val fmt = DateTimeFormatter.ofPattern("yyyy. M. d")
+            val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 10f; color = c.inkSoft.toArgb(); textAlign = Paint.Align.CENTER }
+            if (days.isNotEmpty()) {
+                val who = if (owner.isBlank()) ctx.getString(R.string.colophon_me) else ctx.getString(R.string.colophon_named, owner)
+                cv.drawText(ctx.getString(R.string.colophon, who, name), wb / 2f, H * 0.45f, tp)
+                cv.drawText("${LocalDate.ofEpochDay(days.min()).format(fmt)} – ${LocalDate.ofEpochDay(days.max()).format(fmt)} · ${ctx.getString(R.string.colophon_count, days.size)}", wb / 2f, H * 0.45f + 18f, tp)
+            }
+            doc.finishPage(p)
+        }
         val dir = File(ctx.cacheDir, "share").apply { mkdirs() }
         val f = File(dir, "${name.replace(' ', '_')}.pdf")
         f.outputStream().use { doc.writeTo(it) }; doc.close()

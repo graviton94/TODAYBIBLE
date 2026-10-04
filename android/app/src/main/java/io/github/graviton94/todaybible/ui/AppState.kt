@@ -136,6 +136,9 @@ class AppState(val store: Store) {
     var bookmarks by mutableStateOf(store.loadBookmarks())
     /** 필사의 지금 탭 (첫 안내가 어느 화면인지 알게). */
     var copyTabNow by mutableIntStateOf(store.copyTab)
+    /** 간단 모드: 오늘 화면에 오늘의 장과 큰 버튼 셋만. */
+    var simple by mutableStateOf(store.simple)
+    fun flipSimple() { simple = !simple; store.simple = simple }
     /** 첫 안내를 본 화면들. */
     var coachSeen by mutableStateOf(store.coachSeen)
     fun coachDone(screen: String) { coachSeen = coachSeen + screen; store.coachSeen = coachSeen }
@@ -210,6 +213,9 @@ class AppState(val store: Store) {
     /** 나의 성경 PDF: 평생권이 필요하면 평생권 화면으로. */
     /** 노트 PDF 를 만들 권 (-1 = 전체). */
     var notesBook by mutableStateOf<Int?>(null)
+    /** 내 목소리 한 권 (오디오북) 만들기. */
+    var audiobookBook by mutableStateOf<Int?>(null)
+    fun requestAudiobook(b: Int) { if (gated()) purchaseOpen = true else audiobookBook = b }
     fun requestNotes(b: Int?) { if (gated()) purchaseOpen = true else notesBook = b ?: -1 }
     fun requestPdf(b: Int) { if (!lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)) purchaseOpen = true else pdfBook = b }
     fun setGoal(g: Int) { dailyGoal = g; store.dailyGoal = g; widgets() }

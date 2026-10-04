@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -55,6 +56,7 @@ import java.util.Locale
  */
 @Composable
 fun HomePage(s: AppState) {
+    if (s.simple) { SimpleHome(s); return }
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     val today = s.today(); val days = s.progress.days()
     val run = Presence.streak(days, today)
@@ -95,6 +97,12 @@ fun HomePage(s: AppState) {
         }
         // 이번 주 도장 (주일부터)
         WeekStamps(s)
+        // 절기가 다가오면: 절기 읽기 계획 권하기 (한 줄)
+        io.github.graviton94.todaybible.core.Plans.seasonal(today)?.takeIf { it.first != s.plan?.id }?.let { (id, start) ->
+            val left = ChronoUnit.DAYS.between(today, start).toInt()
+            Text(if (left > 0) stringResource(R.string.season_soon, planName(ctx, id), left) else stringResource(R.string.season_now, planName(ctx, id)),
+                style = Theme.label().copy(color = c.rubric), modifier = Modifier.fillMaxWidth().heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.choosePlan(id) })
+        }
         MyBookCard(s)
         if (s.plan != null) PlanCard(s)
         // 다음 판화
@@ -219,4 +227,33 @@ private fun MyBookCard(s: AppState) {
             Box(Modifier.fillMaxWidth().height(Tokens.Stroke.rule).background(c.hair)) { Box(Modifier.fillMaxWidth(frac.coerceAtLeast(0.01f)).height(Tokens.Stroke.rule).background(c.gilt)) }
         }
     }
+}
+
+/**
+ * 간단 모드 (F5): 자녀가 부모님 폰에 켜 드리기 좋게. 오늘의 장 하나와 큰 버튼 셋만.
+ * 소리 내어 읽기 · 듣기 · 손으로 쓰기 (타자보다 쉬운 쪽). 기록 · 화첩은 아래 이름표로만.
+ */
+@Composable
+private fun SimpleHome(s: AppState) {
+    val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
+    val pn = s.planNext()
+    val (b, ch) = if (pn != null) pn.first to pn.second else s.book to s.chapter
+    val t = s.store.book(s.translation, b)
+    val fill = t.fillable(ch); val done = fill.count { s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(b, ch, it)) }
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+        Text(stringResource(R.string.today_chapter), style = Theme.label().copy(color = c.rubric))
+        Text(stringResource(R.string.listen_head, s.bookName(b), ch), style = Theme.title(k, Tokens.Text.display))
+        Text(stringResource(R.string.ch_progress, done, fill.size) + if (s.goalMet()) " · " + stringResource(R.string.goal_done) else "", style = Theme.body().copy(color = c.inkSoft))
+        BigAction(stringResource(R.string.simple_aloud)) { s.store.copyTab = 0; s.open(b, ch) }
+        BigAction(stringResource(R.string.simple_listen)) { s.read(b, ch); io.github.graviton94.todaybible.data.ListenService.start(ctx, b, ch, s.progress.nextVerse(s.translation, t, ch) ?: 1, s.aloudRate()) }
+        BigAction(stringResource(R.string.simple_write)) { s.store.copyTab = 2; s.open(b, ch) }
+        WeekStamps(s)
+    }
+}
+
+@Composable
+private fun BigAction(text: String, onClick: () -> Unit) {
+    val c = Theme.c
+    Box(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.bigAction).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leather).clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center) { Text(text, style = Theme.title(true).copy(color = c.leatherInk)) }
 }

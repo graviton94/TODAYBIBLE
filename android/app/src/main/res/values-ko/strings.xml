@@ -526,4 +526,25 @@
     <string name="export_title_notes">나의 손글씨</string>
     <string name="export_title_voice">나의 낭독 · %1$s %2$d장</string>
     <string name="export_title_card">하루의 성경 카드</string>
+    <string name="colophon">%1$s 손수 옮겨 쓴 %2$s</string>
+    <string name="colophon_me">내가</string>
+    <string name="colophon_named">%1$s님이</string>
+    <string name="colophon_count">%1$d절</string>
+    <string name="audiobook_make">내 목소리 한 권 만들기 (%1$d장)</string>
+    <string name="audiobook_file">내목소리</string>
+    <string name="audiobook_title">내 목소리로 읽은 %1$s</string>
+    <string name="audiobook_title_named">%1$s님이 읽은 %2$s</string>
+    <string name="duration_hm">%1$d시간 %2$d분</string>
+    <string name="audiobook_verses">%1$d절</string>
+    <string name="plan_lent40">사순절 40일</string>
+    <string name="plan_holy8">고난주간 8일</string>
+    <string name="plan_advent24">대림절 24일</string>
+    <string name="season_soon">%1$s 계획이 %2$d일 뒤 시작돼요 · 시작하기 ›</string>
+    <string name="season_now">%1$s 계획을 시작해요 ›</string>
+    <string name="simple_h">간단 모드</string>
+    <string name="simple_mode">오늘의 장과 큰 버튼 셋만 보이기</string>
+    <string name="simple_hint">부모님 폰에 켜 드리기 좋아요. 기록 · 화첩은 아래 이름표에 그대로 있어요.</string>
+    <string name="simple_aloud">소리 내어 읽기</string>
+    <string name="simple_listen">듣기</string>
+    <string name="simple_write">손으로 쓰기</string>
 </resources>

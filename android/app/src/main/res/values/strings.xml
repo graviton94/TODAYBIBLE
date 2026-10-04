@@ -526,4 +526,25 @@
     <string name="export_title_notes">My handwriting</string>
     <string name="export_title_voice">My reading · %1$s %2$d</string>
     <string name="export_title_card">A card from 하루의 성경</string>
+    <string name="colophon">%2$s, copied by hand by %1$s</string>
+    <string name="colophon_me">me</string>
+    <string name="colophon_named">%1$s</string>
+    <string name="colophon_count">%1$d verses</string>
+    <string name="audiobook_make">This book in my voice (%1$d chapters)</string>
+    <string name="audiobook_file">my_voice</string>
+    <string name="audiobook_title">%1$s · read in my voice</string>
+    <string name="audiobook_title_named">%2$s · read by %1$s</string>
+    <string name="duration_hm">%1$d h %2$d min</string>
+    <string name="audiobook_verses">%1$d verses</string>
+    <string name="plan_lent40">Lent · 40 days</string>
+    <string name="plan_holy8">Holy Week · 8 days</string>
+    <string name="plan_advent24">Advent · 24 days</string>
+    <string name="season_soon">%1$s starts in %2$d days · begin ›</string>
+    <string name="season_now">%1$s has begun · begin ›</string>
+    <string name="simple_h">Simple mode</string>
+    <string name="simple_mode">Only today\'s chapter and three big buttons</string>
+    <string name="simple_hint">Good to set up on a parent\'s phone. Records and pictures are still under the tabs.</string>
+    <string name="simple_aloud">Read aloud</string>
+    <string name="simple_listen">Listen</string>
+    <string name="simple_write">Write by hand</string>
 </resources>
