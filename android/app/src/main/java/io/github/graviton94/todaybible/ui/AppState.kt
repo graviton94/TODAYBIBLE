@@ -192,7 +192,7 @@ class AppState(val store: Store) {
         keeping = Triple(b, 0, n)
         Thread {
             val ok = io.github.graviton94.todaybible.data.Narration.keepBook(ctx, voice, b, n) { done, all -> android.os.Handler(android.os.Looper.getMainLooper()).post { keeping = Triple(b, done, all) } }
-            android.os.Handler(android.os.Looper.getMainLooper()).post { keeping = null; toast = ctx.getString(if (ok) R.string.keep_done else R.string.keep_partial, bookName(b)) }
+            android.os.Handler(android.os.Looper.getMainLooper()).post { keeping = null; toast = ctx.getString(if (ok) io.github.graviton94.todaybible.R.string.keep_done else io.github.graviton94.todaybible.R.string.keep_partial, bookName(b)) }
         }.start()
     }
 
