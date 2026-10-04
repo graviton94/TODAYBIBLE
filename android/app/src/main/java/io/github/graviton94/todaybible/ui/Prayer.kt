@@ -72,7 +72,7 @@ fun PrayerPage(s: AppState, id: String) {
     val now by ListenService.now.collectAsState()
     Column(Modifier.fillMaxSize().background(c.leaf).verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-        Text(stringResource(R.string.read_back), style = Theme.small().copy(color = c.rubric), maxLines = 1,
+        Text(stringResource(R.string.prayer_back), style = Theme.small().copy(color = c.rubric), maxLines = 1,
             modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.prayerOpen = null })
         Text(prayerName(p), style = Theme.title(k, Tokens.Text.title))
         p.passages.forEach { ps ->
