@@ -258,7 +258,11 @@ class AppState(val store: Store) {
         return (total to done).also { planMemo = key to it }
     }
     /** 길잡이 책들을 미리 읽어 둠 (처음 장을 고를 때 멈칫하지 않게). */
-    fun warmPlan() { val pl = plan ?: return; val tr = translation; Thread { runCatching { pl.books.forEach { store.book(tr, it) }; planCounts() } }.start() }
+    /** 지금 권 · 길잡이 책들을 미리 읽어 둠 (처음 장을 고를 때 멈칫하지 않게). */
+    fun warmPlan() {
+        val pl = plan; val tr = translation; val b = book
+        Thread { runCatching { store.book(tr, b); pl?.books?.forEach { store.book(tr, it) }; if (pl != null) planCounts(); store.plates } }.start()
+    }
     /** 길잡이에서 다음에 쓸 (권, 장, 절). */
     fun planNext(): Triple<Int, Int, Int>? {
         val pl = plan ?: return null; val p = progress

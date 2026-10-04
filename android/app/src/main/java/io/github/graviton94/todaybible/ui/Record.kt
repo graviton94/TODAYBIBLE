@@ -40,6 +40,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -159,7 +161,8 @@ private fun CalendarPanel(s: AppState, days: Set<Long>) {
 @Composable
 private fun CalArrow(t: String, enabled: Boolean, onClick: () -> Unit) {
     val c = Theme.c
-    Box(Modifier.size(Tokens.Size.touch).clickable(enabled = enabled, role = Role.Button, onClick = onClick), contentAlignment = Alignment.Center) {
+    val label = stringResource(if (t == "‹") R.string.cal_prev else R.string.cal_next)
+    Box(Modifier.size(Tokens.Size.touch).semantics(mergeDescendants = true) { contentDescription = label }.clickable(enabled = enabled, role = Role.Button, onClick = onClick), contentAlignment = Alignment.Center) {
         Text(t, style = Theme.title(true).copy(color = if (enabled) c.ink else c.hair))
     }
 }

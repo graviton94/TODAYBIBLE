@@ -547,4 +547,8 @@
     <string name="simple_aloud">Read aloud</string>
     <string name="simple_listen">Listen</string>
     <string name="simple_write">Write by hand</string>
+    <string name="feedback_crash">Also send the recent error record (device and error lines only)</string>
+    <string name="feedback_crash_label">[Error record]</string>
+    <string name="cal_prev">Previous</string>
+    <string name="cal_next">Next</string>
 </resources>

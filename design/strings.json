@@ -544,5 +544,9 @@
   "simple_hint": {"en": "Good to set up on a parent's phone. Records and pictures are still under the tabs.", "ko": "부모님 폰에 켜 드리기 좋아요. 기록 · 화첩은 아래 이름표에 그대로 있어요."},
   "simple_aloud": {"en": "Read aloud", "ko": "소리 내어 읽기"},
   "simple_listen": {"en": "Listen", "ko": "듣기"},
-  "simple_write": {"en": "Write by hand", "ko": "손으로 쓰기"}
+  "simple_write": {"en": "Write by hand", "ko": "손으로 쓰기"},
+  "feedback_crash": {"en": "Also send the recent error record (device and error lines only)", "ko": "최근 오류 기록도 함께 보내기 (기기 · 오류 줄만 담겨요)"},
+  "feedback_crash_label": {"en": "[Error record]", "ko": "[오류 기록]"},
+  "cal_prev": {"en": "Previous", "ko": "이전"},
+  "cal_next": {"en": "Next", "ko": "다음"}
 }

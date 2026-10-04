@@ -84,12 +84,13 @@ class GoalWidget : SmallWidget() {
         val side = minOf(size.width, size.height) * 0.62f; val w = Tokens.Stroke.rule.toPx() * 2.5f
         val tl = Offset((size.width - side) / 2, size.height * 0.1f)
         drawArc(c.hair, 0f, 360f, false, tl, Size(side, side), style = Stroke(w))
-        val frac = if (goal <= 0) 0f else (n.toFloat() / goal).coerceIn(0f, 1f)
+        // 장 목표면 한 장 몫 (LONG 절) 에 견줘 고리를 채워요
+        val frac = (n.toFloat() / (if (goal < 0) Goal.LONG * Goal.chapters(goal) else goal)).coerceIn(0f, 1f)
         drawArc(if (met) c.gilt else c.rubric, -90f, 360f * frac, false, tl, Size(side, side), style = Stroke(w, cap = StrokeCap.Round))
         val center = Offset(size.width / 2, tl.y + side / 2)
         if (met) stamp(io.github.graviton94.todaybible.ui.STAMP_CROSS, c.rubric, center, side * 0.4f)
         else {
-            val t = m.measure(if (goal < 0) "$n" else "$n/$goal", TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.label, color = c.ink, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(side.toInt()))
+            val t = m.measure(if (goal < 0) ctx.getString(R.string.verses_n, n) else "$n/$goal", TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.label, color = c.ink, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(side.toInt()))
             drawText(t, topLeft = Offset(tl.x, center.y - t.size.height / 2))
         }
         val l = m.measure(ctx.getString(R.string.widget_goal), TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = c.inkSoft, textAlign = TextAlign.Center), maxLines = 1, constraints = Constraints.fixedWidth(size.width.toInt()))

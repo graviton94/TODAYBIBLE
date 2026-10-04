@@ -22,6 +22,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        io.github.graviton94.todaybible.data.CrashLog.install(this)
         val store = Store(applicationContext)
         if (BuildConfig.DEV_TOOLS && intent.getBooleanExtra("tb.reset", false)) store.reset()
         val s = AppState(store).also { state = it }

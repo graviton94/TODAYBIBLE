@@ -547,4 +547,8 @@
     <string name="simple_aloud">소리 내어 읽기</string>
     <string name="simple_listen">듣기</string>
     <string name="simple_write">손으로 쓰기</string>
+    <string name="feedback_crash">최근 오류 기록도 함께 보내기 (기기 · 오류 줄만 담겨요)</string>
+    <string name="feedback_crash_label">[오류 기록]</string>
+    <string name="cal_prev">이전</string>
+    <string name="cal_next">다음</string>
 </resources>

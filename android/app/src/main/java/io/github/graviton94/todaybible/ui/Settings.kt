@@ -352,13 +352,19 @@ private fun Feedback(s: AppState) {
         decorationBox = { inner -> Box { if (v.isEmpty()) Text(stringResource(hint), style = Theme.body().copy(color = c.unwritten)); inner() } })
     field(bad, R.string.feedback_bad) { bad = it }
     field(good, R.string.feedback_good) { good = it }
-    BookButton(stringResource(R.string.feedback_send), Modifier.fillMaxWidth(), enabled = bad.isNotBlank() || good.isNotBlank()) {
+    // 최근 오류 기록이 있으면 함께 보낼지 (기기 안에만 있던 기록)
+    val crash = remember { io.github.graviton94.todaybible.data.CrashLog.read(ctx) }
+    var withCrash by remember { mutableStateOf(true) }
+    if (crash != null) ChoiceRow(stringResource(R.string.feedback_crash), withCrash) { withCrash = !withCrash }
+    BookButton(stringResource(R.string.feedback_send), Modifier.fillMaxWidth(), enabled = bad.isNotBlank() || good.isNotBlank() || (crash != null && withCrash)) {
         val info = "${ctx.getString(R.string.app_name)} ${BuildConfig.VERSION_NAME} · Android ${android.os.Build.VERSION.RELEASE} · ${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL} · ${s.translation.name} · ${s.narrator} · ${"%.2f".format(s.scale)}"
         val text = buildString {
             if (bad.isNotBlank()) append(ctx.getString(R.string.feedback_bad_label)).append('\n').append(bad.trim()).append("\n\n")
             if (good.isNotBlank()) append(ctx.getString(R.string.feedback_good_label)).append('\n').append(good.trim()).append("\n\n")
             append(info)
+            if (crash != null && withCrash) append("\n\n").append(ctx.getString(R.string.feedback_crash_label)).append('\n').append(crash)
         }
+        if (crash != null && withCrash) io.github.graviton94.todaybible.data.CrashLog.clear(ctx)
         ctx.startActivity(android.content.Intent.createChooser(android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain")
             .putExtra(android.content.Intent.EXTRA_SUBJECT, ctx.getString(R.string.feedback_subject)).putExtra(android.content.Intent.EXTRA_TEXT, text), null))
     }

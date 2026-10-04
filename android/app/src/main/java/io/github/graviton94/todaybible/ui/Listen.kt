@@ -42,6 +42,8 @@ import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
@@ -167,7 +169,8 @@ private fun ChapterText(s: AppState, book: Int, ch: Int, voiceAt: Int?, picked: 
 @Composable
 private fun Arrow(left: Boolean, enabled: Boolean, onClick: () -> Unit) {
     val c = Theme.c
-    Box(Modifier.size(Tokens.Size.tab).clickable(enabled = enabled, role = Role.Button, onClick = onClick), contentAlignment = Alignment.Center) {
+    val label = stringResource(if (left) R.string.listen_prev else R.string.listen_next)
+    Box(Modifier.size(Tokens.Size.tab).semantics(mergeDescendants = true) { contentDescription = label }.clickable(enabled = enabled, role = Role.Button, onClick = onClick), contentAlignment = Alignment.Center) {
         Text(if (left) "‹" else "›", style = Theme.title(true).copy(color = if (enabled) c.ink else c.hair))
     }
 }
