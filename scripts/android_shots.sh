@@ -87,6 +87,30 @@ open --ez tb.cardShots true
 C=/sdcard/Android/data/$P/files/cards
 for i in $(seq 1 45); do adb shell ls $C/done >/dev/null 2>&1 && break; sleep 2; done
 mkdir -p "$OUT/cards"; adb pull $C/. "$OUT/cards/" >/dev/null 2>&1; rm -f "$OUT/cards/done"; ls "$OUT/cards"
+# 마지막 다듬기: 낱말 찾기 · 마음에 새기기 · 주일 설교 노트 · 묵상 한 줄 · 서가와 두루마리 · 듣기 타이머
+open --ez tb.seed true --es tb.find 목자;                            shot g01_find 4
+open --es tb.memory "19:23:1" --ez tb.memoryOpen true;             shot g02_memory 4
+open --es tb.memory "19:23:1" --ez tb.memoryOpen true --ei tb.memoryLevel 1; shot g03_memory_initials 4
+open --es tb.memory "19:23:1" --ez tb.memoryOpen true --ei tb.memoryLevel 2; shot g04_memory_blank 4
+open --es tb.today 2026-10-04 --es tb.sermon "요 3:16-21|세상을 사랑하신 마음을 다시 생각했어요. 이번 주는 가족에게 먼저 연락하기.";  shot g05_today_sunday 5
+swipe_up;                                                          shot g06_today_sunday_more 2
+open --es tb.today 2026-10-04 --ez tb.sermonOpen true;             shot g07_sermon_sheet 4
+open --ei tb.page 3;                                               shot g08_record_shelf 5
+swipe_up;                                                          shot g09_record_scroll 2
+open --es tb.finished 1:7 --es tb.reflect "물이 걷히고 다시 시작하게 하시는 분";
+adb shell input tap 540 1810; sleep 3; swipe_up;                   shot g10_finished_reflect 2
+open --es tb.listen "41:3" --ez tb.listenPlay true;                shot g11_listen_controls 6
+adb shell am startservice -a stop -n $P/.data.ListenService >/dev/null 2>&1 || true
+# 아주 크게 (B3): 새 화면들을 큰 글씨로
+open --ef tb.scale 1.6 --ez tb.seed true;                          shot x06_huge_today 5
+open --ef tb.scale 1.6 --es tb.today 2026-10-04 --ez tb.sermonOpen true; shot x07_huge_sermon 4
+open --ef tb.scale 1.6 --es tb.memory "19:23:1" --ez tb.memoryOpen true --ei tb.memoryLevel 1; shot x08_huge_memory 4
+open --ef tb.scale 1.6 --ei tb.page 3;                             shot x09_huge_record 5
+open --ef tb.scale 1.6 --ei tb.page 1;                             shot x10_huge_library 5
+open --ef tb.scale 1.6 --es tb.listen "41:3";                      shot x11_huge_reader 4
+open --ef tb.scale 1.6 --ez tb.settings true;                      shot x12_huge_settings 4
+open --ef tb.scale 1.6 --ei tb.page 2 --ei tb.copyTab 1;           shot x13_huge_type 4
+open --ef tb.scale 1.0
 # 다크
 open --es tb.theme DARK;                                           shot d01_today 5
 open --ei tb.page 2;                                               shot d02_copy_grid 4

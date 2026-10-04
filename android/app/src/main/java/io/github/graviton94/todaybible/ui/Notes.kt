@@ -75,7 +75,7 @@ fun MemorySheet(s: AppState) {
     val key = s.memoryOpen ?: return
     BookSheet({ s.memoryOpen = null }) {
         val plain = remember(key, s.translation) { Markup.plain(s.store.book(s.translation, key.book).verse(key.chapter, key.verse)) }
-        var level by remember(key) { mutableStateOf(0) }
+        var level by remember(key) { mutableStateOf(s.memoryStartLevel) }
         var peek by remember(key, level) { mutableStateOf(setOf<Int>()) }
         Text(stringResource(R.string.memory_title), style = Theme.small().copy(color = c.rubric))
         Text(stringResource(R.string.ref_verse, s.bookName(key.book), key.chapter, key.verse), style = Theme.title(k))

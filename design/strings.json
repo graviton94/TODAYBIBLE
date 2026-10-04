@@ -620,5 +620,14 @@
   "sermon_passage_bad": {"en": "Write it like John 3:16-21.", "ko": "‘요 3:16-21’처럼 적어 주세요."},
   "sermon_copy": {"en": "Copy this passage", "ko": "본문 필사하기"},
   "sermon_note": {"en": "What stayed with you", "ko": "설교에서 남은 말"},
-  "sermon_note_hint": {"en": "A few lines are enough", "ko": "몇 줄이면 충분해요"}
+  "sermon_note_hint": {"en": "A few lines are enough", "ko": "몇 줄이면 충분해요"},
+  "shelf_title": {"en": "My shelf", "ko": "나의 서가"},
+  "shelf_line": {"en": "%1$d finished · %2$d in progress", "ko": "다 쓴 책 %1$d권 · 쓰는 중 %2$d권"},
+  "scroll_title": {"en": "My copied scroll", "ko": "옮겨 쓴 두루마리"},
+  "scroll_m": {"en": "%1$s m", "ko": "%1$sm"},
+  "scroll_km": {"en": "%1$s km", "ko": "%1$skm"},
+  "scroll_letters": {"en": "%1$s letters, one 1 cm square each", "ko": "%1$s자를 원고지 칸(1cm)으로 이으면"},
+  "scroll_like_bus": {"en": "longer than a bus", "ko": "버스 한 대보다 길어요"},
+  "scroll_like_field": {"en": "longer than a football field", "ko": "축구장 하나보다 길어요"},
+  "scroll_like_km": {"en": "over a kilometre", "ko": "1km를 넘었어요"}
 }

@@ -85,6 +85,10 @@ object Tokens {
         val narrButton = 96.dp
         val bookW = 44.dp
         val bookH = 60.dp
+        val spineBand = 2.dp
+        val scroll = 30.dp
+        val scrollRoll = 9.dp
+        val shelfRow = 68.dp
     }
     object Text {
         val verse = 21.sp
@@ -159,6 +163,7 @@ object Tokens {
         const val aloudFast = 1.3f
         const val reviewMs = 4000
         const val tickMs = 90
+        const val unrollMs = 1100
     }
     object Ratio {
         const val plateAspect = 0.766f
@@ -175,6 +180,7 @@ object Tokens {
         const val heatGap = 0.18f
         const val barMax = 0.8f
         const val scaleHuge = 1.6f
+        const val spineMin = 0.62f
     }
     object Alpha {
         const val faint = 0.5f
@@ -214,5 +220,6 @@ object Tokens {
         const val cardFill = 0.55f
         const val cardPlate = 0.62f
         const val medalTop = 0.24f
+        const val scrollCellCm = 1.0f
     }
 }

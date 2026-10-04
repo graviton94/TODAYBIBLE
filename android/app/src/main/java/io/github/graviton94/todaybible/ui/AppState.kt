@@ -170,6 +170,8 @@ class AppState(val store: Store) {
     /** 마음에 새기는 말씀 (A3): 시험이 아니라 곁에 두고 되뇌는 구절. */
     var memory by mutableStateOf(store.loadMemory())
     var memoryOpen by mutableStateOf<io.github.graviton94.todaybible.core.VerseKey?>(null)
+    /** 캡처용: 되뇌기 창을 처음부터 가린 단계로. */
+    var memoryStartLevel = 0
     fun isMemory(k: io.github.graviton94.todaybible.core.VerseKey) = memory.any { it.translation == translation && it.key == k }
     fun toggleMemory(k: io.github.graviton94.todaybible.core.VerseKey) {
         memory = if (isMemory(k)) memory.filterNot { it.translation == translation && it.key == k }

@@ -150,6 +150,20 @@ class MainActivity : ComponentActivity() {
         if (i.getBooleanExtra("tb.purchase", false)) s.purchaseOpen = true
         s.shareVerse = i.getIntExtra("tb.share", 0).takeIf { it > 0 }?.let { io.github.graviton94.todaybible.core.VerseKey(s.book, s.chapter, it) }
         if (i.getBooleanExtra("tb.cardShots", false)) Thread { cardShots(s) }.start()
+        // 마지막 다듬기 캡처: 낱말 찾기 · 마음에 새기기 · 설교 노트 · 묵상 한 줄
+        i.getStringExtra("tb.find")?.let { w -> s.found = w to io.github.graviton94.todaybible.core.Search.find((0 until 66).asSequence().map { s.store.book(s.translation, it) }, w, 200) }
+        i.getStringExtra("tb.memory")?.split(':')?.let { val k = io.github.graviton94.todaybible.core.VerseKey(it[0].toInt() - 1, it[1].toInt(), it[2].toInt()); if (!s.isMemory(k)) s.toggleMemory(k); if (i.getBooleanExtra("tb.memoryOpen", false)) s.memoryOpen = k }
+        s.memoryStartLevel = i.getIntExtra("tb.memoryLevel", 0)
+        i.getStringExtra("tb.sermon")?.split('|')?.let { p ->
+            val r = io.github.graviton94.todaybible.core.Reference.passage(p[0])
+            s.putSermon(io.github.graviton94.todaybible.data.Store.Note(io.github.graviton94.todaybible.data.Store.NoteKind.SERMON, s.translation, r?.book ?: 0, r?.chapter ?: 1, r?.from ?: 0, r?.to ?: 0, s.today().toEpochDay(), p.getOrElse(1) { "" }))
+        }
+        if (i.getBooleanExtra("tb.listenPlay", false)) s.listenAt?.let { (b, c) ->
+            io.github.graviton94.todaybible.data.ListenService.start(this, b, c, 1, s.aloudRate())
+            android.os.Handler(mainLooper).postDelayed({ io.github.graviton94.todaybible.data.ListenService.setTimer(this, 30) }, 2500)
+        }
+        if (i.getBooleanExtra("tb.sermonOpen", false)) s.sermonOpen = s.today().toEpochDay()
+        i.getStringExtra("tb.reflect")?.let { t -> s.finished?.let { (b, c) -> s.setReflection(b, c, t) } }
         s.toast = i.getIntExtra("tb.toast", 0).takeIf { it > 0 }?.let { getString(R.string.filled_n, it) }
     }
 }

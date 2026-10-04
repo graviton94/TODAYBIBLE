@@ -623,4 +623,13 @@
     <string name="sermon_copy">본문 필사하기</string>
     <string name="sermon_note">설교에서 남은 말</string>
     <string name="sermon_note_hint">몇 줄이면 충분해요</string>
+    <string name="shelf_title">나의 서가</string>
+    <string name="shelf_line">다 쓴 책 %1$d권 · 쓰는 중 %2$d권</string>
+    <string name="scroll_title">옮겨 쓴 두루마리</string>
+    <string name="scroll_m">%1$sm</string>
+    <string name="scroll_km">%1$skm</string>
+    <string name="scroll_letters">%1$s자를 원고지 칸(1cm)으로 이으면</string>
+    <string name="scroll_like_bus">버스 한 대보다 길어요</string>
+    <string name="scroll_like_field">축구장 하나보다 길어요</string>
+    <string name="scroll_like_km">1km를 넘었어요</string>
 </resources>

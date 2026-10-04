@@ -623,4 +623,13 @@
     <string name="sermon_copy">Copy this passage</string>
     <string name="sermon_note">What stayed with you</string>
     <string name="sermon_note_hint">A few lines are enough</string>
+    <string name="shelf_title">My shelf</string>
+    <string name="shelf_line">%1$d finished · %2$d in progress</string>
+    <string name="scroll_title">My copied scroll</string>
+    <string name="scroll_m">%1$s m</string>
+    <string name="scroll_km">%1$s km</string>
+    <string name="scroll_letters">%1$s letters, one 1 cm square each</string>
+    <string name="scroll_like_bus">longer than a bus</string>
+    <string name="scroll_like_field">longer than a football field</string>
+    <string name="scroll_like_km">over a kilometre</string>
 </resources>

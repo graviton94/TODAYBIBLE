@@ -64,6 +64,7 @@ fun RecordPage(s: AppState) {
     val days = s.progress.days()
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
         RunningHead(stringResource(R.string.page_record), stringResource(R.string.presence_n, Presence.total(days)), k)
+        BookShelf(s)
         yearShown(s)?.let { YearCard(s, it) }
         CalendarPanel(s, days)
         Stats(s)
@@ -373,6 +374,7 @@ private fun Stats(s: AppState) {
         stringResource(R.string.stat_modes, pct(io.github.graviton94.todaybible.core.Mode.TYPE), pct(io.github.graviton94.todaybible.core.Mode.PAPER), pct(io.github.graviton94.todaybible.core.Mode.ALOUD)) to "",
     )
     Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        ScrollLength(s, letters)
         cells.take(4).chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                 row.forEach { (big, small) ->
