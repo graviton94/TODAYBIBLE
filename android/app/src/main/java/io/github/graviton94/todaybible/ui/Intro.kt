@@ -98,10 +98,10 @@ private fun DrawScope.leather(cover: Color) {
     drawRect(ShaderBrush(ImageShader(grain, TileMode.Repeated, TileMode.Repeated)))
 }
 
-/** 금박 빛: 왼쪽에서 오른쪽으로 한 번 스치는 띠 (p = 0..1). */
+/** 금박 빛: 왼쪽에서 오른쪽으로 한 번 스치는 띠 (p = 0..1). 띠 밖은 늘 금박 그 색, 띠 가장자리만 살짝 어둡게. */
 private fun goldBrush(lo: Color, mid: Color, hi: Color, p: Float, w: Float): Brush {
     val x = -w + (w * 3) * p
-    return Brush.linearGradient(listOf(lo, mid, hi, mid, lo), start = Offset(x - w, 0f), end = Offset(x + w, w * 0.3f), tileMode = TileMode.Clamp)
+    return Brush.linearGradient(listOf(mid, lerp(mid, lo, 0.5f), hi, lerp(mid, lo, 0.5f), mid), start = Offset(x - w, 0f), end = Offset(x + w, w * 0.3f), tileMode = TileMode.Clamp)
 }
 
 @Composable
@@ -201,7 +201,7 @@ fun IntroCover(s: AppState, onEnter: () -> Unit) {
         .clickable(remember { MutableInteractionSource() }, null) { tap() }) {
         // 속표지
         Box(Modifier.fillMaxSize().background(c.leaf)) {
-            Box(Modifier.align(Alignment.TopEnd).padding(end = Tokens.Space.s6).width(Tokens.Size.ribbonW).height(Tokens.Size.ribbonH * ribbon.value).drawBehind {
+            Box(Modifier.align(Alignment.TopEnd).systemBarsPadding().padding(end = Tokens.Space.s6).width(Tokens.Size.ribbonW).height(Tokens.Size.ribbonH * ribbon.value).drawBehind {
                 val p = Path().apply { moveTo(0f, 0f); lineTo(size.width, 0f); lineTo(size.width, size.height); lineTo(size.width / 2, size.height * 0.92f); lineTo(0f, size.height); close() }
                 drawPath(p, c.rubric); drawLine(lerp(c.rubric, Color.Black, 0.3f), Offset(size.width / 2, 0f), Offset(size.width / 2, size.height * 0.9f), size.width * 0.12f)
             })
