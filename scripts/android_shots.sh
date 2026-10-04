@@ -123,7 +123,7 @@ open --ez tb.settings true;                                        shot j02_sett
 open --ez tb.settings true --es tb.section set_alerts;             shot j03_settings_alerts 4
 open --ez tb.settings true --es tb.askLang en;                     shot j04_language_confirm 4
 open --ez tb.seed true;  swipe_up; swipe_up; swipe_up;             shot j05_today_lifetime 2
-open --ei tb.page 1; swipe_up;                                     shot j06_library_tags 3
+open --ei tb.page 1; swipe_up; swipe_up;                           shot j06_library_tags 3
 open --ei tb.page 2 --ei tb.copyTab 1; adb shell input tap 540 2150; sleep 2
 adb shell input text "zz"; sleep 1.5;                              shot j07_typing_wrong 1
 # 아주 크게 (B3): 새 화면들을 큰 글씨로

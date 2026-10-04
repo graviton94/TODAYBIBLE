@@ -138,8 +138,8 @@ fun LibraryPage(s: AppState) {
                         .padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                             Text(if (k) b.ko else b.en, style = Theme.head(k), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                            if (s.premium(b.index) && st?.done != true) PremiumTag()
                             when {
-                                s.premium(b.index) && st == null -> PremiumTag()
                                 st?.done == true -> { StampMark(STAMP_CROSS, c.giltText, Modifier.size(Tokens.Size.iconSm)); Text(stringResource(R.string.lib_done), style = Theme.small().copy(color = c.giltText), maxLines = 1) }
                                 st != null -> Text(stringResource(R.string.lib_ch_of, st.doneChapters, b.chapters), style = Theme.small(), maxLines = 1)
                                 else -> Text(stringResource(R.string.lib_chapters, b.chapters), style = Theme.small().copy(color = c.unwritten), maxLines = 1)
