@@ -10,6 +10,8 @@ permissions:
 
 env:
   NARRATION_URL: ${{ vars.CF_R2_PUBLIC_URL }}
+  # 교인 시험판 (APK 1주 → Play 비공개 테스트)
+  TB_VERSION_NAME: "0.9.0"
 jobs:
   apk:
     runs-on: ubuntu-latest
