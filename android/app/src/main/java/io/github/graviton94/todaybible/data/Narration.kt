@@ -40,13 +40,20 @@ object Narration {
     private val locks = java.util.concurrent.ConcurrentHashMap<String, Any>()
     fun fetch(ctx: Context, voice: String, book: Int, chapter: Int): Boolean =
         // 같은 장을 앱과 듣기가 동시에 받지 않게
-        synchronized(locks.getOrPut("$voice/$book/$chapter") { Any() }) { fetchOnce(ctx, voice, book, chapter) }
+        synchronized(locks.getOrPut("$voice/$book/$chapter") { Any() }) {
+            // 한 번 더 (잠깐 끊긴 연결) · 그래도 안 되면 까닭을 기록에 남겨 ‘의견 보내기’로 볼 수 있게
+            fetchOnce(ctx, voice, book, chapter) || run { Thread.sleep(1200); fetchOnce(ctx, voice, book, chapter) }
+                .also { if (!it) CrashLog.note(ctx, "narration $voice ${book + 1}:$chapter failed · $lastError") }
+        }
+    @Volatile private var lastError = ""
+    /** 낭독 음원을 못 받아 폰 목소리로 대신 읽은 적이 있는지 (화면에 한 번 알려요). */
+    val fellBack = kotlinx.coroutines.flow.MutableStateFlow(false)
 
     private fun fetchOnce(ctx: Context, voice: String, book: Int, chapter: Int): Boolean = runCatching {
         if (has(ctx, voice, book, chapter)) return true
         val d = dir(ctx, voice, book); d.mkdirs()
         val name = "${voice}_%02d_c%03d.zip".format(book + 1, chapter)
-        val conn = bases.firstNotNullOfOrNull { open(URL("$it/$name")) } ?: run { android.util.Log.w("Narration", "no source for $name (${bases.joinToString()})"); return false }
+        val conn = bases.firstNotNullOfOrNull { open(URL("$it/$name")) } ?: run { lastError = "no source ($name)"; android.util.Log.w("Narration", "no source for $name (${bases.joinToString()})"); return false }
         var n = 0
         ZipInputStream(conn.inputStream.buffered()).use { z ->
             while (true) {
@@ -62,7 +69,7 @@ object Narration {
         android.util.Log.i("Narration", "got $name ($n files)")
         trim(ctx, keep = mark(ctx, voice, book, chapter))
         true
-    }.getOrElse { android.util.Log.w("Narration", "fetch $voice $book:$chapter failed", it); false }
+    }.getOrElse { lastError = it.toString().take(160); android.util.Log.w("Narration", "fetch $voice $book:$chapter failed", it); false }
 
     /**
      * 권 통째로 받아 두기 (I3): 인터넷 없는 곳에서도 듣게. 받아 둔 권은 자동 정리에서 빠져요.
@@ -100,7 +107,7 @@ object Narration {
             val conn = (url.openConnection() as HttpURLConnection).apply { instanceFollowRedirects = false; connectTimeout = 15_000; readTimeout = 30_000 }
             val code = conn.responseCode
             if (code in 300..399 && hops++ < 5) { url = URL(url, conn.getHeaderField("Location")); conn.disconnect(); continue }
-            if (code != 200) { android.util.Log.w("Narration", "$url -> $code"); conn.disconnect(); return null }
+            if (code != 200) { lastError = "$url -> $code"; android.util.Log.w("Narration", "$url -> $code"); conn.disconnect(); return null }
             return conn
         }
     }

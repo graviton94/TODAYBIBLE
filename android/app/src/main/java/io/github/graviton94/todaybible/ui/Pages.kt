@@ -26,6 +26,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -187,6 +188,9 @@ fun Root(s: AppState) {
         // 여는 순간이 먼저, 처음 설치했으면 그다음에 첫 안내
         if (s.opening) { if (s.firstOfDay) IntroCover(s) { s.opening = false } else IntroDaily(s) { s.opening = false } }
         else if (!s.onboarded) Welcome(s)
+        // 낭독 음원을 못 받아 폰 목소리로 읽을 때: 한 번 알려요
+        val fell by io.github.graviton94.todaybible.data.Narration.fellBack.collectAsState()
+        LaunchedEffect(fell) { if (fell) { s.toast = ctx.getString(R.string.narration_fallback); io.github.graviton94.todaybible.data.Narration.fellBack.value = false } }
         // 토스트: 이름표 위에 잠깐
         s.toast?.let { msg ->
             LaunchedEffect(msg) { kotlinx.coroutines.delay(Tokens.Motion.toastMs.toLong()); s.toast = null }

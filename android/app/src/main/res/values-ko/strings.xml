@@ -674,4 +674,5 @@
     <string name="intro_tap_enter">눌러서 들어가기</string>
     <string name="intro_tap_open">눌러서 펼치기</string>
     <string name="intro_tap_start">눌러서 시작하기</string>
+    <string name="narration_fallback">낭독 음원을 받지 못해 폰 목소리로 읽어요. 인터넷 연결을 확인해 주세요.</string>
 </resources>

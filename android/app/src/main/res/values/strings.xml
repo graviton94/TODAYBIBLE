@@ -674,4 +674,5 @@
     <string name="intro_tap_enter">Tap to enter</string>
     <string name="intro_tap_open">Tap to open</string>
     <string name="intro_tap_start">Tap to begin</string>
+    <string name="narration_fallback">Couldnt download the narration, so your phones voice is reading. Check your internet connection.</string>
 </resources>

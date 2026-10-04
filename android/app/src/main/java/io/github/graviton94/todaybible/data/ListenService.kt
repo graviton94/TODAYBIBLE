@@ -117,6 +117,7 @@ class ListenService : Service() {
         val voice = store.narratorFor(tr)
         Thread {
             val narrated = voice != Narration.DEVICE && Narration.fetch(this, voice, book, chapter)
+            if (voice != Narration.DEVICE && !narrated) Narration.fellBack.value = true
             ui.post {
                 if (t != token) return@post
                 val text = store.book(tr, book)

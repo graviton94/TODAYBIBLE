@@ -18,6 +18,12 @@ object CrashLog {
         Thread.setDefaultUncaughtExceptionHandler(Handler(app, prev))
     }
 
+    /** 앱이 닫히지는 않았지만 알아 둘 일 (예: 낭독 음원을 못 받음) 한 줄. 같은 기록에 함께. */
+    fun note(ctx: Context, line: String) = runCatching {
+        val f = file(ctx.applicationContext)
+        f.writeText((f.takeIf { it.exists() }?.readText().orEmpty() + "${java.time.LocalDateTime.now().withNano(0)} · $line\n").takeLast(MAX))
+    }
+
     fun read(ctx: Context): String? = file(ctx).takeIf { it.exists() && it.length() > 0 }?.readText()
     fun clear(ctx: Context) { file(ctx).delete() }
 
