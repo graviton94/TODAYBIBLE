@@ -50,7 +50,8 @@ object Reminder {
         else { am.setWindow(AlarmManager.RTC_WAKEUP, ms, WINDOW_MS, pi); am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, ms + WINDOW_MS, backup) }
     }
 
-    fun post(ctx: Context) {
+    fun post(ctx0: Context) {
+        val ctx = io.github.graviton94.todaybible.ui.Lang.wrap(ctx0)   // 앱에서 고른 언어로
         val store = Store(ctx)
         if (store.reminderHour < 0) return
         // 하루 한 번만 (늦게 울렸어도 정한 시각에서 두 시간이 지났으면 건너뜀)

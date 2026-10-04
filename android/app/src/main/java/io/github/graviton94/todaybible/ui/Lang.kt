@@ -21,7 +21,8 @@ object Lang {
     private val cache = java.util.concurrent.ConcurrentHashMap<Pair<Translation, Int>, Context>()
     /** 번역의 언어로 된 문자열 묶음. */
     fun content(ctx: Context, tr: Translation): Context = cache.getOrPut(tr to System.identityHashCode(ctx.applicationContext)) {
-        val c = Configuration(ctx.resources.configuration); c.setLocale(locale(tr)); ctx.createConfigurationContext(c)
+        val app = ctx.applicationContext
+        val c = Configuration(app.resources.configuration); c.setLocale(locale(tr)); app.createConfigurationContext(c)
     }
     fun content(ctx: Context, korean: Boolean): Context = content(ctx, if (korean) Translation.KRV else Translation.KJV)
     /** 권 · 장 (마가복음 3장 / Mark 3) — 번역의 언어로. */

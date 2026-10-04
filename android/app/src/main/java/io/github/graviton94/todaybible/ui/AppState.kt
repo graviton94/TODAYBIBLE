@@ -274,9 +274,17 @@ class AppState(val store: Store) {
     fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t; checkNight(); widgets() }
     /** 언어 (시스템 · ko · en): 화면 글 · 성경 번역 · 낭독 목소리를 한 번에. 화면 글은 다시 그릴 때 (recreate) 바뀌어요. */
     var language by mutableStateOf(store.language)
+    /** 덮인 창들 모두 닫기 (알림 · 위젯으로 들어올 때). */
+    fun closeOverlays() {
+        settingsOpen = false; purchaseOpen = false; plateView = null; finished = null; picker = null; marksOpen = false; found = null
+        memoryOpen = null; sermonOpen = null; prayersOpen = false; prayerOpen = null; shareVerse = null; handBook = null; planOpen = false; award = null; opening = false
+    }
     /** 앱을 처음부터 다시 (언어처럼 화면 전체가 바뀌는 설정 뒤에). 여는 순간은 이번만 건너뛰어요. */
     fun restartApp(a: android.app.Activity) {
         store.skipIntroOnce = true; store.flush()
+        io.github.graviton94.todaybible.data.ListenService.stop(a)
+        // 뒤에서 쓰던 기록 (책갈피 · 노트 …) 이 마저 저장되도록 잠깐 기다린 뒤
+        Thread.sleep(400)
         a.startActivity(android.content.Intent(a, io.github.graviton94.todaybible.MainActivity::class.java)
             .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK))
         a.finishAffinity(); Runtime.getRuntime().exit(0)
@@ -284,7 +292,7 @@ class AppState(val store: Store) {
     fun chooseLanguage(l: String) {
         language = l; store.language = l
         Lang.applyAppLocale(store.context, l)
-        val tr = when (l) { "ko" -> Translation.KRV; "en" -> Translation.KJV; else -> if (java.util.Locale.getDefault().language == "ko") Translation.KRV else Translation.KJV }
+        val tr = when (l) { "ko" -> Translation.KRV; "en" -> Translation.KJV; else -> if (android.content.res.Resources.getSystem().configuration.locales[0].language == "ko") Translation.KRV else Translation.KJV }
         if (tr != translation) chooseTranslation(tr)
     }
     fun setTextScale(s: Float) { scale = s; store.textScale = s }

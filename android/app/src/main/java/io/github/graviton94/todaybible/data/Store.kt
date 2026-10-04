@@ -278,5 +278,5 @@ class Store(val context: Context) {
         return b.toString()
     }
 
-    private fun defaultTranslation() = if (java.util.Locale.getDefault().language == "ko") Translation.KRV else Translation.KJV
+    private fun defaultTranslation() = if (android.content.res.Resources.getSystem().configuration.locales[0].language == "ko") Translation.KRV else Translation.KJV
 }

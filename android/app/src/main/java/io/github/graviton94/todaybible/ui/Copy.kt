@@ -58,6 +58,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -223,7 +224,7 @@ private fun WritePage(s: AppState, verse: Int?) {
         )
         if (fixHint && marks.any { it == TypeJudge.Mark.WRONG }) Text(stringResource(R.string.type_fix_hint),
             style = Theme.label().copy(color = c.leatherInk, textAlign = androidx.compose.ui.text.style.TextAlign.Center),
-            modifier = Modifier.align(Alignment.TopCenter).padding(Tokens.Space.s3).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.rubric).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s2))
+            modifier = Modifier.align(Alignment.BottomCenter).imePadding().padding(Tokens.Space.s3).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.rubric).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s2))
         // 쓰기 시작: 키보드가 닫혀 있을 때만 아래 띠로
         if (!focused && shown != null) Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(c.leaf)
             .drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }
@@ -286,12 +287,13 @@ private fun Manuscript(s: AppState, verse: Int, source: String, typed: String, m
                                 val w = Tokens.Stroke.hair.toPx(); val line = c.rubric.copy(alpha = Tokens.Alpha.faint)
                                 drawLine(line, Offset(size.width, 0f), Offset(size.width, size.height), w)
                                 drawLine(line, Offset(0f, size.height), Offset(size.width, size.height), w)
+                                if (m == TypeJudge.Mark.WRONG) drawRect(c.rubric.copy(alpha = Tokens.Alpha.wrongCell))
                                 if (i != null && i == cursor && gold <= 0f) drawRect(c.rubric, Offset(Tokens.Stroke.rule.toPx() / 2, Tokens.Stroke.rule.toPx() / 2),
                                     androidx.compose.ui.geometry.Size(size.width - Tokens.Stroke.rule.toPx(), size.height - Tokens.Stroke.rule.toPx()), style = androidx.compose.ui.graphics.drawscope.Stroke(Tokens.Stroke.rule.toPx()))
                             }, contentAlignment = Alignment.Center) {
                                 if (i != null && plain[i] != ' ') {
                                     val done = m == TypeJudge.Mark.OK
-                                    val ch = when (m) { TypeJudge.Mark.WRONG, TypeJudge.Mark.COMPOSING -> typedAt.getOrNull(i) ?: plain[i]; else -> plain[i] }
+                                    val ch = when (m) { TypeJudge.Mark.COMPOSING -> typedAt.getOrNull(i) ?: plain[i]; else -> plain[i] }   // 틀린 칸: 써야 할 글자를 붉게
                                     val color = when {
                                         gold > 0f -> c.giltText
                                         done -> c.ink
@@ -819,11 +821,11 @@ private fun VoiceRow(s: AppState) {
                 }
                 next()
             }
-            BookButton(stringResource(R.string.voice_export_audio), Modifier.weight(1f), enabled = !s.exporting) { export(false) }
-            BookButton(stringResource(R.string.voice_export_video), Modifier.weight(1f), enabled = !s.exporting) { export(true) }
+            BookButton(stringResource(R.string.voice_export_audio) + if (s.premiumOn) " · " + stringResource(R.string.premium_tag) else "", Modifier.weight(1f), enabled = !s.exporting) { export(false) }
+            BookButton(stringResource(R.string.voice_export_video) + if (s.premiumOn) " · " + stringResource(R.string.premium_tag) else "", Modifier.weight(1f), enabled = !s.exporting) { export(true) }
         }
         // 가족에게 보내기 (U1): 표지 카드 한 장 + 이 장 낭독을 함께
-        BookButton(stringResource(R.string.gift_send), Modifier.fillMaxWidth(), enabled = !s.exporting) {
+        BookButton(stringResource(R.string.gift_send) + if (s.premiumOn) " · " + stringResource(R.string.premium_tag) else "", Modifier.fillMaxWidth(), enabled = !s.exporting) {
             if (s.gated()) { s.purchaseOpen = true; return@BookButton }
             s.exporting = true
             scope.launch {

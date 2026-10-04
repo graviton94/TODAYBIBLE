@@ -261,7 +261,7 @@ private fun SimpleHome(s: AppState) {
         Text(stringResource(R.string.listen_head, s.bookName(b), ch), style = Theme.title(k, Tokens.Text.display))
         Text(stringResource(R.string.ch_progress, done, fill.size) + if (s.goalMet()) " · " + stringResource(R.string.goal_done) else "", style = Theme.body().copy(color = c.inkSoft))
         BigAction(stringResource(R.string.simple_aloud)) { s.store.copyTab = 0; s.open(b, ch) }
-        BigAction(stringResource(R.string.simple_listen)) { s.read(b, ch); io.github.graviton94.todaybible.data.ListenService.start(ctx, b, ch, s.progress.nextVerse(s.translation, t, ch) ?: 1, s.aloudRate()) }
+        BigAction(stringResource(R.string.simple_listen)) { s.read(b, ch); if (s.locked(b)) return@BigAction; io.github.graviton94.todaybible.data.ListenService.start(ctx, b, ch, s.progress.nextVerse(s.translation, t, ch) ?: 1, s.aloudRate()) }
         BigAction(stringResource(R.string.simple_write)) { s.store.copyTab = 2; s.open(b, ch) }
         WeekStamps(s)
     }

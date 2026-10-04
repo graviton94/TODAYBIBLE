@@ -43,7 +43,8 @@ object PrayerReminder {
         }
     }
 
-    fun post(ctx: Context, h: Hour) {
+    fun post(ctx0: Context, h: Hour) {
+        val ctx = io.github.graviton94.todaybible.ui.Lang.wrap(ctx0)   // 앱에서 고른 언어로
         val store = Store(ctx)
         if (h !in hoursFor(store.prayerReminder)) return
         val p = Prayers.forHour(h)

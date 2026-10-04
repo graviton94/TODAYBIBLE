@@ -218,6 +218,7 @@ object Tokens {
         const val handGuide = 0.35f
         const val guide = 0.22f
         const val contrastHair = 0.45f
+        const val wrongCell = 0.14f
     }
     object Leading {
         const val verse = 1.8f

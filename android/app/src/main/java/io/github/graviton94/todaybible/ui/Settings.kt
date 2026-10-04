@@ -51,6 +51,7 @@ private val SCALES = listOf(1f, Tokens.Ratio.scaleLarge, Tokens.Ratio.scaleLarge
 
 /** 설정: 한 장짜리. 고르는 것은 모두 밑줄 탭 · 한 줄 목록. */
 @Composable
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 fun SettingsPage(s: AppState) {
     val ctx0 = androidx.compose.ui.platform.LocalContext.current
     val c = Theme.c; val k = s.korean
@@ -65,7 +66,7 @@ fun SettingsPage(s: AppState) {
             Text(stringResource(R.string.settings), style = Theme.title(k), maxLines = 1)
         }
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
-            var openSec by remember { mutableStateOf<String?>(null) }
+            var openSec by remember { mutableStateOf<String?>("set_display") }
             LifetimeCard(s)
             Section(stringResource(R.string.set_display), listOf(stringResource(when (s.language) { "ko" -> R.string.lang_ko_short; "en" -> R.string.lang_en_short; else -> R.string.lang_system }), stringResource(listOf(R.string.theme_system, R.string.theme_light, R.string.theme_dark, R.string.theme_candle)[s.theme.ordinal])).joinToString(" · "), openSec == "set_display") { openSec = if (openSec == "set_display") null else "set_display" }
             if (openSec == "set_display") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
@@ -76,7 +77,6 @@ fun SettingsPage(s: AppState) {
                         ChoiceRow(stringResource(name), s.language == id) { if (s.language != id) askLang = id }
                     }
                 }
-                Text(stringResource(R.string.language_hint), style = Theme.small())
             }
             Group(stringResource(R.string.theme)) {
                 UnderlineTabs(listOf(stringResource(R.string.theme_system), stringResource(R.string.theme_light), stringResource(R.string.theme_dark), stringResource(R.string.theme_candle)), s.theme.ordinal) {
@@ -147,11 +147,15 @@ fun SettingsPage(s: AppState) {
                 fun turnOn(h: Int) { if (android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) { pending = h; ask.launch(android.Manifest.permission.POST_NOTIFICATIONS) } else s.setReminder(h) }
                 val on = s.reminderHour >= 0
                 ChoiceRow(stringResource(R.string.reminder_on), on) { if (on) s.setReminder(-1) else turnOn(s.store.lastReminderHour) }
-                if (on) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    val h = s.reminderHour
-                    BookButton("−", Modifier.width(Tokens.Size.touch), quiet = true) { turnOn((h + 23) % 24) }
-                    Text(fmtDate(R.string.fmt_hour, java.time.LocalTime.of(h, 0)), style = Theme.title(s.korean), textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
-                    BookButton("+", Modifier.width(Tokens.Size.touch), quiet = true) { turnOn((h + 1) % 24) }
+                // 시각: 자주 쓰는 때를 바로 고르기 (한 시간씩 누르지 않게)
+                if (on) androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                    REMINDER_HOURS.forEach { h ->
+                        val sel = h == s.reminderHour
+                        Box(Modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (sel) c.leather else c.paper)
+                            .clickable(role = Role.RadioButton) { turnOn(h) }.padding(horizontal = Tokens.Space.s4), contentAlignment = Alignment.Center) {
+                            Text(fmtDate(R.string.fmt_hour, java.time.LocalTime.of(h, 0)), style = Theme.label().copy(color = if (sel) c.leatherInk else c.ink), maxLines = 1)
+                        }
+                    }
                 }
             }
             Group(stringResource(R.string.prayer_reminder)) {
@@ -174,7 +178,6 @@ fun SettingsPage(s: AppState) {
                 val (voice, photos) = androidx.compose.runtime.remember { io.github.graviton94.todaybible.data.Voice.usage(ctx) }
                 fun mb(b: Long) = if (b < 1_000_000) "%.1fMB".format(b / 1_000_000f) else "%.0fMB".format(b / 1_000_000f)
                 Text(stringResource(R.string.storage) + " · " + stringResource(R.string.storage_line, mb(voice), mb(photos)), style = Theme.small())
-                BookButton(stringResource(R.string.notes_pdf) + if (s.premiumOn) " · " + stringResource(R.string.premium_tag) else "", Modifier.fillMaxWidth(), quiet = true) { s.requestNotes(null) }
                 // 녹음 모두 지우기: 한 번 더 눌러야 지워요
                 var sure by remember { mutableStateOf(false) }
                 if (voice > 0) BookButton(stringResource(if (sure) R.string.rec_clear_sure else R.string.rec_clear), Modifier.fillMaxWidth(), quiet = true) {
@@ -221,9 +224,6 @@ fun SettingsPage(s: AppState) {
             }
             Section(stringResource(R.string.set_help), stringResource(R.string.set_help_sum), openSec == "set_help") { openSec = if (openSec == "set_help") null else "set_help" }
             if (openSec == "set_help") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
-            Group(stringResource(R.string.lifetime)) {
-                ChoiceRow(stringResource(if (s.lifetime.owned) R.string.owned else R.string.lifetime_head), s.lifetime.owned) { s.purchaseOpen = true }
-            }
             Group(stringResource(R.string.feedback)) { Feedback(s) }
             Group(stringResource(R.string.coach_again_h)) {
                 ChoiceRow(stringResource(R.string.coach_again), false) { s.coachReset(); s.settingsOpen = false; s.toast = ctx0.getString(R.string.coach_again_done) }
@@ -248,6 +248,9 @@ fun SettingsPage(s: AppState) {
     }
 }
 
+/** 매일 알림 시각 고르기. */
+private val REMINDER_HOURS = listOf(5, 6, 7, 8, 9, 12, 18, 20, 21, 22)
+
 /** 설정의 큰 갈래 (접힘): 제목 · 지금 고른 것 한 줄 · ›. 누르면 그 갈래만 펼쳐요. */
 @Composable
 private fun Section(title: String, summary: String, open: Boolean, onClick: () -> Unit) {
@@ -256,7 +259,7 @@ private fun Section(title: String, summary: String, open: Boolean, onClick: () -
         .clickable(role = Role.Button, onClick = onClick).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
             Text(title, style = Theme.label().copy(color = if (open) c.rubric else c.ink), maxLines = 1)
-            Text(summary, style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(summary, style = Theme.small(), maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         Text(if (open) "⌃" else "›", style = Theme.title(false).copy(color = c.inkSoft))
     }
@@ -352,7 +355,6 @@ private fun GuideVoiceSettings(s: AppState) {
     var list by remember(guide) { mutableStateOf<List<android.speech.tts.Voice>>(emptyList()) }
     var ready by remember(guide) { mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(guide) { guide.whenReady { main.post { list = guide.voices; ready = true } } }
-    Text(stringResource(R.string.guide_toggle), style = Theme.small())
     // 읽는 빠르기 · 큰 글씨 한 줄
     UnderlineTabs(listOf(stringResource(R.string.aloud_slow), stringResource(R.string.aloud_normal), stringResource(R.string.aloud_fast)), s.aloudSpeed) { s.chooseAloudSpeed(it) }
     ChoiceRow(stringResource(R.string.aloud_big_setting), s.aloudBig) { s.flipAloudBig() }

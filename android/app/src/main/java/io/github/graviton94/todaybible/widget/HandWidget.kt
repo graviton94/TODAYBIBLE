@@ -43,7 +43,8 @@ class HandWidget : AppWidgetProvider() {
             m.getAppWidgetIds(ComponentName(ctx, HandWidget::class.java)).forEach { draw(ctx, m, it) }
         }
 
-        private fun draw(ctx: Context, m: AppWidgetManager, id: Int) {
+        private fun draw(ctx0: Context, m: AppWidgetManager, id: Int) {
+            val ctx = io.github.graviton94.todaybible.ui.Lang.wrap(ctx0)   // 앱에서 고른 언어로
             val o = m.getAppWidgetOptions(id)
             // 세로 화면 기준 자리: 너비는 MIN_WIDTH, 높이는 MAX_HEIGHT
             val wDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 320).coerceAtLeast(180)

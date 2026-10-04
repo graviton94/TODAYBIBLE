@@ -145,7 +145,7 @@ fun SermonSheet(s: AppState) {
                 Text(Lang.passage(s.store.context, s.translation, s.bookName(p.book), p.chapter, p.from, p.to), style = Theme.label())
                 verses.take(3).forEach { v -> Text("$v  " + Markup.plain(t.verse(p.chapter, v)), style = Theme.body().copy(color = c.inkSoft), maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                    BookButton(stringResource(R.string.sermon_copy), Modifier.weight(1f)) { close(); s.open(p.book, p.chapter); s.target = verses.firstOrNull { !s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(p.book, p.chapter, it)) } ?: p.from }
+                    BookButton(stringResource(R.string.sermon_copy), Modifier.weight(1f)) { close(); s.open(p.book, p.chapter); if (!s.locked(p.book)) s.target = verses.firstOrNull { !s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(p.book, p.chapter, it)) } ?: p.from }
                     BookButton(stringResource(R.string.read_short), Modifier.weight(1f), quiet = true) { close(); s.read(p.book, p.chapter, p.from) }
                 }
             } else if (ref.isNotBlank()) Text(stringResource(R.string.sermon_passage_bad), style = Theme.small())

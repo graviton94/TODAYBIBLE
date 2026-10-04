@@ -39,7 +39,8 @@ abstract class SmallWidget : AppWidgetProvider() {
     // 그림 그리기는 뒤에서 (받는 쪽 시간 제한 안에)
     override fun onUpdate(ctx: Context, m: AppWidgetManager, ids: IntArray) { val r = goAsync(); Thread { try { ids.forEach { update(ctx, m, it) } } finally { r.finish() } }.start() }
     override fun onAppWidgetOptionsChanged(ctx: Context, m: AppWidgetManager, id: Int, o: Bundle) { val r = goAsync(); Thread { try { update(ctx, m, id) } finally { r.finish() } }.start() }
-    private fun update(ctx: Context, m: AppWidgetManager, id: Int) {
+    private fun update(ctx0: Context, m: AppWidgetManager, id: Int) {
+        val ctx = io.github.graviton94.todaybible.ui.Lang.wrap(ctx0)   // 앱에서 고른 언어로
         val o = m.getAppWidgetOptions(id)
         // 세로 화면 기준 자리 (가로 · 세로 중 작은 쪽으로 정사각)
         val w = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 110).coerceAtLeast(60)

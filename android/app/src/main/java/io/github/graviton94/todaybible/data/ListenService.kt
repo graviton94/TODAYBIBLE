@@ -97,12 +97,13 @@ class ListenService : Service() {
         return START_NOT_STICKY
     }
 
+    private val store by lazy { Store(this) }
+    override fun attachBaseContext(base: Context) { super.attachBaseContext(io.github.graviton94.todaybible.ui.Lang.wrap(base)) }
     private fun foreground() {
         val nm = getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, getString(R.string.listen_channel), NotificationManager.IMPORTANCE_LOW))
         val open = PendingIntent.getActivity(this, 5, Intent(this, MainActivity::class.java).putExtra("page", io.github.graviton94.todaybible.ui.AppState.COPY).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP), PendingIntent.FLAG_IMMUTABLE)
         val stop = PendingIntent.getService(this, 6, Intent(this, ListenService::class.java).setAction("stop"), PendingIntent.FLAG_IMMUTABLE)
-        val store = Store(this)
         val name = Canon.books[book].let { if (store.translation == io.github.graviton94.todaybible.core.Translation.KRV) it.ko else it.en }
         val n = Notification.Builder(this, CHANNEL).setSmallIcon(R.drawable.ic_stat_cross).setContentTitle(getString(R.string.listen_title, name, chapter))
             .setContentIntent(open).setOngoing(true)
@@ -112,7 +113,7 @@ class ListenService : Service() {
 
     /** 지금 절부터 차례로. 장 음원이 없으면 받아 보고, 끝내 없으면 폰 목소리. */
     private fun play(t: Int) {
-        val store = Store(this); val tr = store.translation
+        val tr = store.translation
         val korean = tr == io.github.graviton94.todaybible.core.Translation.KRV
         val voice = store.narratorFor(tr)
         Thread {
