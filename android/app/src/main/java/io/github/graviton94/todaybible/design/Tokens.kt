@@ -131,6 +131,7 @@ object Tokens {
         const val keepMs = 5000
         const val goldMs = 900
         const val goldHoldMs = 500
+        const val coachDelayMs = 700
         const val inkMs = 600
         const val veilMs = 1400
         const val pageMs = 420
@@ -177,6 +178,7 @@ object Tokens {
     object Alpha {
         const val faint = 0.5f
         const val goldCell = 0.55f
+        const val coachScrim = 0.85f
         const val hintChar = 0.22f
         const val medalFaint = 0.55f
         const val future = 0.6f

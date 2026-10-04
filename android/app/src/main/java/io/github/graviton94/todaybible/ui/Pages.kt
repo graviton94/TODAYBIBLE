@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -146,6 +147,16 @@ fun Root(s: AppState) {
         }
         s.picker?.let { b -> BookSheet({ s.picker = null; s.pickToRead = false }) { ChapterGrid(s, b) { ch -> s.picker = null; if (s.pickToRead) s.read(b, ch) else s.open(b, ch); s.pickToRead = false } } }
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
+        // 첫 안내: 덮개 (설정 · 장 마침 · 판화 …) 가 없을 때 지금 화면의 것
+        val calm = s.onboarded && !s.opening && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null &&
+            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.shareVerse == null && !s.planOpen && !typing && !pager.isScrollInProgress
+        val screen = when (pager.currentPage) {
+            AppState.TODAY -> "today"
+            AppState.BIBLE -> if (s.listenAt != null) "reader" else "library"
+            AppState.COPY -> "copy${s.copyTabNow}"
+            else -> "record"
+        }
+        if (calm) CoachOverlay(s, screen)
         if (!s.onboarded) Welcome(s)
         else if (s.opening) Opening(s) { s.opening = false }
         // 토스트: 이름표 위에 잠깐
@@ -163,8 +174,11 @@ private fun TopBar(s: AppState) {
     Row(Modifier.fillMaxWidth().padding(start = Tokens.Space.s5, end = Tokens.Space.s1), verticalAlignment = Alignment.CenterVertically) {
         Text(stringResource(R.string.app_name), style = Theme.brand(s.korean), maxLines = 1, modifier = Modifier.weight(1f))
         val label = stringResource(R.string.settings)
-        Box(Modifier.size(Tokens.Size.touch).semantics { contentDescription = label }.clickable(role = Role.Button) { s.settingsOpen = true }, contentAlignment = Alignment.Center) {
+        // 톱니만으로는 알기 어려워서 ‘설정’ 글자도 함께
+        Row(Modifier.coach("settings").heightIn(min = Tokens.Size.touch).semantics { contentDescription = label }.clickable(role = Role.Button) { s.settingsOpen = true }
+            .padding(horizontal = Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
             Gear(Modifier.size(Tokens.Size.icon))
+            Text(label, style = Theme.small().copy(color = c.inkSoft), maxLines = 1)
         }
     }
 }
@@ -189,7 +203,7 @@ private fun Gear(modifier: Modifier) {
 private fun PageTabs(current: Int, onSelect: (Int) -> Unit) {
     val c = Theme.c
     val names = listOf(stringResource(R.string.page_today), stringResource(R.string.page_library), stringResource(R.string.page_copy), stringResource(R.string.page_record))
-    Row(Modifier.fillMaxWidth().background(c.paper).navigationBarsPadding().drawBehind {
+    Row(Modifier.fillMaxWidth().background(c.paper).navigationBarsPadding().coach("tabs").drawBehind {
         drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx())
     }) {
         names.forEachIndexed { i, n ->

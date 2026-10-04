@@ -75,7 +75,7 @@ fun HomePage(s: AppState) {
         val ct = s.store.book(s.translation, cb)
         val goal = s.effectiveGoal()
         val fill = ct.fillable(cc); val inCh = fill.count { s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(cb, cc, it)) }
-        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        Column(Modifier.fillMaxWidth().coach("today_card").clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(if (goal < 0) stringResource(R.string.today_chapter) else stringResource(R.string.goal_verses, goal), style = Theme.small().copy(color = c.rubric), modifier = Modifier.weight(1f), maxLines = 1)
                 if (met) { StampMark(s.stamp, c.rubric, Modifier.size(Tokens.Size.iconSm)); Text(" " + stringResource(R.string.goal_done), style = Theme.small().copy(color = c.giltText), maxLines = 1) }
@@ -89,8 +89,8 @@ fun HomePage(s: AppState) {
             val v = pn?.third ?: s.progress.nextVerse(s.translation, ct, cc)
             if (v != null) Text(Markup.plain(ct.verse(cc, v)), style = Theme.body().copy(color = c.inkSoft), maxLines = 2, overflow = TextOverflow.Ellipsis)
             Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                BookButton(stringResource(R.string.continue_now), Modifier.weight(2f)) { s.open(cb, cc) }
-                BookButton(stringResource(R.string.read_short), Modifier.weight(1f), quiet = true) { s.read(cb, cc) }
+                BookButton(stringResource(R.string.continue_now), Modifier.weight(2f).coach("today_go")) { s.open(cb, cc) }
+                BookButton(stringResource(R.string.read_short), Modifier.weight(1f).coach("today_read"), quiet = true) { s.read(cb, cc) }
             }
         }
         // 이번 주 도장 (주일부터)

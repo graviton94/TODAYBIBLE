@@ -112,7 +112,7 @@ private fun CalendarPanel(s: AppState, days: Set<Long>) {
     var month by remember { mutableStateOf(YearMonth.from(today)) }
     var picked by remember { mutableStateOf<LocalDate?>(null) }
     val loc = if (k) java.util.Locale.KOREAN else java.util.Locale.ENGLISH
-    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+    Column(Modifier.coach("rec_calendar"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         Row(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
             listOf(false to R.string.cal_month, true to R.string.cal_year).forEach { (y, id) ->
                 val on = yearView == y
@@ -249,7 +249,7 @@ private fun plateFraction(s: AppState, p: Plate): Float = s.plateFraction(p)
 /** 화첩: 판화마다 그 장을 쓴 만큼 조각이 드러남 (3×4 = 12조각). 누르면 그 장으로. */
 @Composable
 private fun PlateGallery(s: AppState, plates: List<Plate>) {
-    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+    Column(Modifier.coach("rec_plates"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         plates.chunked(3).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 row.forEach { p -> PlateCard(s, p, Modifier.weight(1f)) }
@@ -308,7 +308,7 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
 private fun MilestoneList(s: AppState, list: List<Milestone>) {
     val c = Theme.c; val ctx = LocalContext.current
     val fmt = DateTimeFormatter.ofPattern(if (s.korean) "yyyy. M. d" else "d MMM yyyy", if (s.korean) java.util.Locale.KOREAN else java.util.Locale.ENGLISH)
-    Column {
+    Column(Modifier.coach("rec_miles")) {
         list.forEach { m ->
             val day = s.earned[m]
             Row(

@@ -129,6 +129,9 @@ class Store(val context: Context) {
     var postedDay: Long
         get() = prefs.getLong("posted_day", -1)
         set(v) = prefs.edit().putLong("posted_day", v).apply()
+    var coachSeen: Set<String>
+        get() = prefs.getString("coach_seen", "").orEmpty().split(',').filter { it.isNotBlank() }.toSet()
+        set(v) = prefs.edit().putString("coach_seen", v.joinToString(",")).apply()
     var reminderDay: Long
         get() = prefs.getLong("reminder_day", -1)
         set(v) = prefs.edit().putLong("reminder_day", v).apply()

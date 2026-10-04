@@ -105,7 +105,7 @@ fun LibraryPage(s: AppState) {
         }
         // 내 책갈피 · 형광펜
         val nb = s.bookmarks.count { it.translation == s.translation }; val nm = s.marks.count { it.translation == s.translation }
-        Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).clickable(role = Role.Button) { s.marksOpen = true }
+        Row(Modifier.fillMaxWidth().coach("lib_marks").heightIn(min = Tokens.Size.row).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).clickable(role = Role.Button) { s.marksOpen = true }
             .padding(horizontal = Tokens.Space.s4), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             Ribbon(c.rubric, true, Modifier.size(Tokens.Size.iconSm))
             Text(stringResource(R.string.lib_marks, nb, nm), style = Theme.body(), maxLines = 1, modifier = Modifier.weight(1f))
@@ -113,7 +113,7 @@ fun LibraryPage(s: AppState) {
         }
         FindBox(s)
         // 구약 · 신약
-        Row(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
+        Row(Modifier.fillMaxWidth().coach("lib_testament").drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
             listOf(false to stringResource(R.string.old_count), true to stringResource(R.string.new_count)).forEach { (nt, label) ->
                 val on = newT == nt
                 Box(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Tab) { newT = nt }.drawBehind {
@@ -127,7 +127,7 @@ fun LibraryPage(s: AppState) {
                 Canon.inGroup(g).forEach { b ->
                     val st = states[b.index]
                     val aboutId = remember(b.index) { ctx.resources.getIdentifier("about_%02d".format(b.index + 1), "string", ctx.packageName) }
-                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper)
+                    Column(Modifier.fillMaxWidth().then(if (b.index == Canon.inGroup(g).first().index && g == Group.entries.first { gg -> Canon.inGroup(gg).firstOrNull()?.let { (it.index >= 39) == newT } == true }) Modifier.coach("lib_book") else Modifier).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper)
                         .clickable(role = Role.Button) { if (s.locked(b.index)) { s.peekBook = b.index; s.purchaseOpen = true } else { s.pickToRead = true; s.picker = b.index } }
                         .padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
@@ -247,7 +247,7 @@ private fun FindBox(s: AppState) {
         cursorBrush = androidx.compose.ui.graphics.SolidColor(c.rubric),
         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Go),
         keyboardActions = androidx.compose.foundation.text.KeyboardActions(onGo = { go() }),
-        modifier = Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).padding(horizontal = Tokens.Space.s4),
+        modifier = Modifier.fillMaxWidth().coach("lib_find").heightIn(min = Tokens.Size.row).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).padding(horizontal = Tokens.Space.s4),
         decorationBox = { inner -> Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.heightIn(min = Tokens.Size.row)) {
             if (q.isEmpty()) Text(stringResource(R.string.find_hint), style = Theme.body().copy(color = c.unwritten), maxLines = 1)
             inner()

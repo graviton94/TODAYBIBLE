@@ -106,6 +106,8 @@ class MainActivity : ComponentActivity() {
         i.getStringExtra("tb.today")?.let { s.fixedToday = LocalDate.parse(it) }
         if (i.extras?.keySet()?.any { it.startsWith("tb.") } == true) { s.nightOverride = i.getBooleanExtra("tb.night", false); s.checkNight() }
         i.getStringExtra("tb.mark")?.let { r -> r.split(',').forEach { v -> s.toggleMark(io.github.graviton94.todaybible.core.VerseKey(s.book, s.chapter, v.trim().toInt())) } }
+        // 첫 안내: true = 처음처럼 다시, false = 모두 본 것으로 (캡처용)
+        if (i.hasExtra("tb.coach")) { if (i.getBooleanExtra("tb.coach", false)) s.coachReset() else { s.coachSeen = io.github.graviton94.todaybible.ui.Coach.steps.keys; s.store.coachSeen = s.coachSeen } }
         i.getStringExtra("tb.listen")?.split(':')?.let { s.read(it[0].toInt() - 1, it[1].toInt()) }
         if (i.hasExtra("tb.aloudMode")) s.chooseAloudMode(i.getIntExtra("tb.aloudMode", 0))
         if (i.hasExtra("tb.aloudBig")) { if (s.aloudBig != i.getBooleanExtra("tb.aloudBig", true)) s.flipAloudBig() }

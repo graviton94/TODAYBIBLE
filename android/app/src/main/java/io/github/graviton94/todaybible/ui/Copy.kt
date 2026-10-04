@@ -119,6 +119,7 @@ fun CopyPage(s: AppState) {
     val doneCount = fillable.count { p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) }
     // 낭독 · 타자 · 손글씨 (교인 인터뷰: 낭독을 가장 많이 씀). 마지막에 고른 방식으로 열려요.
     var tab by remember { mutableIntStateOf(s.store.copyTab) }
+    androidx.compose.runtime.SideEffect { s.copyTabNow = tab }
     LaunchedEffect(s.aloudNow) { if (s.aloudNow) { tab = 0; s.store.copyTab = 0; if (next == null) s.aloudNow = false } }
 
     Column(Modifier.fillMaxSize()) {
@@ -140,7 +141,7 @@ fun CopyPage(s: AppState) {
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                UnderlineTabs(listOf(stringResource(R.string.mode_aloud), stringResource(R.string.mode_type), stringResource(R.string.mode_paper)), tab, Modifier.weight(1f)) { tab = it; s.store.copyTab = it }
+                UnderlineTabs(listOf(stringResource(R.string.mode_aloud), stringResource(R.string.mode_type), stringResource(R.string.mode_paper)), tab, Modifier.weight(1f).coach("copy_tabs")) { tab = it; s.store.copyTab = it }
             }
         }
         when (tab) {
@@ -215,7 +216,7 @@ private fun WritePage(s: AppState, verse: Int?) {
         if (!focused && shown != null) Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(c.leaf)
             .drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }
             .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) {
-            BookButton(stringResource(R.string.tap_to_write), Modifier.fillMaxWidth()) { write() }
+            BookButton(stringResource(R.string.tap_to_write), Modifier.fillMaxWidth().coach("type_start")) { write() }
         }
     }
 }
@@ -249,7 +250,7 @@ private fun Manuscript(s: AppState, verse: Int, source: String, typed: String, m
             Text(stringResource(if (on) R.string.mark_off else R.string.mark_on), style = Theme.small().copy(color = if (on) c.rubric else c.inkSoft, background = if (on) c.mark else androidx.compose.ui.graphics.Color.Unspecified), maxLines = 1,
                 modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.toggleMark(key) })
         }
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
+        BoxWithConstraints(Modifier.fillMaxWidth().coach("type_grid")) {
             val cols = (maxWidth / (Tokens.Size.gridCell * s.scale)).toInt().coerceAtLeast(6)
             val cell = maxWidth / cols
             val rows = plain.indices.chunked(cols)
@@ -419,7 +420,7 @@ private fun NarrationBanner(s: AppState, loading: Boolean, failed: Boolean) {
 private fun AloudControls(s: AppState, guideReady: Boolean) {
     // 화면에는 읽는 방식만. 빠르기 · 큰 글씨는 설정 › 낭독으로 (처음엔 보통 · 큰 글씨)
     // 교독 · 나만 읽기 (듣기는 따로: 장 머리의 ‘듣기’)
-    if (guideReady) UnderlineTabs(listOf(stringResource(R.string.resp_mode), stringResource(R.string.guide_alone)), if (s.aloudMode == 2) 1 else 0) { s.chooseAloudMode(if (it == 0) 0 else 2) }
+    if (guideReady) UnderlineTabs(listOf(stringResource(R.string.resp_mode), stringResource(R.string.guide_alone)), if (s.aloudMode == 2) 1 else 0, Modifier.coach("aloud_modes")) { s.chooseAloudMode(if (it == 0) 0 else 2) }
 }
 
 /**
@@ -668,7 +669,7 @@ private fun AloudTab(s: AppState, verse: Int) {
         justRecorded?.let { v -> RecordedBar(s, v, onKeep = { justRecorded = null }, onAgain = { justRecorded = null; s.reread = Triple(s.book, s.chapter, v) }) }
         val micLabel = stringResource(R.string.aloud_listen)
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            Box(Modifier.size(Tokens.Size.emblem).clip(androidx.compose.foundation.shape.CircleShape).background(if (running) c.rubric else c.leather)
+            Box(Modifier.coach("aloud_mic").size(Tokens.Size.emblem).clip(androidx.compose.foundation.shape.CircleShape).background(if (running) c.rubric else c.leather)
                 .semantics { contentDescription = micLabel }.clickable(role = Role.Button) { if (!mic) whyMic = true else running = !running },
                 contentAlignment = Alignment.Center) { MicMark(c.leatherInk, Modifier.size(Tokens.Size.iconMd)) }
             Text(stringResource(when { spoken >= 0 && guideTurn -> R.string.resp_guide; spoken >= 0 -> R.string.guide_reading; on && mode == 0 -> R.string.resp_you; on && record -> R.string.voice_recording; on && useGuide -> R.string.guide_your_turn; on -> R.string.aloud_listening; mode == 0 -> R.string.resp_start; useGuide -> R.string.guide_start; else -> R.string.aloud_listen }),

@@ -113,7 +113,7 @@ fun HandTab(s: AppState, verse: Int) {
             Text(buildAnnotatedString { withStyle(SpanStyle(color = c.rubric)) { append("$verse ") }; append(plain) }, style = Theme.verse(k))
         }
         // 줄 공책
-        Box(Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper)
+        Box(Modifier.weight(1f).fillMaxWidth().coach("hand_sheet").clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper)
             .onSizeChanged { padW = it.width.coerceAtLeast(1); padH = it.height.coerceAtLeast(1) }) {
             Canvas(Modifier.fillMaxSize()) {
                 val lh = lineH.toPx(); var y = lh
@@ -178,7 +178,7 @@ fun HandTab(s: AppState, verse: Int) {
                 }
             }) { live?.let { drawStroke(Ink.Stroke(it), size.width, ink, s.pen) } }
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Row(Modifier.fillMaxWidth().coach("hand_buttons"), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             BookButton(stringResource(R.string.hand_undo), Modifier.weight(1f), quiet = true, enabled = strokes.isNotEmpty()) { strokes.removeAt(strokes.lastIndex) }
             // 밑글씨가 다음 쪽으로 이어지면 ‘다음 쪽’, 마지막 쪽이면 ‘다 썼어요’
             if (s.handGuide && sheet + 1 < sheetsNeeded) BookButton(stringResource(R.string.hand_next), Modifier.weight(1f), enabled = strokes.isNotEmpty()) { earlier.add(strokes.toList()); strokes.clear() }

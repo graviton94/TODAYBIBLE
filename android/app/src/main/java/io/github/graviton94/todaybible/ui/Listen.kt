@@ -89,7 +89,7 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
                 Arrow(left = false, enabled = ch < count) { s.listenAt = book to ch + 1 }
             }
             val marked = s.isBookmarked(book, ch)
-            Row(Modifier.heightIn(min = Tokens.Size.tab).clickable(role = Role.Button) { s.toggleBookmark(book, ch, picked ?: 1) }.padding(horizontal = Tokens.Space.s2),
+            Row(Modifier.coach("read_bookmark").heightIn(min = Tokens.Size.tab).clickable(role = Role.Button) { s.toggleBookmark(book, ch, picked ?: 1) }.padding(horizontal = Tokens.Space.s2),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                 Ribbon(if (marked) c.rubric else c.inkSoft, marked, Modifier.size(Tokens.Size.iconSm))
                 Text(stringResource(R.string.bookmark), style = Theme.small().copy(color = if (marked) c.rubric else c.inkSoft), maxLines = 1)
@@ -99,7 +99,7 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
         val base = LocalViewConfiguration.current
         val wide = remember(base) { object : ViewConfiguration by base { override val touchSlop: Float get() = base.touchSlop * Tokens.Motion.sideSlop } }
         CompositionLocalProvider(LocalViewConfiguration provides wide) {
-            HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth(), beyondViewportPageCount = 0) { page ->
+            HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth().coach("read_text"), beyondViewportPageCount = 0) { page ->
                 CompositionLocalProvider(LocalViewConfiguration provides base) {
                     ChapterText(s, book, page + 1, now?.takeIf { it.book == book && it.chapter == page + 1 }?.verse,
                         picked.takeIf { page + 1 == ch }, s.readVerse.takeIf { page + 1 == chapter }) { v -> picked = if (picked == v) null else v }
@@ -124,10 +124,10 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
         }
         // 아래 띠: 듣기 · 이 장 필사하기
         Row(Modifier.fillMaxWidth().background(c.paper).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            BookButton(stringResource(if (playing) R.string.listen_stop else R.string.listen_start), Modifier.weight(1f)) {
+            BookButton(stringResource(if (playing) R.string.listen_stop else R.string.listen_start), Modifier.weight(1f).coach("read_listen")) {
                 if (playing) ListenService.stop(ctx) else ListenService.start(ctx, book, ch, s.text(book).fillable(ch).firstOrNull() ?: 1, s.aloudRate())
             }
-            BookButton(stringResource(R.string.copy_this), Modifier.weight(1f), quiet = true) { ListenService.stop(ctx); s.open(book, ch) }
+            BookButton(stringResource(R.string.copy_this), Modifier.weight(1f).coach("read_copy"), quiet = true) { ListenService.stop(ctx); s.open(book, ch) }
         }
     }
 }

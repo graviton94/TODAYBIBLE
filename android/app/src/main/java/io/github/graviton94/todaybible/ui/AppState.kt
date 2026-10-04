@@ -132,6 +132,12 @@ class AppState(val store: Store) {
     /** 책갈피 · 형광펜 모아 보기. */
     var marksOpen by mutableStateOf(false)
     var bookmarks by mutableStateOf(store.loadBookmarks())
+    /** 필사의 지금 탭 (첫 안내가 어느 화면인지 알게). */
+    var copyTabNow by mutableIntStateOf(store.copyTab)
+    /** 첫 안내를 본 화면들. */
+    var coachSeen by mutableStateOf(store.coachSeen)
+    fun coachDone(screen: String) { coachSeen = coachSeen + screen; store.coachSeen = coachSeen }
+    fun coachReset() { coachSeen = emptySet(); store.coachSeen = coachSeen }
     fun isBookmarked(b: Int, ch: Int) = bookmarks.any { it.translation == translation && it.key.book == b && it.key.chapter == ch }
     /** 이 장 책갈피 꽂기 · 빼기 (한 장에 하나, 꽂은 절 기억). */
     fun toggleBookmark(b: Int, ch: Int, v: Int = 1) {

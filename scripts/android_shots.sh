@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # 에뮬레이터에서 앱을 열어 장면마다 캡처 (.github/workflows/android-screens.yml).
-# 디버그 빌드만 tb.* 실행 옵션을 읽는다 (MainActivity.debugSetup). 장: 0 오늘 · 1 필사 · 2 서재 · 3 기록
+# 디버그 빌드만 tb.* 실행 옵션을 읽는다 (MainActivity.debugSetup). 장: 0 오늘 · 1 성경 · 2 필사 · 3 기록
 set -u
 P=io.github.graviton94.todaybible
 OUT=${1:-shots}
@@ -8,7 +8,7 @@ mkdir -p "$OUT"
 DAY=2026-10-02
 snap() { adb exec-out screencap -p > "$OUT/$1.png"; echo "shot $1"; }
 shot() { sleep "$2"; adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null; snap "$1"; }
-open() { adb shell am force-stop $P; adb shell am start -W -n $P/.MainActivity --es tb.today $DAY "$@" >/dev/null; }
+open() { adb shell am force-stop $P; adb shell am start -W -n $P/.MainActivity --es tb.today $DAY --ez tb.coach false "$@" >/dev/null; }
 swipe_up() { adb shell input swipe 540 1800 540 700 500; }
 
 adb shell settings put global hide_error_dialogs 1
@@ -26,11 +26,9 @@ sleep 0.9; snap o01_cover; sleep 0.6; snap o02_shine; sleep 0.6; snap o03_turnin
 open --es tb.owner 은혜;                                             shot h01_today 5
 swipe_up;                                                          shot h02_today_more 2
 open --es tb.owner ""
-open --ei tb.page 1 --ez tb.notebook false;                        shot k01_copy_book 5
+open --ei tb.page 2;                        shot k01_copy_grid 5
 adb shell input tap 540 1200; sleep 2;                             shot k02_copy_keyboard 1
-open --ei tb.page 1 --ez tb.notebook true;                         shot k03_copy_notebook 5
-open --ei tb.page 1 --ez tb.notebook false
-open --ei tb.page 2;                                               shot l01_library 5
+open --ei tb.page 1;                                               shot l01_library 5
 open --ei tb.picker 1;                                             shot l02_chapters_illuminated 4
 open --ei tb.page 3;                                               shot r01_record 5
 open --es tb.plate noah;                                           shot r02_plate_full 4
@@ -48,22 +46,31 @@ open --ez tb.planSheet true;                                       shot p01_plan
 open --es tb.plan mark30;                                          shot p02_today_plan 5
 open --es tb.cover navy --es tb.owner 김은혜 --ez tb.opening true; sleep 2.3; snap p03_cover_navy_name
 open --es tb.plan none --es tb.cover burgundy --es tb.owner ""
-open --ei tb.page 1 --ei tb.copyTab 0;                             shot p04_aloud_mic 3
-open --ei tb.page 1 --ei tb.copyTab 0 --ez tb.voice true;          shot p05_aloud_voice 3
+open --ei tb.page 2 --ei tb.copyTab 0;                             shot p04_aloud_mic 3
+open --ei tb.page 2 --ei tb.copyTab 0 --ez tb.voice true;          shot p05_aloud_voice 3
 open --ez tb.settings true; swipe_up; swipe_up;                    shot p06_settings_voice 2
 # 손글씨: 빈 공책 → 몇 획 그은 공책
-open --ei tb.page 1 --ei tb.copyTab 2;                             shot p07_hand_empty 3
+open --ei tb.page 2 --ei tb.copyTab 2;                             shot p07_hand_empty 3
 for st in "180 1000 300 1000" "240 960 240 1040" "200 1060 290 1080" "340 990 420 990" "380 990 370 1090" "370 1040 430 1050" "470 980 470 1100" "520 1000 620 1000" "570 960 560 1100" "520 1060 610 1060"; do adb shell input swipe $st 180; done
 shot p08_hand_written 2
 open --ez tb.voice false
 # 낭독 세 갈래 · 원고지 · 형광펜 · 한 해 · 밤 · 아주 크게
-open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 0;         shot q01_aloud_responsive 6
-open --ei tb.page 1 --es tb.listen "41:3";                         shot q02_listen_reader 4
-open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 2;         shot q03_aloud_alone_big 4
-open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 2 --ez tb.aloudBig false; shot q04_aloud_alone_small 4
-open --ei tb.page 1 --ei tb.copyTab 0 --ei tb.aloudMode 0 --ez tb.aloudBig true
-open --ei tb.page 1 --ei tb.copyTab 1 --ei tb.typeView 2;          shot k04_copy_grid 4
-open --ei tb.page 1 --ei tb.copyTab 1 --ei tb.typeView 0 --es tb.mark "1,2"; shot k05_marked 4
+open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0;         shot q01_aloud_responsive 6
+open --es tb.listen "41:3";                                        shot q02_listen_reader 4
+open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 2;         shot q03_aloud_alone_big 4
+open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 2 --ez tb.aloudBig false; shot q04_aloud_alone_small 4
+open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0 --ez tb.aloudBig true
+open --ei tb.page 2 --ei tb.copyTab 1;          shot k04_copy_grid 4
+open --ei tb.page 2 --ei tb.copyTab 1 --es tb.mark "1,2"; shot k05_marked 4
+# 첫 안내 (처음 들어온 것처럼)
+open --ez tb.coach true;                                           shot c01_coach_today 5
+open --ez tb.coach true --ei tb.page 1;                            shot c02_coach_library 5
+open --ez tb.coach true --es tb.listen "41:3";                     shot c03_coach_reader 5
+open --ez tb.coach true --ei tb.page 2 --ei tb.copyTab 0;          shot c04_coach_aloud 5
+open --ez tb.coach true --ei tb.page 2 --ei tb.copyTab 1;          shot c05_coach_type 5
+open --ez tb.coach true --ei tb.page 3;                            shot c06_coach_record 5
+# 성경: 읽기 화면에서 절을 누르면 띠
+open --es tb.listen "41:3"; adb shell input tap 540 900;           shot l03_reader_verse 2
 open --ei tb.page 3 --es tb.mark "1,2";                            shot r05_record_marks 4
 swipe_up; swipe_up;                                                shot r06_record_marks_more 2
 open --ei tb.page 3 --ez tb.year true;                             shot r07_year_card 4
@@ -71,8 +78,8 @@ open --ez tb.settings true; swipe_up; swipe_up; swipe_up;          shot s03_sett
 swipe_up; swipe_up;                                                shot s04_settings_end 2
 swipe_up; swipe_up;                                                shot s05_settings_feedback 2
 open --ez tb.night true;                                           shot n01_night_today 4
-open --ez tb.night true --ei tb.page 1 --ei tb.copyTab 0;          shot n02_night_aloud 4
-open --ef tb.scale 1.6 --ez tb.contrast true --ei tb.page 1 --ei tb.copyTab 0; shot x05_huge_contrast 4
+open --ez tb.night true --ei tb.page 2 --ei tb.copyTab 0;          shot n02_night_aloud 4
+open --ef tb.scale 1.6 --ez tb.contrast true --ei tb.page 2 --ei tb.copyTab 0; shot x05_huge_contrast 4
 open --ef tb.scale 1.0 --ez tb.contrast false
 open --ei tb.page 3;                                               shot r00_record_stats 5
 open --ei tb.page 0 --ei tb.toast 5;                               shot t01_toast 1.5
@@ -82,9 +89,7 @@ for i in $(seq 1 45); do adb shell ls $C/done >/dev/null 2>&1 && break; sleep 2;
 mkdir -p "$OUT/cards"; adb pull $C/. "$OUT/cards/" >/dev/null 2>&1; rm -f "$OUT/cards/done"; ls "$OUT/cards"
 # 다크
 open --es tb.theme DARK;                                           shot d01_today 5
-open --ei tb.page 1;                                               shot d02_copy_book 4
-open --ei tb.page 1 --ez tb.notebook true;                         shot d03_copy_notebook 4
-open --ei tb.page 1 --ez tb.notebook false
+open --ei tb.page 2;                                               shot d02_copy_grid 4
 open --es tb.plate noah;                                           shot d04_plate 4
 adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --ez tb.opening true >/dev/null
 sleep 1.4; snap d05_opening; sleep 1.6; snap d06_opening_title
@@ -92,16 +97,15 @@ open --es tb.theme LIGHT
 # 영어 (KJV): 실제로 쳐 보기
 adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
 open --ez tb.seed true --es tb.theme LIGHT --es tb.tr KJV;         shot e1_today 6
-open --ei tb.page 1;                                               sleep 3
+open --ei tb.page 2;                                               sleep 3
 adb shell input tap 540 1200; sleep 2; adb shell input text "And%she%sgoeth%sup%sinto%sa%smountian"; shot e2_copy_typing 2
-open --ei tb.page 1 --ez tb.notebook true;                         shot e3_notebook 4
-open --ei tb.page 1 --ez tb.notebook false
+open --ei tb.page 2;                         shot e3_notebook 4
 open --ez tb.reset true --ei tb.welcomeStep 2;                     shot e4_welcome_goal 4
 open --ez tb.seed true --es tb.tr KJV --es tb.plate prodigal;      shot e5_plate 5
 open --ez tb.lock true --es tb.price "'\$29.99'" --ez tb.purchase true; shot e6_purchase 4
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # 큰 글자 · 작은 화면
-open --ez tb.seed true --es tb.tr KRV --ef tb.scale 1.3 --ei tb.page 1; shot x01_large_copy 5
+open --ez tb.seed true --es tb.tr KRV --ef tb.scale 1.3 --ei tb.page 2; shot x01_large_copy 5
 open --ei tb.page 0;                                               shot x02_large_today 4
 open --ef tb.scale 1.0
 adb shell wm size 720x1280; adb shell wm density 320

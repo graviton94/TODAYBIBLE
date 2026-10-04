@@ -51,6 +51,7 @@ private val SCALES = listOf(1f, Tokens.Ratio.scaleLarge, Tokens.Ratio.scaleLarge
 /** 설정: 한 장짜리. 고르는 것은 모두 밑줄 탭 · 한 줄 목록. */
 @Composable
 fun SettingsPage(s: AppState) {
+    val ctx0 = androidx.compose.ui.platform.LocalContext.current
     val c = Theme.c; val k = s.korean
     BackHandler { s.settingsOpen = false }
     val backLabel = stringResource(R.string.back)
@@ -186,6 +187,9 @@ fun SettingsPage(s: AppState) {
                 BookButton(stringResource(R.string.backup_import), Modifier.fillMaxWidth(), quiet = true) { pick.launch(arrayOf("application/zip", "application/octet-stream")) }
             }
             Group(stringResource(R.string.feedback)) { Feedback(s) }
+            Group(stringResource(R.string.coach_again_h)) {
+                ChoiceRow(stringResource(R.string.coach_again), false) { s.coachReset(); s.settingsOpen = false; s.toast = ctx0.getString(R.string.coach_again_done) }
+            }
             Group(stringResource(R.string.about)) {
                 Text(stringResource(R.string.about_text), style = Theme.small())
                 Text(stringResource(R.string.app_version, BuildConfig.VERSION_NAME), style = Theme.small())

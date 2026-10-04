@@ -16,6 +16,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -163,7 +164,7 @@ fun Welcome(s: AppState) {
     Column(Modifier.fillMaxSize().background(c.leaf).systemBarsPadding().imePadding().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         AnimatedContent(s.welcomeStep, transitionSpec = { fadeIn(tween(Tokens.Motion.fadeMs)) togetherWith fadeOut(tween(Tokens.Motion.fadeMs)) }, label = "welcome", modifier = Modifier.weight(1f)) { i ->
-            Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+            Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
                 when (i) {
                     0 -> {
                         Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.welcomeArt).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper), contentAlignment = Alignment.Center) { WelcomeArt(s, 1) }
@@ -177,6 +178,8 @@ fun Welcome(s: AppState) {
                         NameField(s) { s.welcomeStep++ }
                         Text(stringResource(R.string.ob_restore), style = Theme.small().copy(color = c.rubric),
                             modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { restore.launch(arrayOf("application/zip", "application/octet-stream")) })
+                        // 하루 분량 (처음엔 하루 한 장)
+                        GoalChooser(s, title = true)
                     }
                     else -> FirstReading(s) { read = true }
                 }
