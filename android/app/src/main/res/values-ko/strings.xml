@@ -84,7 +84,7 @@
     <string name="ms_OMEGA_name">알파와 오메가</string>
     <string name="ms_OMEGA_rule">요한계시록을 마치다</string>
     <string name="plates">화첩</string>
-    <string name="weeks_n">온전한 주 %1$d</string>
+    <string name="weeks_n">7일 다 쓴 주 %1$d</string>
     <string name="rest_day">주일은 쉬는 날이에요</string>
     <string name="not_yet">아직</string>
     <string name="veil_hint">덮개 아래 판화가 있어요</string>
@@ -174,9 +174,9 @@
     <string name="tap_open">누르면 열려요</string>
     <string name="books_n">%1$d권</string>
     <string name="feast_reward_on">그날 쓰면 ‘%1$s’ 발자취를 받아요</string>
-    <string name="plan">길잡이</string>
-    <string name="plan_choose">길잡이 고르기</string>
-    <string name="plan_none">길잡이 없이 · 내 속도로</string>
+    <string name="plan">읽기 계획</string>
+    <string name="plan_choose">읽기 계획 고르기</string>
+    <string name="plan_none">계획 없이 · 내 속도로</string>
     <string name="plan_mark30">마가복음 한 달</string>
     <string name="plan_prov31">잠언 한 달</string>
     <string name="plan_ps365">시편 한 해</string>
@@ -184,7 +184,7 @@
     <string name="plan_rate">하루 %1$d절 · %2$d일</string>
     <string name="plan_day">%2$d일 중 %1$d일째</string>
     <string name="plan_progress">%2$s절 중 %1$s절</string>
-    <string name="plan_done">길잡이를 마쳤어요</string>
+    <string name="plan_done">읽기 계획을 마쳤어요</string>
     <string name="my_cover">나의 성경</string>
     <string name="cover_color">표지 가죽</string>
     <string name="cover_burgundy">버건디</string>
@@ -297,7 +297,7 @@
     <string name="guide_start">함께 읽기 시작</string>
     <string name="guide_again">다시 듣기</string>
     <string name="guide_settings">낭독 목소리</string>
-    <string name="guide_toggle">낭독 화면에서 교독(낭독 목소리와 한 절씩 주고받기) · 듣기 · 나만 읽기를 고를 수 있어요.</string>
+    <string name="guide_toggle">낭독 화면에서 교독(낭독 목소리와 한 절씩 주고받기)과 나만 읽기를 고를 수 있어요. 듣기만 하려면 성경 탭에서 ‘이 장 듣기’를 누르세요.</string>
     <string name="guide_none">이 폰에 한국어 읽기 목소리가 아직 없어요. 폰의 ‘텍스트 음성 변환’ 설정에서 받을 수 있어요.</string>
     <string name="guide_install">텍스트 음성 변환 설정 열기</string>
     <string name="guide_q_high">자연스러운 목소리</string>
@@ -474,4 +474,15 @@
     <string name="rec_guide_note">교독은 인도 목소리 절도 함께 저장돼서 장 전체가 차례대로 이어져요.</string>
     <string name="grid_verse">%1$d절</string>
     <string name="grid_done">%1$d절을 다 썼어요</string>
+    <string name="today_chapter">오늘의 장</string>
+    <string name="ch_progress">%2$d절 중 %1$d절</string>
+    <string name="read_short">읽기</string>
+    <string name="aloud_line">소리 내어 읽은 시간 · 오늘 %1$d분 · 이번 주 %2$d분</string>
+    <string name="fold">접기</string>
+    <string name="unfold_all">펼치기 · %1$d개 모두</string>
+    <string name="cal_month">월</string>
+    <string name="cal_year">해</string>
+    <string name="cal_year_n">%1$d년</string>
+    <string name="cal_month_n">%1$d월</string>
+    <string name="day_line">%1$s %2$d:%3$s · %4$d절</string>
 </resources>

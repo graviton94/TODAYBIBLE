@@ -69,7 +69,7 @@ class Store(val context: Context) {
         set(v) = prefs.edit().putInt("reminder", v).apply()
     /** 오늘의 분량 (절 수, -1 = 하루 한 장). */
     var dailyGoal: Int
-        get() = prefs.getInt("goal", 5)
+        get() = prefs.getInt("goal", io.github.graviton94.todaybible.core.Goal.CHAPTER)
         set(v) = prefs.edit().putInt("goal", v).apply()
     /** 처음 소개를 마쳤는지. */
     var onboarded: Boolean

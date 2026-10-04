@@ -58,23 +58,35 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun RecordPage(s: AppState) {
-    val k = s.korean
+    val k = s.korean; val c = Theme.c
     val days = s.progress.days()
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
         RunningHead(stringResource(R.string.page_record), stringResource(R.string.presence_n, Presence.total(days)), k)
         yearShown(s)?.let { YearCard(s, it) }
+        CalendarPanel(s, days)
         Stats(s)
-        if (s.aloudLog.isNotEmpty()) AloudTime(s)
-        YearStamps(s)
-        PresenceMonth(s, days)
+        // 소리 내어 읽은 시간: 한 줄
+        if (s.aloudLog.isNotEmpty()) {
+            val today = s.today().toEpochDay()
+            val week = (0..6).sumOf { s.aloudLog[today - it] ?: 0 }
+            Text(stringResource(R.string.aloud_line, ((s.aloudLog[today] ?: 0) + 30) / 60, (week + 30) / 60), style = Theme.body().copy(color = c.inkSoft))
+        }
+        // 화첩: 쓰는 중 · 다 모은 것부터 여섯 점, 펼치면 모두
+        var allPlates by remember { mutableStateOf(false) }
+        val plates = remember(s.fills.size) { s.store.plates.sortedWith(compareByDescending<Plate> { plateFraction(s, it).let { f -> if (f > 0f && f < 1f) 2 else if (f >= 1f) 1 else 0 } }.thenByDescending { plateFraction(s, it) }) }
+        Section(stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size}", k)
+        PlateGallery(s, if (allPlates) plates else plates.take(PLATES_SHOWN))
+        if (plates.size > PLATES_SHOWN) BookButton(stringResource(if (allPlates) R.string.fold else R.string.unfold_all, plates.size), Modifier.fillMaxWidth(), quiet = true) { allPlates = !allPlates }
+        // 발자취: 받은 것 최근 넷 (없으면 처음 넷), 펼치면 모두
+        var allMiles by remember { mutableStateOf(false) }
+        val miles = Milestone.entries.sortedByDescending { s.earned[it] ?: Long.MIN_VALUE }
+        Section(stringResource(R.string.milestones), "${s.earned.size} / ${Milestone.entries.size}", k)
+        MilestoneList(s, if (allMiles) miles else miles.take(MILES_SHOWN))
+        BookButton(stringResource(if (allMiles) R.string.fold else R.string.unfold_all, miles.size), Modifier.fillMaxWidth(), quiet = true) { allMiles = !allMiles }
         if (s.marks.isNotEmpty()) {
             Section(stringResource(R.string.marks), "${s.marks.count { it.translation == s.translation }}", k)
             MarkList(s)
         }
-        Section(stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size}", k)
-        PlateGallery(s)
-        Section(stringResource(R.string.milestones), "${s.earned.size} / ${Milestone.entries.size}", k)
-        MilestoneList(s)
     }
 }
 
@@ -86,29 +98,89 @@ private fun Section(title: String, right: String, korean: Boolean) {
     }
 }
 
-/** 이 달의 출석: 쓴 날 = 도장, 주일 = 쉼 (빈칸이어도 괜찮음), 오늘 = 가는 테. */
+/**
+ * 달력 하나 (하루의 정원처럼): 위에 [월 · 해].
+ * 월: ‹ › 로 달을 넘기고, 쓴 날은 도장. 날을 누르면 그날 쓴 절.
+ * 해: 작은 달력 열두 개. 누르면 그 달로.
+ */
 @Composable
-private fun PresenceMonth(s: AppState, days: Set<Long>) {
+private fun CalendarPanel(s: AppState, days: Set<Long>) {
     val c = Theme.c; val k = s.korean
-    val today = s.today(); val month = YearMonth.from(today)
-    val first = month.atDay(1); val lead = first.dayOfWeek.value % 7
+    val today = s.today()
+    val first = days.minOrNull()?.let { YearMonth.from(LocalDate.ofEpochDay(it)) } ?: YearMonth.from(today)
+    var yearView by remember { mutableStateOf(false) }
+    var month by remember { mutableStateOf(YearMonth.from(today)) }
+    var picked by remember { mutableStateOf<LocalDate?>(null) }
+    val loc = if (k) java.util.Locale.KOREAN else java.util.Locale.ENGLISH
+    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        Row(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
+            listOf(false to R.string.cal_month, true to R.string.cal_year).forEach { (y, id) ->
+                val on = yearView == y
+                Box(Modifier.weight(1f).heightIn(min = Tokens.Size.tab).clickable(role = Role.Tab) { yearView = y }.drawBehind {
+                    if (on) drawRect(c.rubric, Offset(0f, size.height - Tokens.Stroke.rule.toPx()), androidx.compose.ui.geometry.Size(size.width, Tokens.Stroke.rule.toPx()))
+                }, contentAlignment = Alignment.Center) { Text(stringResource(id), style = Theme.label().copy(color = if (on) c.ink else c.inkSoft)) }
+            }
+        }
+        // ‹ 2026년 10월 ›  /  ‹ 2026년 ›
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            val canBack = if (yearView) month.year > first.year else month > first
+            val canNext = if (yearView) month.year < today.year else month < YearMonth.from(today)
+            CalArrow("‹", canBack) { month = if (yearView) month.minusYears(1) else month.minusMonths(1); picked = null }
+            Text(if (yearView) stringResource(R.string.cal_year_n, month.year) else month.atDay(1).format(DateTimeFormatter.ofPattern(if (k) "yyyy년 M월" else "MMMM yyyy", loc)),
+                style = Theme.head(k), textAlign = TextAlign.Center, modifier = Modifier.weight(1f), maxLines = 1)
+            CalArrow("›", canNext) { month = if (yearView) month.plusYears(1).let { if (it > YearMonth.from(today)) YearMonth.from(today) else it } else month.plusMonths(1); picked = null }
+        }
+        if (!yearView) {
+            MonthGrid(s, month, days, today, picked) { d -> picked = if (picked == d) null else d }
+            Text(stringResource(R.string.weeks_n, Presence.weeksComplete(days)), style = Theme.small())
+            picked?.let { d -> DayVerses(s, d) }
+        } else {
+            (1..12).chunked(3).forEach { row ->
+                Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                    row.forEach { m ->
+                        val ym = YearMonth.of(month.year, m)
+                        val future = ym > YearMonth.from(today)
+                        Column(Modifier.weight(1f).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).clickable(enabled = !future, role = Role.Button) { month = ym; yearView = false; picked = null }
+                            .padding(Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                            val n = (1..ym.lengthOfMonth()).count { ym.atDay(it).toEpochDay() in days }
+                            Row(verticalAlignment = Alignment.Bottom) {
+                                Text(stringResource(R.string.cal_month_n, m), style = Theme.small().copy(color = if (future) c.hair else c.ink), modifier = Modifier.weight(1f), maxLines = 1)
+                                if (n > 0) Text("$n", style = Theme.small().copy(color = c.rubric), maxLines = 1)
+                            }
+                            MiniMonth(ym, days, future)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CalArrow(t: String, enabled: Boolean, onClick: () -> Unit) {
+    val c = Theme.c
+    Box(Modifier.size(Tokens.Size.touch).clickable(enabled = enabled, role = Role.Button, onClick = onClick), contentAlignment = Alignment.Center) {
+        Text(t, style = Theme.title(true).copy(color = if (enabled) c.ink else c.hair))
+    }
+}
+
+@Composable
+private fun MonthGrid(s: AppState, month: YearMonth, days: Set<Long>, today: LocalDate, picked: LocalDate?, onPick: (LocalDate) -> Unit) {
+    val c = Theme.c
+    val lead = month.atDay(1).dayOfWeek.value % 7
     val cells = (0 until lead).map { null } + (1..month.lengthOfMonth()).map { month.atDay(it) }
     val names = stringResource(R.string.weekdays)
-    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-            Text(month.atDay(1).format(DateTimeFormatter.ofPattern(if (k) "yyyy년 M월" else "MMMM yyyy", if (k) java.util.Locale.KOREAN else java.util.Locale.ENGLISH)),
-                style = Theme.label(), modifier = Modifier.weight(1f), maxLines = 1)
-            Text(stringResource(R.string.weeks_n, Presence.weeksComplete(days)), style = Theme.small(), maxLines = 1)
-        }
+    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
         Row(Modifier.fillMaxWidth()) {
-            names.forEachIndexed { i, ch ->
-                Text(ch.toString(), style = Theme.small().copy(color = if (i == 0) c.rubric else c.inkSoft, textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
-            }
+            names.forEachIndexed { i, ch -> Text(ch.toString(), style = Theme.small().copy(color = if (i == 0) c.rubric else c.inkSoft, textAlign = TextAlign.Center), modifier = Modifier.weight(1f)) }
         }
         cells.chunked(7).forEach { week ->
             Row(Modifier.fillMaxWidth()) {
                 week.forEach { d ->
-                    Box(Modifier.weight(1f).aspectRatio(1f).padding(Tokens.Size.spineGap), contentAlignment = Alignment.Center) {
+                    Box(Modifier.weight(1f).aspectRatio(1f).padding(Tokens.Size.spineGap)
+                        .then(if (d != null && d.toEpochDay() in days) Modifier.clickable(role = Role.Button) { onPick(d) } else Modifier)
+                        .drawBehind { if (d != null && d == picked) drawRoundRect(c.mark, cornerRadius = CornerRadius(Tokens.Radius.chip.toPx())) },
+                        contentAlignment = Alignment.Center) {
                         if (d != null) DayCell(s, d, d.toEpochDay() in days, d == today, d.isAfter(today))
                     }
                 }
@@ -117,6 +189,41 @@ private fun PresenceMonth(s: AppState, days: Set<Long>) {
         }
     }
 }
+
+/** 해 보기의 작은 달력: 쓴 날만 붉은 점. */
+@Composable
+private fun MiniMonth(ym: YearMonth, days: Set<Long>, future: Boolean) {
+    val c = Theme.c
+    val lead = ym.atDay(1).dayOfWeek.value % 7
+    Canvas(Modifier.fillMaxWidth().aspectRatio(7f / 6f)) {
+        val w = size.width / 7; val h = size.height / 6
+        for (d in 1..ym.lengthOfMonth()) {
+            val i = lead + d - 1
+            val on = ym.atDay(d).toEpochDay() in days
+            val cx = (i % 7) * w + w / 2; val cy = (i / 7) * h + h / 2
+            drawCircle(if (on) c.rubric else if (future) c.hair.copy(alpha = Tokens.Alpha.future) else c.hair, (if (on) 0.36f else 0.16f) * minOf(w, h), Offset(cx, cy))
+        }
+    }
+}
+
+/** 고른 날 쓴 절: 장마다 한 줄. 누르면 그 장을 읽기로. */
+@Composable
+private fun DayVerses(s: AppState, d: LocalDate) {
+    val c = Theme.c
+    val e = d.toEpochDay()
+    val byCh = s.fills.filter { it.translation == s.translation && it.epochDay == e }.groupBy { it.key.book to it.key.chapter }
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Text(d.format(DateTimeFormatter.ofPattern(if (s.korean) "M월 d일" else "d MMM")), style = Theme.label())
+        byCh.forEach { (bc, f) ->
+            val vs = f.map { it.key.verse }.sorted()
+            Text(stringResource(R.string.day_line, s.bookName(bc.first), bc.second, if (vs.size > 1) "${vs.first()}–${vs.last()}" else "${vs.first()}", vs.size),
+                style = Theme.body(), modifier = Modifier.fillMaxWidth().clickable(role = Role.Button) { s.read(bc.first, bc.second, vs.first()) })
+        }
+    }
+}
+
+private const val PLATES_SHOWN = 6
+private const val MILES_SHOWN = 4
 
 @Composable
 private fun DayCell(s: AppState, d: LocalDate, present: Boolean, today: Boolean, future: Boolean) {
@@ -141,9 +248,9 @@ private fun plateFraction(s: AppState, p: Plate): Float = s.plateFraction(p)
 
 /** 화첩: 판화마다 그 장을 쓴 만큼 조각이 드러남 (3×4 = 12조각). 누르면 그 장으로. */
 @Composable
-private fun PlateGallery(s: AppState) {
+private fun PlateGallery(s: AppState, plates: List<Plate>) {
     Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-        s.store.plates.chunked(3).forEach { row ->
+        plates.chunked(3).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 row.forEach { p -> PlateCard(s, p, Modifier.weight(1f)) }
                 repeat(3 - row.size) { Box(Modifier.weight(1f)) }
@@ -198,11 +305,11 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
 
 /** 발자취: 한 줄 이름 + 한 줄 조건. 얻은 것은 가죽 메달, 아직은 빈 테. */
 @Composable
-private fun MilestoneList(s: AppState) {
+private fun MilestoneList(s: AppState, list: List<Milestone>) {
     val c = Theme.c; val ctx = LocalContext.current
     val fmt = DateTimeFormatter.ofPattern(if (s.korean) "yyyy. M. d" else "d MMM yyyy", if (s.korean) java.util.Locale.KOREAN else java.util.Locale.ENGLISH)
     Column {
-        Milestone.entries.forEach { m ->
+        list.forEach { m ->
             val day = s.earned[m]
             Row(
                 Modifier.fillMaxWidth().heightIn(min = Tokens.Size.rowTall).drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }
@@ -271,31 +378,6 @@ private fun Stats(s: AppState) {
     }
 }
 
-/** 한 해 도장첩 (J1): 주마다 한 줄, 붉을수록 많이 쓴 날. */
-@Composable
-private fun YearStamps(s: AppState) {
-    val c = Theme.c; val k = s.korean
-    val today = s.today(); val year = today.year
-    val counts = s.fills.filter { it.translation == s.translation }.groupBy { it.epochDay }.mapValues { it.value.size }
-    val jan1 = java.time.LocalDate.of(year, 1, 1); val start = jan1.minusDays((jan1.dayOfWeek.value % 7).toLong())
-    val stamped = counts.keys.count { java.time.LocalDate.ofEpochDay(it).year == year }
-    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(if (k) "${year}년" else "$year", style = Theme.label(), modifier = Modifier.weight(1f))
-            Text(stringResource(R.string.year_stamps, stamped), style = Theme.small())
-        }
-        Canvas(Modifier.fillMaxWidth().aspectRatio(53f / 7f)) {
-            val cell = size.width / 53f; val gap = cell * Tokens.Ratio.heatGap
-            for (w in 0 until 53) for (d in 0 until 7) {
-                val day = start.plusDays((w * 7 + d).toLong())
-                if (day.year != year) continue
-                val n = counts[day.toEpochDay()] ?: 0
-                val col = when { day.isAfter(today) -> c.hair.copy(alpha = Tokens.Alpha.faint); n == 0 -> c.hair; n < 5 -> c.rubric.copy(alpha = Tokens.Alpha.faint); else -> c.rubric }
-                drawRect(col, Offset(w * cell, d * cell), Size(cell - gap, cell - gap))
-            }
-        }
-    }
-}
 
 private const val MARKS_SHOWN = 5
 
@@ -364,29 +446,3 @@ private fun YearCard(s: AppState, year: Int) {
     }
 }
 
-/** 소리 내어 읽은 시간 (U2): 오늘 몇 분 · 이번 이레 막대. */
-@Composable
-private fun AloudTime(s: AppState) {
-    val c = Theme.c; val k = s.korean
-    val today = s.today().toEpochDay()
-    val week = (6 downTo 0).map { today - it }.map { s.aloudLog[it] ?: 0 }
-    val max = week.maxOrNull()?.coerceAtLeast(60) ?: 60
-    val names = stringResource(R.string.weekdays)
-    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            Text(stringResource(R.string.minutes_n, (week.last() + 30) / 60), style = Theme.title(k, Tokens.Text.display), maxLines = 1)
-            Text(stringResource(R.string.aloud_today), style = Theme.small(), maxLines = 1, modifier = Modifier.padding(bottom = Tokens.Space.s2))
-        }
-        Row(Modifier.fillMaxWidth().height(Tokens.Size.aloudBars), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2), verticalAlignment = Alignment.Bottom) {
-            week.forEachIndexed { i, secs ->
-                Column(Modifier.weight(1f).fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Bottom) {
-                    Box(Modifier.fillMaxWidth().fillMaxHeight((secs.toFloat() / max).coerceIn(0.03f, 1f) * Tokens.Ratio.barMax).clip(RoundedCornerShape(Tokens.Radius.chip))
-                        .background(if (i == 6) c.rubric else c.rubric.copy(alpha = Tokens.Alpha.rest)))
-                    val d = java.time.LocalDate.ofEpochDay(today - 6 + i)
-                    Text(names[d.dayOfWeek.value % 7].toString(), style = Theme.small(), maxLines = 1)
-                }
-            }
-        }
-        Text(stringResource(R.string.aloud_week, (week.sum() + 30) / 60), style = Theme.small())
-    }
-}

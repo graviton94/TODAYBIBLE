@@ -83,7 +83,11 @@ fun SettingsPage(s: AppState) {
                     VerseText(s, 1, s.text(0).verse(1, 1))
                 }
             }
-            Group(stringResource(R.string.daily_goal)) { GoalChooser(s, title = false) }
+            Group(stringResource(R.string.daily_goal)) {
+                GoalChooser(s, title = false)
+                // 읽기 계획 (오늘 화면에서 옮겨 옴)
+                ChoiceRow(s.plan?.let { planName(androidx.compose.ui.platform.LocalContext.current, it.id) } ?: stringResource(R.string.plan_choose), s.plan != null) { s.planOpen = true }
+            }
             Group(stringResource(R.string.reminder)) {
                 // 매일 알림: 끄기 · 켜기, 켜면 정각 아무 시나 (안드로이드 13+ 는 처음 켤 때 알림 허락을 물음)
                 val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -99,24 +103,10 @@ fun SettingsPage(s: AppState) {
                     BookButton("+", Modifier.width(Tokens.Size.touch), quiet = true) { turnOn((h + 1) % 24) }
                 }
             }
-            Group(stringResource(R.string.stamp)) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                    STAMPS.forEach { m ->
-                        val on = m == s.stamp
-                        Box(
-                            Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (on) c.paper else c.leaf)
-                                .drawBehind { if (on) drawLine(c.rubric, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.rule.toPx() * 2) }
-                                .clickable(role = Role.RadioButton) { s.setStampMark(m) },
-                            contentAlignment = Alignment.Center,
-                        ) { StampMark(m, if (on) c.rubric else c.inkSoft, Modifier.size(Tokens.Size.iconMd)) }
-                    }
-                }
-            }
             Group(stringResource(R.string.owner_name)) {
                 NameField(s)
                 Text(stringResource(R.string.owner_note), style = Theme.small())
             }
-            Group(stringResource(R.string.my_cover)) { CoverPicker(s) }
             Group(stringResource(R.string.guide_settings)) { GuideVoiceSettings(s) }
             Group(stringResource(R.string.hand_settings)) {
                 // 펜 (손글씨 화면에서 옮겨 옴)
@@ -140,6 +130,21 @@ fun SettingsPage(s: AppState) {
                     if (!sure) sure = true else { java.io.File(ctx.filesDir, "voice").deleteRecursively(); s.voiceRev++; sure = false; s.toast = ctx.getString(R.string.rec_cleared) }
                 }
             }
+            // 꾸미기: 도장 · 표지
+            Group(stringResource(R.string.stamp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                    STAMPS.forEach { m ->
+                        val on = m == s.stamp
+                        Box(
+                            Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (on) c.paper else c.leaf)
+                                .drawBehind { if (on) drawLine(c.rubric, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.rule.toPx() * 2) }
+                                .clickable(role = Role.RadioButton) { s.setStampMark(m) },
+                            contentAlignment = Alignment.Center,
+                        ) { StampMark(m, if (on) c.rubric else c.inkSoft, Modifier.size(Tokens.Size.iconMd)) }
+                    }
+                }
+            }
+            Group(stringResource(R.string.my_cover)) { CoverPicker(s) }
             Group(stringResource(R.string.lifetime)) {
                 ChoiceRow(stringResource(if (s.lifetime.owned) R.string.owned else R.string.lifetime_head), s.lifetime.owned) { s.purchaseOpen = true }
             }
@@ -207,7 +212,11 @@ private fun ChoiceRow(text: String, on: Boolean, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(text, style = Theme.body().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-        if (on) Box(Modifier.size(Tokens.Size.dot).clip(androidx.compose.foundation.shape.CircleShape).background(c.rubric))
+        // 켜짐 · 꺼짐이 늘 보이게: 빈 동그라미 / 붉은 점이 든 동그라미
+        Box(Modifier.size(Tokens.Size.iconSm).drawBehind {
+            drawCircle(if (on) c.rubric else c.inkSoft, size.minDimension / 2 - Tokens.Stroke.rule.toPx(), style = androidx.compose.ui.graphics.drawscope.Stroke(Tokens.Stroke.rule.toPx()))
+            if (on) drawCircle(c.rubric, size.minDimension / 4)
+        })
     }
 }
 

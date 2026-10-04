@@ -283,8 +283,8 @@ fun GoalChooser(s: AppState, title: Boolean) {
                 Column(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(if (on) c.leather else c.paper)
                     .clickable(role = Role.RadioButton) { s.setGoal(g) }.padding(vertical = Tokens.Space.s2),
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Text(if (g == Goal.CHAPTER) "1" else "$g", style = Theme.title(k).copy(color = if (on) c.leatherInk else c.ink), maxLines = 1)
-                    Text(stringResource(if (g == Goal.CHAPTER) R.string.unit_chapter else R.string.unit_verses), style = Theme.small().copy(color = if (on) c.leatherInk else c.inkSoft), maxLines = 1)
+                    Text(if (g < 0) "${-g}" else "$g", style = Theme.title(k).copy(color = if (on) c.leatherInk else c.ink), maxLines = 1)
+                    Text(stringResource(if (g < 0) R.string.unit_chapter else R.string.unit_verses), style = Theme.small().copy(color = if (on) c.leatherInk else c.inkSoft), maxLines = 1)
                 }
             }
         }

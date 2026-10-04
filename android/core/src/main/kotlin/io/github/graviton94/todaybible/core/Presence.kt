@@ -75,14 +75,22 @@ object Feasts {
             .filter { !it.second.isBefore(today) }.sortedBy { it.second }.take(count)
 }
 
-/** 오늘의 분량: 절 수 (CHAPTER = 하루 한 장). */
+/**
+ * 오늘의 분량: 절 수, 또는 장 (CHAPTER = 하루 한 장, TWO = 하루 두 장). 기본은 하루 한 장.
+ * 장이 아주 길면 (시편 119편 등) 한 장 몫의 절 (LONG) 을 써도 채운 것으로 쳐요.
+ */
 object Goal {
     const val CHAPTER = -1
-    val choices = listOf(1, 5, 10, CHAPTER)
-    /** 분량을 채웠는지: 절이면 오늘 쓴 절 수, 장이면 오늘 마친 장이 있는지. */
-    fun met(goal: Int, todayVerses: Int, todayChapters: Int): Boolean = if (goal == CHAPTER) todayChapters > 0 else todayVerses >= goal
+    const val TWO = -2
+    const val LONG = 25
+    val choices = listOf(5, CHAPTER, TWO)
+    /** 장 수 (절 목표면 0). */
+    fun chapters(goal: Int): Int = if (goal < 0) -goal else 0
+    /** 분량을 채웠는지: 절이면 오늘 쓴 절 수, 장이면 오늘 마친 장 수 (또는 장마다 LONG 절). */
+    fun met(goal: Int, todayVerses: Int, todayChapters: Int): Boolean =
+        if (goal < 0) todayChapters >= chapters(goal) || todayVerses >= LONG * chapters(goal) else todayVerses >= goal
     /** 이 분량이면 몇 날이 걸리는지 (절 수 기준, 장이면 장 수). */
-    fun days(goal: Int, verses: Int, chapters: Int): Int = if (goal == CHAPTER) chapters else (verses + goal - 1) / goal
+    fun days(goal: Int, verses: Int, chapters: Int): Int = if (goal < 0) (chapters + chapters(goal) - 1) / chapters(goal) else (verses + goal - 1) / goal
 }
 
 /** 필사 길잡이: 정한 권 · 장을 정한 날 수 안에. 하루 분량은 남은 절을 남은 날로 나눔. */

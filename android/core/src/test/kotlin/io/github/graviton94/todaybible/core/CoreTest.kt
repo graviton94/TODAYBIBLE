@@ -105,6 +105,8 @@ class CoreTest {
         assertEquals(Feast.CHRISTMAS, Feasts.upcoming(LocalDate.of(2026, 12, 25), true)[0].first)
         assertTrue(Goal.met(5, 5, 0)); assertFalse(Goal.met(5, 4, 0)); assertTrue(Goal.met(Goal.CHAPTER, 0, 1))
         assertEquals(136, Goal.days(5, 678, 16))
+        assertTrue(Goal.met(Goal.CHAPTER, 30, 0)); assertFalse(Goal.met(Goal.TWO, 10, 1)); assertTrue(Goal.met(Goal.TWO, 3, 2))
+        assertEquals(8, Goal.days(Goal.TWO, 678, 16))
     }
 
     @Test fun longestStreakAndPlans() {

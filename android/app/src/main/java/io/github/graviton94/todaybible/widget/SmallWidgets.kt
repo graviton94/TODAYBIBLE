@@ -80,7 +80,7 @@ private fun frame(ctx: Context, wDp: Int, hDp: Int, dark: Boolean, block: androi
 class GoalWidget : SmallWidget() {
     override fun draw(ctx: Context, wDp: Int, hDp: Int, dark: Boolean): Bitmap = frame(ctx, wDp, hDp, dark) { m, c ->
         val (n, goal, _) = today(ctx)
-        val met = if (goal == Goal.CHAPTER) false else n >= goal
+        val met = if (goal < 0) n >= Goal.LONG * Goal.chapters(goal) else n >= goal
         val side = minOf(size.width, size.height) * 0.62f; val w = Tokens.Stroke.rule.toPx() * 2.5f
         val tl = Offset((size.width - side) / 2, size.height * 0.1f)
         drawArc(c.hair, 0f, 360f, false, tl, Size(side, side), style = Stroke(w))
@@ -89,7 +89,7 @@ class GoalWidget : SmallWidget() {
         val center = Offset(size.width / 2, tl.y + side / 2)
         if (met) stamp(io.github.graviton94.todaybible.ui.STAMP_CROSS, c.rubric, center, side * 0.4f)
         else {
-            val t = m.measure(if (goal == Goal.CHAPTER) "$n" else "$n/$goal", TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.label, color = c.ink, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(side.toInt()))
+            val t = m.measure(if (goal < 0) "$n" else "$n/$goal", TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.label, color = c.ink, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(side.toInt()))
             drawText(t, topLeft = Offset(tl.x, center.y - t.size.height / 2))
         }
         val l = m.measure(ctx.getString(R.string.widget_goal), TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = c.inkSoft, textAlign = TextAlign.Center), maxLines = 1, constraints = Constraints.fixedWidth(size.width.toInt()))

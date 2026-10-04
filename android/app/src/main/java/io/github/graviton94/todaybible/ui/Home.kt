@@ -69,42 +69,34 @@ fun HomePage(s: AppState) {
             Text(stringResource(when { h in 4..11 -> R.string.hi_morning; h in 12..17 -> R.string.hi_day; else -> R.string.hi_evening }, s.ownerName),
                 style = Theme.title(k), maxLines = 1)
         }
-        MyBookCard(s)
-        // 오늘의 분량
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-            val goal = s.effectiveGoal()
-            val frac = if (goal == Goal.CHAPTER) (if (met) 1f else 0f) else (verses.toFloat() / goal).coerceIn(0f, 1f)
-            Box(Modifier.size(Tokens.Size.medalLg), contentAlignment = Alignment.Center) {
-                Canvas(Modifier.fillMaxSize()) {
-                    val w = Tokens.Stroke.rule.toPx() * 2; val inset = w / 2
-                    drawArc(c.hair, 0f, 360f, false, Offset(inset, inset), Size(size.width - w, size.height - w), style = Stroke(w))
-                    drawArc(if (met) c.gilt else c.rubric, -90f, 360f * frac, false, Offset(inset, inset), Size(size.width - w, size.height - w), style = Stroke(w, cap = StrokeCap.Round))
-                }
-                if (met) StampMark(s.stamp, c.rubric, Modifier.size(Tokens.Size.iconMd))
-                else Text(if (goal == Goal.CHAPTER) "–" else "$verses/$goal", style = Theme.label(), maxLines = 1)
-            }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                Text(if (goal == Goal.CHAPTER) stringResource(R.string.goal_chapter) else stringResource(R.string.goal_verses, goal), style = Theme.title(k), maxLines = 1)
-                Text(when {
-                    met -> stringResource(R.string.goal_done)
-                    goal == Goal.CHAPTER -> stringResource(R.string.goal_left_chapter)
-                    else -> stringResource(R.string.goal_left, goal - verses)
-                }, style = Theme.small().copy(color = if (met) c.giltText else c.inkSoft), maxLines = 2)
-            }
-        }
-        // 이어 쓸 한 절 (길잡이가 있으면 길잡이의 다음 절)
+        // 오늘의 장: 길잡이가 있으면 길잡이의 다음 장, 없으면 쓰던 장
         val pn = s.planNext()
         val (cb, cc) = if (pn != null) pn.first to pn.second else s.book to s.chapter
         val ct = s.store.book(s.translation, cb)
-        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            val v = pn?.third ?: next ?: t.fillable(s.chapter).first()
-            Text(stringResource(R.string.continue_ref, "${s.bookName(cb)} $cc:$v"), style = Theme.small().copy(color = c.rubric), maxLines = 1)
-            Text(Markup.plain(ct.verse(cc, v)), style = Theme.body().copy(color = c.inkSoft), maxLines = 3, overflow = TextOverflow.Ellipsis)
-            BookButton(stringResource(R.string.continue_now), Modifier.fillMaxWidth()) { s.open(cb, cc) }
+        val goal = s.effectiveGoal()
+        val fill = ct.fillable(cc); val inCh = fill.count { s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(cb, cc, it)) }
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(if (goal < 0) stringResource(R.string.today_chapter) else stringResource(R.string.goal_verses, goal), style = Theme.small().copy(color = c.rubric), modifier = Modifier.weight(1f), maxLines = 1)
+                if (met) { StampMark(s.stamp, c.rubric, Modifier.size(Tokens.Size.iconSm)); Text(" " + stringResource(R.string.goal_done), style = Theme.small().copy(color = c.giltText), maxLines = 1) }
+                else if (goal > 0) Text(stringResource(R.string.goal_left, (goal - verses).coerceAtLeast(0)), style = Theme.small(), maxLines = 1)
+            }
+            Text(stringResource(R.string.listen_head, s.bookName(cb), cc), style = Theme.title(k, Tokens.Text.title), maxLines = 1)
+            Box(Modifier.fillMaxWidth().height(Tokens.Size.bar).clip(RoundedCornerShape(Tokens.Size.bar)).background(c.hair)) {
+                Box(Modifier.fillMaxWidth(if (fill.isEmpty()) 0f else inCh / fill.size.toFloat()).height(Tokens.Size.bar).background(if (met) c.gilt else c.rubric))
+            }
+            Text(stringResource(R.string.ch_progress, inCh, fill.size), style = Theme.small(), maxLines = 1)
+            val v = pn?.third ?: s.progress.nextVerse(s.translation, ct, cc)
+            if (v != null) Text(Markup.plain(ct.verse(cc, v)), style = Theme.body().copy(color = c.inkSoft), maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                BookButton(stringResource(R.string.continue_now), Modifier.weight(2f)) { s.open(cb, cc) }
+                BookButton(stringResource(R.string.read_short), Modifier.weight(1f), quiet = true) { s.read(cb, cc) }
+            }
         }
-        PlanCard(s)
         // 이번 주 도장 (주일부터)
         WeekStamps(s)
+        MyBookCard(s)
+        if (s.plan != null) PlanCard(s)
         // 다음 판화
         s.nextPlate()?.let { (pl, left) ->
             val f = s.plateFraction(pl)
@@ -126,16 +118,11 @@ fun HomePage(s: AppState) {
         Feasts.upcoming(today, korea = k, count = 1).firstOrNull()?.let { (f, d) ->
             val name = ctx.getString(ctx.resources.getIdentifier("feast_${f.name}", "string", ctx.packageName))
             val daysLeft = ChronoUnit.DAYS.between(today, d).toInt()
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leather)
-                .drawWithContent { drawContent(); giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = false) }
-                .padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                if (daysLeft == 0) {
-                    Text(stringResource(R.string.feast_today, name), style = Theme.title(k).copy(color = c.leatherInk), maxLines = 1)
-                    Text(stringResource(R.string.feast_reward, milestoneName(ctx, f.milestone)), style = Theme.small().copy(color = c.leatherInk), maxLines = 2)
-                } else {
-                    Text(stringResource(R.string.feast_soon, name, daysLeft), style = Theme.label().copy(color = c.leatherInk), maxLines = 1)
-                    Text(stringResource(R.string.feast_reward_on, milestoneName(ctx, f.milestone)), style = Theme.small().copy(color = c.leatherInk), maxLines = 2)
-                }
+            // 한 줄 소식 (오늘이면 붉게)
+            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                Text(if (daysLeft == 0) stringResource(R.string.feast_today, name) else stringResource(R.string.feast_soon, name, daysLeft),
+                    style = Theme.label().copy(color = if (daysLeft == 0) c.rubric else c.ink), maxLines = 1)
+                Text(stringResource(if (daysLeft == 0) R.string.feast_reward else R.string.feast_reward_on, milestoneName(ctx, f.milestone)), style = Theme.small(), maxLines = 2)
             }
         }
     }

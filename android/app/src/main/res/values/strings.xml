@@ -84,7 +84,7 @@
     <string name="ms_OMEGA_name">Alpha and Omega</string>
     <string name="ms_OMEGA_rule">Finish Revelation</string>
     <string name="plates">Plates</string>
-    <string name="weeks_n">%1$d full weeks</string>
+    <string name="weeks_n">%1$d weeks written all 7 days</string>
     <string name="rest_day">Sunday is a day of rest</string>
     <string name="not_yet">Not yet</string>
     <string name="veil_hint">A plate awaits beneath the cover</string>
@@ -297,7 +297,7 @@
     <string name="guide_start">Begin reading along</string>
     <string name="guide_again">Hear it again</string>
     <string name="guide_settings">Reading voice</string>
-    <string name="guide_toggle">On the read-aloud page choose Responsive (the reading voice and you take turns), Listen, or On my own.</string>
+    <string name="guide_toggle">On the read-aloud page choose Responsive (the reading voice and you take turns) or On my own. To just listen, use Listen in the Bible tab.</string>
     <string name="guide_none">This phone has no reading voice for this language yet. You can add one in the phone\'s text-to-speech settings.</string>
     <string name="guide_install">Open text-to-speech settings</string>
     <string name="guide_q_high">natural</string>
@@ -474,4 +474,15 @@
     <string name="rec_guide_note">In responsive reading the guide\'s verses are saved too, so the chapter plays through in order.</string>
     <string name="grid_verse">Verse %1$d</string>
     <string name="grid_done">Verse %1$d written</string>
+    <string name="today_chapter">Today\'s chapter</string>
+    <string name="ch_progress">%1$d of %2$d verses</string>
+    <string name="read_short">Read</string>
+    <string name="aloud_line">Read aloud · today %1$d min · this week %2$d min</string>
+    <string name="fold">Fold</string>
+    <string name="unfold_all">Show all %1$d</string>
+    <string name="cal_month">Month</string>
+    <string name="cal_year">Year</string>
+    <string name="cal_year_n">%1$d</string>
+    <string name="cal_month_n">%1$d</string>
+    <string name="day_line">%1$s %2$d:%3$s · %4$d verses</string>
 </resources>
