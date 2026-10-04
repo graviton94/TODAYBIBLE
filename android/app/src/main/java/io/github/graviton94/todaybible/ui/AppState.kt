@@ -96,8 +96,9 @@ class AppState(val store: Store) {
     fun addAloud(secs: Int) { val d = today().toEpochDay(); aloudLog = aloudLog + (d to (aloudLog[d] ?: 0) + secs); store.saveAloud(aloudLog) }
     var aloudSpeed by mutableStateOf(store.aloudSpeed)
     var guideVoice by mutableStateOf(store.guideVoice)
-    var narrator by mutableStateOf(store.narrator)
-    fun chooseNarrator(v: String) { narrator = v; store.narrator = v; narration = emptyMap() }
+    /** 지금 번역의 낭독 목소리 (개역한글 · KJV 따로). */
+    var narrator by mutableStateOf(store.narratorFor(store.translation))
+    fun chooseNarrator(v: String) { narrator = v; store.setNarrator(translation, v); narration = emptyMap() }
     /** 장 낭독 음원: "권:장" → 0 받는 중 · 1 있음 · -1 못 받음. */
     var narration by mutableStateOf<Map<String, Int>>(emptyMap())
     fun narrationState(book: Int, chapter: Int): Int? = narration["$book:$chapter"]
@@ -206,7 +207,7 @@ class AppState(val store: Store) {
         if (locked(b)) { peekBook = b; purchaseOpen = true; return }
         book = b; chapter = ch; target = null; store.setBookmark(translation, b, ch); page = COPY; widgets()
     }
-    fun chooseTranslation(t: Translation) { translation = t; store.translation = t; val bm = store.bookmark(t); book = bm.first; chapter = bm.second; widgets() }
+    fun chooseTranslation(t: Translation) { translation = t; store.translation = t; narrator = store.narratorFor(t); narration = emptyMap(); val bm = store.bookmark(t); book = bm.first; chapter = bm.second; widgets() }
     fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t; widgets() }
     fun setTextScale(s: Float) { scale = s; store.textScale = s }
     fun setStampMark(s: String) { stamp = s; store.stamp = s; widgets() }

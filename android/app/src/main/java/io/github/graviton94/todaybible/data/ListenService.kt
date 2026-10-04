@@ -80,9 +80,9 @@ class ListenService : Service() {
     private fun play(t: Int) {
         val store = Store(this); val tr = store.translation
         val korean = tr == io.github.graviton94.todaybible.core.Translation.KRV
-        val voice = store.narrator
+        val voice = store.narratorFor(tr)
         Thread {
-            val narrated = korean && voice != Narration.DEVICE && Narration.fetch(this, voice, book, chapter)
+            val narrated = voice != Narration.DEVICE && Narration.fetch(this, voice, book, chapter)
             ui.post {
                 if (t != token) return@post
                 val text = store.book(tr, book)

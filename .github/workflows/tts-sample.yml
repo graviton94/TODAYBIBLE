@@ -1,5 +1,8 @@
 name: TTS sample
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      lang: { description: "ko or en", default: "ko" }
 jobs:
   sample:
     runs-on: ubuntu-latest
@@ -15,7 +18,7 @@ jobs:
           hf download supertone-oss-archive/supertonic-3 --revision aafc6e32416a594460b32413efc49d7fe4ce6d46 --local-dir /tmp/st/assets
           ls /tmp/st/assets /tmp/st/assets/voice_styles
       - name: Make Psalm 23 in ten voices
-        run: python scripts/tts_sample.py /tmp/st/py /tmp/st/assets tts_out
+        run: python scripts/tts_sample.py /tmp/st/py /tmp/st/assets tts_out ${{ inputs.lang }}
       - name: Encode and publish to tts-sample branch
         run: |
           sudo apt-get install -y -qq ffmpeg >/dev/null
@@ -24,4 +27,4 @@ jobs:
           rm *.wav; ls -la
           git init -q && git checkout -q -b tts-sample && git add .
           git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "Psalm 23 samples"
-          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" tts-sample
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:tts-sample${{ inputs.lang == 'en' && '-en' || '' }}

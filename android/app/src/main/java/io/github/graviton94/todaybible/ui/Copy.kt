@@ -516,7 +516,7 @@ private fun AloudTab(s: AppState, verse: Int) {
     DisposableEffect(guide) { onDispose { guide.release() } }
     // 낭독 목소리 (M5 · F5): 지금 장 음원만 받아 둬요 (수백 KB). 폰 목소리는 받을 수 없을 때만 대신.
     val N = io.github.graviton94.todaybible.data.Narration
-    val wantNarr = k && s.narrator != N.DEVICE
+    val wantNarr = s.narrator != N.DEVICE
     LaunchedEffect(wantNarr, s.narrator, s.book, s.chapter) { if (wantNarr) s.fetchNarration(s.book, s.chapter) }
     val narr = if (wantNarr) s.narrationState(s.book, s.chapter) else null
     val narrLoading = wantNarr && (narr == null || narr == 0)

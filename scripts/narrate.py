@@ -4,7 +4,8 @@
 숨: 절 안에서는 이어지는 말끝(~며 · ~고 · ~니 …)에서 쉬고, 절과 절 사이 쉼은 앱이 넣어요.
 남성(M5)은 조금 더 진중하게: 조금 느리게 만들고 4% 낮춰 재생해 목소리를 낮고 깊게.
 빠르게: 구절들을 길이 순으로 묶어 한꺼번에(배치) 만들고, 큰 권은 장 묶음(part)으로 나눠 여러 작업에서 동시에.
-python scripts/narrate.py <supertonic/py> <assets> <M5|F5> <권 1..66> <첫 장> <끝 장> <part> <출력 폴더>
+python scripts/narrate.py <supertonic/py> <assets> <M5|F5|EN_M3 …> <권 1..66> <첫 장> <끝 장> <part> <출력 폴더>
+영어(KJV): 목소리 앞에 EN_ (예: EN_M3) — 본문 kjv, 말 en, 파일 이름 앞머리 en_m3.
 python scripts/narrate.py --plan  → 작업 목록 (JSON)
 """
 import csv, os, re, subprocess, sys, tempfile
@@ -39,10 +40,20 @@ TUNE = {  # 빠르기, 낮춤(재생 비율), 구절 사이 쉼(초)
     "M5": (0.92, 0.96, 0.42),
     "F5": (0.90, 1.00, 0.35),
 }
-speed, deepen, gap = TUNE.get(voice, (0.9, 1.0, 0.35))
+english = voice.upper().startswith("EN_")
+style_id = voice[3:].upper() if english else voice
+tr, lang = ("kjv", "en") if english else ("krv", "ko")
+speed, deepen, gap = TUNE.get(voice.upper(), (0.92, 1.0, 0.32) if english else (0.9, 1.0, 0.35))
 CONT = re.compile(r"(며|고|니|되|나|여|서|면|매|요|라|은|는|도)$")
 
 def phrases(v):
+    if english:  # 영어: 문장부호에서 숨, 너무 짧은 토막은 붙여서
+        res = []
+        for p in re.split(r"(?<=[,;:.?!])\s+", v):
+            if res and len(p) < 12: res[-1] += " " + p
+            elif res and len(res[-1]) < 12: res[-1] += " " + p
+            else: res.append(p)
+        return [p for p in res if p.strip()]
     res, cur = [], []
     for w in v.split():
         cur.append(w)
@@ -54,12 +65,15 @@ def phrases(v):
     return res
 
 def plain(t):  # 앱의 Markup.plain 과 같게: 꾸밈 표시 지우기
-    return re.sub(r"[\[\]{}<>]", "", t).strip()
+    t = re.sub(r"[\[\]{}<>¶]", "", t)
+    # KJV: 대문자로 쓴 하나님의 이름 (LORD · GOD · JESUS …) 은 글자를 하나씩 읽지 않게 첫 글자만 크게
+    if english: t = re.sub(r"\b([A-Z])([A-Z]{1,})\b", lambda m: m.group(1) + m.group(2).lower(), t)
+    return re.sub(r"\s+", " ", t).strip()
 
 tts = load_text_to_speech(os.path.join(assets, "onnx"), False)
 sr = tts.sample_rate
-style_path = os.path.join(assets, "voice_styles", f"{voice}.json")
-rows = [r for r in csv.reader(open(f"android/app/src/main/assets/bible/krv/{book:02d}.tsv", encoding="utf-8"), delimiter="\t") if ch_from <= int(r[0]) <= ch_to]
+style_path = os.path.join(assets, "voice_styles", f"{style_id}.json")
+rows = [r for r in csv.reader(open(f"android/app/src/main/assets/bible/{tr}/{book:02d}.tsv", encoding="utf-8"), delimiter="\t") if ch_from <= int(r[0]) <= ch_to]
 dst = os.path.join(out, f"{voice.lower()}_{book:02d}_{part}"); os.makedirs(dst, exist_ok=True)
 # 모든 구절을 한 줄로 펼쳐 길이 순으로 묶어 만들기
 items = []  # (절 번호표, 구절 순서, 글)
@@ -74,7 +88,7 @@ for s0 in range(0, len(order), B):
     idx = order[s0:s0 + B]
     n = len(idx)
     if n not in styles: styles[n] = load_voice_style([style_path] * n)
-    wav, dur = tts.batch([items[k][2] for k in idx], ["ko"] * n, styles[n], 10, speed)
+    wav, dur = tts.batch([items[k][2] for k in idx], [lang] * n, styles[n], 10, speed)
     for j, k in enumerate(idx):
         audio[k] = wav[j, : int(sr * dur[j].item())].astype(np.float32)
 print(f"synth {len(items)} phrases in {time.time() - t0:.0f}s", flush=True)

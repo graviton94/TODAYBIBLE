@@ -297,9 +297,11 @@ private fun GuideVoiceSettings(s: AppState) {
     UnderlineTabs(listOf(stringResource(R.string.aloud_slow), stringResource(R.string.aloud_normal), stringResource(R.string.aloud_fast)), s.aloudSpeed) { s.chooseAloudSpeed(it) }
     ChoiceRow(stringResource(R.string.aloud_big_setting), s.aloudBig) { s.flipAloudBig() }
     // 미리 만든 낭독 목소리 (개역한글): 듣기는 받은 권이 있으면 그 음원으로
-    if (s.korean) {
-        val N = io.github.graviton94.todaybible.data.Narration
-        listOf(N.MALE to R.string.narr_male, N.FEMALE to R.string.narr_female, N.DEVICE to R.string.narr_device).forEach { (v, id) ->
+    val N = io.github.graviton94.todaybible.data.Narration
+    // 번역마다 따로 (개역한글 M5 · F5, KJV 는 영어 목소리가 생기면)
+    if (N.choices(s.korean).size > 1) {
+        N.choices(s.korean).forEach { v ->
+            val id = when (v) { N.DEVICE -> R.string.narr_device; N.MALE, N.MALE_EN -> R.string.narr_male; else -> R.string.narr_female }
             ChoiceRow(stringResource(id), s.narrator == v) { s.chooseNarrator(v) }
         }
         var player by remember { mutableStateOf<android.media.MediaPlayer?>(null) }
@@ -319,7 +321,7 @@ private fun GuideVoiceSettings(s: AppState) {
         if (used > 0) Text(stringResource(R.string.narr_usage, "%.0fMB".format(used / 1_000_000f)), style = Theme.small())
     }
     // 폰 목소리는 낭독 목소리를 못 쓸 때만: 그때만 목록을 보여요
-    if (!s.korean || s.narrator == io.github.graviton94.todaybible.data.Narration.DEVICE) {
+    if (s.narrator == N.DEVICE) {
         if (ready && list.isEmpty()) {
             Text(stringResource(R.string.guide_none), style = Theme.small())
             BookButton(stringResource(R.string.guide_install), Modifier.fillMaxWidth(), quiet = true) {

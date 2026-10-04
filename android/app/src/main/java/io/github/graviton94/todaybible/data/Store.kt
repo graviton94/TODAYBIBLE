@@ -187,6 +187,12 @@ class Store(val context: Context) {
     var narrator: String
         get() = prefs.getString("narrator", "m5")!!
         set(v) = prefs.edit().putString("narrator", v).apply()
+    /** 영어 (KJV) 낭독 목소리. 영어 음원이 생기기 전에는 폰 목소리. */
+    var narratorEn: String
+        get() = prefs.getString("narrator_en", null) ?: Narration.MALE_EN.ifEmpty { Narration.DEVICE }
+        set(v) = prefs.edit().putString("narrator_en", v).apply()
+    fun narratorFor(tr: Translation) = if (tr == Translation.KRV) narrator else narratorEn
+    fun setNarrator(tr: Translation, v: String) { if (tr == Translation.KRV) narrator = v else narratorEn = v }
     var guideVoice: String
         get() = prefs.getString("guide_voice", "")!!
         set(v) = prefs.edit().putString("guide_voice", v).apply()

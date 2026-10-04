@@ -13,6 +13,10 @@ import java.util.zip.ZipInputStream
  */
 object Narration {
     const val MALE = "m5"; const val FEMALE = "f5"; const val DEVICE = "device"
+    /** 영어 (KJV) 낭독 목소리: 견본을 듣고 고른 뒤 채워요 (en_m? · en_f?). 비어 있으면 폰 목소리. */
+    const val MALE_EN = ""; const val FEMALE_EN = ""
+    /** 번역마다 고를 수 있는 목소리 (이름표 문자열 id 와 함께). */
+    fun choices(korean: Boolean): List<String> = (if (korean) listOf(MALE, FEMALE) else listOf(MALE_EN, FEMALE_EN)).filter { it.isNotEmpty() } + DEVICE
     /** 듣기에서 절과 절 사이 쉼 (ms). */
     const val GAP_MS = 350
     private const val RELEASE = "https://github.com/graviton94/TODAYBIBLE/releases/download/narration-v1"

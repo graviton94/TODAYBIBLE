@@ -21,7 +21,7 @@ class GuideVoice(ctx: Context, private val korean: Boolean, private val preferre
 
     /** 미리 만든 낭독 음원이 있으면 그 파일 (개역한글만). */
     fun narrated(book: Int, chapter: Int, verse: Int): java.io.File? =
-        if (!korean || narrator == Narration.DEVICE) null else Narration.file(app, narrator, book, chapter, verse).takeIf { it.exists() }
+        if (narrator == Narration.DEVICE) null else Narration.file(app, narrator, book, chapter, verse).takeIf { it.exists() }
     private var tts: TextToSpeech? = null
     @Volatile var ready = false; private set
     @Volatile var voices: List<Voice> = emptyList(); private set

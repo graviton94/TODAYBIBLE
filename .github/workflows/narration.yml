@@ -2,7 +2,7 @@ name: Narration
 on:
   workflow_dispatch:
     inputs:
-      voice: { description: "M5 or F5", default: "M5" }
+      voice: { description: "M5 or F5 (Korean), EN_M3 etc. (English KJV)", default: "M5" }
       only: { description: "one job as book:from:to:part (empty = by books)", default: "" }
       books: { description: "books to narrate, e.g. 19,41 (empty = whole Bible)", default: "" }
       tag: { description: "release tag", default: "narration-v1" }
@@ -21,7 +21,8 @@ jobs:
           import json, subprocess, sys, os
           out = subprocess.run([sys.executable, "-c", "exec(open('scripts/narrate.py').read().split('import numpy')[0].replace('sys.argv[1] == \"--plan\"','True'))"], capture_output=True, text=True).stdout
           books = {int(b) for b in os.environ.get("BOOKS", "").split(",") if b.strip()}
-          j = [x for x in json.loads(out) if x["voice"] == os.environ["V"] and (not books or x["book"] in books)]
+          # 장 묶음은 목소리와 상관없이 같아서 M5 목록을 바탕으로 고른 목소리 (EN_M3 같은 영어 목소리 포함) 로
+          j = [dict(x, voice=os.environ["V"]) for x in json.loads(out) if x["voice"] == "M5" and (not books or x["book"] in books)]
           print("jobs=" + json.dumps(j))
           PY
           fi
