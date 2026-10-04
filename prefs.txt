@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <long name="opened" value="20730" />
+    <string name="coach_seen">today,library,reader,copy0,copy1,copy2,record</string>
+    <int name="last_goal" value="-1" />
+    <int name="copy_tab" value="1" />
+</map>
