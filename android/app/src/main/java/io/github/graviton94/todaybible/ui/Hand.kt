@@ -89,10 +89,7 @@ fun HandTab(s: AppState, verse: Int) {
     val feel = remember { io.github.graviton94.todaybible.data.PenFeel(ctx.applicationContext) }
     androidx.compose.runtime.DisposableEffect(Unit) { onDispose { feel.release() } }
     val full = Markup.plain(s.text().verse(s.chapter, verse))
-    // 마음에 닿은 구절만 (X1): 숨 쉴 자리로 나눈 구절 가운데 고른 것만 써요 (처음엔 첫 구절). 고른 구절들은 이어진 한 덩이.
-    val parts = remember(full) { io.github.graviton94.todaybible.core.Recite.phrases(full) }
-    var pick by remember(key) { mutableStateOf(0..0) }
-    val plain = if (s.handPhrase && parts.isNotEmpty()) full.substring(parts[pick.first.coerceIn(parts.indices)].first, parts[pick.last.coerceIn(parts.indices)].last + 1) else full
+    val plain = full
     val ink = if (s.pen == Ink.PENCIL) c.graphite else c.penInk
     val measurer = rememberTextMeasurer()
     val dens = LocalDensity.current
@@ -110,50 +107,8 @@ fun HandTab(s: AppState, verse: Int) {
     val sheetsNeeded = guide?.let { (it.lineCount + perSheet - 1) / perSheet } ?: 1
     val sheet = earlier.size
     Column(Modifier.fillMaxSize().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-        // 펜 고르기 · 밑글씨
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            listOf(Ink.FOUNTAIN to R.string.pen_fountain, Ink.BRUSH to R.string.pen_brush, Ink.PENCIL to R.string.pen_pencil).forEach { (id, name) ->
-                val on = s.pen == id
-                Row(Modifier.heightIn(min = Tokens.Size.tab).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (on) c.paper else c.leaf)
-                    .drawBehind { if (on) drawRect(c.rubric, Offset(0f, size.height - Tokens.Stroke.rule.toPx()), androidx.compose.ui.geometry.Size(size.width, Tokens.Stroke.rule.toPx())) }
-                    .clickable(role = Role.RadioButton) { s.choosePen(id) }.padding(horizontal = Tokens.Space.s3),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                    Text(stringResource(name), style = Theme.small().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1)
-                    if (id != Ink.FOUNTAIN && s.gated()) LockMark(c.inkSoft, Modifier.size(Tokens.Size.lock))
-                }
-            }
-            Box(Modifier.weight(1f))
-            Text(stringResource(if (s.handGuide) R.string.guide_on else R.string.guide_off), style = Theme.small().copy(color = if (s.handGuide) c.rubric else c.inkSoft), maxLines = 1,
-                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Switch) { s.flipGuide() })
-        }
-        // 밑글씨가 없으면 위에 본문, 있으면 절 번호만
-        // 구절만 · 절 전체
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            listOf(true to R.string.hand_phrase, false to R.string.hand_whole).forEach { (v, id) ->
-                Text(stringResource(id), style = Theme.small().copy(color = if (s.handPhrase == v) c.rubric else c.inkSoft), maxLines = 1,
-                    modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.RadioButton) { if (s.handPhrase != v) s.flipHandPhrase() })
-            }
-        }
-        if (s.handPhrase && parts.size > 1 && strokes.isEmpty() && earlier.isEmpty()) {
-            // 구절 고르기: 누르면 그 구절, 이어서 다른 구절을 누르면 그 사이까지
-            Text(buildAnnotatedString {
-                withStyle(SpanStyle(color = c.rubric)) { append("$verse ") }
-                parts.forEachIndexed { i, r ->
-                    withStyle(SpanStyle(color = if (i in pick) c.ink else c.unwritten, background = if (i in pick) c.mark else androidx.compose.ui.graphics.Color.Unspecified)) { append(full.substring(r.first, r.last + 1)) }
-                    if (i < parts.lastIndex) append(" ")
-                }
-            }, style = Theme.verse(k), modifier = Modifier.fillMaxWidth().heightIn(max = Tokens.Size.handModel).verticalScroll(rememberScrollState()))
-            androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                parts.forEachIndexed { i, r ->
-                    val on = i in pick
-                    Text(full.substring(r.first, r.last + 1), style = Theme.small().copy(color = if (on) c.leatherInk else c.ink), maxLines = 1,
-                        modifier = Modifier.heightIn(min = Tokens.Size.tab).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (on) c.leather else c.paper)
-                            .clickable(role = Role.Button) { pick = if (i in pick && pick.first == pick.last) i..i else if (i < pick.first) i..pick.last else if (i > pick.last) pick.first..i else i..i }
-                            .padding(horizontal = Tokens.Space.s3).wrapContentHeight())
-                }
-            }
-        }
-        else if (s.handGuide) Text(stringResource(R.string.hand_where, verse, sheet + 1, maxOf(sheetsNeeded, sheet + 1)), style = Theme.small().copy(color = c.rubric), maxLines = 1)
+        // 펜 · 밑글씨는 설정 ‘손글씨’에서. 여기에는 지금 절과 쪽만.
+        if (s.handGuide) Text(stringResource(R.string.hand_where, verse, sheet + 1, maxOf(sheetsNeeded, sheet + 1)), style = Theme.small().copy(color = c.rubric), maxLines = 1)
         else Box(Modifier.fillMaxWidth().heightIn(max = Tokens.Size.handModel).verticalScroll(rememberScrollState())) {
             Text(buildAnnotatedString { withStyle(SpanStyle(color = c.rubric)) { append("$verse ") }; append(plain) }, style = Theme.verse(k))
         }
@@ -225,8 +180,9 @@ fun HandTab(s: AppState, verse: Int) {
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             BookButton(stringResource(R.string.hand_undo), Modifier.weight(1f), quiet = true, enabled = strokes.isNotEmpty()) { strokes.removeAt(strokes.lastIndex) }
-            BookButton(stringResource(if (s.handGuide && sheet + 1 < sheetsNeeded) R.string.hand_next else R.string.hand_more), Modifier.weight(1f), quiet = true, enabled = strokes.isNotEmpty()) { earlier.add(strokes.toList()); strokes.clear() }
-            BookButton(stringResource(R.string.hand_done), Modifier.weight(1f), enabled = strokes.isNotEmpty() || earlier.isNotEmpty()) {
+            // 밑글씨가 다음 쪽으로 이어지면 ‘다음 쪽’, 마지막 쪽이면 ‘다 썼어요’
+            if (s.handGuide && sheet + 1 < sheetsNeeded) BookButton(stringResource(R.string.hand_next), Modifier.weight(1f), enabled = strokes.isNotEmpty()) { earlier.add(strokes.toList()); strokes.clear() }
+            else BookButton(stringResource(R.string.hand_done), Modifier.weight(1f), enabled = strokes.isNotEmpty() || earlier.isNotEmpty()) {
                 val sheets = (earlier + listOf(strokes.toList())).filter { it.isNotEmpty() }
                 val f = Ink.file(ctx, s.translation.id, s.book, s.chapter, verse); val page = Ink.Page(sheets, lineH.value * ctx.resources.displayMetrics.density / padW, s.pen)
                 // 파일 쓰기는 뒤에서 (화면이 멈칫하지 않게)
@@ -235,6 +191,9 @@ fun HandTab(s: AppState, verse: Int) {
                 s.fill(listOf(verse), Mode.PAPER)
             }
         }
+        // 밑글씨 없이 쓸 때 쪽이 모자라면
+        if (!s.handGuide && strokes.isNotEmpty()) Text(stringResource(R.string.hand_more), style = Theme.small().copy(color = c.rubric), maxLines = 1,
+            modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { earlier.add(strokes.toList()); strokes.clear() })
     }
 }
 

@@ -109,7 +109,6 @@ class MainActivity : ComponentActivity() {
         i.getStringExtra("tb.listen")?.split(':')?.let { s.read(it[0].toInt() - 1, it[1].toInt()) }
         if (i.hasExtra("tb.aloudMode")) s.chooseAloudMode(i.getIntExtra("tb.aloudMode", 0))
         if (i.hasExtra("tb.aloudBig")) { if (s.aloudBig != i.getBooleanExtra("tb.aloudBig", true)) s.flipAloudBig() }
-        if (i.hasExtra("tb.typeView")) s.chooseTypeView(i.getIntExtra("tb.typeView", 0))
         if (i.hasExtra("tb.contrast")) { if (s.contrast != i.getBooleanExtra("tb.contrast", false)) s.flipContrast() }
         if (i.hasExtra("tb.year")) s.forceYear = i.getBooleanExtra("tb.year", false)
         if (i.hasExtra("tb.pen")) s.pen = i.getIntExtra("tb.pen", 0)
@@ -143,7 +142,7 @@ class MainActivity : ComponentActivity() {
         if (i.hasExtra("tb.welcomeStep")) s.welcomeStep = i.getIntExtra("tb.welcomeStep", 0)
         s.lifetime.debugSet(if (i.hasExtra("tb.owned")) i.getBooleanExtra("tb.owned", false) else null, i.getStringExtra("tb.price"))
         if (i.getBooleanExtra("tb.purchase", false)) s.purchaseOpen = true
-        s.shareVerse = i.getIntExtra("tb.share", 0).takeIf { it > 0 }
+        s.shareVerse = i.getIntExtra("tb.share", 0).takeIf { it > 0 }?.let { io.github.graviton94.todaybible.core.VerseKey(s.book, s.chapter, it) }
         if (i.getBooleanExtra("tb.cardShots", false)) Thread { cardShots(s) }.start()
         s.toast = i.getIntExtra("tb.toast", 0).takeIf { it > 0 }?.let { getString(R.string.filled_n, it) }
     }

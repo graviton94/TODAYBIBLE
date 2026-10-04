@@ -158,7 +158,7 @@
     <string name="begin">Begin</string>
     <string name="view_book">Book</string>
     <string name="view_note">Notebook</string>
-    <string name="tap_to_write">Tap the page to write</string>
+    <string name="tap_to_write">Tap here to start typing</string>
     <string name="plate_locked">Write this chapter to reveal it</string>
     <string name="my_bible_pdf">My Bible PDF</string>
     <string name="my_bible_cover">Copied by my own hand</string>
@@ -247,7 +247,7 @@
     <string name="hand_hint">Write on the lines with your finger or a pen</string>
     <string name="hand_sheet">Sheet %1$d</string>
     <string name="hand_undo">Undo</string>
-    <string name="hand_more">New sheet</string>
+    <string name="hand_more">One more page</string>
     <string name="hand_done">Done</string>
     <string name="backup_drive">Keep in Google Drive</string>
     <string name="backup_drive_note">Choose Drive in the save screen. After that, the same file is updated whenever you write something new.</string>
@@ -261,8 +261,8 @@
     <string name="pen_pencil">Pencil</string>
     <string name="guide_on">Hide guide</string>
     <string name="guide_off">Show guide</string>
-    <string name="hand_where">Verse %1$d · sheet %2$d of %3$d</string>
-    <string name="hand_next">Next sheet</string>
+    <string name="hand_where">Verse %1$d · page %2$d of %3$d</string>
+    <string name="hand_next">Next page</string>
     <string name="hand_widget_name">My handwriting</string>
     <string name="hand_widget_desc">A verse you wrote by hand, in your own handwriting</string>
     <string name="hand_widget_empty">Verses you write by hand will hang here in your own handwriting</string>
@@ -323,7 +323,7 @@
     <string name="gift_title">%1$s %2$d, in my voice</string>
     <string name="gift_title_named">%2$s %3$d, read by %1$s</string>
     <string name="view_grid">Grid</string>
-    <string name="grid_hint">One letter to a square. Tap to type.</string>
+    <string name="grid_hint">Type the faint letter in each square, one at a time.</string>
     <string name="reminder_aloud">Read aloud</string>
     <string name="hand_phrase">One phrase</string>
     <string name="hand_whole">Whole verse</string>
@@ -466,4 +466,12 @@
     <string name="about_64">Praise for Gaius</string>
     <string name="about_65">Contend for the faith</string>
     <string name="about_66">The end and a new heaven and earth</string>
+    <string name="rec_just">Verse %1$d recorded</string>
+    <string name="rec_listen">▶ Listen</string>
+    <string name="rec_redo">Record again</string>
+    <string name="rec_keep">Save</string>
+    <string name="rec_auto">Leave it and it saves by itself.</string>
+    <string name="rec_guide_note">In responsive reading the guide\'s verses are saved too, so the chapter plays through in order.</string>
+    <string name="grid_verse">Verse %1$d</string>
+    <string name="grid_done">Verse %1$d written</string>
 </resources>

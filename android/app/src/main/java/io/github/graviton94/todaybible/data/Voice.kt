@@ -117,6 +117,8 @@ object Voice {
                         // 마이크를 못 잡으면 빈 손으로 돌지 않게 잠깐 쉬고, 계속 안 되면 그만
                         if (n <= 0) { if (++fails > 200) break; Thread.sleep(10); continue }
                         fails = 0
+                        // 소리 크기 (말하는 중인지 보려고): 표본 몇 개만 훑어요
+                        run { var sum = 0.0; var m = 0; var j = 0; while (j + 1 < n) { val x = ((pcm[j + 1].toInt() shl 8) or (pcm[j].toInt() and 0xff)).toShort() / 32768.0; sum += x * x; m++; j += 16 }; if (m > 0) level = kotlin.math.sqrt(sum / m).toFloat() }
                         // 음성 인식에 16kHz 로 (두 표본 평균)
                         if (pipeOut != null) {
                             val sb = ByteBuffer.wrap(pcm, 0, n).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer(); val ob = ByteBuffer.wrap(half).order(ByteOrder.LITTLE_ENDIAN)
@@ -149,6 +151,8 @@ object Voice {
         }
 
         @Volatile private var keep = true
+        /** 지금 소리 크기 (0..1). */
+        @Volatile var level = 0f
         /** 녹음 줄이 파일을 다 쓰고 나면 (남겼는지). 화면 줄이 아니라 녹음 줄에서 불려요. */
         @Volatile var onSaved: ((Boolean) -> Unit)? = null
         /** 멈춤: 기다리지 않아요 (마무리는 녹음 줄이 해요). */

@@ -68,6 +68,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -140,10 +141,7 @@ fun CopyPage(s: AppState) {
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 UnderlineTabs(listOf(stringResource(R.string.mode_aloud), stringResource(R.string.mode_type), stringResource(R.string.mode_paper)), tab, Modifier.weight(1f)) { tab = it; s.store.copyTab = it }
-                if (tab == 1 && s.scale <= 1.15f) ViewToggle(s)
             }
-            // 큰 글씨: 탭이 눌리지 않게 보기 고르기는 아랫줄로
-            if (tab == 1 && s.scale > 1.15f) Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s2), horizontalArrangement = Arrangement.End) { ViewToggle(s) }
         }
         when (tab) {
             1 -> WritePage(s, next)
@@ -162,64 +160,59 @@ fun CopyPage(s: AppState) {
     }
 }
 
-/** 책 / 노트 보기 바꾸기 (타자일 때만). */
-@Composable
-private fun ViewToggle(s: AppState) {
-    val c = Theme.c
-    Row(Modifier.padding(start = Tokens.Space.s3).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper)) {
-        listOf(0 to R.string.view_book, 1 to R.string.view_note, 2 to R.string.view_grid).forEach { (v, id) ->
-            val on = s.typeView == v
-            Box(Modifier.heightIn(min = Tokens.Size.tab).clickable(role = Role.Tab) { if (!on) s.chooseTypeView(v) }
-                .background(if (on) c.leather else androidx.compose.ui.graphics.Color.Transparent).padding(horizontal = Tokens.Space.s3), contentAlignment = Alignment.Center) {
-                Text(stringResource(id), style = Theme.small().copy(color = if (on) c.leatherInk else c.inkSoft), maxLines = 1)
-            }
-        }
-    }
-}
-
 /**
- * 타자 필사: 입력칸 없이 페이지 위에서 그대로 씀 (A1). 숨은 입력칸 하나가 키보드를 받고,
- * 쓴 글자는 바로 먹, 틀린 글자는 붉은 밑줄, 다음 글자 밑에 붉은 펜촉. 다 쓰면 도장 · 금선 · 진동.
- * 노트 보기(A2): 위는 성경, 아래 줄 공책에 내 글씨(펜 글씨체)로 이 장에서 쓴 절이 쌓임.
+ * 타자 필사 = 원고지 하나 (A1 · W1): 칸마다 쓸 글자가 옅은 밑글씨로 깔려 있고, 친 글자가 먹으로 덮어요.
+ * 틀리면 붉게, 조합 중이면 흐리게. 키보드가 올라오면 지금 줄이 키보드 바로 위에 오도록 따라가요.
+ * 한 절을 마치면 칸이 차례로 금빛으로 반짝인 뒤, 종이를 넘기듯 다음 절로.
  */
 @Composable
 private fun WritePage(s: AppState, verse: Int?) {
     val c = Theme.c; val k = s.korean
-    val t = s.text(); val p = s.progress
-    val source = verse?.let { t.verse(s.chapter, it) }.orEmpty()
-    var value by remember(s.translation, s.book, s.chapter, verse) { mutableStateOf(TextFieldValue("")) }
-    val marks = if (verse != null) TypeJudge.marks(source, value.text) else emptyList()
+    val t = s.text()
     val haptic = LocalHapticFeedback.current
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
     var focused by remember { mutableStateOf(false) }
-    // 방금 마친 절: 도장 · 금선이 잠깐 머묾
-    var sealed by remember(s.book, s.chapter) { mutableStateOf<Int?>(null) }
+    // 금빛으로 마무리하는 동안은 그 절을 그대로 보여 주고 입력은 받지 않아요
+    var sealing by remember(s.book, s.chapter) { mutableStateOf<Pair<Int, String>?>(null) }
+    val shown = sealing?.first ?: verse
+    val source = shown?.let { t.verse(s.chapter, it) }.orEmpty()
+    var value by remember(s.translation, s.book, s.chapter, verse) { mutableStateOf(TextFieldValue("")) }
+    val typed = sealing?.second ?: value.text
+    val marks = if (shown != null) TypeJudge.marks(source, typed) else emptyList()
+    val gold = remember(s.book, s.chapter) { androidx.compose.animation.core.Animatable(0f) }
     LaunchedEffect(value.text) {
-        if (verse != null && TypeJudge.done(source, value.text)) {
+        if (verse != null && sealing == null && TypeJudge.done(source, value.text)) {
             delay(Tokens.Motion.typeSettleMs.toLong())
             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-            sealed = verse; s.target = null; s.fill(listOf(verse), Mode.TYPE)
+            sealing = verse to value.text
+            gold.snapTo(0f); gold.animateTo(1f, tween(Tokens.Motion.goldMs, easing = androidx.compose.animation.core.LinearEasing))
+            delay(Tokens.Motion.goldHoldMs.toLong())
+            s.target = null; s.fill(listOf(verse), Mode.TYPE)
+            sealing = null; gold.snapTo(0f)
         }
     }
-    LaunchedEffect(sealed) { if (sealed != null) { delay(Tokens.Motion.sealHoldMs.toLong()); sealed = null } }
     fun write() { focus.requestFocus(); keyboard?.show() }
 
     Box(Modifier.fillMaxSize()) {
-        when (s.typeView) {
-            1 -> NotebookView(s, verse, source, value.text, marks) { write() }
-            2 -> GridView(s, verse, source, value.text, marks) { write() }
-            else -> BookView(s, verse, marks, sealed) { write() }
+        if (shown == null) Box(Modifier.padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) { ChapterDoneNote(s) }
+        else androidx.compose.animation.AnimatedContent(shown, transitionSpec = {
+            // 종이를 넘기듯: 새 절이 오른쪽에서 살짝 들어오고, 마친 절은 왼쪽으로
+            (androidx.compose.animation.slideInHorizontally(tween(Tokens.Motion.turnMs)) { it / 3 } + androidx.compose.animation.fadeIn(tween(Tokens.Motion.turnMs))) togetherWith
+                (androidx.compose.animation.slideOutHorizontally(tween(Tokens.Motion.turnMs)) { -it / 3 } + androidx.compose.animation.fadeOut(tween(Tokens.Motion.turnMs)))
+        }, label = "verse") { v ->
+            val src = if (v == shown) source else t.verse(s.chapter, v)
+            Manuscript(s, v, src, if (v == shown) typed else "", if (v == shown) marks else TypeJudge.marks(src, ""), if (v == shown) gold.value else 0f, focused) { write() }
         }
         // 숨은 입력칸: 붙여넣기 · 자동완성으로 한꺼번에 들어온 글은 받지 않음 (한 자씩 옮겨 쓰기)
         BasicTextField(
             value = value,
-            onValueChange = { nv -> if (nv.text.length - value.text.length <= 3) value = nv },
+            onValueChange = { nv -> if (sealing == null && nv.text.length - value.text.length <= 3) value = nv },
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None),
             modifier = Modifier.size(Tokens.Size.hiddenField).alpha(0f).focusRequester(focus).onFocusChanged { focused = it.isFocused },
         )
-        // 쓰기 안내: 글 위에 겹치지 않게 아래 띠로 (키보드가 열리면 사라짐)
-        if (!focused && verse != null) Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(c.leaf)
+        // 쓰기 시작: 키보드가 닫혀 있을 때만 아래 띠로
+        if (!focused && shown != null) Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(c.leaf)
             .drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }
             .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) {
             BookButton(stringResource(R.string.tap_to_write), Modifier.fillMaxWidth()) { write() }
@@ -227,49 +220,10 @@ private fun WritePage(s: AppState, verse: Int?) {
     }
 }
 
-/** 책 보기: 이 장 전체가 한 페이지. 쓴 절은 먹, 쓰는 절은 표시, 남은 절은 흐린 먹. */
+/** 원고지 한 장: 칸마다 밑글씨 · 친 글자 · 지금 칸 표시 · 마칠 때 금빛. */
 @Composable
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
-private fun BookView(s: AppState, current: Int?, marks: List<TypeJudge.Mark>, sealed: Int?, onWrite: () -> Unit) {
-    val c = Theme.c; val k = s.korean; val ctx = LocalContext.current; val haptic = LocalHapticFeedback.current
-    val t = s.text(); val p = s.progress
-    val fillable = t.fillable(s.chapter)
-    val list = rememberLazyListState()
-    val chapterDone = current == null
-    LaunchedEffect(current) { current?.let { v -> val i = fillable.indexOf(v); if (i > 1) list.animateScrollToItem(i - 1) } }
-    LazyColumn(state = list, modifier = Modifier.fillMaxSize().clickable(remember { MutableInteractionSource() }, null) { onWrite() },
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(start = Tokens.Space.s5, end = Tokens.Space.s5, top = Tokens.Space.s4, bottom = Tokens.Size.touch * 2),
-        verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        item { ChapterInitial(s.chapter, chapterDone, Modifier.padding(bottom = Tokens.Space.s1)) }
-        items(fillable, key = { it }) { v ->
-            val key = at
-            val filled = p.isFilled(s.translation, key)
-            val text = t.verse(s.chapter, v)
-            val on = s.isMarked(key)
-            // 길게 누르면 형광펜 (긋기 · 지우기)
-            Box(Modifier.combinedClickable(role = Role.Button, onLongClick = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress); s.toggleMark(key)
-                s.toast = ctx.getString(if (on) R.string.mark_removed else R.string.mark_added)
-            }) { when { v == current -> onWrite(); filled -> s.shareVerse = VerseKey(s.book, s.chapter, v); else -> s.target = v } }) {
-                when {
-                    v == current -> VerseText(s, v, text, marks = marks, marked = on)
-                    filled -> VerseText(s, v, text, sealed = v == sealed, marked = on)
-                    else -> VerseText(s, v, text, faint = true, marked = on)
-                }
-            }
-        }
-        if (chapterDone) item { ChapterDoneNote(s) }
-    }
-}
-
-/**
- * 원고지 보기 (W1): 위에 옮겨 쓸 절, 아래 원고지 칸에 한 칸에 한 글자씩. 띄어쓰기는 빈 칸.
- * 맞게 쓴 글자가 칸에 놓일 때마다 펜 소리 한 번 · 아주 약한 결. 지금 쓸 칸 밑에 붉은 줄.
- */
-@Composable
-private fun GridView(s: AppState, verse: Int?, source: String, typed: String, marks: List<TypeJudge.Mark>, onWrite: () -> Unit) {
+private fun Manuscript(s: AppState, verse: Int, source: String, typed: String, marks: List<TypeJudge.Mark>, gold: Float, typing: Boolean, onWrite: () -> Unit) {
     val c = Theme.c; val ctx = LocalContext.current; val view = androidx.compose.ui.platform.LocalView.current
-    if (verse == null) { Box(Modifier.padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) { ChapterDoneNote(s) }; return }
     val plain = Markup.plain(source)
     val feel = remember { io.github.graviton94.todaybible.data.PenFeel(ctx.applicationContext) }
     DisposableEffect(Unit) { onDispose { feel.release() } }
@@ -281,93 +235,70 @@ private fun GridView(s: AppState, verse: Int?, source: String, typed: String, ma
         }
     }
     val cursor = marks.indexOfFirst { it == TypeJudge.Mark.PENDING || it == TypeJudge.Mark.COMPOSING }
-    // 칸에는 실제로 친 글자를: 맞으면 먹, 틀리면 붉게, 조합 중이면 흐리게 (ㄸ → 또)
     val typedAt = TypeJudge.typedAt(source, typed)
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).clickable(remember { MutableInteractionSource() }, null) { onWrite() }
-        .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-        VerseText(s, verse, source, faint = true)
+    val key = VerseKey(s.book, s.chapter, verse)
+    val scroll = rememberScrollState()
+    val dens = LocalDensity.current
+    Column(Modifier.fillMaxSize().verticalScroll(scroll).clickable(remember { MutableInteractionSource() }, null) { onWrite() }
+        .padding(start = Tokens.Space.s5, end = Tokens.Space.s5, top = Tokens.Space.s3, bottom = if (typing) Tokens.Space.s3 else Tokens.Size.touch * 2),
+        verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        // 절 번호 · 형광펜
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.grid_verse, verse), style = Theme.label().copy(color = c.rubric), modifier = Modifier.weight(1f))
+            val on = s.isMarked(key)
+            Text(stringResource(if (on) R.string.mark_off else R.string.mark_on), style = Theme.small().copy(color = if (on) c.rubric else c.inkSoft, background = if (on) c.mark else androidx.compose.ui.graphics.Color.Unspecified), maxLines = 1,
+                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.toggleMark(key) })
+        }
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val cols = (maxWidth / Tokens.Size.gridCell).toInt().coerceAtLeast(6)
+            val cols = (maxWidth / (Tokens.Size.gridCell * s.scale)).toInt().coerceAtLeast(6)
             val cell = maxWidth / cols
+            val rows = plain.indices.chunked(cols)
+            val n = plain.length.coerceAtLeast(1)
+            // 지금 줄이 늘 보이게: 키보드가 올라와 화면이 줄면 그 줄 위 한 줄까지 보이도록
+            val row = (cursor.coerceAtLeast(0) / cols)
+            LaunchedEffect(row, typing) { if (typing) with(dens) { scroll.animateScrollTo(((row - 1).coerceAtLeast(0) * cell.toPx()).toInt()) } }
             Column(Modifier.drawBehind {
                 drawLine(c.rubric.copy(alpha = Tokens.Alpha.faint), Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx())
                 drawLine(c.rubric.copy(alpha = Tokens.Alpha.faint), Offset.Zero, Offset(0f, size.height), Tokens.Stroke.hair.toPx())
             }) {
-                plain.indices.chunked(cols).forEach { row ->
+                rows.forEach { r ->
                     Row {
                         (0 until cols).forEach { j ->
-                            val i = row.getOrNull(j)
+                            val i = r.getOrNull(j)
                             val m = i?.let { marks.getOrNull(it) }
+                            // 금빛: 칸 차례대로 지나가는 빛
+                            val g = if (i == null || gold <= 0f) 0f else ((gold * (n + 6) - i) / 6f).coerceIn(0f, 1f).let { if (it >= 1f) 0.45f else it }
                             Box(Modifier.size(cell).drawBehind {
+                                if (g > 0f) drawRect(c.gilt.copy(alpha = g * Tokens.Alpha.goldCell))
                                 val w = Tokens.Stroke.hair.toPx(); val line = c.rubric.copy(alpha = Tokens.Alpha.faint)
                                 drawLine(line, Offset(size.width, 0f), Offset(size.width, size.height), w)
                                 drawLine(line, Offset(0f, size.height), Offset(size.width, size.height), w)
-                                if (i != null && i == cursor) drawLine(c.rubric, Offset(size.width * 0.2f, size.height - Tokens.Stroke.rule.toPx() * 2), Offset(size.width * 0.8f, size.height - Tokens.Stroke.rule.toPx() * 2), Tokens.Stroke.rule.toPx())
+                                if (i != null && i == cursor && gold <= 0f) drawRect(c.rubric, Offset(Tokens.Stroke.rule.toPx() / 2, Tokens.Stroke.rule.toPx() / 2),
+                                    androidx.compose.ui.geometry.Size(size.width - Tokens.Stroke.rule.toPx(), size.height - Tokens.Stroke.rule.toPx()), style = androidx.compose.ui.graphics.drawscope.Stroke(Tokens.Stroke.rule.toPx()))
                             }, contentAlignment = Alignment.Center) {
-                                val shown = if (i == null || m == null || m == TypeJudge.Mark.PENDING) null
-                                    else if (m == TypeJudge.Mark.OK) plain[i].takeIf { it != ' ' } else typedAt.getOrNull(i)
-                                if (shown != null)
-                                    Text(shown.toString(), style = Theme.verse(s.korean).copy(fontSize = Tokens.Text.gridChar * s.scale, lineHeight = Tokens.Text.gridChar * s.scale,
-                                        color = when (m) { TypeJudge.Mark.WRONG -> c.rubric; TypeJudge.Mark.COMPOSING -> c.inkSoft; else -> c.ink }, textAlign = TextAlign.Center), maxLines = 1)
+                                if (i != null && plain[i] != ' ') {
+                                    val done = m == TypeJudge.Mark.OK
+                                    val ch = when (m) { TypeJudge.Mark.WRONG, TypeJudge.Mark.COMPOSING -> typedAt.getOrNull(i) ?: plain[i]; else -> plain[i] }
+                                    val color = when {
+                                        gold > 0f -> c.giltText
+                                        done -> c.ink
+                                        m == TypeJudge.Mark.WRONG -> c.rubric
+                                        m == TypeJudge.Mark.COMPOSING -> c.inkSoft
+                                        else -> c.ink.copy(alpha = Tokens.Alpha.hintChar)   // 밑글씨
+                                    }
+                                    Text(ch.toString(), style = Theme.verse(s.korean).copy(fontSize = Tokens.Text.gridChar * s.scale, lineHeight = Tokens.Text.gridChar * s.scale, color = color, textAlign = TextAlign.Center), maxLines = 1)
+                                }
                             }
                         }
                     }
                 }
             }
         }
-        Text(stringResource(R.string.grid_hint), style = Theme.small())
+        if (gold > 0f) Text(stringResource(R.string.grid_done, verse), style = Theme.label().copy(color = c.giltText), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+        else if (!typing) Text(stringResource(R.string.grid_hint), style = Theme.small())
     }
 }
 
-/** 노트 보기: 위는 성경 한 절, 아래는 줄 공책에 내 글씨. 여백에 쓴 날짜. */
-@Composable
-private fun NotebookView(s: AppState, current: Int?, source: String, typed: String, marks: List<TypeJudge.Mark>, onWrite: () -> Unit) {
-    val c = Theme.c; val k = s.korean
-    val t = s.text(); val p = s.progress
-    val written = s.fills.filter { it.translation == s.translation && it.key.book == s.book && it.key.chapter == s.chapter }
-        .groupBy { it.key.verse }.mapValues { (_, f) -> f.minOf { it.epochDay } }.toSortedMap()
-    val list = rememberLazyListState(); val ctx = LocalContext.current
-    LaunchedEffect(written.size) { if (written.isNotEmpty()) list.animateScrollToItem(written.size) }
-    Column(Modifier.fillMaxSize()) {
-        if (current != null) Box(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) { VerseText(s, current, source) }
-        else Box(Modifier.padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) { ChapterDoneNote(s) }
-        val pen = TextStyle(fontFamily = Fonts.pen, fontSize = Tokens.Text.pen * s.scale, lineHeight = Tokens.Text.penLine * s.scale, color = c.penInk, lineBreak = Theme.phrase)
-        val fmt = DateTimeFormatter.ofPattern("M. d")
-        LazyColumn(state = list, modifier = Modifier.fillMaxSize().background(c.leaf).drawBehind {
-            // 공책 여백의 붉은 세로줄
-            val x = Tokens.Size.noteMargin.toPx() + Tokens.Space.s3.toPx()
-            drawLine(c.rubric.copy(alpha = Tokens.Alpha.faint), Offset(x, 0f), Offset(x, size.height), Tokens.Stroke.hair.toPx())
-        }.clickable(remember { MutableInteractionSource() }, null) { onWrite() },
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(bottom = Tokens.Size.touch * 2)) {
-            items(written.keys.toList(), key = { it }) { v ->
-                // 손으로 쓴 절은 그 손글씨 그대로
-                val ink = remember(s.translation, s.book, s.chapter, v) { io.github.graviton94.todaybible.data.Ink.file(ctx, s.translation.id, s.book, s.chapter, v).takeIf { it.exists() }?.let { io.github.graviton94.todaybible.data.Ink.load(it) } }
-                if (ink != null) HandNoteLine(java.time.LocalDate.ofEpochDay(written.getValue(v)).format(fmt), v, ink)
-                else NoteLine(java.time.LocalDate.ofEpochDay(written.getValue(v)).format(fmt), buildAnnotatedString {
-                    withStyle(SpanStyle(color = c.rubric)) { append("$v ") }; append(Markup.plain(t.verse(s.chapter, v)))
-                }, pen)
-            }
-            if (current != null) item {
-                // 지금 쓰는 글: 쓴 만큼만, 틀린 글자는 붉게, 조합 중인 글자는 친 그대로, 끝에 펜촉
-                val plain = Markup.plain(source)
-                val typedAt = TypeJudge.typedAt(source, typed)
-                val line = buildAnnotatedString {
-                    withStyle(SpanStyle(color = c.rubric)) { append("$current ") }
-                    plain.forEachIndexed { i, ch ->
-                        when (marks.getOrNull(i)) {
-                            TypeJudge.Mark.OK -> append(ch)
-                            TypeJudge.Mark.WRONG -> withStyle(SpanStyle(color = c.rubric, textDecoration = TextDecoration.Underline)) { append(ch) }
-                            TypeJudge.Mark.COMPOSING -> withStyle(SpanStyle(color = c.inkSoft)) { append(typedAt.getOrNull(i) ?: ch) }
-                            else -> {}
-                        }
-                    }
-                    withStyle(SpanStyle(color = c.rubric)) { append("▏") }
-                }
-                NoteLine(s.today().format(fmt), line, pen)
-            }
-        }
-    }
-}
 
 /** 줄 공책 한 덩이: 왼쪽 여백에 날짜, 줄마다 가는 선. */
 @Composable
@@ -603,21 +534,26 @@ private fun AloudTab(s: AppState, verse: Int) {
     DisposableEffect(running) { view.keepScreenOn = running; onDispose { view.keepScreenOn = false } }
     var spoken by remember(verse, s.chapter, s.book) { mutableIntStateOf(-1) }   // 가이드가 읽은 데까지 (-1 = 가이드가 읽는 중 아님)
     var replay by remember { mutableIntStateOf(0) }
+    // 방금 녹음한 절 (나만 읽기): 들어보기 · 다시 녹음 · 저장을 고르는 동안 다음 절로 가지 않아요
+    var justRecorded by remember(s.book, s.chapter) { mutableStateOf<Int?>(null) }
 
     if (canHear || (record && mic)) {
-        val lit = if (recognize) Recite.lit(plain, heard) else plain.length
-        val done = recognize && Recite.done(plain, heard)
+        // 따라 읽기 (후한 판정): 소리가 들리는 동안 읽는 빠르기로 글자가 천천히 밝아지고, 알아들은 곳이 앞서면 거기까지 당겨요
+        var paced by remember(verse, s.chapter, s.book) { mutableIntStateOf(0) }
+        var voiceAt by remember { mutableLongStateOf(0L) }
+        val lit = maxOf(paced, if (recognize) Recite.lit(plain, heard) else 0).coerceAtMost(plain.length)
+        val done = lit >= plain.length || (recognize && Recite.done(plain, heard))
         var finished by remember(verse, s.chapter, s.book) { mutableStateOf(false) }
-        fun complete() { if (finished) return; finished = true; haptic.performHapticFeedback(HapticFeedbackType.LongPress); s.fill(listOf(verse), Mode.ALOUD); if (s.reread?.third == verse) { s.reread = null; s.voiceRev++ } }
-        // 놓친 곳 (T2): 다 읽었는데 알아듣지 못한 낱말이 있으면 붉게 짚고, 잠시 뒤 그대로 채움 (듣기 · 다시 읽기를 누르면 기다림)
-        val missed = remember(heard, done) { if (done) Recite.missed(plain, heard) else emptyList() }
-        var review by remember(verse, s.chapter, s.book) { mutableStateOf(false) }
-        var hold by remember(verse, s.chapter, s.book) { mutableStateOf(false) }
+        fun complete() {
+            if (finished) return; finished = true; haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            if (record && mode == 2 && !guideTurn) justRecorded = verse
+            s.fill(listOf(verse), Mode.ALOUD); if (s.reread?.third == verse) { s.reread = null; s.voiceRev++ }
+        }
+        LaunchedEffect(done) { if (done) { delay(Tokens.Motion.typeSettleMs.toLong()); complete() } }
         var retry by remember(verse, s.chapter, s.book) { mutableIntStateOf(0) }
-        LaunchedEffect(done) { if (done) { delay(Tokens.Motion.typeSettleMs.toLong()); if (missed.isEmpty()) complete() else review = true } }
-        LaunchedEffect(review, hold) { if (review && !hold) { delay(Tokens.Motion.reviewMs.toLong()); complete() } }
-        LaunchedEffect(running, verse, s.chapter, s.book, mode, replay, narrLoading) {
-            if (!running) { guide.stop(); spoken = -1; on = false; return@LaunchedEffect }
+        val holding = justRecorded != null
+        LaunchedEffect(running, verse, s.chapter, s.book, mode, replay, narrLoading, holding) {
+            if (!running || holding) { guide.stop(); spoken = -1; on = false; return@LaunchedEffect }
             if (narrLoading && mode == 0) { on = false; return@LaunchedEffect }   // 목소리 받는 동안 잠깐 기다림
             when {
                 // 교독 · 인도 차례: 가이드가 읽은 절도 읽은 것으로 채우고, 녹음을 켰으면 가이드 목소리도 그 절 자리에 남겨 장 전체가 이어지게
@@ -651,6 +587,14 @@ private fun AloudTab(s: AppState, verse: Int) {
             // 절 · 장 · 방식이 바뀌거나 화면을 떠나면 가이드 소리도 멈춤
             try { kotlinx.coroutines.awaitCancellation() } finally { guide.stop() }
         }
+        // 소리가 들린 지 얼마 안 됐으면 한 글자씩 (말을 멈추면 빛도 멈춤)
+        LaunchedEffect(on, verse, s.chapter, s.book) {
+            if (!on) return@LaunchedEffect
+            while (paced < plain.length && !finished) {
+                delay(ReadingPace.delayMillis(plain[paced], k, s.aloudRate() * Tokens.Motion.followPace))
+                if (System.currentTimeMillis() - voiceAt < Tokens.Motion.voiceHoldMs) paced++
+            }
+        }
         // 앱을 내리면 읽기를 멈춤 (마이크 · 녹음 · 가이드)
         val owner = androidx.lifecycle.compose.LocalLifecycleOwner.current
         DisposableEffect(owner) {
@@ -666,6 +610,8 @@ private fun AloudTab(s: AppState, verse: Int) {
         DisposableEffect(on, verse, s.chapter, s.book, mic, record, retry) {
             if (!on || !mic) return@DisposableEffect onDispose { }
             val session = if (record) Voice.Session(Voice.file(ctx, s.translation.id, s.book, s.chapter, verse)).also { it.start() } else null
+            // 알아듣기가 없으면 녹음 소리 크기로 말하는 중인지
+            val levelJob = if (session != null && !recognize) kotlinx.coroutines.MainScope().launch { while (true) { delay(100); if (session.level > Tokens.Motion.voiceLevel) voiceAt = System.currentTimeMillis() } } else null
             var rec: SpeechRecognizer? = null
             var alive = true
             if (recognize) {
@@ -701,7 +647,7 @@ private fun AloudTab(s: AppState, verse: Int) {
                     }
                     override fun onReadyForSpeech(p: Bundle?) {}
                     override fun onBeginningOfSpeech() {}
-                    override fun onRmsChanged(v: Float) {}
+                    override fun onRmsChanged(v: Float) { if (v > Tokens.Motion.voiceRms) voiceAt = System.currentTimeMillis() }
                     override fun onBufferReceived(b: ByteArray?) {}
                     override fun onEndOfSpeech() {}
                     override fun onEvent(t: Int, p: Bundle?) {}
@@ -709,7 +655,7 @@ private fun AloudTab(s: AppState, verse: Int) {
                 r.startListening(intent())
             }
             onDispose {
-                alive = false; runCatching { rec?.cancel(); rec?.destroy() }
+                alive = false; levelJob?.cancel(); runCatching { rec?.cancel(); rec?.destroy() }
                 // 다 읽은 절만 남기고, 중간에 멈춘 녹음은 버림
                 if (session != null) { if (finished) session.stop() else session.discard() }
             }
@@ -717,18 +663,9 @@ private fun AloudTab(s: AppState, verse: Int) {
         NarrationBanner(s, narrLoading, narr == -1)
         AloudControls(s, guideReady)
         val at = if (spoken >= 0) spoken else lit
-        if (s.aloudBig) AloudLines(s, verse, plain, at, if (review) missed else emptyList(), guiding = spoken >= 0)
-        else VerseText(s, verse, source, lit = at, missed = if (review) missed else emptyList())
-        if (review) Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            Text(stringResource(R.string.missed_n, missed.size), style = Theme.small().copy(color = c.rubric))
-            Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                if (guideReady) BookButton(stringResource(R.string.missed_listen), Modifier.weight(1f), quiet = true) {
-                    hold = true; guide.speak(missed.joinToString(" ") { plain.substring(it.first, it.last + 1) }, s.aloudRate(), { _, _ -> }, { })
-                }
-                BookButton(stringResource(R.string.missed_again), Modifier.weight(1f), quiet = true) { hold = false; review = false; heard = ""; retry++ }
-                BookButton(stringResource(R.string.missed_fill), Modifier.weight(1f)) { complete() }
-            }
-        }
+        if (s.aloudBig) AloudLines(s, verse, plain, at, emptyList(), guiding = spoken >= 0)
+        else VerseText(s, verse, source, lit = at)
+        justRecorded?.let { v -> RecordedBar(s, v, onKeep = { justRecorded = null }, onAgain = { justRecorded = null; s.reread = Triple(s.book, s.chapter, v) }) }
         val micLabel = stringResource(R.string.aloud_listen)
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             Box(Modifier.size(Tokens.Size.emblem).clip(androidx.compose.foundation.shape.CircleShape).background(if (running) c.rubric else c.leather)
@@ -737,7 +674,7 @@ private fun AloudTab(s: AppState, verse: Int) {
             Text(stringResource(when { spoken >= 0 && guideTurn -> R.string.resp_guide; spoken >= 0 -> R.string.guide_reading; on && mode == 0 -> R.string.resp_you; on && record -> R.string.voice_recording; on && useGuide -> R.string.guide_your_turn; on -> R.string.aloud_listening; mode == 0 -> R.string.resp_start; useGuide -> R.string.guide_start; else -> R.string.aloud_listen }),
                 style = Theme.label().copy(color = if (running) c.rubric else c.ink))
             if (on && !recognize) BookButton(stringResource(R.string.voice_done_reading), Modifier.fillMaxWidth()) { complete() }
-            if (running && useGuide && spoken < 0 && !review) BookButton(stringResource(R.string.guide_again), Modifier.fillMaxWidth(), quiet = true) { replay++ }
+            if (running && useGuide && spoken < 0) BookButton(stringResource(R.string.guide_again), Modifier.fillMaxWidth(), quiet = true) { replay++ }
             Text(stringResource(if (record) R.string.voice_keep_hint else R.string.aloud_hint), style = Theme.small().copy(textAlign = TextAlign.Center))
         }
         VoiceRow(s)
@@ -791,6 +728,34 @@ fun ShareVerseSheet(s: AppState, at: VerseKey) {
             BookButton(stringResource(if (s.isMarked(key)) R.string.mark_off else R.string.mark_on), Modifier.weight(1f), quiet = true) { s.toggleMark(key) }
             BookButton(stringResource(R.string.share), Modifier.weight(1f)) { Cards.share(ctx, bmp, "verse"); s.shareVerse = null }
         }
+    }
+}
+
+/** 방금 녹음한 절: 들어보기 · 다시 녹음 · 저장 (그대로 두면 잠시 뒤 저장하고 다음 절로). */
+@Composable
+private fun RecordedBar(s: AppState, v: Int, onKeep: () -> Unit, onAgain: () -> Unit) {
+    val c = Theme.c; val ctx = LocalContext.current; val scope = rememberCoroutineScope()
+    val f = Voice.file(ctx, s.translation.id, s.book, s.chapter, v)
+    var player by remember(v) { mutableStateOf<android.media.MediaPlayer?>(null) }
+    var touched by remember(v) { mutableStateOf(false) }
+    DisposableEffect(v) { onDispose { player?.release() } }
+    LaunchedEffect(v, touched) { if (!touched) { delay(Tokens.Motion.keepMs.toLong()); onKeep() } }
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        Text(stringResource(R.string.rec_just, v), style = Theme.label())
+        Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            BookButton(stringResource(R.string.rec_listen), Modifier.weight(1f), quiet = true) {
+                touched = true
+                scope.launch {
+                    // 녹음 줄이 파일을 마저 쓸 때까지 잠깐
+                    repeat(30) { if (f.exists()) return@repeat; delay(100) }
+                    player?.release()
+                    player = runCatching { android.media.MediaPlayer().apply { setDataSource(f.path); prepare(); start() } }.getOrNull()
+                }
+            }
+            BookButton(stringResource(R.string.rec_redo), Modifier.weight(1f), quiet = true) { player?.release(); player = null; f.delete(); s.voiceRev++; onAgain() }
+            BookButton(stringResource(R.string.rec_keep), Modifier.weight(1f)) { player?.release(); player = null; onKeep() }
+        }
+        if (!touched) Text(stringResource(R.string.rec_auto), style = Theme.small())
     }
 }
 
@@ -870,6 +835,7 @@ private fun VoiceRow(s: AppState) {
             }
         }
         if (s.exporting) Text(stringResource(R.string.exporting), style = Theme.small())
+        if (s.aloudMode != 2) Text(stringResource(R.string.rec_guide_note), style = Theme.small())
         // 절마다 녹음: 듣기 · 지우기 (마음에 안 들면 지우고 다시 읽어요)
         var open by remember { mutableStateOf(false) }
         Text(stringResource(if (open) R.string.rec_hide else R.string.rec_show), style = Theme.small().copy(color = c.rubric),

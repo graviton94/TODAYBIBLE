@@ -119,6 +119,9 @@ fun SettingsPage(s: AppState) {
             Group(stringResource(R.string.my_cover)) { CoverPicker(s) }
             Group(stringResource(R.string.guide_settings)) { GuideVoiceSettings(s) }
             Group(stringResource(R.string.hand_settings)) {
+                // 펜 (손글씨 화면에서 옮겨 옴)
+                listOf(io.github.graviton94.todaybible.data.Ink.FOUNTAIN to R.string.pen_fountain, io.github.graviton94.todaybible.data.Ink.BRUSH to R.string.pen_brush, io.github.graviton94.todaybible.data.Ink.PENCIL to R.string.pen_pencil)
+                    .forEach { (id, name) -> ChoiceRow(stringResource(name), s.pen == id) { s.choosePen(id) } }
                 ChoiceRow(stringResource(R.string.guide_setting), s.handGuide) { s.flipGuide() }
                 ChoiceRow(stringResource(R.string.pen_sound), s.penSound) { s.flipPenSound() }
                 ChoiceRow(stringResource(R.string.paper_haptic), s.paperHaptic) { s.flipPaperHaptic() }
