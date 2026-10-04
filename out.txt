@@ -1,0 +1,21 @@
+m5_19_c023.zip | Dalvik/2.1.0 (Linux; U; Android 14; SM-S918N Build/UP1A.231005.007) | 200 235970 application/zip
+m5_19_c023.zip | okhttp/4.12.0 | 200 235970 application/zip
+m5_19_c023.zip | Mozilla/5.0 | 200 235970 application/zip
+f5_43_c003.zip | Dalvik/2.1.0 (Linux; U; Android 14; SM-S918N Build/UP1A.231005.007) | 200 1435315 application/zip
+f5_43_c003.zip | okhttp/4.12.0 | 200 1435315 application/zip
+f5_43_c003.zip | Mozilla/5.0 | 200 1435315 application/zip
+en_m5_43_c003.zip | Dalvik/2.1.0 (Linux; U; Android 14; SM-S918N Build/UP1A.231005.007) | 200 1604729 application/zip
+en_m5_43_c003.zip | okhttp/4.12.0 | 200 1604729 application/zip
+en_m5_43_c003.zip | Mozilla/5.0 | 200 1604729 application/zip
+no UA | 200
+HTTP/1.1 200 OK
+Date: Sun, 04 Oct 2026 15:05:39 GMT
+Content-Type: application/zip
+Content-Length: 235970
+Connection: keep-alive
+Accept-Ranges: bytes
+ETag: "a67aaf276e26951b384f844917266a79"
+Last-Modified: Sun, 04 Oct 2026 02:21:20 GMT
+Server: cloudflare
+CF-RAY: a45516052a63a5f2-IAD
+
