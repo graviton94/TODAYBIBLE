@@ -27,13 +27,21 @@ android {
             storeFile = file("../keystore/sideload.jks")
             storePassword = "android"; keyAlias = "sideload"; keyPassword = "android"
         }
+        // Play 올리기용 키: 저장소에 없고, 출시 빌드 (android-release.yml) 가 Secrets 에서 꺼내 씀
+        System.getenv("PLAY_KEYSTORE")?.let { path ->
+            create("play") {
+                storeFile = file(path)
+                storePassword = System.getenv("PLAY_KEYSTORE_PASSWORD"); keyAlias = System.getenv("PLAY_KEY_ALIAS") ?: "upload"
+                keyPassword = System.getenv("PLAY_KEY_PASSWORD") ?: System.getenv("PLAY_KEYSTORE_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         debug { signingConfig = signingConfigs.getByName("sideload") }
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("sideload")
+            signingConfig = signingConfigs.findByName("play") ?: signingConfigs.getByName("sideload")
             buildConfigField("boolean", "DEV_TOOLS", "false")
         }
     }

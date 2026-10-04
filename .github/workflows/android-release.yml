@@ -1,0 +1,48 @@
+name: Android release (Play)
+
+# Play 에 올릴 AAB. 올리기 키는 저장소에 두지 않아요:
+#  · PLAY_UPLOAD_KEYSTORE_B64 (keystore 파일을 base64 로) · PLAY_KEYSTORE_PASSWORD · PLAY_KEY_ALIAS · PLAY_KEY_PASSWORD 를 Secrets 에.
+# 결과: 이 실행의 Artifacts 에 app-release.aab (Play Console › 내부 테스트 › 새 버전에 올리기)
+on:
+  workflow_dispatch:
+    inputs:
+      version: { description: "version name (e.g. 1.0.0)", default: "1.0.0" }
+
+permissions: { contents: read }
+
+env:
+  NARRATION_URL: ${{ vars.CF_R2_PUBLIC_URL }}
+jobs:
+  aab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Upload key from Secrets
+        env: { B64: "${{ secrets.PLAY_UPLOAD_KEYSTORE_B64 }}" }
+        run: |
+          [ -n "$B64" ] || { echo "::error::PLAY_UPLOAD_KEYSTORE_B64 is not set"; exit 1; }
+          echo "$B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          echo "PLAY_KEYSTORE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
+      - name: Build AAB
+        working-directory: android
+        env:
+          PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
+          PLAY_KEY_ALIAS: ${{ secrets.PLAY_KEY_ALIAS }}
+          PLAY_KEY_PASSWORD: ${{ secrets.PLAY_KEY_PASSWORD }}
+          TB_VERSION_NAME: ${{ inputs.version }}
+          # Play 판 번호는 계속 커져야 해서 시험 APK 와 겹치지 않게 1000 부터
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          export GITHUB_RUN_NUMBER=$((1000 + GITHUB_RUN_NUMBER))
+          ./gradlew :core:test :app:bundleRelease
+          # 올리기 키로 서명됐는지 (시험 키가 아닌지) 확인
+          keytool -printcert -jarfile app/build/outputs/bundle/release/app-release.aab | grep -q "CN=sideload" && { echo "::error::signed with the sideload key"; exit 1; } || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ inputs.version }}
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 14
