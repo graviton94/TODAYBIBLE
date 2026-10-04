@@ -39,6 +39,9 @@ from helper import load_text_to_speech, load_voice_style  # noqa: E402
 TUNE = {  # 빠르기, 낮춤(재생 비율), 구절 사이 쉼(초)
     "M5": (0.92, 0.96, 0.42),
     "F5": (0.90, 1.00, 0.35),
+    # 영어 (KJV): 견본 (0.88) 결 그대로, 남성은 한국어처럼 조금 낮게
+    "EN_M5": (0.88, 0.97, 0.36),
+    "EN_F5": (0.88, 1.00, 0.32),
 }
 english = voice.upper().startswith("EN_")
 style_id = voice[3:].upper() if english else voice
