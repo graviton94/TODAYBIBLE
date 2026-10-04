@@ -4,7 +4,7 @@
     pip install pysword && python3 scripts/fetch_bible.py
 
 - KJV (1611, 공개 도메인. 영국은 왕실 특허 — 영국 출시는 보류)
-- KorRV 개역한글 (1961, 저작권 만료로 통용. 출시 전 대한성서공회에 확인)
+- KorRV 개역한글 (1961, 저작권 보호 기간이 끝난 판 · 이 판만 씀. 개역개정은 쓰지 않음)
 KJV 의 번역자 첨가어(<transChange type="added">)는 {중괄호}로, 하나님의 이름(<divineName>)은 대문자로, 단락 표시(¶)는 그대로 남긴다.
 주석(<note>) · 제목(<title>) 은 뺀다. 절 수가 정본(31,102절)과 크게 다르면 실패한다.
 """
