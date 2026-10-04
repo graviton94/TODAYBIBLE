@@ -666,4 +666,6 @@
     <string name="keep_done">%1$s 낭독을 받아 두었어요. 인터넷 없이도 들려요.</string>
     <string name="keep_partial">%1$s 낭독 가운데 몇 장을 받지 못했어요. 와이파이에서 다시 해 주세요.</string>
     <string name="keep_wifi">와이파이에 연결한 뒤 받아 주세요</string>
+    <string name="parallel_short">한 · 영</string>
+    <string name="gift_code">교회에서 받은 선물 코드가 있으세요? Play에서 쓰기 ›</string>
 </resources>

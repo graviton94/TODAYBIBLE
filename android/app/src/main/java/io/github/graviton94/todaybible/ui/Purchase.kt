@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import io.github.graviton94.todaybible.core.Canon
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -73,6 +74,11 @@ fun PurchasePage(s: AppState) {
                 else -> BookButton(stringResource(R.string.not_ready), Modifier.fillMaxWidth(), enabled = false) {}
             }
             if (!life.owned) BookButton(stringResource(R.string.restore), Modifier.fillMaxWidth(), quiet = true) { life.restore() }
+            // 교회 · 소그룹에서 받은 선물 코드 (Play 프로모션 코드): Play 의 코드 쓰기 화면으로
+            if (!life.owned) Text(stringResource(R.string.gift_code), style = Theme.small().copy(color = Theme.c.rubric), modifier = Modifier.fillMaxWidth()
+                .heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = androidx.compose.ui.semantics.Role.Button) {
+                    runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(io.github.graviton94.todaybible.data.Links.REDEEM))) }
+                }, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
             Text(stringResource(R.string.free_books), style = Theme.small().copy(textAlign = TextAlign.Center))
             Text(stringResource(R.string.pay_note), style = Theme.small().copy(textAlign = TextAlign.Center))
         }

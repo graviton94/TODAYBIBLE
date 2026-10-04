@@ -226,6 +226,10 @@ class Store(val context: Context) {
         tmp.writeText(marks.joinToString("") { "${it.translation.name}\t${it.key.raw}\t${it.epochDay}\n" }); tmp.renameTo(f)
     }
 
+    /** 읽기 화면 한영 대조. */
+    var parallel: Boolean
+        get() = prefs.getBoolean("parallel", false)
+        set(v) = prefs.edit().putBoolean("parallel", v).apply()
     /** 기도 알림: 0 끄기 · 1 아침과 저녁 · 2 하루 네 번. */
     var prayerReminder: Int
         get() = prefs.getInt("prayer_reminder", 0)

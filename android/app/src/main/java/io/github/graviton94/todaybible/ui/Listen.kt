@@ -98,6 +98,9 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
                     modifier = Modifier.clickable(role = Role.Button) { s.pickToRead = true; s.picker = book }.padding(horizontal = Tokens.Space.s1))
                 Arrow(left = false, enabled = ch < count) { s.listenAt = book to ch + 1 }
             }
+            // 한영 대조 켜고 끄기
+            Text(stringResource(R.string.parallel_short), style = Theme.small().copy(color = if (s.parallel) c.rubric else c.inkSoft), maxLines = 1,
+                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Switch) { s.flipParallel() }.padding(horizontal = Tokens.Space.s2))
             val marked = s.isBookmarked(book, ch)
             Row(Modifier.coach("read_bookmark").heightIn(min = Tokens.Size.tab).clickable(role = Role.Button) { s.toggleBookmark(book, ch, picked ?: 1) }.padding(horizontal = Tokens.Space.s2),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
@@ -176,6 +179,9 @@ private fun ChapterText(s: AppState, book: Int, ch: Int, voiceAt: Int?, picked: 
     LaunchedEffect(voiceAt) { voiceAt?.let { v -> verses.indexOf(v).takeIf { it >= 0 }?.let { list.animateScrollToItem(it) } } }
     LaunchedEffect(jump) { jump?.let { v -> verses.indexOf(v).takeIf { it >= 0 }?.let { list.scrollToItem(it + 1); s.readVerse = null } } }
     val filled = s.progress.filled(s.translation)
+    // 한영 대조 (I2): 다른 번역의 같은 절을 아래에 작게 (절 번호가 없는 곳은 비워요)
+    val otherTr = if (s.translation == io.github.graviton94.todaybible.core.Translation.KRV) io.github.graviton94.todaybible.core.Translation.KJV else io.github.graviton94.todaybible.core.Translation.KRV
+    val other = if (s.parallel) remember(book, otherTr) { s.store.book(otherTr, book) } else null
     LazyColumn(state = list, modifier = Modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
@@ -194,6 +200,9 @@ private fun ChapterText(s: AppState, book: Int, ch: Int, voiceAt: Int?, picked: 
                     else if (key.raw in filled) drawCircle(c.gilt, Tokens.Size.dot.toPx() / 2, Offset(-Tokens.Space.s3.toPx(), Tokens.Size.dot.toPx() * 1.5f))
                 }
                 .clickable(role = Role.Button) { onTap(v) })
+            other?.takeIf { ch <= it.chapterCount && v <= it.verseCount(ch) }?.verse(ch, v)?.takeIf { it.isNotBlank() }?.let { o ->
+                Text(Markup.plain(o), style = Theme.verse(!k).copy(fontSize = Theme.body().fontSize, color = c.inkSoft), modifier = Modifier.fillMaxWidth().padding(bottom = Tokens.Space.s2))
+            }
         }
         item { Text(stringResource(R.string.read_hint), style = Theme.small(), modifier = Modifier.padding(top = Tokens.Space.s4)) }
     }

@@ -89,6 +89,7 @@ object Tokens {
         val scroll = 30.dp
         val scrollRoll = 9.dp
         val shelfRow = 68.dp
+        val wideMin = 600.dp
     }
     object Text {
         val verse = 21.sp
@@ -181,6 +182,7 @@ object Tokens {
         const val barMax = 0.8f
         const val scaleHuge = 1.6f
         const val spineMin = 0.62f
+        const val wideVerse = 1.15f
     }
     object Alpha {
         const val faint = 0.5f

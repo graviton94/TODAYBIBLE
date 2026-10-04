@@ -7,6 +7,7 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -106,7 +107,15 @@ fun HandTab(s: AppState, verse: Int) {
     val perSheet = with(dens) { (padH / lineH.toPx()).toInt().coerceAtLeast(1) }
     val sheetsNeeded = guide?.let { (it.lineCount + perSheet - 1) / perSheet } ?: 1
     val sheet = earlier.size
-    Column(Modifier.fillMaxSize().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+    // 태블릿 (I4): 넓으면 두 쪽 펼침 — 왼쪽은 그 절 (인쇄된 쪽), 오른쪽은 줄 공책
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val wide = maxWidth >= Tokens.Size.wideMin
+    Row(Modifier.fillMaxSize()) {
+    if (wide) Box(Modifier.weight(1f).fillMaxHeight().padding(start = Tokens.Space.s5, top = Tokens.Space.s3, bottom = Tokens.Space.s3).clip(RoundedCornerShape(Tokens.Radius.card))
+        .background(c.leaf).verticalScroll(rememberScrollState()).padding(Tokens.Space.s5)) {
+        Text(buildAnnotatedString { withStyle(SpanStyle(color = c.rubric)) { append("$verse ") }; append(plain) }, style = Theme.verse(k).copy(fontSize = Theme.verse(k).fontSize * Tokens.Ratio.wideVerse))
+    }
+    Column(Modifier.weight(1f).fillMaxHeight().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         // 펜 · 밑글씨는 설정 ‘손글씨’에서. 여기에는 지금 절과 쪽만.
         if (s.handGuide) Text(stringResource(R.string.hand_where, verse, sheet + 1, maxOf(sheetsNeeded, sheet + 1)), style = Theme.small().copy(color = c.rubric), maxLines = 1)
         else Box(Modifier.fillMaxWidth().heightIn(max = Tokens.Size.handModel).verticalScroll(rememberScrollState())) {
@@ -194,6 +203,8 @@ fun HandTab(s: AppState, verse: Int) {
         // 밑글씨 없이 쓸 때 쪽이 모자라면
         if (!s.handGuide && strokes.isNotEmpty()) Text(stringResource(R.string.hand_more), style = Theme.small().copy(color = c.rubric), maxLines = 1,
             modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { earlier.add(strokes.toList()); strokes.clear() })
+    }
+    }
     }
 }
 

@@ -179,13 +179,15 @@ class AppState(val store: Store) {
         val list = memory; Thread { runCatching { store.saveMemory(list) } }.start()
     }
 
+    var parallel by mutableStateOf(store.parallel)
+    fun flipParallel() { parallel = !parallel; store.parallel = parallel }
     /** 낭독 받아 두기 (I3): 받는 중인 권과 받은 장 수 / 전체. */
     var keeping by mutableStateOf<Triple<Int, Int, Int>?>(null)
     fun keepNarration(b: Int) {
         if (keeping != null) return
         val ctx = store.context
         val cm = ctx.getSystemService(android.net.ConnectivityManager::class.java)
-        if (cm?.isActiveNetworkMetered != false) { toast = ctx.getString(R.string.keep_wifi); return }
+        if (cm?.isActiveNetworkMetered != false) { toast = ctx.getString(io.github.graviton94.todaybible.R.string.keep_wifi); return }
         val voice = narrator; val n = store.book(translation, b).chapterCount
         keeping = Triple(b, 0, n)
         Thread {
