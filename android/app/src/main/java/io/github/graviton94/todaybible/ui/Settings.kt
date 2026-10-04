@@ -57,7 +57,7 @@ fun SettingsPage(s: AppState) {
     val c = Theme.c; val k = s.korean
     BackHandler { s.settingsOpen = false }
     val backLabel = stringResource(R.string.back)
-    var askLang by remember { mutableStateOf<String?>(null) }
+    var askLang by remember { mutableStateOf(s.debugAskLang) }
     Column(Modifier.fillMaxSize().background(c.leaf)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(Tokens.Size.touch).semantics { contentDescription = backLabel }.clickable(role = Role.Button) { s.settingsOpen = false }, contentAlignment = Alignment.Center) {
@@ -66,7 +66,7 @@ fun SettingsPage(s: AppState) {
             Text(stringResource(R.string.settings), style = Theme.title(k), maxLines = 1)
         }
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
-            var openSec by remember { mutableStateOf<String?>("set_display") }
+            var openSec by remember { mutableStateOf(s.debugSection ?: "set_display") }
             LifetimeCard(s)
             Section(stringResource(R.string.set_display), listOf(stringResource(when (s.language) { "ko" -> R.string.lang_ko_short; "en" -> R.string.lang_en_short; else -> R.string.lang_system }), stringResource(listOf(R.string.theme_system, R.string.theme_light, R.string.theme_dark, R.string.theme_candle)[s.theme.ordinal])).joinToString(" · "), openSec == "set_display") { openSec = if (openSec == "set_display") null else "set_display" }
             if (openSec == "set_display") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {

@@ -274,6 +274,9 @@ class AppState(val store: Store) {
     fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t; checkNight(); widgets() }
     /** 언어 (시스템 · ko · en): 화면 글 · 성경 번역 · 낭독 목소리를 한 번에. 화면 글은 다시 그릴 때 (recreate) 바뀌어요. */
     var language by mutableStateOf(store.language)
+    /** 캡처용: 설정의 펼친 갈래 · 언어 묻기 창. */
+    var debugSection: String? = null
+    var debugAskLang: String? = null
     /** 덮인 창들 모두 닫기 (알림 · 위젯으로 들어올 때). */
     fun closeOverlays() {
         settingsOpen = false; purchaseOpen = false; plateView = null; finished = null; picker = null; marksOpen = false; found = null

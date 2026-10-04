@@ -117,6 +117,15 @@ adb shell wm size 1600x2560; adb shell wm density 320
 open --ei tb.page 2 --ei tb.copyTab 2;                             shot h17_tablet_hand 5
 open --ei tb.page 0;                                               shot h18_tablet_today 4
 adb shell wm size reset; adb shell wm density reset
+# 시험 직전 고침: 설정 (접힘 · 갈래) · 언어 묻기 · 평생권 · 타자 틀림
+open --ez tb.settings true --es tb.section none;                   shot j01_settings_folded 4
+open --ez tb.settings true;                                        shot j02_settings_display 4
+open --ez tb.settings true --es tb.section set_alerts;             shot j03_settings_alerts 4
+open --ez tb.settings true --es tb.askLang en;                     shot j04_language_confirm 4
+open --ez tb.seed true;  swipe_up; swipe_up; swipe_up;             shot j05_today_lifetime 2
+open --ei tb.page 1; swipe_up;                                     shot j06_library_tags 3
+open --ei tb.page 2 --ei tb.copyTab 1; adb shell input tap 540 2150; sleep 2
+adb shell input text "zz"; sleep 1.5;                              shot j07_typing_wrong 1
 # 아주 크게 (B3): 새 화면들을 큰 글씨로
 open --ef tb.scale 1.6 --ez tb.seed true;                          shot x06_huge_today 5
 open --ef tb.scale 1.6 --es tb.today 2026-10-04 --ez tb.sermonOpen true; shot x07_huge_sermon 4
