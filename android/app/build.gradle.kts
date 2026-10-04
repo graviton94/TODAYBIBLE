@@ -16,6 +16,8 @@ android {
         versionName = System.getenv("TB_VERSION_NAME") ?: "0.1.0"
         // 개발자 도구(캡처용 시험 데이터 · 장면 열기): debug 빌드에만
         buildConfigField("boolean", "DEV_TOOLS", "true")
+        // 낭독 음원 공개 주소 (Cloudflare R2). 비밀이 아니라 GitHub Variables 에서 빌드할 때 넣음. 비면 GitHub 릴리스만.
+        buildConfigField("String", "NARRATION_URL", "\"${(System.getenv("NARRATION_URL") ?: "").trimEnd('/')}\"")
     }
 
     // 직접 설치용 (내 폰 시험용) 고정 키: 저장소에 있는 시험 키라 비밀이 아님 (android/keystore/README.md).

@@ -8,6 +8,8 @@ on:
 permissions:
   contents: write
 
+env:
+  NARRATION_URL: ${{ vars.CF_R2_PUBLIC_URL }}
 jobs:
   apk:
     runs-on: ubuntu-latest

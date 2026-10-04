@@ -7,7 +7,7 @@ import java.net.URL
 import java.util.zip.ZipInputStream
 
 /**
- * 낭독 음원 (개역한글, Supertonic 3 로 미리 만든 목소리): 권마다 내려받아 폰에 두고 써요.
+ * 낭독 음원 (개역한글, Supertonic 3 로 미리 만든 목소리): 장마다 내려받아 폰에 두고 써요 (Cloudflare R2, 안 되면 GitHub 릴리스).
  * 절마다 파일 하나 (장_절.m4a, 32kHz 모노 AAC) — 내 목소리 녹음과 같은 결이라 교독 녹음에 그대로 이어 붙어요.
  * 목소리: m5 (진중한 남성) · f5 (차분한 여성). device = 폰의 읽기 목소리.
  */
@@ -15,7 +15,9 @@ object Narration {
     const val MALE = "m5"; const val FEMALE = "f5"; const val DEVICE = "device"
     /** 듣기에서 절과 절 사이 쉼 (ms). */
     const val GAP_MS = 350
-    private const val BASE = "https://github.com/graviton94/TODAYBIBLE/releases/download/narration-v1"
+    private const val RELEASE = "https://github.com/graviton94/TODAYBIBLE/releases/download/narration-v1"
+    /** 받을 곳 차례: Cloudflare R2 (있으면) → GitHub 릴리스. */
+    private val bases = listOfNotNull(io.github.graviton94.todaybible.BuildConfig.NARRATION_URL.takeIf { it.isNotBlank() }?.let { "$it/narration" }, RELEASE)
 
     fun dir(ctx: Context, voice: String, book: Int) = File(ctx.filesDir, "narration/$voice/${book + 1}")
     fun file(ctx: Context, voice: String, book: Int, chapter: Int, verse: Int) = File(dir(ctx, voice, book), "${chapter}_$verse.m4a")
@@ -33,7 +35,8 @@ object Narration {
     private fun fetchOnce(ctx: Context, voice: String, book: Int, chapter: Int): Boolean = runCatching {
         if (has(ctx, voice, book, chapter)) return true
         val d = dir(ctx, voice, book); d.mkdirs()
-        val conn = open(URL("$BASE/${voice}_%02d_c%03d.zip".format(book + 1, chapter))) ?: return false
+        val name = "${voice}_%02d_c%03d.zip".format(book + 1, chapter)
+        val conn = bases.firstNotNullOfOrNull { open(URL("$it/$name")) } ?: return false
         var n = 0
         ZipInputStream(conn.inputStream.buffered()).use { z ->
             while (true) {

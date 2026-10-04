@@ -61,3 +61,15 @@ jobs:
           done
           ls out/*.zip | wc -l
           gh release upload "${{ inputs.tag }}" out/*.zip --clobber -R "${{ github.repository }}"
+      - name: Upload to R2 (when set up)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+          ACCOUNT: ${{ secrets.CF_ACCOUNT_ID }}
+          BUCKET: ${{ secrets.CF_R2_BUCKET }}
+        run: |
+          [ -n "$ACCOUNT" ] && [ -n "$BUCKET" ] || { echo "R2 not set up, release only"; exit 0; }
+          for f in out/*.zip; do aws s3 cp "$f" "s3://$BUCKET/narration/" --only-show-errors --content-type application/zip --endpoint-url "https://$ACCOUNT.r2.cloudflarestorage.com"; done

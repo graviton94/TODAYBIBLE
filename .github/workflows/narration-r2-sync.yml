@@ -1,0 +1,45 @@
+name: Narration to R2
+# 낭독 음원을 Cloudflare R2 로 옮기고, 공개 주소로 하나 받아 확인해요.
+# 키는 GitHub Secrets (CF_ACCOUNT_ID · CF_R2_ACCESS_KEY_ID · CF_R2_SECRET_ACCESS_KEY · CF_R2_BUCKET), 공개 주소는 Variables (CF_R2_PUBLIC_URL).
+on:
+  workflow_dispatch:
+    inputs:
+      tag: { description: "release tag to copy from", default: "narration-v1" }
+permissions: { contents: read }
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      ACCOUNT: ${{ secrets.CF_ACCOUNT_ID }}
+      BUCKET: ${{ secrets.CF_R2_BUCKET }}
+      PUBLIC: ${{ vars.CF_R2_PUBLIC_URL }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check settings (names only)
+        run: |
+          ok=1
+          for n in ACCOUNT BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY PUBLIC; do
+            if [ -z "${!n}" ]; then echo "::error::$n is empty"; ok=0; else echo "$n is set"; fi
+          done
+          [ $ok = 1 ]
+          echo "public url: $PUBLIC"
+      - name: Download release zips
+        run: |
+          mkdir z && gh release download "${{ inputs.tag }}" -R "${{ github.repository }}" -p "*_c*.zip" -D z
+          ls z | wc -l; du -sh z
+      - name: Upload to R2 (narration/)
+        run: |
+          aws s3 cp z "s3://$BUCKET/narration/" --recursive --only-show-errors --content-type application/zip \
+            --endpoint-url "https://$ACCOUNT.r2.cloudflarestorage.com"
+          aws s3 ls "s3://$BUCKET/narration/" --endpoint-url "https://$ACCOUNT.r2.cloudflarestorage.com" | wc -l
+      - name: Check public download
+        run: |
+          f=$(ls z | head -1)
+          code=$(curl -s -o /tmp/t.zip -w "%{http_code}" "${PUBLIC%/}/narration/$f")
+          echo "GET $f → $code ($(stat -c%s /tmp/t.zip) bytes)"
+          [ "$code" = 200 ] && cmp -s /tmp/t.zip "z/$f" && echo "same file ✓"

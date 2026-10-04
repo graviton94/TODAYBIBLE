@@ -10,6 +10,8 @@ concurrency:
   group: android-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  NARRATION_URL: ${{ vars.CF_R2_PUBLIC_URL }}
 jobs:
   build:
     runs-on: ubuntu-latest
