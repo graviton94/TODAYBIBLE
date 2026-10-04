@@ -1,7 +1,7 @@
 name: Android release (Play)
 
-# Play 에 올릴 AAB. 올리기 키는 저장소에 두지 않아요:
-#  · PLAY_UPLOAD_KEYSTORE_B64 (keystore 파일을 base64 로) · PLAY_KEYSTORE_PASSWORD · PLAY_KEY_ALIAS · PLAY_KEY_PASSWORD 를 Secrets 에.
+# Play 에 올릴 AAB. 올리기 키: 저장소의 잠긴 키 (android/keystore/upload.jks.gpg, ‘Android signing key’ 워크플로가 만듦) 를
+# Secrets 의 ANDROID_UPLOAD_PASSPHRASE 로 풀어 씀 (키스토어 · 키 암호도 같고 별칭은 upload). carpediem 과 같은 방식.
 # 결과: 이 실행의 Artifacts 에 app-release.aab (Play Console › 내부 테스트 › 새 버전에 올리기)
 on:
   workflow_dispatch:
@@ -21,18 +21,18 @@ jobs:
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: "17" }
       - uses: gradle/actions/setup-gradle@v4
-      - name: Upload key from Secrets
-        env: { B64: "${{ secrets.PLAY_UPLOAD_KEYSTORE_B64 }}" }
+      - name: Unlock the upload key
+        env: { P: "${{ secrets.ANDROID_UPLOAD_PASSPHRASE }}" }
         run: |
-          [ -n "$B64" ] || { echo "::error::PLAY_UPLOAD_KEYSTORE_B64 is not set"; exit 1; }
-          echo "$B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          if [ -z "$P" ] || [ ! -f android/keystore/upload.jks.gpg ]; then echo "::error::올리기 키가 없어요 (Secrets 의 ANDROID_UPLOAD_PASSPHRASE 와 ‘Android signing key’ 실행)"; exit 1; fi
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 -d -o "$RUNNER_TEMP/upload.jks" android/keystore/upload.jks.gpg 3<<<"$P"
           echo "PLAY_KEYSTORE=$RUNNER_TEMP/upload.jks" >> "$GITHUB_ENV"
       - name: Build AAB
         working-directory: android
         env:
-          PLAY_KEYSTORE_PASSWORD: ${{ secrets.PLAY_KEYSTORE_PASSWORD }}
-          PLAY_KEY_ALIAS: ${{ secrets.PLAY_KEY_ALIAS }}
-          PLAY_KEY_PASSWORD: ${{ secrets.PLAY_KEY_PASSWORD }}
+          PLAY_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_PASSPHRASE }}
+          PLAY_KEY_ALIAS: upload
+          PLAY_KEY_PASSWORD: ${{ secrets.ANDROID_UPLOAD_PASSPHRASE }}
           TB_VERSION_NAME: ${{ inputs.version }}
           # Play 판 번호는 계속 커져야 해서 시험 APK 와 겹치지 않게 1000 부터
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
@@ -41,6 +41,9 @@ jobs:
           ./gradlew :core:test :app:bundleRelease
           # 올리기 키로 서명됐는지 (시험 키가 아닌지) 확인
           keytool -printcert -jarfile app/build/outputs/bundle/release/app-release.aab | grep -q "CN=sideload" && { echo "::error::signed with the sideload key"; exit 1; } || true
+      - name: Forget the unlocked key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.jks"
       - uses: actions/upload-artifact@v4
         with:
           name: app-release-${{ inputs.version }}

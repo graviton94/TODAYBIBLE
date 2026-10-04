@@ -1,0 +1,46 @@
+name: Android signing key (one time)
+
+# Play 올리기 키를 GitHub 안에서 만들어요 (한 번만, 직접 실행). carpediem 과 같은 방식.
+# Secrets 의 ANDROID_UPLOAD_PASSPHRASE (16자 이상) 로 잠가 android/keystore/upload.jks.gpg 로 저장소에 둬요.
+# 잠그지 않은 키 · 암호는 어디에도 남지 않아요 (로그에는 공개해도 되는 인증서 지문만).
+# 직접 설치용 시험 키 (sideload.jks) 는 비밀이 아닌 고정 키라 그대로 둬요 (바꾸면 시험 폰마다 지우고 다시 설치해야 해서).
+on:
+  workflow_dispatch:
+    inputs:
+      replace:
+        description: "이미 있는 키를 새 키로 바꾸기 (Play Console 에서 올리기 키 재설정이 필요)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  make-key:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - name: Make and lock the upload key
+        env:
+          P: ${{ secrets.ANDROID_UPLOAD_PASSPHRASE }}
+          REPLACE: ${{ inputs.replace }}
+        run: |
+          set -euo pipefail
+          if [ -z "$P" ]; then echo "::error::Secrets 에 ANDROID_UPLOAD_PASSPHRASE 가 없어요"; exit 1; fi
+          if [ "${#P}" -lt 16 ]; then echo "::error::ANDROID_UPLOAD_PASSPHRASE 는 16자 이상이어야 해요"; exit 1; fi
+          OUT=android/keystore/upload.jks.gpg
+          if [ -f "$OUT" ] && [ "$REPLACE" != "true" ]; then echo "::error::키가 이미 있어요 (바꾸려면 replace 를 켜고 실행)"; exit 1; fi
+          KS="$RUNNER_TEMP/upload.jks"
+          keytool -genkeypair -keystore "$KS" -storetype PKCS12 -alias upload -keyalg RSA -keysize 4096 -validity 10000 \
+            -storepass:env P -keypass:env P -dname "CN=Today Bible upload, O=graviton94" >/dev/null
+          keytool -list -v -keystore "$KS" -storepass:env P -alias upload | grep -E "SHA256:" | head -1
+          gpg --batch --yes --pinentry-mode loopback --passphrase-fd 3 --symmetric --cipher-algo AES256 -o "$OUT" "$KS" 3<<<"$P"
+          rm -f "$KS"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$OUT"
+          git commit -m "New Play upload key, locked with the ANDROID_UPLOAD_PASSPHRASE secret"
+          git push
