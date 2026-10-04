@@ -1,0 +1,34 @@
+name: Narration QA
+# R2 의 낭독 음원 점검: 빠진 장 · 무작위 절의 끝 잘림 · 잡음 · 길이 · 받아쓰기 오류율. 결과는 narration-qa 가지에 JSON 으로.
+on:
+  workflow_dispatch:
+    inputs:
+      voices: { description: "voices", default: "m5,f5" }
+      samples: { description: "random verses", default: "100" }
+permissions: { contents: write }
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      PUBLIC: ${{ vars.CF_R2_PUBLIC_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: |
+          sudo apt-get install -y -qq ffmpeg >/dev/null
+          pip install -q faster-whisper numpy
+      - name: List bucket
+        run: aws s3 ls "s3://${{ secrets.CF_R2_BUCKET }}/narration/" --endpoint-url "https://${{ secrets.CF_ACCOUNT_ID }}.r2.cloudflarestorage.com" > list.txt; wc -l list.txt
+      - name: Check
+        run: LIST=list.txt python scripts/narration_qa.py "${{ inputs.voices }}" "${{ inputs.samples }}" qa.json
+      - name: Publish result
+        run: |
+          mkdir pub && cp qa.json pub/ && cd pub
+          git init -q && git checkout -q -b narration-qa && git add . && git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "narration QA"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" narration-qa
