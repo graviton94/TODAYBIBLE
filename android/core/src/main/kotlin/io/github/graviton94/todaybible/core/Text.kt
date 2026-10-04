@@ -53,3 +53,21 @@ object Markup {
     /** 화면 · 판정에 쓰는 맨글자 (표시 기호 제거). */
     fun plain(text: String): String = text.removePrefix("¶ ").removePrefix("¶").replace("{", "").replace("}", "")
 }
+
+/** 낱말로 찾은 절 하나. */
+data class Hit(val book: Int, val chapter: Int, val verse: Int, val text: String)
+
+object Search {
+    /** 낱말(들)이 모두 든 절을 성경 차례대로. 맨글자 기준, 대소문자 · 띄어쓰기 차이는 무시. */
+    fun find(books: Sequence<BookText>, query: String, limit: Int = 200): List<Hit> {
+        val words = query.trim().lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        if (words.isEmpty()) return emptyList()
+        val out = ArrayList<Hit>()
+        for (b in books) for ((ci, ch) in b.chapters.withIndex()) for ((vi, raw) in ch.withIndex()) {
+            if (raw.isBlank()) continue
+            val plain = Markup.plain(raw); val low = plain.lowercase()
+            if (words.all { low.contains(it) }) { out += Hit(b.book, ci + 1, vi + 1, plain); if (out.size >= limit) return out }
+        }
+        return out
+    }
+}

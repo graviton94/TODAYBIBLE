@@ -142,7 +142,7 @@ fun Opening(s: AppState, onDone: () -> Unit) {
 }
 
 /**
- * 처음 한 번 (소개 세 장 → 부를 이름 · 기록 되살리기 → 오늘의 분량 → 시작할 곳 → 아침 알림). 문장은 한두 줄.
+ * 처음 한 번: 소개 → 첫 절 소리 내어 읽기 (설치하고 두 번째 화면에서 바로) → 부를 이름 · 분량 · 아침 알림 (모두 건너뛰어도 돼요).
  */
 @Composable
 fun Welcome(s: AppState) {
@@ -170,16 +170,16 @@ fun Welcome(s: AppState) {
                         Text(stringResource(R.string.ob1_p, "%,d".format(s.translation.total)), style = Theme.body().copy(color = c.inkSoft))
                         Text(stringResource(R.string.ob2_p), style = Theme.body().copy(color = c.inkSoft))
                     }
-                    1 -> {
+                    1 -> FirstReading(s) { read = true }
+                    else -> {
                         Text(stringResource(R.string.ob_name), style = Theme.title(k, Tokens.Text.title))
                         Text(stringResource(R.string.ob_name_p), style = Theme.body().copy(color = c.inkSoft))
-                        NameField(s) { s.welcomeStep++ }
+                        NameField(s) { }
                         Text(stringResource(R.string.ob_restore), style = Theme.small().copy(color = c.rubric),
                             modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { restore.launch(arrayOf("application/zip", "application/octet-stream")) })
                         // 하루 분량 (처음엔 하루 한 장)
                         GoalChooser(s, title = true)
                     }
-                    else -> FirstReading(s) { read = true }
                 }
             }
         }
@@ -187,10 +187,12 @@ fun Welcome(s: AppState) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2, Alignment.CenterHorizontally)) {
             for (i in 0..2) Box(Modifier.size(Tokens.Size.dot).clip(CircleShape).background(if (i == s.welcomeStep) c.rubric else c.hair))
         }
-        when {
-            s.welcomeStep < 2 -> BookButton(stringResource(R.string.next), Modifier.fillMaxWidth()) { s.welcomeStep++ }
-            // 첫 절을 읽었으면: 아침 알림을 물어보고 시작
-            read -> Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        when (s.welcomeStep) {
+            0 -> BookButton(stringResource(R.string.next), Modifier.fillMaxWidth()) { s.welcomeStep++ }
+            // 첫 절: 읽었으면 다음, 아니면 나중에
+            1 -> BookButton(stringResource(if (read) R.string.next else R.string.ob_skip_read), Modifier.fillMaxWidth(), quiet = !read) { s.welcomeStep++ }
+            // 마지막: 아침 알림을 물어보고 시작
+            else -> Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                 Text(stringResource(R.string.ob_reminder), style = Theme.body())
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                     BookButton(stringResource(R.string.not_now), Modifier.weight(1f), quiet = true) { done() }
@@ -199,7 +201,6 @@ fun Welcome(s: AppState) {
                     }
                 }
             }
-            else -> BookButton(stringResource(R.string.ob_skip_read), Modifier.fillMaxWidth(), quiet = true) { done() }
         }
     }
 }

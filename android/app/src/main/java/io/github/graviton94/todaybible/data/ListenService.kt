@@ -38,6 +38,14 @@ class ListenService : Service() {
             if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i) else ctx.startService(i)
         }
         fun stop(ctx: Context) { ctx.startService(Intent(ctx, ListenService::class.java).setAction("stop")) }
+
+        /** 잠들기 타이머: 0 끔 · TIMER_CHAPTER 이 장 끝까지 · 그 밖은 분. */
+        const val TIMER_CHAPTER = -1
+        val TIMERS = intArrayOf(0, 15, 30, TIMER_CHAPTER)
+        private val _timer = MutableStateFlow(0)
+        val timer: StateFlow<Int> = _timer
+        fun setTimer(ctx: Context, mode: Int) { if (_now.value != null) ctx.startService(Intent(ctx, ListenService::class.java).setAction("timer").putExtra("m", mode)) }
+        fun setRate(ctx: Context, rate: Float) { if (_now.value != null) ctx.startService(Intent(ctx, ListenService::class.java).setAction("rate").putExtra("r", rate)) }
     }
 
     private val ui = Handler(Looper.getMainLooper())
@@ -45,6 +53,7 @@ class ListenService : Service() {
     private var guide: GuideVoice? = null
     private var book = 0; private var chapter = 1; private var verse = 1; private var rate = 1f
     private var token = 0
+    private var stopAt = 0L
     // 화면이 꺼져도 절 사이 쉼 · 다음 장 받기 동안 멈추지 않게
     private var wake: android.os.PowerManager.WakeLock? = null
     private var wifi: android.net.wifi.WifiManager.WifiLock? = null
@@ -53,6 +62,16 @@ class ListenService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == "stop") { finish(); return START_NOT_STICKY }
+        if (intent?.action == "timer") {
+            val m = intent.getIntExtra("m", 0); _timer.value = m
+            stopAt = if (m > 0) System.currentTimeMillis() + m * 60_000L else 0L
+            return START_NOT_STICKY
+        }
+        if (intent?.action == "rate") {
+            rate = intent.getFloatExtra("r", 1f)
+            player?.let { p -> runCatching { if (p.isPlaying) p.playbackParams = p.playbackParams.setSpeed(rate) } }
+            return START_NOT_STICKY
+        }
         book = intent?.getIntExtra("b", 0) ?: 0; chapter = intent?.getIntExtra("c", 1) ?: 1
         verse = intent?.getIntExtra("v", 1) ?: 1; rate = intent?.getFloatExtra("r", 1f) ?: 1f
         foreground()
@@ -91,6 +110,7 @@ class ListenService : Service() {
                 fun step(i: Int) {
                     if (t != token) return
                     if (i >= verses.size) { next(t); return }
+                    if (stopAt > 0 && System.currentTimeMillis() >= stopAt) { finish(); return }
                     val v = verses[i]; verse = v
                     _now.value = Now(book, chapter, v, true)
                     // 절 사이는 짧게 (책 읽어 주듯 이어서)
@@ -116,18 +136,21 @@ class ListenService : Service() {
         }.start()
     }
 
-    /** 다음 장으로 (권 끝이면 멈춤). */
+    /** 다음 장으로 (권 끝이면 다음 권 · 요한계시록 끝 · 이 장까지 타이머면 멈춤). */
     private fun next(t: Int) {
         if (t != token) return
-        if (chapter >= Canon.books[book].chapters) { finish(); return }
-        chapter++; verse = 1; foreground(); play(t)
+        if (_timer.value == TIMER_CHAPTER) { finish(); return }
+        if (chapter < Canon.books[book].chapters) chapter++
+        else if (book < 65 && (book + 1 in Canon.free || getSharedPreferences("today", MODE_PRIVATE).getBoolean("lifetime", false))) { book++; chapter = 1 }
+        else { finish(); return }
+        verse = 1; foreground(); play(t)
     }
 
     private fun finish() {
         token++
         runCatching { player?.release() }; player = null
         guide?.release(); guide = null
-        _now.value = null
+        _now.value = null; _timer.value = 0; stopAt = 0L
         runCatching { wake?.release() }; wake = null; runCatching { wifi?.release() }; wifi = null
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE) else @Suppress("DEPRECATION") stopForeground(true)
         stopSelf()

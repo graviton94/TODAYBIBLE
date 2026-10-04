@@ -71,7 +71,15 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
     val count = s.text(book).chapterCount
     val pager = rememberPagerState(initialPage = (chapter - 1).coerceIn(0, count - 1)) { count }
     // 목소리가 다음 장으로 넘어가면 따라가요
-    LaunchedEffect(now?.book, now?.chapter) { now?.let { n -> if (n.book == book && n.chapter != pager.currentPage + 1) pager.animateScrollToPage(n.chapter - 1) } }
+    var heardBook by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(now?.book, now?.chapter) {
+        now?.let { n ->
+            // 권 끝에서 다음 권으로 이어지면 읽기 화면도 그 권으로
+            if (n.book != book && heardBook == book) s.listenAt = n.book to n.chapter
+            else if (n.book == book && n.chapter != pager.currentPage + 1) pager.animateScrollToPage(n.chapter - 1)
+            heardBook = n.book
+        }
+    }
     LaunchedEffect(chapter) { if (pager.currentPage != chapter - 1) pager.animateScrollToPage(chapter - 1) }
     LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect { if (it + 1 != s.listenAt?.second) s.listenAt = book to it + 1 } }
     var picked by remember(book) { mutableStateOf<Int?>(null) }
@@ -124,6 +132,18 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
                 }
             }
         }
+        // 듣는 중: 빠르기 · 잠들기 타이머 (누를 때마다 다음 값)
+        if (now != null) {
+            val timer by ListenService.timer.collectAsState()
+            Row(Modifier.fillMaxWidth().background(c.paper).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s1), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                val speedName = stringResource(when (s.aloudSpeed) { 0 -> R.string.aloud_slow; 2 -> R.string.aloud_fast; else -> R.string.aloud_normal })
+                val timerName = when (timer) { 0 -> stringResource(R.string.reminder_off); ListenService.TIMER_CHAPTER -> stringResource(R.string.timer_chapter); else -> stringResource(R.string.timer_min, timer) }
+                ListenChip(stringResource(R.string.listen_speed, speedName), Modifier.weight(1f)) { s.chooseAloudSpeed((s.aloudSpeed + 1) % 3); ListenService.setRate(ctx, s.aloudRate()) }
+                ListenChip(stringResource(R.string.listen_timer, timerName), Modifier.weight(1f), on = timer != 0) {
+                    val t = ListenService.TIMERS; ListenService.setTimer(ctx, t[(t.indexOf(timer) + 1) % t.size])
+                }
+            }
+        }
         // 아래 띠: 듣기 · 이 장 필사하기
         Row(Modifier.fillMaxWidth().background(c.paper).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             BookButton(stringResource(if (playing) R.string.listen_stop else R.string.listen_start), Modifier.weight(1f).coach("read_listen")) {
@@ -131,6 +151,15 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
             }
             BookButton(stringResource(R.string.copy_this), Modifier.weight(1f).coach("read_copy"), quiet = true) { ListenService.stop(ctx); s.open(book, ch) }
         }
+    }
+}
+
+@Composable
+private fun ListenChip(label: String, modifier: Modifier, on: Boolean = false, onClick: () -> Unit) {
+    val c = Theme.c
+    Box(modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (on) c.leather else c.leaf).clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center) {
+        Text(label, style = Theme.small().copy(color = if (on) c.leatherInk else c.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
 }
 

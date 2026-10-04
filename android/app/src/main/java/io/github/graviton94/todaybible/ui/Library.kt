@@ -43,6 +43,7 @@ import io.github.graviton94.todaybible.core.VerseKey
 import io.github.graviton94.todaybible.design.Theme
 import io.github.graviton94.todaybible.design.Tokens
 import java.time.LocalDate
+import kotlinx.coroutines.launch
 
 private val groupNames = mapOf(
     Group.LAW to R.string.group_law, Group.HISTORY to R.string.group_history, Group.POETRY to R.string.group_poetry, Group.PROPHETS to R.string.group_prophets,
@@ -184,7 +185,34 @@ fun MarksSheet(s: AppState) {
                     verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                     Text(io.github.graviton94.todaybible.core.Markup.plain(s.store.book(s.translation, v.book).verse(v.chapter, v.verse)),
                         style = Theme.body().copy(background = c.mark), maxLines = 3, overflow = TextOverflow.Ellipsis)
-                    Text("${s.bookName(v.book)} ${v.chapter}:${v.verse}", style = Theme.small(), maxLines = 1)
+                    Text(stringResource(R.string.ref_verse, s.bookName(v.book), v.chapter, v.verse), style = Theme.small(), maxLines = 1)
+                }
+            }
+        }
+    }
+}
+
+private const val FOUND_MAX = 200
+
+/** 낱말로 찾은 절: 찾은 말에 형광, 누르면 읽기 화면의 그 절로. */
+@Composable
+fun FoundSheet(s: AppState) {
+    val c = Theme.c; val (word, hits) = s.found ?: return
+    BookSheet({ s.found = null }) {
+        if (hits == null) { Text(stringResource(R.string.found_searching), style = Theme.small()); return@BookSheet }
+        Text(stringResource(R.string.found_title, word, hits.size), style = Theme.title(s.korean), maxLines = 2)
+        if (hits.size >= FOUND_MAX) Text(stringResource(R.string.found_more, FOUND_MAX), style = Theme.small())
+        val words = word.lowercase().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        androidx.compose.foundation.lazy.LazyColumn(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid * 2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            items(hits.size) { i ->
+                val h = hits[i]
+                Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.found = null; s.read(h.book, h.chapter, h.verse) }.padding(vertical = Tokens.Space.s1),
+                    verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                    Text(androidx.compose.ui.text.buildAnnotatedString {
+                        append(h.text); val low = h.text.lowercase()
+                        words.forEach { w -> var at = low.indexOf(w); while (at >= 0) { addStyle(androidx.compose.ui.text.SpanStyle(background = c.mark), at, at + w.length); at = low.indexOf(w, at + w.length) } }
+                    }, style = Theme.body(), maxLines = 4, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.ref_verse, s.bookName(h.book), h.chapter, h.verse), style = Theme.small().copy(color = c.rubric), maxLines = 1)
                 }
             }
         }
@@ -238,13 +266,25 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
 @Composable
 private fun FindBox(s: AppState) {
     val c = Theme.c; val ctx = androidx.compose.ui.platform.LocalContext.current
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     var q by remember { mutableStateOf("") }
+    // 장절이면 그 자리로, 아니면 낱말로 찾기
     fun go() {
         val r = io.github.graviton94.todaybible.core.Reference.parse(q)
-        if (r == null) { s.toast = ctx.getString(R.string.find_none); return }
-        val (b, ch, v) = r
-        s.read(b, ch, v?.takeIf { it in s.text(b).fillable(ch) })
-        q = ""
+        if (r != null) {
+            val (b, ch, v) = r
+            s.read(b, ch, v?.takeIf { it in s.text(b).fillable(ch) }); q = ""; return
+        }
+        val word = q.trim()
+        if (word.length < 2) { s.toast = ctx.getString(if (word.isEmpty()) R.string.find_none else R.string.find_short); return }
+        s.found = word to null
+        val tr = s.translation
+        scope.launch {
+            val hits = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                io.github.graviton94.todaybible.core.Search.find((0 until 66).asSequence().map { s.store.book(tr, it) }, word, FOUND_MAX)
+            }
+            if (s.found?.first == word) { if (hits.isEmpty()) { s.found = null; s.toast = ctx.getString(R.string.find_none) } else s.found = word to hits }
+        }
     }
     androidx.compose.foundation.text.BasicTextField(
         value = q, onValueChange = { q = it }, singleLine = true, textStyle = Theme.body(),

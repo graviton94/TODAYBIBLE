@@ -69,11 +69,13 @@ object Reminder {
         val text = store.book(tr, b)
         val v = planNext?.third ?: p.nextVerse(tr, text, ch) ?: text.fillable(ch).first()
         val book = Canon.books[b]
-        val ref = "${if (tr == Translation.KRV) book.ko else book.en} $ch:$v"
+        val ref = io.github.graviton94.todaybible.ui.Lang.content(ctx, tr).getString(R.string.ref_verse, if (tr == Translation.KRV) book.ko else book.en, ch, v)
         val title = if (store.ownerName.isNotBlank()) ctx.getString(R.string.reminder_named, store.ownerName, ref) else ref
         val nm = ctx.getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, ctx.getString(R.string.reminder_channel), NotificationManager.IMPORTANCE_DEFAULT))
-        val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java).putExtra("page", io.github.graviton94.todaybible.ui.AppState.COPY).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+        // 누르면 그 절이 펼쳐진 필사 자리로 곧바로
+        val open = PendingIntent.getActivity(ctx, 0, Intent(ctx, MainActivity::class.java).setAction("at").putExtra("page", io.github.graviton94.todaybible.ui.AppState.COPY)
+            .putExtra("at", true).putExtra("at_b", b).putExtra("at_c", ch).putExtra("at_v", v).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val body = Markup.plain(text.verse(ch, v))
         val n = android.app.Notification.Builder(ctx, CHANNEL).setSmallIcon(R.drawable.ic_stat_cross).setContentTitle(title).setContentText(body)

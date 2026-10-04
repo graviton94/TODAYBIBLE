@@ -233,8 +233,8 @@
     <string name="backup_import">드라이브나 파일에서 되살리기</string>
     <string name="backup_done">기록을 되살렸어요</string>
     <string name="backup_bad">읽을 수 없는 파일이에요</string>
-    <string name="find_hint">장절 찾기 · 요 3:16</string>
-    <string name="find_none">그런 장절을 찾지 못했어요</string>
+    <string name="find_hint">장절이나 낱말 · 요 3:16, 목자</string>
+    <string name="find_none">찾지 못했어요. ‘요 3:16’ 같은 장절이나 낱말을 넣어 보세요.</string>
     <string name="owner_note">인사와 표지 금박에 들어가요</string>
     <string name="ob_name">어떻게 불러 드릴까요?</string>
     <string name="ob_name_p">이 이름이 내가 쓰는 성경의 표지에 새겨져요.</string>
@@ -587,4 +587,13 @@
     <string name="group_acts">사도행전</string>
     <string name="group_epistles">서신서</string>
     <string name="group_revelation">계시록</string>
+    <string name="find_short">두 글자 이상 넣어 주세요</string>
+    <string name="found_title">‘%1$s’ · %2$d절</string>
+    <string name="found_more">처음 %1$d절만 보여요. 낱말을 하나 더 넣으면 좁혀져요.</string>
+    <string name="found_searching">찾는 중이에요</string>
+    <string name="ref_verse">%1$s %2$d:%3$d</string>
+    <string name="listen_speed">빠르기 · %1$s</string>
+    <string name="listen_timer">잠들기 · %1$s</string>
+    <string name="timer_min">%1$d분</string>
+    <string name="timer_chapter">이 장 끝까지</string>
 </resources>

@@ -90,13 +90,16 @@ class MainActivity : ComponentActivity() {
 
     /** 아침 알림의 ‘함께 읽기’: 그 절로 열고 낭독을 곧바로. */
     private fun openAloud(s: AppState, i: Intent) {
-        if (!i.getBooleanExtra("aloud", false)) return
-        i.removeExtra("aloud")
+        // 알림에서: aloud = 함께 읽기로, at = 그 절의 필사 자리로
+        val aloud = i.getBooleanExtra("aloud", false)
+        if (!aloud && !i.getBooleanExtra("at", false)) return
+        i.removeExtra("aloud"); i.removeExtra("at")
         getSystemService(android.app.NotificationManager::class.java)?.cancel(io.github.graviton94.todaybible.data.Reminder.ID)
         val b = i.getIntExtra("at_b", -1); val c = i.getIntExtra("at_c", -1); val v = i.getIntExtra("at_v", -1)
         s.opening = false
         if (b >= 0 && c > 0) { s.open(b, c); if (v > 0) s.target = v }
-        s.store.copyTab = 0; s.page = io.github.graviton94.todaybible.ui.AppState.COPY; s.aloudNow = true
+        if (aloud) s.store.copyTab = 0
+        s.page = io.github.graviton94.todaybible.ui.AppState.COPY; s.aloudNow = aloud
     }
 
     /**

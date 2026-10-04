@@ -233,8 +233,8 @@
     <string name="backup_import">Restore from Drive or a file</string>
     <string name="backup_done">Your records are restored</string>
     <string name="backup_bad">This file can\'t be read</string>
-    <string name="find_hint">Find a verse · John 3:16</string>
-    <string name="find_none">Couldn\'t find that passage</string>
+    <string name="find_hint">Passage or word · John 3:16, shepherd</string>
+    <string name="find_none">Nothing found. Try a passage like John 3:16 or a word.</string>
     <string name="owner_note">Used in greetings and pressed in gold on your cover</string>
     <string name="ob_name">What shall we call you?</string>
     <string name="ob_name_p">Your name goes on the cover of the Bible you write.</string>
@@ -587,4 +587,13 @@
     <string name="group_acts">Acts</string>
     <string name="group_epistles">Epistles</string>
     <string name="group_revelation">Revelation</string>
+    <string name="find_short">Type at least two letters</string>
+    <string name="found_title">“%1$s” · %2$d verses</string>
+    <string name="found_more">Showing the first %1$d verses. Add a word to narrow it.</string>
+    <string name="found_searching">Searching…</string>
+    <string name="ref_verse">%1$s %2$d:%3$d</string>
+    <string name="listen_speed">Speed · %1$s</string>
+    <string name="listen_timer">Sleep timer · %1$s</string>
+    <string name="timer_min">%1$d min</string>
+    <string name="timer_chapter">End of chapter</string>
 </resources>

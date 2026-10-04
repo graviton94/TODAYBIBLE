@@ -132,6 +132,8 @@ class AppState(val store: Store) {
     var pickToRead by mutableStateOf(false)
     /** 책갈피 · 형광펜 모아 보기. */
     var marksOpen by mutableStateOf(false)
+    /** 낱말로 찾은 결과 (찾은 말, 절들). 찾는 중이면 절 목록이 null. */
+    var found by mutableStateOf<Pair<String, List<io.github.graviton94.todaybible.core.Hit>?>?>(null)
     /** 내보내기 창 (저장 · 메일 · 다른 앱). */
     var exportJob by mutableStateOf<ExportJob?>(null)
     var bookmarks by mutableStateOf(store.loadBookmarks())

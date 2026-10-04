@@ -231,8 +231,8 @@
   "backup_import": {"en": "Restore from Drive or a file", "ko": "드라이브나 파일에서 되살리기"},
   "backup_done": {"en": "Your records are restored", "ko": "기록을 되살렸어요"},
   "backup_bad": {"en": "This file can't be read", "ko": "읽을 수 없는 파일이에요"},
-  "find_hint": {"en": "Find a verse · John 3:16", "ko": "장절 찾기 · 요 3:16"},
-  "find_none": {"en": "Couldn't find that passage", "ko": "그런 장절을 찾지 못했어요"},
+  "find_hint": {"en": "Passage or word · John 3:16, shepherd", "ko": "장절이나 낱말 · 요 3:16, 목자"},
+  "find_none": {"en": "Nothing found. Try a passage like John 3:16 or a word.", "ko": "찾지 못했어요. ‘요 3:16’ 같은 장절이나 낱말을 넣어 보세요."},
   "owner_note": {"en": "Used in greetings and pressed in gold on your cover", "ko": "인사와 표지 금박에 들어가요"},
   "ob_name": {"en": "What shall we call you?", "ko": "어떻게 불러 드릴까요?"},
   "ob_name_p": {"en": "Your name goes on the cover of the Bible you write.", "ko": "이 이름이 내가 쓰는 성경의 표지에 새겨져요."},
@@ -584,5 +584,14 @@
   "group_gospels": {"en": "Gospels", "ko": "복음서"},
   "group_acts": {"en": "Acts", "ko": "사도행전"},
   "group_epistles": {"en": "Epistles", "ko": "서신서"},
-  "group_revelation": {"en": "Revelation", "ko": "계시록"}
+  "group_revelation": {"en": "Revelation", "ko": "계시록"},
+  "find_short": {"en": "Type at least two letters", "ko": "두 글자 이상 넣어 주세요"},
+  "found_title": {"en": "“%1$s” · %2$d verses", "ko": "‘%1$s’ · %2$d절"},
+  "found_more": {"en": "Showing the first %1$d verses. Add a word to narrow it.", "ko": "처음 %1$d절만 보여요. 낱말을 하나 더 넣으면 좁혀져요."},
+  "found_searching": {"en": "Searching…", "ko": "찾는 중이에요"},
+  "ref_verse": {"en": "%1$s %2$d:%3$d", "ko": "%1$s %2$d:%3$d"},
+  "listen_speed": {"en": "Speed · %1$s", "ko": "빠르기 · %1$s"},
+  "listen_timer": {"en": "Sleep timer · %1$s", "ko": "잠들기 · %1$s"},
+  "timer_min": {"en": "%1$d min", "ko": "%1$d분"},
+  "timer_chapter": {"en": "End of chapter", "ko": "이 장 끝까지"}
 }

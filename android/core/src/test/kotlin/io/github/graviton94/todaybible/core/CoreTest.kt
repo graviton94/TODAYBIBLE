@@ -197,4 +197,15 @@ class CoreTest {
         assertEquals(listOf('가', 'ㅂ'), TypeJudge.typedAt("가방", "가ㅂ"))
         assertTrue(TypeJudge.done("또 산에", "또산에"))
     }
+
+    @Test fun searchFindsWordsInOrder() {
+        val krv = (0 until 66).asSequence().map { book("krv", it) }
+        val hits = Search.find(krv, "목자")
+        assertTrue(hits.any { it.book == 18 && it.chapter == 23 && it.verse == 1 })
+        assertEquals(hits.sortedWith(compareBy({ it.book }, { it.chapter }, { it.verse })), hits)
+        val kjv = (0 until 66).asSequence().map { book("kjv", it) }
+        assertTrue(Search.find(kjv, "lord  SHEPHERD").any { it.book == 18 && it.chapter == 23 && it.verse == 1 })
+        assertTrue(Search.find(kjv, "   ").isEmpty())
+        assertEquals(3, Search.find(kjv, "the", limit = 3).size)
+    }
 }
