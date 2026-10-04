@@ -156,9 +156,12 @@ private fun PlateGallery(s: AppState) {
 @Composable
 fun rememberPlate(id: String, small: Boolean = false): ImageBitmap? {
     val ctx = LocalContext.current
-    return remember(id, small) {
-        runCatching { ctx.assets.open("plates/$id.jpg").use { BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = if (small) 4 else 1 })?.asImageBitmap() } }.getOrNull()
-    }
+    // 그림 읽기는 뒤에서 (화첩을 넘길 때 멈칫하지 않게)
+    return androidx.compose.runtime.produceState<ImageBitmap?>(null, id, small) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching { ctx.assets.open("plates/$id.jpg").use { BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = if (small) 4 else 2 })?.asImageBitmap() } }.getOrNull()
+        }
+    }.value
 }
 
 @Composable

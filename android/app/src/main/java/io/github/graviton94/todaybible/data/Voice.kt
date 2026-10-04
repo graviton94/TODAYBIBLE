@@ -94,9 +94,11 @@ object Voice {
                 val info = MediaCodec.BufferInfo()
                 val pcm = ByteArray(4096); var samples = 0L
                 fun drain(end: Boolean) {
+                    var waits = 0
                     while (true) {
                         val i = enc.dequeueOutputBuffer(info, if (end) 10_000 else 0)
-                        if (i == MediaCodec.INFO_TRY_AGAIN_LATER) { if (!end) return else continue }
+                        // 끝맺을 때도 1초 넘게 기다리지 않음 (부호기가 멈춰도 녹음 줄이 묶이지 않게)
+                        if (i == MediaCodec.INFO_TRY_AGAIN_LATER) { if (!end || ++waits > 100) return else continue }
                         if (i == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) { track = mux.addTrack(enc.outputFormat); mux.start(); started = true; continue }
                         if (i < 0) continue
                         val buf = enc.getOutputBuffer(i)!!
@@ -109,8 +111,12 @@ object Voice {
                 runCatching {
                     rec.startRecording()
                     val half = ByteArray(pcm.size / 2)
+                    var fails = 0
                     while (running) {
-                        val n = rec.read(pcm, 0, pcm.size); if (n <= 0) continue
+                        val n = rec.read(pcm, 0, pcm.size)
+                        // 마이크를 못 잡으면 빈 손으로 돌지 않게 잠깐 쉬고, 계속 안 되면 그만
+                        if (n <= 0) { if (++fails > 200) break; Thread.sleep(10); continue }
+                        fails = 0
                         // 음성 인식에 16kHz 로 (두 표본 평균)
                         if (pipeOut != null) {
                             val sb = ByteBuffer.wrap(pcm, 0, n).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer(); val ob = ByteBuffer.wrap(half).order(ByteOrder.LITTLE_ENDIAN)
@@ -136,13 +142,19 @@ object Voice {
                 runCatching { enc.stop() }; enc.release()
                 runCatching { if (started) mux.stop() }; runCatching { mux.release() }
                 toRecognizer.clear(); toRecognizer.offer(ByteArray(0)); runCatching { pipeOut?.close() }; pipeOut = null
-                if (started && samples > RATE / 2) tmp.renameTo(out) else tmp.delete()
+                val ok = keep && started && samples > RATE / 2
+                if (ok) tmp.renameTo(out) else { tmp.delete(); if (!keep) out.delete() }
+                onSaved?.invoke(ok)
             }.apply { name = "voice"; start() }
         }
 
-        fun stop() { running = false; thread?.join(3000); thread = null }
+        @Volatile private var keep = true
+        /** 녹음 줄이 파일을 다 쓰고 나면 (남겼는지). 화면 줄이 아니라 녹음 줄에서 불려요. */
+        @Volatile var onSaved: ((Boolean) -> Unit)? = null
+        /** 멈춤: 기다리지 않아요 (마무리는 녹음 줄이 해요). */
+        fun stop() { running = false; thread = null }
         /** 다시 읽기: 녹음을 버림. */
-        fun discard() { stop(); out.delete() }
+        fun discard() { keep = false; stop() }
     }
 
     /** 이 장의 절 녹음을 이어 붙여 소리 파일 하나로 (다시 부호화하지 않음). */

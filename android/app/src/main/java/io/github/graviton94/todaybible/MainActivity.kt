@@ -31,7 +31,7 @@ class MainActivity : ComponentActivity() {
         openAloud(s, intent)
         // 알림 다시 맞추기 (끈 상태면 남은 알림을 지움) · 위젯 새로 그리기 (되살리기 · 업데이트 뒤에도 맞게)
         io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
-        s.widgets()
+        s.widgets(); s.warmPlan()
         setContent {
             val dark = s.night || when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK -> true }
             LaunchedEffect(dark) {
@@ -76,7 +76,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
-        io.github.graviton94.todaybible.data.Backup.auto(this)
+        // 화면 줄을 붙잡지 않게 뒤에서
+        val app = applicationContext
+        Thread { runCatching { io.github.graviton94.todaybible.data.Backup.auto(app) } }.start()
     }
 
     override fun onNewIntent(intent: Intent) {

@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -69,25 +70,45 @@ fun Root(s: AppState) {
     // 이름표 · 버튼으로 옮길 땐 ‘숨 한 번’, 손으로 넘길 땐 ‘내려앉는 종이’
     var breath by remember { mutableStateOf(false) }
     // 옆 장이면 책장을 넘기듯 한 장, 멀리 뛰면 숨 한 번
+    var turning by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var turnSeq by remember { mutableIntStateOf(0) }
+    // 지나온 길 (뒤로 가기가 되짚어요)
+    val trail = remember { mutableListOf<Int>() }
+    var backing by remember { mutableStateOf(false) }
     fun turnTo(i: Int) {
-        scope.launch {
+        turning?.cancel()
+        val n = ++turnSeq
+        turning = scope.launch {
             val far = abs(i - pager.currentPage) > 1
             breath = far
             try { pager.animateScrollToPage(i, animationSpec = androidx.compose.animation.core.tween(if (far) Tokens.Motion.pageMs else Tokens.Motion.turnMs, easing = androidx.compose.animation.core.FastOutSlowInEasing)) }
-            finally { breath = false }
+            // 앞선 넘김이 취소될 때 새 넘김의 모양을 지우지 않게
+            finally { if (n == turnSeq) breath = false }
         }
     }
-    LaunchedEffect(s.page) { if (pager.currentPage != s.page && !pager.isScrollInProgress) turnTo(s.page) }
-    LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect { s.page = it } }
-    BackHandler(enabled = pager.currentPage != 0 && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null && s.listenAt == null && !s.purchaseOpen && s.onboarded && !s.opening) { turnTo(0) }
-    // 옮겨 쓰는 동안 (키보드가 떠 있으면) 옆으로 넘어가지 않게
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val focus = androidx.compose.ui.platform.LocalFocusManager.current
+    LaunchedEffect(s.page) { if (pager.targetPage != s.page) turnTo(s.page) }
+    LaunchedEffect(pager) {
+        var last = pager.settledPage
+        snapshotFlow { pager.settledPage }.collect {
+            if (it != last) { if (!backing) { trail.remove(last); trail.add(last) }; backing = false; last = it }
+            // 다른 장으로 가면 키보드는 내려요
+            focus.clearFocus(); keyboard?.hide()
+            s.page = it
+        }
+    }
+    BackHandler(enabled = pager.currentPage != 0 && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null && s.listenAt == null && !s.purchaseOpen && s.onboarded && !s.opening) { val to = trail.removeLastOrNull()?.takeIf { it != pager.currentPage } ?: 0; backing = true; s.page = to; turnTo(to) }
+    // 옮겨 쓰는 동안 (키보드가 떠 있으면) 아래 이름표는 숨김
     val typing = WindowInsets.isImeVisible && pager.currentPage == 1
 
     Box(Modifier.fillMaxSize().background(c.paper)) {
         Column(Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
             TopBar(s)
             HorizontalPager(
-                pager, Modifier.weight(1f).fillMaxWidth(), beyondViewportPageCount = 0, userScrollEnabled = !typing,
+                pager, Modifier.weight(1f).fillMaxWidth(), beyondViewportPageCount = 0,
+                // 페이지는 아래 이름표로만 옮겨요 (옆으로 밀기는 위아래 스크롤과 다퉈서 없앰)
+                userScrollEnabled = false,
                 flingBehavior = PagerDefaults.flingBehavior(pager, snapPositionalThreshold = Tokens.Motion.turnSnap,
                     snapAnimationSpec = androidx.compose.animation.core.tween(Tokens.Motion.turnMs, easing = androidx.compose.animation.core.FastOutSlowInEasing)),
             ) { page ->

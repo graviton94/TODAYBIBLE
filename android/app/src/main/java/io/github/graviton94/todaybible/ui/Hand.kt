@@ -83,7 +83,7 @@ fun HandTab(s: AppState, verse: Int) {
     val strokes = remember(key) { mutableStateListOf<Ink.Stroke>() }
     val earlier = remember(key) { mutableStateListOf<List<Ink.Stroke>>() }
     var live by remember(key) { mutableStateOf<FloatArray?>(null) }
-    var stylus by remember { mutableStateOf(false) }
+    var stylus by remember(key) { mutableStateOf(false) }
     var padW by remember { mutableIntStateOf(1) }
     var padH by remember { mutableIntStateOf(1) }
     val feel = remember { io.github.graviton94.todaybible.data.PenFeel(ctx.applicationContext) }
@@ -168,7 +168,7 @@ fun HandTab(s: AppState, verse: Int) {
                     drawText(guide, color = c.ink.copy(alpha = Tokens.Alpha.guide), topLeft = Offset(inset.toPx(), -sheet * perSheet * lh))
                 }
             }
-            if (!s.handGuide && strokes.isEmpty() && live == null) Text(stringResource(if (earlier.isEmpty()) R.string.hand_hint else R.string.hand_sheet, earlier.size + 1),
+            if (!s.handGuide && strokes.isEmpty()) Text(stringResource(if (earlier.isEmpty()) R.string.hand_hint else R.string.hand_sheet, earlier.size + 1),
                 style = Theme.body().copy(fontSize = Tokens.Text.hint * s.scale, color = c.unwritten, textAlign = TextAlign.Center),
                 modifier = Modifier.align(Alignment.Center).padding(Tokens.Space.s5))
             // 다 그은 획 (바뀔 때만 다시 그림)
@@ -178,7 +178,7 @@ fun HandTab(s: AppState, verse: Int) {
                 val base = Tokens.Stroke.pen.toPx(); val vRef = 3f * density / 2.6f; val tick = Tokens.Size.grain.toPx()
                 val brush = s.pen == Ink.BRUSH; val pencil = s.pen == Ink.PENCIL
                 awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
+                    val down = awaitFirstDown(requireUnconsumed = true)
                     val pen = down.type == PointerType.Stylus || down.type == PointerType.Eraser
                     if (pen) stylus = true
                     if (stylus && !pen) return@awaitEachGesture
@@ -208,6 +208,8 @@ fun HandTab(s: AppState, verse: Int) {
                     add(down.position, down.uptimeMillis, down.pressure); down.consume(); live = pts.toFloatArray()
                     while (true) {
                         val ev = awaitPointerEvent()
+                        // 두 손가락이면 그리지 않고 놓아 줘요
+                        if (ev.changes.count { it.pressed } > 1) { pts.clear(); break }
                         val ch = ev.changes.firstOrNull { it.id == down.id } ?: break
                         ch.historical.forEach { add(it.position, it.uptimeMillis, ch.pressure) }
                         add(ch.position, ch.uptimeMillis, ch.pressure)
@@ -217,7 +219,7 @@ fun HandTab(s: AppState, verse: Int) {
                     // 붓펜은 끝도 가늘게 빠져요
                     if (brush && pts.size >= 9) { val m = pts.size / 3; for (j in 1..minOf(3, m - 1)) pts[(m - j) * 3 + 2] *= 0.4f + 0.2f * (j - 1) }
                     feel.speed(0f)
-                    strokes.add(Ink.Stroke(pts.toFloatArray())); live = null
+                    if (pts.isNotEmpty()) strokes.add(Ink.Stroke(pts.toFloatArray())); live = null
                 }
             }) { live?.let { drawStroke(Ink.Stroke(it), size.width, ink, s.pen) } }
         }
@@ -226,7 +228,9 @@ fun HandTab(s: AppState, verse: Int) {
             BookButton(stringResource(if (s.handGuide && sheet + 1 < sheetsNeeded) R.string.hand_next else R.string.hand_more), Modifier.weight(1f), quiet = true, enabled = strokes.isNotEmpty()) { earlier.add(strokes.toList()); strokes.clear() }
             BookButton(stringResource(R.string.hand_done), Modifier.weight(1f), enabled = strokes.isNotEmpty() || earlier.isNotEmpty()) {
                 val sheets = (earlier + listOf(strokes.toList())).filter { it.isNotEmpty() }
-                Ink.save(Ink.file(ctx, s.translation.id, s.book, s.chapter, verse), Ink.Page(sheets, lineH.value * ctx.resources.displayMetrics.density / padW, s.pen))
+                val f = Ink.file(ctx, s.translation.id, s.book, s.chapter, verse); val page = Ink.Page(sheets, lineH.value * ctx.resources.displayMetrics.density / padW, s.pen)
+                // 파일 쓰기는 뒤에서 (화면이 멈칫하지 않게)
+                Thread { runCatching { Ink.save(f, page) } }.start()
                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 s.fill(listOf(verse), Mode.PAPER)
             }

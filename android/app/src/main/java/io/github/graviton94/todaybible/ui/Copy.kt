@@ -573,7 +573,7 @@ private fun AloudTab(s: AppState, verse: Int) {
     val recognize = canHear && (!record || (Build.VERSION.SDK_INT >= 33 && !pipeFailed))
     // 가이드 목소리 (함께 읽기): 먼저 한 절을 차분히 들려주고, 다 들으면 마이크가 열려요
     val main = remember { android.os.Handler(android.os.Looper.getMainLooper()) }
-    val guide = remember(k, s.narrator) { io.github.graviton94.todaybible.data.GuideVoice(ctx, k, s.guideVoice, s.narrator) }
+    val guide = remember(k, s.narrator, s.guideVoice) { io.github.graviton94.todaybible.data.GuideVoice(ctx, k, s.guideVoice, s.narrator) }
     DisposableEffect(guide) { onDispose { guide.release() } }
     // 낭독 목소리 (M5 · F5): 지금 장 음원만 받아 둬요 (수백 KB). 폰 목소리는 받을 수 없을 때만 대신.
     val N = io.github.graviton94.todaybible.data.Narration
@@ -792,7 +792,9 @@ private fun VoiceRow(s: AppState) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     val parts = remember(s.fills.size, s.book, s.chapter, s.translation, s.voiceRev) { Voice.verses(ctx, s.translation.id, s.book, s.chapter) }
     if (parts.isEmpty()) return
-    val lengths = remember(parts) { parts.associate { it.first to Voice.durationMs(it.second) } }
+    val lengths = androidx.compose.runtime.produceState(emptyMap<Int, Long>(), parts) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { parts.associate { it.first to Voice.durationMs(it.second) } }
+    }.value
     val total = lengths.values.sum()
     val scope = rememberCoroutineScope()
     var player by remember { mutableStateOf<android.media.MediaPlayer?>(null) }

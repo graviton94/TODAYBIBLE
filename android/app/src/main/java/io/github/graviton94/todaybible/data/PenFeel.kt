@@ -20,10 +20,11 @@ class PenFeel(private val ctx: Context) {
     /** 긋는 빠르기 (0..1). 0 이면 잦아듦. */
     fun speed(v: Float) {
         target = v.coerceIn(0f, 1f)
-        if (target > 0f && !running) start()
+        if (target > 0f && !running && !released) start()
     }
 
-    fun release() { running = false; thread = null }
+    @Volatile private var released = false
+    fun release() { released = true; running = false; thread = null }
 
     private fun start() {
         val am = ctx.getSystemService(AudioManager::class.java)

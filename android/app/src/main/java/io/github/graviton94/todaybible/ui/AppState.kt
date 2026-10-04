@@ -159,8 +159,9 @@ class AppState(val store: Store) {
     /** 무료 네 권 밖은 평생권이 있어야 열림. Play 에 닿지 않는 곳(직접 설치 등)에서는 잠그지 않음. */
     fun locked(b: Int) = b !in Canon.free && !lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)
     fun widgets() {
-        val ctx = store.context; runCatching { store.lastGoal = effectiveGoal() }
-        Thread { io.github.graviton94.todaybible.widget.WidgetTick.refreshAll(ctx); io.github.graviton94.todaybible.widget.WidgetTick.schedule(ctx) }.start()
+        val ctx = store.context
+        // 목표 계산 (길잡이 책들을 읽음) 과 위젯 그리기는 화면 줄 밖에서
+        Thread { runCatching { store.lastGoal = effectiveGoal() }; io.github.graviton94.todaybible.widget.WidgetTick.refreshAll(ctx); io.github.graviton94.todaybible.widget.WidgetTick.schedule(ctx) }.start()
     }
 
     fun open(b: Int, ch: Int) {
@@ -201,16 +202,22 @@ class AppState(val store: Store) {
     fun choosePlan(id: String?) {
         val p = io.github.graviton94.todaybible.core.Plans.byId(id)
         if (p != null && p.books.any { locked(it) }) { peekBook = p.books.first { locked(it) }; purchaseOpen = true; return }
-        planId = id; store.planId = id; store.planStart = today().toEpochDay(); planOpen = false
+        planId = id; store.planId = id; store.planStart = today().toEpochDay(); planOpen = false; warmPlan()
         planNext()?.let { (b, c, _) -> book = b; chapter = c; target = null; store.setBookmark(translation, b, c) }
         widgets()
     }
     /** 길잡이 범위의 절 수 · 쓴 절 수. */
+    @Volatile private var planMemo: Pair<List<Any?>, Pair<Int, Int>>? = null
     fun planCounts(): Pair<Int, Int> {
-        val pl = plan ?: return 0 to 0; val p = progress; var total = 0; var done = 0
+        val pl = plan ?: return 0 to 0
+        val key = listOf(pl.id, translation, fills.size)
+        planMemo?.let { (k, v) -> if (k == key) return v }
+        val p = progress; var total = 0; var done = 0
         pl.chapters.forEach { (b, c) -> val t = store.book(translation, b); t.fillable(c).forEach { v -> total++; if (p.isFilled(translation, VerseKey(b, c, v))) done++ } }
-        return total to done
+        return (total to done).also { planMemo = key to it }
     }
+    /** 길잡이 책들을 미리 읽어 둠 (처음 장을 고를 때 멈칫하지 않게). */
+    fun warmPlan() { val pl = plan ?: return; val tr = translation; Thread { runCatching { pl.books.forEach { store.book(tr, it) }; planCounts() } }.start() }
     /** 길잡이에서 다음에 쓸 (권, 장, 절). */
     fun planNext(): Triple<Int, Int, Int>? {
         val pl = plan ?: return null; val p = progress

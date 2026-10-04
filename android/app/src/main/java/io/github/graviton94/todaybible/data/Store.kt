@@ -20,7 +20,8 @@ class Store(val context: Context) {
     private val prefs = context.getSharedPreferences("today", Context.MODE_PRIVATE)
     private val fillsFile = File(context.filesDir, "fills.tsv")
     private val earnedFile = File(context.filesDir, "earned.tsv")
-    private val cache = HashMap<String, BookText>()
+    // 화면 줄과 PDF 만드는 줄이 함께 써요
+    private val cache = java.util.concurrent.ConcurrentHashMap<String, BookText>()
 
     fun book(tr: Translation, index: Int): BookText = cache.getOrPut("${tr.id}/$index") {
         BookText.parse(index, context.assets.open("bible/${tr.id}/%02d.tsv".format(index + 1)).bufferedReader().use { it.readText() })
