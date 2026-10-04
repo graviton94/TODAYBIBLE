@@ -114,9 +114,12 @@ fun CoachOverlay(s: AppState, screen: String) {
         val below = hole.center.y < h / 2
         val gap = with(dens) { Tokens.Space.s3.toPx() }
         var bubbleH by remember(id) { mutableIntStateOf(0) }
+        val top = androidx.compose.foundation.layout.WindowInsets.statusBars.getTop(dens) + with(dens) { Tokens.Space.s2.roundToPx() }
+        val bottom = androidx.compose.foundation.layout.WindowInsets.navigationBars.getBottom(dens)
         val y = if (below) hole.bottom + gap else hole.top - gap - bubbleH
         Column(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s5)
-            .offset { IntOffset(0, y.toInt().coerceIn(0, (h - bubbleH).toInt().coerceAtLeast(0))) }
+            // 상태 표시줄 · 아래 이름표에 걸리지 않게
+            .offset { IntOffset(0, y.toInt().coerceIn(top, (h - bubbleH - bottom).toInt().coerceAtLeast(top))) }
             .onGloballyPositioned { bubbleH = it.size.height }
             .clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leaf).padding(Tokens.Space.s4),
             verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {

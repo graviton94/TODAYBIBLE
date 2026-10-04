@@ -63,7 +63,7 @@ private data class BookState(val doneChapters: Int, val verses: Int, val total: 
  */
 @Composable
 fun LibraryPage(s: AppState) {
-    s.listenAt?.let { (b, ch) -> BibleReader(s, b, ch); return }
+    s.listenAt?.let { (b, ch) -> androidx.compose.runtime.key(b) { BibleReader(s, b, ch) }; return }
     val c = Theme.c; val k = s.korean; val ctx = androidx.compose.ui.platform.LocalContext.current
     val p = s.progress; val filled = p.filled(s.translation)
     // 시작한 권만 본문을 읽어 셈 (뒤에서)
