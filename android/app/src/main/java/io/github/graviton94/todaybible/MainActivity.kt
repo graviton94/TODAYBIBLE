@@ -30,6 +30,7 @@ class MainActivity : ComponentActivity() {
         if (BuildConfig.DEV_TOOLS) debugSetup(s, intent)
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; s.opening = false }
         openAloud(s, intent)
+        intent.getStringExtra("prayer")?.let { s.prayerOpen = it; s.opening = false; intent.removeExtra("prayer") }
         // 알림 다시 맞추기 (끈 상태면 남은 알림을 지움) · 위젯 새로 그리기 (되살리기 · 업데이트 뒤에도 맞게)
         io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
         s.widgets(); s.warmPlan()
@@ -85,7 +86,7 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { state?.page = it }
-        state?.let { openAloud(it, intent) }
+        state?.let { openAloud(it, intent); intent.getStringExtra("prayer")?.let { id -> it.prayerOpen = id } }
     }
 
     /** 아침 알림의 ‘함께 읽기’: 그 절로 열고 낭독을 곧바로. */

@@ -57,10 +57,27 @@ object Narration {
         true
     }.getOrDefault(false)
 
+    /**
+     * 권 통째로 받아 두기 (I3): 인터넷 없는 곳에서도 듣게. 받아 둔 권은 자동 정리에서 빠져요.
+     * progress(받은 장, 전체 장). 하나라도 못 받으면 false (받은 장은 남겨요).
+     */
+    fun keepBook(ctx: Context, voice: String, book: Int, chapters: Int, progress: (Int, Int) -> Unit): Boolean {
+        val d = dir(ctx, voice, book); d.mkdirs(); File(d, KEEP).writeText("ok")
+        var ok = true
+        for (ch in 1..chapters) { if (!fetch(ctx, voice, book, ch)) ok = false; progress(ch, chapters) }
+        return ok
+    }
+    fun kept(ctx: Context, voice: String, book: Int) = File(dir(ctx, voice, book), KEEP).exists()
+    /** 받아 둔 권 내려놓기: 표시만 지우면 다음 정리 때 오래된 장부터 지워져요. */
+    fun release(ctx: Context, voice: String, book: Int) { File(dir(ctx, voice, book), KEEP).delete(); trim(ctx, keep = File("")) }
+    private const val KEEP = ".keep"
+
     private const val CAP = 50L * 1024 * 1024
+    private fun pinned(f: File) = File(f.parentFile, KEEP).exists()
     private fun trim(ctx: Context, keep: File) {
-        var total = usage(ctx); if (total <= CAP) return
-        val marks = File(ctx.filesDir, "narration").walkTopDown().filter { it.isFile && it.name.startsWith(".c") && it != keep }.sortedBy { it.lastModified() }
+        // 받아 둔 권은 세지도 지우지도 않아요
+        var total = File(ctx.filesDir, "narration").walkTopDown().filter { it.isFile && !pinned(it) }.sumOf { it.length() }; if (total <= CAP) return
+        val marks = File(ctx.filesDir, "narration").walkTopDown().filter { it.isFile && it.name.startsWith(".c") && it != keep && !pinned(it) }.sortedBy { it.lastModified() }
         for (m in marks) {
             if (total <= CAP) break
             val ch = m.name.removePrefix(".c")

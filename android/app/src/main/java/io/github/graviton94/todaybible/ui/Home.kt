@@ -95,6 +95,9 @@ fun HomePage(s: AppState) {
         }
         // 이번 주 도장 (주일부터)
         WeekStamps(s)
+        // 12월 중순 ~ 1월 첫 주: 올해의 성경 카드가 기록에 나와요
+        if ((today.monthValue == 12 && today.dayOfMonth >= 15) || (today.monthValue == 1 && today.dayOfMonth <= 7))
+            Text(stringResource(R.string.year_ready), style = Theme.label().copy(color = c.rubric), modifier = Modifier.fillMaxWidth().heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.page = AppState.RECORD })
         // 지금 때의 기도 (아침 · 낮 · 저녁 · 밤)
         PrayerCard(s)
         // 주일 설교 노트 (주일이거나 오늘 적은 것이 있으면)

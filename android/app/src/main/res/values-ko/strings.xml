@@ -649,4 +649,21 @@
     <string name="prayer_amen">아멘</string>
     <string name="prayer_prayed">오늘 드렸어요 · 아멘</string>
     <string name="prayer_prayed_short">드렸어요</string>
+    <string name="prayer_reminder">기도 알림</string>
+    <string name="prayer_twice">아침 · 저녁</string>
+    <string name="prayer_four">하루 네 번</string>
+    <string name="prayer_reminder_note">아침 7시 · 낮 12시 · 저녁 6시 · 밤 9시 반에 그 기도의 첫 말씀으로. 이미 드렸으면 울리지 않아요.</string>
+    <string name="prayer_channel">기도 시간</string>
+    <string name="plan_bible365">성경 1년 1독</string>
+    <string name="year_scroll">옮겨 쓴 두루마리 %1$sm</string>
+    <string name="year_sermons">설교 노트 %1$d편</string>
+    <string name="year_ready">올해의 성경 카드가 나왔어요 ›</string>
+    <string name="keep_book">인터넷 없이 듣게 낭독 받아 두기 · 약 %1$dMB</string>
+    <string name="keep_running">낭독 받는 중 · %2$d장 중 %1$d장</string>
+    <string name="keep_kept">이 권의 낭독을 폰에 받아 두었어요</string>
+    <string name="keep_release">지우기</string>
+    <string name="keep_released">지웠어요. 들을 때 다시 받아요.</string>
+    <string name="keep_done">%1$s 낭독을 받아 두었어요. 인터넷 없이도 들려요.</string>
+    <string name="keep_partial">%1$s 낭독 가운데 몇 장을 받지 못했어요. 와이파이에서 다시 해 주세요.</string>
+    <string name="keep_wifi">와이파이에 연결한 뒤 받아 주세요</string>
 </resources>

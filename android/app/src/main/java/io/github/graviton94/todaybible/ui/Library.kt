@@ -200,6 +200,8 @@ fun MarksSheet(s: AppState) {
 }
 
 private const val FOUND_MAX = 200
+/** 낭독 받아 두기 크기 어림 (장마다 0.4MB, 10분의 1 MB 단위). */
+private const val KEEP_MB_PER_CH = 4
 
 /** 낱말로 찾은 절: 찾은 말에 형광, 누르면 읽기 화면의 그 절로. */
 @Composable
@@ -239,6 +241,20 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
         // 내 목소리로 읽은 장이 있으면: 한 권 오디오북
         val voiced by androidx.compose.runtime.produceState(0, b, s.voiceRev) {
             value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { (1..t.chapterCount).count { io.github.graviton94.todaybible.data.Voice.verses(ctx, s.translation.id, b, it).isNotEmpty() } }
+        }
+        // 낭독 받아 두기: 인터넷 없는 곳에서도 이 권을 들어요 (폰 목소리면 필요 없음)
+        if (s.narrator != io.github.graviton94.todaybible.data.Narration.DEVICE) {
+            val keepRun = s.keeping?.takeIf { it.first == b }
+            val kept = remember(b, s.keeping, s.narrator) { io.github.graviton94.todaybible.data.Narration.kept(ctx, s.narrator, b) }
+            when {
+                keepRun != null -> Text(stringResource(R.string.keep_running, keepRun.second, keepRun.third), style = Theme.small().copy(color = c.rubric))
+                kept -> Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.keep_kept), style = Theme.small(), modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.keep_release), style = Theme.small().copy(color = c.rubric), modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight()
+                        .clickable(role = Role.Button) { io.github.graviton94.todaybible.data.Narration.release(ctx, s.narrator, b); s.toast = ctx.getString(R.string.keep_released) })
+                }
+                else -> BookButton(stringResource(R.string.keep_book, t.chapterCount * KEEP_MB_PER_CH / 10), Modifier.fillMaxWidth(), quiet = true, enabled = s.keeping == null) { s.keepNarration(b) }
+            }
         }
         if (voiced > 0) BookButton(stringResource(R.string.audiobook_make, voiced), Modifier.fillMaxWidth(), quiet = true, enabled = !s.exporting) { s.picker = null; s.requestAudiobook(b) }
         if (io.github.graviton94.todaybible.data.Ink.chapters(ctx, s.translation.id, b).isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {

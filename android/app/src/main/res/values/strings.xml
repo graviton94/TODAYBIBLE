@@ -649,4 +649,21 @@
     <string name="prayer_amen">Amen</string>
     <string name="prayer_prayed">Prayed today · Amen</string>
     <string name="prayer_prayed_short">prayed</string>
+    <string name="prayer_reminder">Prayer reminders</string>
+    <string name="prayer_twice">Morning &amp; evening</string>
+    <string name="prayer_four">Four times</string>
+    <string name="prayer_reminder_note">7 a.m., noon, 6 p.m. and 9:30 p.m. with the first words of that prayer. Skipped once you\'ve prayed it.</string>
+    <string name="prayer_channel">Prayer times</string>
+    <string name="plan_bible365">The whole Bible in a year</string>
+    <string name="year_scroll">A scroll %1$s m long</string>
+    <string name="year_sermons">%1$d sermon notes</string>
+    <string name="year_ready">Your year in the Bible is ready ›</string>
+    <string name="keep_book">Download narration for offline · about %1$d MB</string>
+    <string name="keep_running">Downloading narration · %1$d / %2$d chapters</string>
+    <string name="keep_kept">Narration saved on this phone</string>
+    <string name="keep_release">Remove</string>
+    <string name="keep_released">Removed. It will be fetched again when you listen.</string>
+    <string name="keep_done">%1$s narration is saved for offline listening</string>
+    <string name="keep_partial">Some chapters of %1$s didn\'t download. Try again on Wi-Fi.</string>
+    <string name="keep_wifi">Please connect to Wi-Fi first</string>
 </resources>

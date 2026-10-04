@@ -27,6 +27,7 @@
             </intent-filter>
         </activity>
         <receiver android:name=".data.ReminderReceiver" android:exported="false" />
+        <receiver android:name=".data.PrayerReceiver" android:exported="false" />
         <receiver android:name=".widget.WidgetTick" android:exported="false" />
         <receiver android:name=".data.ReminderBoot" android:exported="false">
             <intent-filter>

@@ -105,6 +105,7 @@ object Plans {
         Plan("prov31", whole(19), 31),
         Plan("ps365", whole(18), 365),
         Plan("nt365", (39..65).flatMap { whole(it) }, 365),
+        Plan("bible365", (0..65).flatMap { whole(it) }, 365),
         // 교회력 계획: 사순절 40일 (마가복음 · 누가복음 22–24 · 요한복음 12–21), 고난주간 8일, 대림절 24일
         Plan("lent40", whole(40) + (22..24).map { 41 to it } + (12..21).map { 42 to it }, 40),
         Plan("holy8", listOf(39 to 21) + (13..17).map { 42 to it } + (26..28).map { 39 to it }, 8),

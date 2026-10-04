@@ -179,9 +179,26 @@ class AppState(val store: Store) {
         val list = memory; Thread { runCatching { store.saveMemory(list) } }.start()
     }
 
+    /** 낭독 받아 두기 (I3): 받는 중인 권과 받은 장 수 / 전체. */
+    var keeping by mutableStateOf<Triple<Int, Int, Int>?>(null)
+    fun keepNarration(b: Int) {
+        if (keeping != null) return
+        val ctx = store.context
+        val cm = ctx.getSystemService(android.net.ConnectivityManager::class.java)
+        if (cm?.isActiveNetworkMetered != false) { toast = ctx.getString(R.string.keep_wifi); return }
+        val voice = narrator; val n = store.book(translation, b).chapterCount
+        keeping = Triple(b, 0, n)
+        Thread {
+            val ok = io.github.graviton94.todaybible.data.Narration.keepBook(ctx, voice, b, n) { done, all -> android.os.Handler(android.os.Looper.getMainLooper()).post { keeping = Triple(b, done, all) } }
+            android.os.Handler(android.os.Looper.getMainLooper()).post { keeping = null; toast = ctx.getString(if (ok) R.string.keep_done else R.string.keep_partial, bookName(b)) }
+        }.start()
+    }
+
     /** 기도문: 펼친 기도 · 목록 시트 · 오늘 드린 것. */
     var prayerOpen by mutableStateOf<String?>(null)
     var prayersOpen by mutableStateOf(false)
+    var prayerReminder by mutableIntStateOf(store.prayerReminder)
+    fun setPrayerReminder(m: Int) { prayerReminder = m; store.prayerReminder = m; Thread { io.github.graviton94.todaybible.data.PrayerReminder.schedule(store.context) }.start() }
     private var prayedIds by mutableStateOf(store.prayedOn(java.time.LocalDate.now().toEpochDay()))
     fun prayed(id: String) = id in prayedIds && store.prayedOn(today().toEpochDay()).contains(id)
     fun markPrayed(id: String) { val d = today().toEpochDay(); prayedIds = store.prayedOn(d) + id; store.setPrayed(d, prayedIds) }

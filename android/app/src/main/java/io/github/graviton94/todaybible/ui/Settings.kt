@@ -109,6 +109,17 @@ fun SettingsPage(s: AppState) {
                     BookButton("+", Modifier.width(Tokens.Size.touch), quiet = true) { turnOn((h + 1) % 24) }
                 }
             }
+            Group(stringResource(R.string.prayer_reminder)) {
+                // 기도 알림: 끄기 · 아침과 저녁 · 하루 네 번 (알림 허락이 없으면 먼저 물음)
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                var want by remember { mutableIntStateOf(0) }
+                val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (ok) s.setPrayerReminder(want) else s.toast = ctx.getString(R.string.reminder_denied) }
+                UnderlineTabs(listOf(stringResource(R.string.reminder_off), stringResource(R.string.prayer_twice), stringResource(R.string.prayer_four)), s.prayerReminder) { m ->
+                    if (m > 0 && android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) { want = m; ask.launch(android.Manifest.permission.POST_NOTIFICATIONS) }
+                    else s.setPrayerReminder(m)
+                }
+                Text(stringResource(R.string.prayer_reminder_note), style = Theme.small())
+            }
             Group(stringResource(R.string.owner_name)) {
                 NameField(s)
                 Text(stringResource(R.string.owner_note), style = Theme.small())

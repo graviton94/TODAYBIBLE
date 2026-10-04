@@ -101,6 +101,7 @@ class ReminderReceiver : BroadcastReceiver() {
 class ReminderBoot : BroadcastReceiver() {
     override fun onReceive(ctx: Context, intent: Intent) {
         Reminder.schedule(ctx, Store(ctx).reminderHour)
+        PrayerReminder.schedule(ctx)
         io.github.graviton94.todaybible.widget.WidgetTick.schedule(ctx)
     }
 }

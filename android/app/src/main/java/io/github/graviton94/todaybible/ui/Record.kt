@@ -444,9 +444,15 @@ private fun YearCard(s: AppState, year: Int) {
     val big = stringResource(R.string.year_big, "%,d".format(verses))
     val lines = listOf(
         stringResource(R.string.year_top, s.bookName(topBook)),
-        stringResource(R.string.year_first, "${s.bookName(first.key.book)} ${first.key.chapter}:${first.key.verse}", java.time.LocalDate.ofEpochDay(first.epochDay).format(fmt)),
+        stringResource(R.string.year_first, stringResource(R.string.ref_verse, s.bookName(first.key.book), first.key.chapter, first.key.verse), java.time.LocalDate.ofEpochDay(first.epochDay).format(fmt)),
         stringResource(R.string.year_days, days.size, Presence.longestStreak(days)),
         stringResource(R.string.year_plates, plates),
+    ) + listOfNotNull(
+        // 올해 옮겨 쓴 두루마리 길이 · 적은 설교 노트
+        remember(year, inYear.size) {
+            inYear.distinctBy { it.translation to it.key }.sumOf { f -> Markup.plain(s.store.book(f.translation, f.key.book).verse(f.key.chapter, f.key.verse)).count { !it.isWhitespace() } }
+        }.takeIf { it > 0 }?.let { n -> stringResource(R.string.year_scroll, "%.1f".format(n * Tokens.Px.scrollCellCm / 100f)) },
+        s.notes.count { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.SERMON && it.epochDay in from..to }.takeIf { it > 0 }?.let { stringResource(R.string.year_sermons, it) },
     )
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leather).drawBehind { giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = false) }
         .padding(Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {

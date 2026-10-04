@@ -646,5 +646,22 @@
   "prayer_write": {"en": "Write it out", "ko": "따라 쓰기"},
   "prayer_amen": {"en": "Amen", "ko": "아멘"},
   "prayer_prayed": {"en": "Prayed today · Amen", "ko": "오늘 드렸어요 · 아멘"},
-  "prayer_prayed_short": {"en": "prayed", "ko": "드렸어요"}
+  "prayer_prayed_short": {"en": "prayed", "ko": "드렸어요"},
+  "prayer_reminder": {"en": "Prayer reminders", "ko": "기도 알림"},
+  "prayer_twice": {"en": "Morning & evening", "ko": "아침 · 저녁"},
+  "prayer_four": {"en": "Four times", "ko": "하루 네 번"},
+  "prayer_reminder_note": {"en": "7 a.m., noon, 6 p.m. and 9:30 p.m. with the first words of that prayer. Skipped once you've prayed it.", "ko": "아침 7시 · 낮 12시 · 저녁 6시 · 밤 9시 반에 그 기도의 첫 말씀으로. 이미 드렸으면 울리지 않아요."},
+  "prayer_channel": {"en": "Prayer times", "ko": "기도 시간"},
+  "plan_bible365": {"en": "The whole Bible in a year", "ko": "성경 1년 1독"},
+  "year_scroll": {"en": "A scroll %1$s m long", "ko": "옮겨 쓴 두루마리 %1$sm"},
+  "year_sermons": {"en": "%1$d sermon notes", "ko": "설교 노트 %1$d편"},
+  "year_ready": {"en": "Your year in the Bible is ready ›", "ko": "올해의 성경 카드가 나왔어요 ›"},
+  "keep_book": {"en": "Download narration for offline · about %1$d MB", "ko": "인터넷 없이 듣게 낭독 받아 두기 · 약 %1$dMB"},
+  "keep_running": {"en": "Downloading narration · %1$d / %2$d chapters", "ko": "낭독 받는 중 · %2$d장 중 %1$d장"},
+  "keep_kept": {"en": "Narration saved on this phone", "ko": "이 권의 낭독을 폰에 받아 두었어요"},
+  "keep_release": {"en": "Remove", "ko": "지우기"},
+  "keep_released": {"en": "Removed. It will be fetched again when you listen.", "ko": "지웠어요. 들을 때 다시 받아요."},
+  "keep_done": {"en": "%1$s narration is saved for offline listening", "ko": "%1$s 낭독을 받아 두었어요. 인터넷 없이도 들려요."},
+  "keep_partial": {"en": "Some chapters of %1$s didn't download. Try again on Wi-Fi.", "ko": "%1$s 낭독 가운데 몇 장을 받지 못했어요. 와이파이에서 다시 해 주세요."},
+  "keep_wifi": {"en": "Please connect to Wi-Fi first", "ko": "와이파이에 연결한 뒤 받아 주세요"}
 }
