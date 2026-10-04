@@ -27,17 +27,17 @@ jobs:
           profile: pixel_6
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           script: |
-            P=io.github.graviton94.todaybible; mkdir -p out
+            mkdir -p out
             adb install -r android/app/build/outputs/apk/debug/app-debug.apk
             sleep 20
             adb logcat -c
-            adb shell am start -W -n $P/.MainActivity --ez tb.coach false --es tb.listen 19:23 --ez tb.listenPlay true
+            adb shell am start -W -n io.github.graviton94.todaybible/.MainActivity --ez tb.coach false --es tb.listen 19:23 --ez tb.listenPlay true
             sleep 30
-            adb shell am start -W -n $P/.MainActivity --ez tb.coach false --es tb.tr KJV --es tb.listen 43:3 --ez tb.listenPlay true
+            adb shell am start -W -n io.github.graviton94.todaybible/.MainActivity --ez tb.coach false --es tb.tr KJV --es tb.listen 43:3 --ez tb.listenPlay true
             sleep 30
             adb logcat -d -s Narration:* AndroidRuntime:E TextToSpeech:* > out/logcat.txt || true
-            adb shell run-as $P ls -laR files/narration > out/files.txt 2>&1 || true
-            adb shell run-as $P cat shared_prefs/today.xml > out/prefs.txt 2>&1 || true
+            adb shell run-as io.github.graviton94.todaybible ls -laR files/narration > out/files.txt 2>&1 || true
+            adb shell run-as io.github.graviton94.todaybible cat shared_prefs/today.xml > out/prefs.txt 2>&1 || true
       - name: Publish
         if: always()
         run: |
