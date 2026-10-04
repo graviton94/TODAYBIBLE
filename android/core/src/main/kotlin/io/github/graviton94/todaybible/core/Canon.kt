@@ -72,6 +72,18 @@ object Reference {
         return Triple(book, ch, v)
     }
 
+    /** 본문 범위: "요 3:16-21", "요한복음 3장 16~21절", "시 23" (장 전체는 to = 0). 장을 넘는 범위는 그 장 끝까지. */
+    data class Passage(val book: Int, val chapter: Int, val from: Int, val to: Int)
+    fun passage(raw: String): Passage? {
+        val parts = raw.split(Regex("[-~–—]"), limit = 2)
+        val (b, ch, v) = parse(parts[0]) ?: return null
+        val end = parts.getOrNull(1)?.let { t -> Regex("(\\d+)\\D*$").find(t.trim())?.groupValues?.get(1)?.toIntOrNull() }
+        val crosses = parts.getOrNull(1)?.contains(Regex("[:장편]")) == true
+        val from = v ?: 1
+        val to = when { v == null -> 0; crosses -> 0; end != null && end >= from -> end; else -> from }
+        return Passage(b, ch, from, to)
+    }
+
     private fun find(name: String): Int? {
         Canon.books.firstOrNull { it.ko.replace(" ", "") == name }?.let { return it.index }
         koShort.indexOf(name).takeIf { it >= 0 }?.let { return it }

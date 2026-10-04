@@ -611,4 +611,16 @@
     <string name="memory_show">다시 다 보기</string>
     <string name="memory_read">앞뒤 함께 읽기</string>
     <string name="memory_remove">이 말씀 내려놓기</string>
+    <string name="ref_range">%1$s %2$d:%3$d–%4$d</string>
+    <string name="ref_onward">%1$s %2$d:%3$d 이하</string>
+    <string name="sermon_title">주일 설교 노트</string>
+    <string name="sermon_invite">오늘 설교 본문과 마음에 남은 말을 적어 두세요.</string>
+    <string name="sermon_write">적기 ›</string>
+    <string name="sermon_continue">이어 적기 ›</string>
+    <string name="sermon_passage">설교 본문</string>
+    <string name="sermon_passage_hint">예: 요 3:16-21</string>
+    <string name="sermon_passage_bad">‘요 3:16-21’처럼 적어 주세요.</string>
+    <string name="sermon_copy">본문 필사하기</string>
+    <string name="sermon_note">설교에서 남은 말</string>
+    <string name="sermon_note_hint">몇 줄이면 충분해요</string>
 </resources>

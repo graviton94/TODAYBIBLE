@@ -12,8 +12,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -108,5 +113,63 @@ fun MemoryList(s: AppState, onOpen: () -> Unit) {
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
             Text(stringResource(R.string.ref_verse, s.bookName(v.book), v.chapter, v.verse), style = Theme.small().copy(color = c.rubric), maxLines = 1)
         }
+    }
+}
+
+/**
+ * 주일 설교 노트 (A2): 본문 장절 · 설교에서 남은 말. 본문은 곧바로 필사하거나 읽을 수 있어요.
+ * 하루에 하나, 창을 닫을 때 남겨요. 나의 성경 PDF 끝에 그 권의 설교 노트가 모여요.
+ */
+@Composable
+fun SermonSheet(s: AppState) {
+    val c = Theme.c; val k = s.korean
+    val day = s.sermonOpen ?: return
+    val old = remember(day) { s.sermonOn(day) }
+    var ref by remember(day) { mutableStateOf(old?.takeIf { it.from > 0 }?.let { s.passageLabel(it) } ?: "") }
+    var text by remember(day) { mutableStateOf(old?.text ?: "") }
+    val p = remember(ref) { io.github.graviton94.todaybible.core.Reference.passage(ref) }
+    fun save() {
+        s.putSermon(io.github.graviton94.todaybible.data.Store.Note(io.github.graviton94.todaybible.data.Store.NoteKind.SERMON, s.translation,
+            p?.book ?: 0, p?.chapter ?: 1, p?.from ?: 0, p?.to ?: 0, day, text.trim()))
+    }
+    fun close() { save(); s.sermonOpen = null }
+    BookSheet({ close() }) {
+        Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid * 2).verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            Text(stringResource(R.string.sermon_title), style = Theme.title(k))
+            Text(fmtDate(R.string.fmt_date_full, java.time.LocalDate.ofEpochDay(day)), style = Theme.small())
+            Text(stringResource(R.string.sermon_passage), style = Theme.small().copy(color = c.rubric))
+            LineField(ref, { ref = it }, stringResource(R.string.sermon_passage_hint), max = 40)
+            if (p != null) {
+                val t = s.store.book(s.translation, p.book)
+                val verses = t.fillable(p.chapter).filter { it >= p.from && (p.to == 0 || it <= p.to) }
+                Text(Lang.passage(s.store.context, s.translation, s.bookName(p.book), p.chapter, p.from, p.to), style = Theme.label())
+                verses.take(3).forEach { v -> Text("$v  " + Markup.plain(t.verse(p.chapter, v)), style = Theme.body().copy(color = c.inkSoft), maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
+                Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                    BookButton(stringResource(R.string.sermon_copy), Modifier.weight(1f)) { close(); s.open(p.book, p.chapter); s.target = verses.firstOrNull { !s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(p.book, p.chapter, it)) } ?: p.from }
+                    BookButton(stringResource(R.string.read_short), Modifier.weight(1f), quiet = true) { close(); s.read(p.book, p.chapter, p.from) }
+                }
+            } else if (ref.isNotBlank()) Text(stringResource(R.string.sermon_passage_bad), style = Theme.small())
+            Text(stringResource(R.string.sermon_note), style = Theme.small().copy(color = c.rubric), modifier = Modifier.padding(top = Tokens.Space.s2))
+            LineField(text, { text = it }, stringResource(R.string.sermon_note_hint), lines = 5, max = 2000)
+            BookButton(stringResource(R.string.close), Modifier.fillMaxWidth(), quiet = true) { close() }
+            Spacer(Modifier.windowInsetsBottomHeight(WindowInsets.ime))
+        }
+    }
+}
+
+/** 오늘 화면의 주일 칸: 설교 본문 적기 · 적은 노트 한 줄. */
+@Composable
+fun SermonCard(s: AppState, day: Long) {
+    val c = Theme.c
+    val n = s.sermonOn(day)
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).clickable(role = Role.Button) { s.sermonOpen = day }.padding(Tokens.Space.s4),
+        verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+        Text(stringResource(R.string.sermon_title), style = Theme.small().copy(color = c.rubric), maxLines = 1)
+        if (n == null) Text(stringResource(R.string.sermon_invite), style = Theme.body())
+        else {
+            if (n.from > 0) Text(s.passageLabel(n), style = Theme.label(), maxLines = 1)
+            if (n.text.isNotBlank()) Text(n.text.lineSequence().first(), style = Theme.body().copy(color = c.inkSoft), maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        }
+        Text(stringResource(if (n == null) R.string.sermon_write else R.string.sermon_continue), style = Theme.small().copy(color = c.rubric), maxLines = 1)
     }
 }

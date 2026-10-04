@@ -217,4 +217,13 @@ class CoreTest {
         assertEquals("T__", Memorize.words("The LORD", 1)[0].shown)
         assertFalse(Memorize.words(v, 0)[0].hidden)
     }
+
+    @Test fun passageRanges() {
+        assertEquals(Reference.Passage(42, 3, 16, 21), Reference.passage("요 3:16-21"))
+        assertEquals(Reference.Passage(42, 3, 16, 21), Reference.passage("요한복음 3장 16~21절"))
+        assertEquals(Reference.Passage(18, 23, 1, 0), Reference.passage("시 23"))
+        assertEquals(Reference.Passage(42, 3, 16, 16), Reference.passage("John 3:16"))
+        assertEquals(Reference.Passage(42, 3, 16, 0), Reference.passage("요 3:16-4:2"))
+        assertEquals(null, Reference.passage("설교"))
+    }
 }

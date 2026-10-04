@@ -173,6 +173,8 @@ private fun MonthGrid(s: AppState, month: YearMonth, days: Set<Long>, today: Loc
     val lead = month.atDay(1).dayOfWeek.value % 7
     val cells = (0 until lead).map { null } + (1..month.lengthOfMonth()).map { month.atDay(it) }
     val names = stringResource(R.string.weekdays)
+    // 설교 노트를 적은 날: 아래에 금빛 점 (눌러서 볼 수 있게)
+    val sermonDays = s.notes.filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.SERMON }.map { it.epochDay }.toSet()
     Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
         Row(Modifier.fillMaxWidth()) {
             names.forEachIndexed { i, ch -> Text(ch.toString(), style = Theme.small().copy(color = if (i == 0) c.rubric else c.inkSoft, textAlign = TextAlign.Center), modifier = Modifier.weight(1f)) }
@@ -181,8 +183,11 @@ private fun MonthGrid(s: AppState, month: YearMonth, days: Set<Long>, today: Loc
             Row(Modifier.fillMaxWidth()) {
                 week.forEach { d ->
                     Box(Modifier.weight(1f).aspectRatio(1f).padding(Tokens.Size.spineGap)
-                        .then(if (d != null && d.toEpochDay() in days) Modifier.clickable(role = Role.Button) { onPick(d) } else Modifier)
-                        .drawBehind { if (d != null && d == picked) drawRoundRect(c.mark, cornerRadius = CornerRadius(Tokens.Radius.chip.toPx())) },
+                        .then(if (d != null && (d.toEpochDay() in days || d.toEpochDay() in sermonDays)) Modifier.clickable(role = Role.Button) { onPick(d) } else Modifier)
+                        .drawBehind {
+                            if (d != null && d == picked) drawRoundRect(c.mark, cornerRadius = CornerRadius(Tokens.Radius.chip.toPx()))
+                            if (d != null && d.toEpochDay() in sermonDays) { val r = Tokens.Size.plateDot.toPx() / 2; drawCircle(c.gilt, r, Offset(size.width / 2, size.height - r)) }
+                        },
                         contentAlignment = Alignment.Center) {
                         if (d != null) DayCell(s, d, d.toEpochDay() in days, d == today, d.isAfter(today))
                     }
@@ -221,6 +226,10 @@ private fun DayVerses(s: AppState, d: LocalDate) {
             val vs = f.map { it.key.verse }.sorted()
             Text(stringResource(R.string.day_line, s.bookName(bc.first), bc.second, if (vs.size > 1) "${vs.first()}–${vs.last()}" else "${vs.first()}", vs.size),
                 style = Theme.body(), modifier = Modifier.fillMaxWidth().clickable(role = Role.Button) { s.read(bc.first, bc.second, vs.first()) })
+        }
+        s.sermonOn(e)?.let { n ->
+            Text(stringResource(R.string.sermon_title) + (if (n.from > 0) " · " + s.passageLabel(n) else ""), style = Theme.body().copy(color = c.rubric),
+                modifier = Modifier.fillMaxWidth().clickable(role = Role.Button) { s.sermonOpen = e })
         }
     }
 }

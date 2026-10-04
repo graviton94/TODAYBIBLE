@@ -611,4 +611,16 @@
     <string name="memory_show">Show all again</string>
     <string name="memory_read">Read in context</string>
     <string name="memory_remove">Let go of this verse</string>
+    <string name="ref_range">%1$s %2$d:%3$d–%4$d</string>
+    <string name="ref_onward">%1$s %2$d:%3$d ff.</string>
+    <string name="sermon_title">Sermon notes</string>
+    <string name="sermon_invite">Jot down today\'s sermon passage and what stayed with you.</string>
+    <string name="sermon_write">Write ›</string>
+    <string name="sermon_continue">Keep writing ›</string>
+    <string name="sermon_passage">Passage</string>
+    <string name="sermon_passage_hint">e.g. John 3:16-21</string>
+    <string name="sermon_passage_bad">Write it like John 3:16-21.</string>
+    <string name="sermon_copy">Copy this passage</string>
+    <string name="sermon_note">What stayed with you</string>
+    <string name="sermon_note_hint">A few lines are enough</string>
 </resources>

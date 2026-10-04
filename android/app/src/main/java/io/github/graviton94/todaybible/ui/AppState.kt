@@ -195,6 +195,7 @@ class AppState(val store: Store) {
         saveNotes(if (n.text.isBlank() && n.from == 0) rest else rest + n)
     }
     var sermonOpen by mutableStateOf<Long?>(null)
+    fun passageLabel(n: io.github.graviton94.todaybible.data.Store.Note) = Lang.passage(store.context, n.translation, bookName(n.book), n.chapter, n.from, n.to)
 
     fun isMarked(k: io.github.graviton94.todaybible.core.VerseKey) = marks.any { it.translation == translation && it.key == k }
     fun toggleMark(k: io.github.graviton94.todaybible.core.VerseKey) {

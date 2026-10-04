@@ -115,6 +115,23 @@ object MyBible {
             y += 8f
         }
         close(pg)
+        // 설교 노트 (A2): 이 권을 본문으로 한 주일 설교 노트를 날짜순으로
+        val sermons = store.loadNotes().filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.SERMON && it.book == book && it.from > 0 }.sortedBy { it.epochDay }
+        if (sermons.isNotEmpty()) {
+            pg = open(); y = M.toFloat() + 14f
+            val cc = Lang.content(ctx, tr)
+            pg.canvas.drawText(cc.getString(R.string.sermon_title), M.toFloat(), y + 12f, TextPaint(chap).apply { textSize = 16f }); y += 34f
+            val day = DateTimeFormatter.ofPattern(cc.getString(R.string.fmt_ymd), Lang.locale(tr))
+            for (n in sermons) {
+                val headLine = LocalDate.ofEpochDay(n.epochDay).format(day) + "  ·  " + Lang.passage(ctx, tr, name, n.chapter, n.from, n.to)
+                val lay = StaticLayout.Builder.obtain(n.text, 0, n.text.length, body, colW + gutter.toInt()).setLineSpacing(0f, 1.25f).setIncludePad(false).build()
+                if (y + 16f + lay.height > H - M) { close(pg); pg = open(); y = M.toFloat() + 14f }
+                pg.canvas.drawText(headLine, M.toFloat(), y + 8f, TextPaint(head).apply { color = c.rubric.toArgb() }); y += 16f
+                pg.canvas.save(); pg.canvas.translate(M.toFloat(), y); lay.draw(pg.canvas); pg.canvas.restore()
+                y += lay.height + 18f
+            }
+            close(pg)
+        }
         // 맺음 쪽: 누가 언제부터 언제까지 옮겨 썼는지
         run {
             val p = open(); val cv = p.canvas

@@ -32,6 +32,16 @@ object Lang {
         return DateTimeFormatter.ofPattern(ctx.getString(pattern), l).format(t)
     }
     /** 음성 인식 · 읽기 엔진 언어 (번역을 따라). */
+    /** 설교 본문 같은 범위 표기: 장 전체 · 한 절 · 몇 절부터 몇 절 · 몇 절 이하. */
+    fun passage(ctx: Context, tr: Translation, book: String, chapter: Int, from: Int, to: Int): String {
+        val c = content(ctx, tr)
+        return when {
+            from <= 1 && to == 0 -> c.getString(R.string.ref_chapter, book, chapter)
+            to == 0 -> c.getString(R.string.ref_onward, book, chapter, from)
+            to <= from -> c.getString(R.string.ref_verse, book, chapter, from)
+            else -> c.getString(R.string.ref_range, book, chapter, from, to)
+        }
+    }
     fun speechTag(ctx: Context, tr: Translation): String = content(ctx, tr).getString(R.string.speech_lang)
 }
 
