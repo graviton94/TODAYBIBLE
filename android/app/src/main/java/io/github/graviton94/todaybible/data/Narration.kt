@@ -20,8 +20,18 @@ object Narration {
     /** 듣기에서 절과 절 사이 쉼 (ms). */
     const val GAP_MS = 350
     private const val RELEASE = "https://github.com/graviton94/TODAYBIBLE/releases/download/narration-v1"
-    /** 받을 곳 차례: Cloudflare R2 (있으면) → GitHub 릴리스. */
-    private val bases = listOfNotNull(io.github.graviton94.todaybible.BuildConfig.NARRATION_URL.takeIf { it.isNotBlank() }?.let { "$it/narration" }, RELEASE)
+    /** Cloudflare R2 (있으면). 통신망에 따라 r2.dev 인증서가 막히는 곳이 있어, 한 번 막히면 이번 실행 동안은 건너뛰어요. */
+    private val r2 = io.github.graviton94.todaybible.BuildConfig.NARRATION_URL.takeIf { it.isNotBlank() }?.let { "$it/narration" }
+    @Volatile private var r2Blocked = false
+    /** GitHub 릴리스 거울: 목소리 · 구약/신약마다 (narr-m5-ot …). */
+    private const val MIRROR = "https://github.com/graviton94/TODAYBIBLE/releases/download"
+    /** 이 장을 받을 주소들 차례: R2 → GitHub 거울 → 옛 릴리스. */
+    private fun urls(voice: String, book: Int, name: String) = listOfNotNull(
+        r2?.takeIf { !r2Blocked }?.let { "$it/$name" },
+        "$MIRROR/narr-$voice-${if (book < 39) "ot" else "nt"}/$name",
+        "$RELEASE/$name",
+    )
+    private val bases get() = listOfNotNull(r2, MIRROR, RELEASE)
 
     fun dir(ctx: Context, voice: String, book: Int) = File(ctx.filesDir, "narration/$voice/${book + 1}")
     fun file(ctx: Context, voice: String, book: Int, chapter: Int, verse: Int) = File(dir(ctx, voice, book), "${chapter}_$verse.m4a")
@@ -53,7 +63,12 @@ object Narration {
         if (has(ctx, voice, book, chapter)) return true
         val d = dir(ctx, voice, book); d.mkdirs()
         val name = "${voice}_%02d_c%03d.zip".format(book + 1, chapter)
-        val conn = bases.firstNotNullOfOrNull { open(URL("$it/$name")) } ?: run { lastError = "no source ($name)"; android.util.Log.w("Narration", "no source for $name (${bases.joinToString()})"); return false }
+        val conn = urls(voice, book, name).firstNotNullOfOrNull { u ->
+            runCatching { open(URL(u)) }.onFailure { e ->
+                lastError = e.toString().take(160)
+                if (u.startsWith(r2 ?: "-") && e is javax.net.ssl.SSLException) r2Blocked = true
+            }.getOrNull()
+        } ?: run { lastError = "no source ($name) · $lastError"; android.util.Log.w("Narration", "no source for $name (${bases.joinToString()})"); return false }
         var n = 0
         ZipInputStream(conn.inputStream.buffered()).use { z ->
             while (true) {

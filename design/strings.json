@@ -684,5 +684,19 @@
   "set_write": {"en": "Writing", "ko": "쓰기와 꾸미기"},
   "set_alerts": {"en": "Reminders", "ko": "알림"},
   "set_keep": {"en": "Records & backup", "ko": "기록과 보관"},
-  "set_help": {"en": "Lifetime pass & help", "ko": "평생권과 도움"}
+  "set_help": {"en": "Lifetime pass & help", "ko": "평생권과 도움"},
+  "cancel": {"en": "Cancel", "ko": "취소"},
+  "lang_confirm_title": {"en": "Change the language?", "ko": "언어를 바꿀까요?"},
+  "lang_confirm_body": {"en": "The app will reopen in the new language, with the Bible text and narrating voice to match. What you've written in each language stays.", "ko": "앱이 새 언어로 다시 열려요. 성경 본문과 낭독 목소리도 함께 바뀌고, 언어마다 쓴 기록은 그대로 남아요."},
+  "lang_confirm_go": {"en": "Change and reopen", "ko": "바꾸고 다시 열기"},
+  "premium_tag": {"en": "Lifetime", "ko": "평생권"},
+  "lifetime_card_line": {"en": "All 66 books to write out · every engraving · My Bible PDF · brush pen and pencil · your-voice audiobook", "ko": "66권 모두 옮겨 쓰기 · 판화 모두 · 나의 성경 PDF · 붓펜 · 연필 · 내 목소리 오디오북"},
+  "lifetime_card_go": {"en": "One payment, for good · %1$s ›", "ko": "한 번 결제로 평생 · %1$s ›"},
+  "lifetime_price_hint": {"en": "see price", "ko": "가격 보기"},
+  "type_fix_hint": {"en": "Red letter: delete it and type it again", "ko": "빨간 글자를 지우고 다시 써 주세요"},
+  "lang_ko_short": {"en": "한국어", "ko": "한국어"},
+  "lang_en_short": {"en": "English", "ko": "English"},
+  "set_write_sum": {"en": "Daily amount · name · pen · stamp · cover", "ko": "하루 분량 · 이름 · 펜 · 도장 · 표지"},
+  "set_keep_sum": {"en": "Recordings · Google Drive backup", "ko": "녹음 · 구글 드라이브 보관"},
+  "set_help_sum": {"en": "Lifetime pass · feedback · guide again", "ko": "평생권 · 의견 보내기 · 안내 다시 보기"}
 }

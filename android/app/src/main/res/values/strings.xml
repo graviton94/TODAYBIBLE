@@ -687,4 +687,18 @@
     <string name="set_alerts">Reminders</string>
     <string name="set_keep">Records &amp; backup</string>
     <string name="set_help">Lifetime pass &amp; help</string>
+    <string name="cancel">Cancel</string>
+    <string name="lang_confirm_title">Change the language?</string>
+    <string name="lang_confirm_body">The app will reopen in the new language, with the Bible text and narrating voice to match. What you\'ve written in each language stays.</string>
+    <string name="lang_confirm_go">Change and reopen</string>
+    <string name="premium_tag">Lifetime</string>
+    <string name="lifetime_card_line">All 66 books to write out · every engraving · My Bible PDF · brush pen and pencil · your-voice audiobook</string>
+    <string name="lifetime_card_go">One payment, for good · %1$s ›</string>
+    <string name="lifetime_price_hint">see price</string>
+    <string name="type_fix_hint">Red letter: delete it and type it again</string>
+    <string name="lang_ko_short">한국어</string>
+    <string name="lang_en_short">English</string>
+    <string name="set_write_sum">Daily amount · name · pen · stamp · cover</string>
+    <string name="set_keep_sum">Recordings · Google Drive backup</string>
+    <string name="set_help_sum">Lifetime pass · feedback · guide again</string>
 </resources>

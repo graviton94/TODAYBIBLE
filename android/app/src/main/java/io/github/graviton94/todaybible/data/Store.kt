@@ -164,6 +164,13 @@ class Store(val context: Context) {
         get() = prefs.getBoolean("contrast", false)
         set(v) = prefs.edit().putBoolean("contrast", v).apply()
     /** 밤 필사: 밤 9시 ~ 새벽 5시에 촛불빛 화면. */
+    /** 다시 열 때 여는 순간을 한 번 건너뛸지 (언어를 바꾼 뒤). 읽으면 지워요. */
+    var skipIntroOnce: Boolean
+        get() = prefs.getBoolean("skip_intro", false)
+        set(v) = prefs.edit().putBoolean("skip_intro", v).commit().let { }
+    /** 바로 디스크에 (앱을 곧 닫을 때: apply 로 미뤄 둔 것까지). */
+    fun flush() { prefs.edit().commit() }
+    fun consumeSkipIntro(): Boolean = skipIntroOnce.also { if (it) skipIntroOnce = false }
     /** 앱 언어: system · ko · en. */
     var language: String
         get() = prefs.getString("language", "system")!!

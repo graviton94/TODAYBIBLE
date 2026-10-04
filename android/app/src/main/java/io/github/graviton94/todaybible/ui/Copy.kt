@@ -193,6 +193,8 @@ private fun WritePage(s: AppState, verse: Int?) {
         }
     }
     fun write() { focus.requestFocus(); keyboard?.show() }
+    // 틀린 글자 뒤에 더 치려 하면: 빨간 칸을 지우라는 한 줄
+    var fixHint by remember(s.book, s.chapter, verse) { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize()) {
         if (shown == null) Box(Modifier.padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) { ChapterDoneNote(s) }
@@ -207,10 +209,21 @@ private fun WritePage(s: AppState, verse: Int?) {
         // 숨은 입력칸: 붙여넣기 · 자동완성으로 한꺼번에 들어온 글은 받지 않음 (한 자씩 옮겨 쓰기)
         BasicTextField(
             value = value,
-            onValueChange = { nv -> if (sealing == null && nv.text.length - value.text.length <= 3) value = nv },
+            onValueChange = { nv ->
+                if (sealing == null && nv.text.length - value.text.length <= 3) {
+                    // 틀린 글자가 있으면 그 뒤로는 더 받지 않아요: 바로 그 자리에서 지우고 고치게 (지우기 · 띄어쓰기는 받음)
+                    val wrongNow = TypeJudge.marks(source, value.text).any { it == TypeJudge.Mark.WRONG }
+                    val adding = TypeJudge.letters(nv.text).length > TypeJudge.letters(value.text).length
+                    if (wrongNow && adding) { haptic.performHapticFeedback(HapticFeedbackType.LongPress); fixHint = true }
+                    else { value = nv; if (!TypeJudge.marks(source, nv.text).any { it == TypeJudge.Mark.WRONG }) fixHint = false }
+                }
+            },
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None),
             modifier = Modifier.size(Tokens.Size.hiddenField).alpha(0f).focusRequester(focus).onFocusChanged { focused = it.isFocused },
         )
+        if (fixHint && marks.any { it == TypeJudge.Mark.WRONG }) Text(stringResource(R.string.type_fix_hint),
+            style = Theme.label().copy(color = c.leatherInk, textAlign = androidx.compose.ui.text.style.TextAlign.Center),
+            modifier = Modifier.align(Alignment.TopCenter).padding(Tokens.Space.s3).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.rubric).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s2))
         // 쓰기 시작: 키보드가 닫혀 있을 때만 아래 띠로
         if (!focused && shown != null) Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(c.leaf)
             .drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }

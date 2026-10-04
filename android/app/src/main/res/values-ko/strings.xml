@@ -687,4 +687,18 @@
     <string name="set_alerts">알림</string>
     <string name="set_keep">기록과 보관</string>
     <string name="set_help">평생권과 도움</string>
+    <string name="cancel">취소</string>
+    <string name="lang_confirm_title">언어를 바꿀까요?</string>
+    <string name="lang_confirm_body">앱이 새 언어로 다시 열려요. 성경 본문과 낭독 목소리도 함께 바뀌고, 언어마다 쓴 기록은 그대로 남아요.</string>
+    <string name="lang_confirm_go">바꾸고 다시 열기</string>
+    <string name="premium_tag">평생권</string>
+    <string name="lifetime_card_line">66권 모두 옮겨 쓰기 · 판화 모두 · 나의 성경 PDF · 붓펜 · 연필 · 내 목소리 오디오북</string>
+    <string name="lifetime_card_go">한 번 결제로 평생 · %1$s ›</string>
+    <string name="lifetime_price_hint">가격 보기</string>
+    <string name="type_fix_hint">빨간 글자를 지우고 다시 써 주세요</string>
+    <string name="lang_ko_short">한국어</string>
+    <string name="lang_en_short">English</string>
+    <string name="set_write_sum">하루 분량 · 이름 · 펜 · 도장 · 표지</string>
+    <string name="set_keep_sum">녹음 · 구글 드라이브 보관</string>
+    <string name="set_help_sum">평생권 · 의견 보내기 · 안내 다시 보기</string>
 </resources>

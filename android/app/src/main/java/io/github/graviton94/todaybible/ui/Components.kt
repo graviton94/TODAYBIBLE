@@ -27,6 +27,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
+import io.github.graviton94.todaybible.R
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -240,6 +242,33 @@ fun StampMark(mark: String, color: Color, modifier: Modifier = Modifier) {
 }
 
 /** 자물쇠 (가는 선): 평생권으로 열리는 권 표시. */
+@Composable
+/** 평생권 안내 칸 (오늘 화면 아래 · 설정 맨 위): 가죽 바탕에 금박, 무엇이 열리는지 한 줄 · 누르면 평생권 화면. */
+@Composable
+fun LifetimeCard(s: AppState, modifier: Modifier = Modifier) {
+    if (s.lifetime.owned) return
+    val c = Theme.c
+    Column(modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leather).drawBehind { giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = true) }
+        .clickable(role = Role.Button) { s.purchaseOpen = true }.padding(Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            LockMark(c.gilt, Modifier.size(Tokens.Size.lock))
+            Text(stringResource(R.string.lifetime), style = Theme.title(s.korean).copy(color = c.gilt), maxLines = 1)
+        }
+        Text(stringResource(R.string.lifetime_card_line), style = Theme.small().copy(color = c.leatherInk))
+        Text(stringResource(R.string.lifetime_card_go, s.lifetime.price ?: stringResource(R.string.lifetime_price_hint)), style = Theme.label().copy(color = c.leatherInk), maxLines = 1)
+    }
+}
+
+/** 평생권 표시: 금빛 자물쇠 + ‘평생권’. 누르면 평생권 화면 (onClick 이 있으면). */
+@Composable
+fun PremiumTag(modifier: Modifier = Modifier) {
+    val c = Theme.c
+    Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+        LockMark(c.giltText, Modifier.size(Tokens.Size.lock))
+        Text(stringResource(R.string.premium_tag), style = Theme.small().copy(color = c.giltText), maxLines = 1)
+    }
+}
+
 @Composable
 fun LockMark(color: Color, modifier: Modifier = Modifier) {
     Box(modifier.drawBehind {

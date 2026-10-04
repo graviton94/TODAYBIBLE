@@ -37,7 +37,7 @@ class AppState(val store: Store) {
     /** 켤 때 표지 넘김 (처음 소개 뒤로는 매번). */
     /** 여는 순간: 켤 때마다 (동작 줄이기를 켠 폰은 빼고). 하루 첫 열기면 표지 넘김, 아니면 금박 새김. */
     var firstOfDay = store.openedDay != java.time.LocalDate.now().toEpochDay()
-    var opening by mutableStateOf(android.provider.Settings.Global.getFloat(store.context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f)
+    var opening by mutableStateOf(!store.consumeSkipIntro() && android.provider.Settings.Global.getFloat(store.context.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f)
     var dailyGoal by mutableStateOf(store.dailyGoal)
     var notebook by mutableStateOf(store.notebook)
     /** 크게 보는 판화. */
@@ -274,6 +274,13 @@ class AppState(val store: Store) {
     fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t; checkNight(); widgets() }
     /** 언어 (시스템 · ko · en): 화면 글 · 성경 번역 · 낭독 목소리를 한 번에. 화면 글은 다시 그릴 때 (recreate) 바뀌어요. */
     var language by mutableStateOf(store.language)
+    /** 앱을 처음부터 다시 (언어처럼 화면 전체가 바뀌는 설정 뒤에). 여는 순간은 이번만 건너뛰어요. */
+    fun restartApp(a: android.app.Activity) {
+        store.skipIntroOnce = true; store.flush()
+        a.startActivity(android.content.Intent(a, io.github.graviton94.todaybible.MainActivity::class.java)
+            .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK))
+        a.finishAffinity(); Runtime.getRuntime().exit(0)
+    }
     fun chooseLanguage(l: String) {
         language = l; store.language = l
         Lang.applyAppLocale(store.context, l)
@@ -350,6 +357,10 @@ class AppState(val store: Store) {
         return io.github.graviton94.todaybible.core.Plans.perDay(total, doneBefore, left).coerceAtLeast(1)
     }
     /** 평생권이 있어야 하는데 없는 상태 (Play 에 닿을 때만 잠금). */
+    /** 평생권으로 열리는 권인지 (보여 주기용: 결제를 쓸 수 없는 시험판에서도 표시). */
+    fun premium(b: Int) = b !in Canon.free && !lifetime.owned
+    /** 평생권 기능 표시 (붓펜 · 연필 · 표지 · PDF · 녹음 …). */
+    val premiumOn: Boolean get() = !lifetime.owned
     fun gated() = !lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)
     fun toggleVoice() { if (gated()) { purchaseOpen = true; return }; voiceOn = !voiceOn; store.voiceOn = voiceOn }
     fun chooseCover(c: String) { cover = c; store.cover = c }

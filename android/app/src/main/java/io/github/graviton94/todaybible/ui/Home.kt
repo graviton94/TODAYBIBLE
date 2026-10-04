@@ -118,6 +118,8 @@ fun HomePage(s: AppState) {
                 style = Theme.label().copy(color = c.rubric), modifier = Modifier.fillMaxWidth().heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.choosePlan(id) })
         }
         MyBookCard(s)
+        // 평생권: 아직이면 무엇이 열리는지 한 칸
+        LifetimeCard(s)
         if (s.plan != null) PlanCard(s)
         // 다음 판화
         s.nextPlate()?.let { (pl, left) ->
@@ -209,7 +211,7 @@ fun PlanSheet(s: AppState) {
                     Text(planName(ctx, pl.id), style = Theme.body(), maxLines = 1)
                     Text(stringResource(R.string.plan_rate, (verses + pl.days - 1) / pl.days, pl.days), style = Theme.small(), maxLines = 1)
                 }
-                if (pl.books.any { s.locked(it) }) LockMark(c.unwritten, Modifier.size(Tokens.Size.lock))
+                if (pl.books.any { s.premium(it) }) PremiumTag()
                 else if (on) Box(Modifier.size(Tokens.Size.dot).clip(androidx.compose.foundation.shape.CircleShape).background(c.rubric))
             }
         }
