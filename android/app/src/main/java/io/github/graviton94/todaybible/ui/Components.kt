@@ -241,8 +241,6 @@ fun StampMark(mark: String, color: Color, modifier: Modifier = Modifier) {
     Box(modifier.drawBehind { stamp(mark, color) })
 }
 
-/** 자물쇠 (가는 선): 평생권으로 열리는 권 표시. */
-@Composable
 /** 평생권 안내 칸 (오늘 화면 아래 · 설정 맨 위): 가죽 바탕에 금박, 무엇이 열리는지 한 줄 · 누르면 평생권 화면. */
 @Composable
 fun LifetimeCard(s: AppState, modifier: Modifier = Modifier) {

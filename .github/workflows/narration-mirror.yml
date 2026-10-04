@@ -33,5 +33,16 @@ jobs:
         run: |
           T="narr-${{ matrix.voice }}-${{ matrix.part }}"
           gh release view "$T" -R "${{ github.repository }}" >/dev/null 2>&1 || gh release create "$T" -R "${{ github.repository }}" --title "낭독 ${{ matrix.voice }} ${{ matrix.part }}" --notes "앱 낭독 음원 (R2 와 같은 파일)" --latest=false
-          ls z/*.zip | xargs -n 100 gh release upload "$T" -R "${{ github.repository }}" --clobber
+          # 이미 올라간 것은 건너뛰고, 50개씩 (막히면 잠깐 쉬고 다시)
+          for round in 1 2 3 4 5 6; do
+            gh release view "$T" -R "${{ github.repository }}" --json assets --jq '.assets[].name' | sort > have.txt
+            (cd z && ls *.zip | sort) > want.txt
+            comm -23 want.txt have.txt > todo.txt
+            echo "round $round: $(wc -l < todo.txt) to upload"
+            [ -s todo.txt ] || break
+            split -l 50 todo.txt part_
+            for f in part_*; do (cd z && xargs gh release upload "$T" -R "${{ github.repository }}" --clobber < "../$f") || sleep 60; sleep 5; done
+            rm -f part_*
+          done
+          [ ! -s todo.txt ] || { echo "::error::still missing $(wc -l < todo.txt)"; exit 1; }
           echo "assets: $(gh release view "$T" -R "${{ github.repository }}" --json assets --jq '.assets | length')"
