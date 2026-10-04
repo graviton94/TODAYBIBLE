@@ -180,13 +180,11 @@ object Cards {
     }
 
     /** 그림을 저장해 나누기 창 열기 (FileProvider, 캐시 폴더). */
-    fun share(ctx: Context, bmp: Bitmap, name: String) {
+    fun share(s: AppState, ctx: Context, bmp: Bitmap, name: String) {
         val dir = File(ctx.cacheDir, "share").apply { mkdirs() }
         val f = File(dir, "$name.png")
         f.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", f)
-        val send = Intent(Intent.ACTION_SEND).setType("image/png").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        ctx.startActivity(Intent.createChooser(send, null).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        s.exportJob = ExportJob(listOf(f), "image/png", ctx.getString(io.github.graviton94.todaybible.R.string.export_title_card))
     }
 
 }

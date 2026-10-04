@@ -129,6 +129,10 @@ class Store(val context: Context) {
     var postedDay: Long
         get() = prefs.getLong("posted_day", -1)
         set(v) = prefs.edit().putLong("posted_day", v).apply()
+    /** 내보내기 메일의 받는 사람 (이 폰에만). */
+    var mailTo: String
+        get() = prefs.getString("mail_to", "").orEmpty()
+        set(v) = prefs.edit().putString("mail_to", v).apply()
     var coachSeen: Set<String>
         get() = prefs.getString("coach_seen", "").orEmpty().split(',').filter { it.isNotBlank() }.toSet()
         set(v) = prefs.edit().putString("coach_seen", v.joinToString(",")).apply()

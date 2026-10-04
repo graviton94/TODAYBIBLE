@@ -85,7 +85,7 @@ fun PlatePage(s: AppState, p: Plate) {
             Text(if (k) p.byKo else p.byEn, style = Theme.small())
             if (n < Pieces.COUNT) BookButton(stringResource(R.string.continue_at, s.bookName(p.book), p.chapter), Modifier.fillMaxWidth()) { s.plateView = null; s.open(p.book, p.chapter) }
             else BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
-                Cards.share(ctx, Cards.plate(ctx, k, p.id, if (k) p.ko else p.en, if (k) "${s.bookName(p.book)} ${p.chapter}장" else "${s.bookName(p.book)} ${p.chapter}"), "plate")
+                Cards.share(s, ctx, Cards.plate(ctx, k, p.id, if (k) p.ko else p.en, if (k) "${s.bookName(p.book)} ${p.chapter}장" else "${s.bookName(p.book)} ${p.chapter}"), "plate")
             }
         }
     }

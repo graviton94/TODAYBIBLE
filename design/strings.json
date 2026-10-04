@@ -511,5 +511,17 @@
   "coach_hand_buttons": {"en": "Undo takes back a stroke. When the page is full, go to the next page; at the end tap Done.", "ko": "되돌리기는 한 획 지워요. 한 쪽을 채우면 ‘다음 쪽’, 다 쓰면 ‘다 썼어요’."},
   "coach_rec_calendar": {"en": "Switch between month and year. Tap a stamped day to see what you wrote.", "ko": "월 · 해로 바꿔 봐요. 도장 찍힌 날을 누르면 그날 쓴 절이 보여요."},
   "coach_rec_plates": {"en": "The picture book (화첩): finish a chapter and a picture appears piece by piece.", "ko": "화첩: 장을 쓸 때마다 그 장의 그림이 한 조각씩 드러나요."},
-  "coach_rec_miles": {"en": "Footsteps (발자취): marks you receive for days in a row and books finished.", "ko": "발자취: 이어 쓴 날, 마친 권마다 받는 표지예요."}
+  "coach_rec_miles": {"en": "Footsteps (발자취): marks you receive for days in a row and books finished.", "ko": "발자취: 이어 쓴 날, 마친 권마다 받는 표지예요."},
+  "export_save": {"en": "Save to this phone", "ko": "이 폰에 저장"},
+  "export_mail": {"en": "Send by email", "ko": "메일로 보내기"},
+  "export_share": {"en": "Send with another app", "ko": "다른 앱으로 보내기 (카카오톡 등)"},
+  "export_mail_to": {"en": "Email to (remembered on this phone only)", "ko": "받는 사람 메일 (이 폰에만 기억해요)"},
+  "export_mail_hint": {"en": "name@example.com", "ko": "예: family@example.com"},
+  "export_saved": {"en": "Saved in Downloads › %1$s", "ko": "다운로드 › %1$s 폴더에 저장했어요"},
+  "export_failed": {"en": "Couldn't save. Try sending it instead.", "ko": "저장하지 못했어요. 보내기를 써 보세요."},
+  "export_no_mail": {"en": "No email app found on this phone.", "ko": "이 폰에 메일 앱이 없어요."},
+  "export_title_pdf": {"en": "My Bible · %1$s", "ko": "나의 성경 · %1$s"},
+  "export_title_notes": {"en": "My handwriting", "ko": "나의 손글씨"},
+  "export_title_voice": {"en": "My reading · %1$s %2$d", "ko": "나의 낭독 · %1$s %2$d장"},
+  "export_title_card": {"en": "A card from 하루의 성경", "ko": "하루의 성경 카드"}
 }

@@ -727,7 +727,7 @@ fun ShareVerseSheet(s: AppState, at: VerseKey) {
         Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             val key = at
             BookButton(stringResource(if (s.isMarked(key)) R.string.mark_off else R.string.mark_on), Modifier.weight(1f), quiet = true) { s.toggleMark(key) }
-            BookButton(stringResource(R.string.share), Modifier.weight(1f)) { Cards.share(ctx, bmp, "verse"); s.shareVerse = null }
+            BookButton(stringResource(R.string.share), Modifier.weight(1f)) { Cards.share(s, ctx, bmp, "verse"); s.shareVerse = null }
         }
     }
 }
@@ -788,11 +788,7 @@ private fun VoiceRow(s: AppState) {
                     Voice.exportVideo(frames, parts.map { it.second }, out).also { frames.forEach { it.first.recycle() } }
                 }
             } } finally { s.exporting = false }
-            if (ok) {
-                val uri = androidx.core.content.FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", out)
-                val send = Intent(Intent.ACTION_SEND).setType(if (video) "video/mp4" else "audio/mp4").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                ctx.startActivity(Intent.createChooser(send, null))
-            }
+            if (ok) s.exportJob = ExportJob(listOf(out), if (video) "video/mp4" else "audio/mp4", ctx.getString(R.string.export_title_voice, s.bookName(), s.chapter))
         }
     }
     Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s4).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s4),
@@ -829,10 +825,7 @@ private fun VoiceRow(s: AppState) {
                 } } finally { s.exporting = false }
                 if (card == null) return@launch
                 val img = java.io.File(ctx.cacheDir, "share/$name.png").also { f -> f.outputStream().use { card.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) } }
-                fun uri(f: java.io.File) = androidx.core.content.FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", f)
-                val send = Intent(Intent.ACTION_SEND_MULTIPLE).setType("*/*").putParcelableArrayListExtra(Intent.EXTRA_STREAM, arrayListOf(uri(img), uri(audio)))
-                    .putExtra(Intent.EXTRA_TEXT, title).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                ctx.startActivity(Intent.createChooser(send, null))
+                s.exportJob = ExportJob(listOf(img, audio), "*/*", title)
             }
         }
         if (s.exporting) Text(stringResource(R.string.exporting), style = Theme.small())

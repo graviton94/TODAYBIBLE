@@ -514,4 +514,16 @@
     <string name="coach_rec_calendar">Switch between month and year. Tap a stamped day to see what you wrote.</string>
     <string name="coach_rec_plates">The picture book (화첩): finish a chapter and a picture appears piece by piece.</string>
     <string name="coach_rec_miles">Footsteps (발자취): marks you receive for days in a row and books finished.</string>
+    <string name="export_save">Save to this phone</string>
+    <string name="export_mail">Send by email</string>
+    <string name="export_share">Send with another app</string>
+    <string name="export_mail_to">Email to (remembered on this phone only)</string>
+    <string name="export_mail_hint">name@example.com</string>
+    <string name="export_saved">Saved in Downloads › %1$s</string>
+    <string name="export_failed">Couldn\'t save. Try sending it instead.</string>
+    <string name="export_no_mail">No email app found on this phone.</string>
+    <string name="export_title_pdf">My Bible · %1$s</string>
+    <string name="export_title_notes">My handwriting</string>
+    <string name="export_title_voice">My reading · %1$s %2$d</string>
+    <string name="export_title_card">A card from 하루의 성경</string>
 </resources>

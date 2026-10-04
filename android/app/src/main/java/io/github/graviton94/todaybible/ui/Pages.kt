@@ -131,19 +131,20 @@ fun Root(s: AppState) {
         s.shareVerse?.let { v -> ShareVerseSheet(s, v) }
         s.handBook?.let { b -> HandBookView(s, b) }
         if (s.marksOpen) MarksSheet(s)
+        s.exportJob?.let { ExportSheet(s, it) }
         s.plateView?.let { pl -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PlatePage(s, pl) } }
         // 나의 성경 PDF: 만들어서 나누기 창으로
         val ctx = androidx.compose.ui.platform.LocalContext.current
         LaunchedEffect(s.pdfBook) {
             val b = s.pdfBook ?: return@LaunchedEffect
             val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { MyBible.make(ctx, s.store, s.translation, b) }.getOrNull() }
-            s.pdfBook = null; f?.let { MyBible.share(ctx, it) }
+            s.pdfBook = null; f?.let { s.exportJob = ExportJob(listOf(it), "application/pdf", ctx.getString(R.string.export_title_pdf, s.bookName(b))) }
         }
         if (s.planOpen) PlanSheet(s)
         LaunchedEffect(s.notesBook) {
             val b = s.notesBook ?: return@LaunchedEffect
             val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { MyBible.notes(ctx, s.store, s.translation, b.takeIf { it >= 0 }) }.getOrNull() }
-            s.notesBook = null; f?.let { MyBible.share(ctx, it) }
+            s.notesBook = null; f?.let { s.exportJob = ExportJob(listOf(it), "application/pdf", ctx.getString(R.string.export_title_notes)) }
         }
         s.picker?.let { b -> BookSheet({ s.picker = null; s.pickToRead = false }) { ChapterGrid(s, b) { ch -> s.picker = null; if (s.pickToRead) s.read(b, ch) else s.open(b, ch); s.pickToRead = false } } }
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }

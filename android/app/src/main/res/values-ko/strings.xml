@@ -514,4 +514,16 @@
     <string name="coach_rec_calendar">월 · 해로 바꿔 봐요. 도장 찍힌 날을 누르면 그날 쓴 절이 보여요.</string>
     <string name="coach_rec_plates">화첩: 장을 쓸 때마다 그 장의 그림이 한 조각씩 드러나요.</string>
     <string name="coach_rec_miles">발자취: 이어 쓴 날, 마친 권마다 받는 표지예요.</string>
+    <string name="export_save">이 폰에 저장</string>
+    <string name="export_mail">메일로 보내기</string>
+    <string name="export_share">다른 앱으로 보내기 (카카오톡 등)</string>
+    <string name="export_mail_to">받는 사람 메일 (이 폰에만 기억해요)</string>
+    <string name="export_mail_hint">예: family@example.com</string>
+    <string name="export_saved">다운로드 › %1$s 폴더에 저장했어요</string>
+    <string name="export_failed">저장하지 못했어요. 보내기를 써 보세요.</string>
+    <string name="export_no_mail">이 폰에 메일 앱이 없어요.</string>
+    <string name="export_title_pdf">나의 성경 · %1$s</string>
+    <string name="export_title_notes">나의 손글씨</string>
+    <string name="export_title_voice">나의 낭독 · %1$s %2$d장</string>
+    <string name="export_title_card">하루의 성경 카드</string>
 </resources>

@@ -131,6 +131,8 @@ class AppState(val store: Store) {
     var pickToRead by mutableStateOf(false)
     /** 책갈피 · 형광펜 모아 보기. */
     var marksOpen by mutableStateOf(false)
+    /** 내보내기 창 (저장 · 메일 · 다른 앱). */
+    var exportJob by mutableStateOf<ExportJob?>(null)
     var bookmarks by mutableStateOf(store.loadBookmarks())
     /** 필사의 지금 탭 (첫 안내가 어느 화면인지 알게). */
     var copyTabNow by mutableIntStateOf(store.copyTab)
