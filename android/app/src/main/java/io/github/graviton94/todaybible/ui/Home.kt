@@ -67,7 +67,7 @@ fun HomePage(s: AppState) {
         if (s.ownerName.isNotBlank()) {
             val h = java.time.LocalTime.now().hour
             Text(stringResource(when { h in 4..11 -> R.string.hi_morning; h in 12..17 -> R.string.hi_day; else -> R.string.hi_evening }, s.ownerName),
-                style = Theme.title(k), maxLines = 1)
+                style = Theme.title(k), maxLines = 2)
         }
         // 오늘의 장: 길잡이가 있으면 길잡이의 다음 장, 없으면 쓰던 장
         val pn = s.planNext()

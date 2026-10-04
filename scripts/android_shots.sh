@@ -92,12 +92,12 @@ open --ez tb.seed true --es tb.find 목자;                            shot g01_
 open --es tb.memory "19:23:1" --ez tb.memoryOpen true;             shot g02_memory 4
 open --es tb.memory "19:23:1" --ez tb.memoryOpen true --ei tb.memoryLevel 1; shot g03_memory_initials 4
 open --es tb.memory "19:23:1" --ez tb.memoryOpen true --ei tb.memoryLevel 2; shot g04_memory_blank 4
-open --es tb.today 2026-10-04 --es tb.sermon "요 3:16-21|세상을 사랑하신 마음을 다시 생각했어요. 이번 주는 가족에게 먼저 연락하기.";  shot g05_today_sunday 5
+open --es tb.today 2026-10-04 --es tb.sermon "'요 3:16-21|세상을 사랑하신 마음을 다시 생각했어요. 이번 주는 가족에게 먼저 연락하기.'";  shot g05_today_sunday 5
 swipe_up;                                                          shot g06_today_sunday_more 2
 open --es tb.today 2026-10-04 --ez tb.sermonOpen true;             shot g07_sermon_sheet 4
 open --ei tb.page 3;                                               shot g08_record_shelf 5
 swipe_up;                                                          shot g09_record_scroll 2
-open --es tb.finished 1:7 --es tb.reflect "물이 걷히고 다시 시작하게 하시는 분";
+open --es tb.finished 1:7 --es tb.reflect "'물이 걷히고 다시 시작하게 하시는 분'";
 adb shell input tap 540 1810; sleep 3; swipe_up;                   shot g10_finished_reflect 2
 open --es tb.listen "41:3" --ez tb.listenPlay true;                shot g11_listen_controls 6
 adb shell am startservice -a stop -n $P/.data.ListenService >/dev/null 2>&1 || true

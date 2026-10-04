@@ -79,7 +79,7 @@ fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = fal
             .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = Theme.label().copy(color = if (quiet) c.ink else if (enabled) c.leatherInk else c.inkSoft, textAlign = TextAlign.Center), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(text, style = Theme.label().copy(color = if (quiet) c.ink else if (enabled) c.leatherInk else c.inkSoft, textAlign = TextAlign.Center), maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -156,7 +156,7 @@ fun UnderlineTabs(items: List<String>, selected: Int, modifier: Modifier = Modif
                     drawRect(if (on) c.rubric else c.hair, Offset(0f, size.height - h), androidx.compose.ui.geometry.Size(size.width, h))
                 },
                 contentAlignment = Alignment.Center,
-            ) { Text(s, style = Theme.label().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1) }
+            ) { Text(s, style = Theme.label().copy(color = if (on) c.ink else c.inkSoft, textAlign = TextAlign.Center), maxLines = 2, modifier = Modifier.padding(horizontal = Tokens.Space.s1)) }
         }
     }
 }

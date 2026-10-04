@@ -58,10 +58,8 @@ fun BookShelf(s: AppState) {
     val done = frac.count { it >= 1f }; val going = frac.count { it > 0f && it < 1f }
     val summary = stringResource(R.string.shelf_line, done, going)
     Column(Modifier.fillMaxWidth().semantics { contentDescription = summary }, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-            Text(stringResource(R.string.shelf_title), style = Theme.title(s.korean, Tokens.Text.title), maxLines = 1, modifier = Modifier.weight(1f))
-            Text(summary, style = Theme.small(), maxLines = 1)
-        }
+        Text(stringResource(R.string.shelf_title), style = Theme.title(s.korean, Tokens.Text.title), maxLines = 1)
+        Text(summary, style = Theme.small(), maxLines = 2)
         Shelf(s, 0 until 39, frac, c)
         Shelf(s, 39 until 66, frac, c)
     }
@@ -79,7 +77,7 @@ private fun Shelf(s: AppState, books: IntRange, frac: FloatArray, c: Palette) {
         val floor = size.height - board
         drawRect(c.leather, Offset(0f, floor), Size(size.width, board))
         for ((i, b) in books.withIndex()) {
-            val h = floor * (Tokens.Ratio.spineMin + (1f - Tokens.Ratio.spineMin) * Canon.books[b].chapters / maxCh.toFloat())
+            val h = floor * (Tokens.Ratio.spineMin + (1f - Tokens.Ratio.spineMin) * kotlin.math.sqrt(Canon.books[b].chapters / maxCh.toFloat()))
             spine(Offset(i * slot + gap / 2, floor - h), Size(slot - gap, h), frac[b], c)
         }
     }
@@ -97,7 +95,7 @@ private fun DrawScope.spine(at: Offset, size: Size, f: Float, c: Palette) {
         drawRect(c.gilt, Offset(at.x, at.y + size.height - inset - band), Size(size.width, band))
     } else {
         drawRoundRect(c.paper, at, size, r)
-        if (f > 0f) { val fh = size.height * f.coerceAtLeast(0.04f); drawRect(c.gilt, Offset(at.x, at.y + size.height - fh), Size(size.width, fh)) }
+        if (f > 0f) { val fh = size.height * f.coerceAtLeast(0.1f); drawRect(c.gilt, Offset(at.x, at.y + size.height - fh), Size(size.width, fh)) }
         drawRoundRect(c.hair, at, size, r, style = Stroke(Tokens.Stroke.hair.toPx()))
     }
 }
