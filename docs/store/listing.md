@@ -39,13 +39,13 @@
 
 ## English (United States, and other English-speaking countries except the UK)
 
-**App name:** Today Bible – Read Aloud & Copy Scripture
+**App name:** Bible by Hand – Read Aloud & Copy Scripture
 
 **Short description:** One chapter a day: read it aloud, type it and write it by hand into your own Bible.
 
 **Full description:**
 
-Today Bible helps you make a whole Bible your own, one chapter a day, by reading it aloud, typing it into manuscript squares and writing it by hand.
+Bible by Hand helps you make a whole Bible your own, one chapter a day, by reading it aloud, typing it into manuscript squares and writing it by hand.
 
 ■ Three ways to copy
 · Read aloud: follow the light across the words and the verse fills as you read. Responsive reading lets a reading voice and you take turns, verse by verse.

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
-    <string name="app_name">Today Bible</string>
+    <string name="app_name">Bible by Hand</string>
     <string name="page_library">Bible</string>
-    <string name="page_copy">Copy</string>
+    <string name="page_copy">Write</string>
     <string name="page_record">Progress</string>
     <string name="settings">Settings</string>
     <string name="my_bible">My Bible</string>
@@ -103,7 +103,7 @@
     <string name="benefit_books">All 66 books · 1,189 chapters</string>
     <string name="benefit_plates">Every engraving in the album</string>
     <string name="benefit_once">Pay once, keep it for life</string>
-    <string name="free_books">Genesis, Psalms, Proverbs and Mark are free</string>
+    <string name="free_books">Genesis, Psalms, Proverbs, Mark and John are free</string>
     <string name="buy_lifetime">Get Lifetime · %1$s</string>
     <string name="restore">Restore purchase</string>
     <string name="not_ready">Purchases aren\'t available here yet</string>
@@ -111,7 +111,7 @@
     <string name="pay_note">Paid through Google Play</string>
     <string name="share_verse">Share this verse</string>
     <string name="widget_name">Today\'s verse</string>
-    <string name="widget_desc">The next verse to copy and this week\'s stamps</string>
+    <string name="widget_desc">The next verse to write out and this week\'s stamps</string>
     <string name="widget_empty">Open the app to begin</string>
     <string name="page_today">Today</string>
     <string name="day_n">Day %1$d</string>
@@ -357,7 +357,7 @@
     <string name="feedback_send">Send by text or another app…</string>
     <string name="feedback_bad_label">[Hard or confusing]</string>
     <string name="feedback_good_label">[What I liked]</string>
-    <string name="feedback_subject">Today Bible feedback</string>
+    <string name="feedback_subject">Bible by Hand feedback</string>
     <string name="mybook">My Bible</string>
     <string name="mybook_named">%1$s\'s Bible</string>
     <string name="mybook_count">%1$s verses copied · %2$s%% of the whole Bible</string>
@@ -382,7 +382,7 @@
     <string name="bookmark_on">Bookmarked %1$s</string>
     <string name="bookmark_off">Bookmark removed from %1$s</string>
     <string name="listen_here">Listen from here</string>
-    <string name="copy_this">Copy this chapter</string>
+    <string name="copy_this">Write out this chapter</string>
     <string name="read_hint">Swipe sideways for the previous or next chapter. Tap a verse to highlight, bookmark or share it.</string>
     <string name="lib_count">%1$d of %2$s verses</string>
     <string name="lib_going">Books you\'re copying</string>
@@ -494,7 +494,7 @@
     <string name="coach_today_card">Today\'s chapter. One chapter a day is the goal, and the bar shows how far you\'ve come.</string>
     <string name="coach_today_go">Continue copying from the verse where you stopped.</string>
     <string name="coach_today_read">Just read or listen to this chapter, without copying.</string>
-    <string name="coach_tabs">Use these tabs to move between Today, Bible, Copy and Progress.</string>
+    <string name="coach_tabs">Use these tabs to move between Today, Bible, Write and Progress.</string>
     <string name="coach_settings">Settings: text size, reminder time, reading voice and more.</string>
     <string name="coach_lib_marks">Your bookmarks and highlights are gathered here.</string>
     <string name="coach_lib_find">Type a reference like "John 3:16" to jump there.</string>
@@ -503,7 +503,7 @@
     <string name="coach_read_text">Tap a verse to highlight, bookmark or share it. Swipe sideways for the next chapter.</string>
     <string name="coach_read_bookmark">Put a bookmark in this chapter.</string>
     <string name="coach_read_listen">Listen to this chapter read aloud. It keeps going with the screen off.</string>
-    <string name="coach_read_copy">Copy this chapter yourself.</string>
+    <string name="coach_read_copy">Write this chapter out yourself.</string>
     <string name="coach_copy_tabs">Three ways to copy: read aloud, type, or write by hand.</string>
     <string name="coach_aloud_modes">Responsive reading: you and the leader\'s voice take turns verse by verse, as in church. On my own: you read every verse.</string>
     <string name="coach_aloud_mic">Tap to begin. Read slowly as the words light up, and the verse is completed. Your voice is recorded only on this phone.</string>
@@ -525,7 +525,7 @@
     <string name="export_title_pdf">My Bible · %1$s</string>
     <string name="export_title_notes">My handwriting</string>
     <string name="export_title_voice">My reading · %1$s %2$d</string>
-    <string name="export_title_card">A card from Today Bible</string>
+    <string name="export_title_card">A card from Bible by Hand</string>
     <string name="colophon">%2$s, copied by hand by %1$s</string>
     <string name="colophon_me">me</string>
     <string name="colophon_named">%1$s</string>
@@ -555,8 +555,8 @@
     <string name="foot_privacy">Privacy policy</string>
     <string name="foot_credits">Sources &amp; licenses</string>
     <string name="foot_contact">Contact</string>
-    <string name="foot_line">Today Bible %1$s · © 2026 graviton94</string>
-    <string name="about_us">Today Bible helps you make the whole Bible your own, one chapter a day — reading it aloud, typing it and writing it by hand. There are no accounts, ads or analytics; what you write stays on your phone. Made by an independent developer for churchgoers of every age.</string>
+    <string name="foot_line">Bible by Hand %1$s · © 2026 graviton94</string>
+    <string name="about_us">Bible by Hand helps you make the whole Bible your own, one chapter a day — reading it aloud, typing it and writing it by hand. There are no accounts, ads or analytics; what you write stays on your phone. Made by an independent developer for churchgoers of every age.</string>
     <string name="about_contact">Questions and suggestions: %1$s</string>
     <string name="credit_text">Bible texts</string>
     <string name="credit_text_d">Korean Revised Version (개역한글, 1961) — its copyright term has ended. King James Version (1611) — public domain (Crown patent in the UK). Texts from the CrossWire SWORD modules.</string>
@@ -620,7 +620,7 @@
     <string name="sermon_passage">Passage</string>
     <string name="sermon_passage_hint">e.g. John 3:16-21</string>
     <string name="sermon_passage_bad">Write it like John 3:16-21.</string>
-    <string name="sermon_copy">Copy this passage</string>
+    <string name="sermon_copy">Write out this passage</string>
     <string name="sermon_note">What stayed with you</string>
     <string name="sermon_note_hint">A few lines are enough</string>
     <string name="shelf_title">My shelf</string>
@@ -632,4 +632,21 @@
     <string name="scroll_like_bus">longer than a bus</string>
     <string name="scroll_like_field">longer than a football field</string>
     <string name="scroll_like_km">over a kilometre</string>
+    <string name="prayer_title">Prayers</string>
+    <string name="prayer_row">Lord\'s Prayer · morning · midday · evening · night</string>
+    <string name="prayer_list_hint">Every prayer here is Scripture, word for word.</string>
+    <string name="prayer_note">Every word here is from Scripture. Pray it slowly, aloud or in your heart.</string>
+    <string name="prayer_lords">The Lord\'s Prayer</string>
+    <string name="prayer_morning">Morning prayer</string>
+    <string name="prayer_noon">Midday prayer</string>
+    <string name="prayer_evening">Evening prayer</string>
+    <string name="prayer_night">Night prayer</string>
+    <string name="prayer_blessing">The priestly blessing</string>
+    <string name="prayer_shepherd">The Lord is my shepherd</string>
+    <string name="prayer_go">Pray ›</string>
+    <string name="prayer_listen">Pray along</string>
+    <string name="prayer_write">Write it out</string>
+    <string name="prayer_amen">Amen</string>
+    <string name="prayer_prayed">Prayed today · Amen</string>
+    <string name="prayer_prayed_short">prayed</string>
 </resources>

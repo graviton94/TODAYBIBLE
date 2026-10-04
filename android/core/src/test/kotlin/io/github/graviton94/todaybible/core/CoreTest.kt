@@ -226,4 +226,16 @@ class CoreTest {
         assertEquals(Reference.Passage(42, 3, 16, 0), Reference.passage("요 3:16-4:2"))
         assertEquals(null, Reference.passage("설교"))
     }
+
+    @Test fun prayersAreWholeVersesInBothTranslations() {
+        for (tr in listOf("krv", "kjv")) for (pr in Prayers.all) for (ps in pr.passages) {
+            val t = book(tr, ps.book)
+            assertTrue(ps.from >= 1 && ps.to >= ps.from && ps.to <= t.verseCount(ps.chapter), "${pr.id} $tr")
+            assertTrue((ps.from..ps.to).all { t.verse(ps.chapter, it).isNotBlank() }, "${pr.id} $tr blank")
+        }
+        assertTrue(book("krv", 39).verse(6, 9).contains("하늘에 계신 우리 아버지여"))
+        assertTrue(book("krv", 18).verse(55, 17).contains("정오"))
+        assertEquals(Hour.MORNING, Prayers.hourAt(6)); assertEquals(Hour.NIGHT, Prayers.hourAt(23)); assertEquals(Hour.NIGHT, Prayers.hourAt(2))
+        assertEquals(4, Hour.entries.count { h -> Prayers.all.any { it.hour == h } })
+    }
 }

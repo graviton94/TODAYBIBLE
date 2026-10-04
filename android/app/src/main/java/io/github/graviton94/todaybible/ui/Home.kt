@@ -95,6 +95,8 @@ fun HomePage(s: AppState) {
         }
         // 이번 주 도장 (주일부터)
         WeekStamps(s)
+        // 지금 때의 기도 (아침 · 낮 · 저녁 · 밤)
+        PrayerCard(s)
         // 주일 설교 노트 (주일이거나 오늘 적은 것이 있으면)
         if (today.dayOfWeek == java.time.DayOfWeek.SUNDAY || s.sermonOn(today.toEpochDay()) != null) SermonCard(s, today.toEpochDay())
         // 마음에 새기는 말씀: 날마다 하나씩 돌아가며 곁에 (누르면 되뇌기)

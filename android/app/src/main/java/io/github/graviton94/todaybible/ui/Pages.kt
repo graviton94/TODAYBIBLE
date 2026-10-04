@@ -134,6 +134,8 @@ fun Root(s: AppState) {
         if (s.found != null) FoundSheet(s)
         if (s.memoryOpen != null) MemorySheet(s)
         if (s.sermonOpen != null) SermonSheet(s)
+        if (s.prayersOpen) PrayersSheet(s)
+        s.prayerOpen?.let { id -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PrayerPage(s, id) } }
         s.exportJob?.let { ExportSheet(s, it) }
         s.plateView?.let { pl -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PlatePage(s, pl) } }
         // 나의 성경 PDF: 만들어서 나누기 창으로
@@ -174,7 +176,7 @@ fun Root(s: AppState) {
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
         // 첫 안내: 덮개 (설정 · 장 마침 · 판화 …) 가 없을 때 지금 화면의 것
         val calm = s.onboarded && !s.opening && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null &&
-            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && s.shareVerse == null && !s.planOpen && !typing && !pager.isScrollInProgress
+            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && !s.prayersOpen && s.prayerOpen == null && s.shareVerse == null && !s.planOpen && !typing && !pager.isScrollInProgress
         val screen = when (pager.currentPage) {
             AppState.TODAY -> "today"
             AppState.BIBLE -> if (s.listenAt != null) "reader" else "library"

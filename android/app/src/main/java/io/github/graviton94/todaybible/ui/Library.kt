@@ -112,6 +112,12 @@ fun LibraryPage(s: AppState) {
             Text("›", style = Theme.title(k).copy(color = c.inkSoft))
         }
         FindBox(s)
+        // 기도문: 주기도문 · 때마다의 기도
+        Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).clickable(role = Role.Button) { s.prayersOpen = true }
+            .padding(horizontal = Tokens.Space.s4), verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.prayer_title), style = Theme.label(), modifier = Modifier.weight(1f), maxLines = 1)
+            Text(stringResource(R.string.prayer_row), style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
         // 구약 · 신약
         Row(Modifier.fillMaxWidth().coach("lib_testament").drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
             listOf(false to stringResource(R.string.old_count), true to stringResource(R.string.new_count)).forEach { (nt, label) ->

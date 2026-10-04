@@ -37,6 +37,13 @@ class ListenService : Service() {
             val i = Intent(ctx, ListenService::class.java).putExtra("b", book).putExtra("c", chapter).putExtra("v", verse).putExtra("r", rate)
             if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i) else ctx.startService(i)
         }
+        /** 기도문처럼 정한 절들만 차례로 (장 · 절 범위 여러 개) 듣고 멈춰요. */
+        fun startPassages(ctx: Context, list: List<io.github.graviton94.todaybible.core.Reference.Passage>, rate: Float) {
+            if (list.isEmpty()) return
+            val q = list.flatMap { listOf(it.book, it.chapter, it.from, it.to) }.toIntArray()
+            val i = Intent(ctx, ListenService::class.java).putExtra("q", q).putExtra("r", rate)
+            if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i) else ctx.startService(i)
+        }
         fun stop(ctx: Context) { ctx.startService(Intent(ctx, ListenService::class.java).setAction("stop")) }
 
         /** 잠들기 타이머: 0 끔 · TIMER_CHAPTER 이 장 끝까지 · 그 밖은 분. */
@@ -54,6 +61,9 @@ class ListenService : Service() {
     private var book = 0; private var chapter = 1; private var verse = 1; private var rate = 1f
     private var token = 0
     private var stopAt = 0L
+    /** 범위 듣기: 이 절까지 (0 = 장 끝까지 이어서) · 다음에 들을 범위들. */
+    private var to = 0
+    private val queue = ArrayDeque<IntArray>()
     // 화면이 꺼져도 절 사이 쉼 · 다음 장 받기 동안 멈추지 않게
     private var wake: android.os.PowerManager.WakeLock? = null
     private var wifi: android.net.wifi.WifiManager.WifiLock? = null
@@ -74,6 +84,11 @@ class ListenService : Service() {
         }
         book = intent?.getIntExtra("b", 0) ?: 0; chapter = intent?.getIntExtra("c", 1) ?: 1
         verse = intent?.getIntExtra("v", 1) ?: 1; rate = intent?.getFloatExtra("r", 1f) ?: 1f
+        queue.clear(); to = 0
+        intent?.getIntArrayExtra("q")?.let { q ->
+            q.toList().chunked(4).forEach { queue.addLast(it.toIntArray()) }
+            queue.removeFirstOrNull()?.let { book = it[0]; chapter = it[1]; verse = it[2]; to = it[3] }
+        }
         foreground()
         if (wake == null) wake = getSystemService(android.os.PowerManager::class.java)?.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "harubible:listen")?.apply { setReferenceCounted(false); acquire(3 * 60 * 60 * 1000L) }
         if (wifi == null) wifi = runCatching { applicationContext.getSystemService(android.net.wifi.WifiManager::class.java)?.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "harubible:listen")?.apply { setReferenceCounted(false); acquire() } }.getOrNull()
@@ -105,7 +120,7 @@ class ListenService : Service() {
             ui.post {
                 if (t != token) return@post
                 val text = store.book(tr, book)
-                val verses = text.fillable(chapter).filter { it >= verse }
+                val verses = text.fillable(chapter).filter { it >= verse && (to == 0 || it <= to) }
                 if (verses.isEmpty()) { next(t); return@post }
                 fun step(i: Int) {
                     if (t != token) return
@@ -139,6 +154,10 @@ class ListenService : Service() {
     /** 다음 장으로 (권 끝이면 다음 권 · 요한계시록 끝 · 이 장까지 타이머면 멈춤). */
     private fun next(t: Int) {
         if (t != token) return
+        if (to > 0) {
+            val n = queue.removeFirstOrNull() ?: run { finish(); return }
+            book = n[0]; chapter = n[1]; verse = n[2]; to = n[3]; foreground(); play(t); return
+        }
         if (_timer.value == TIMER_CHAPTER) { finish(); return }
         if (chapter < Canon.books[book].chapters) chapter++
         else if (book < 65 && (book + 1 in Canon.free || getSharedPreferences("today", MODE_PRIVATE).getBoolean("lifetime", false))) { book++; chapter = 1 }

@@ -179,6 +179,13 @@ class AppState(val store: Store) {
         val list = memory; Thread { runCatching { store.saveMemory(list) } }.start()
     }
 
+    /** 기도문: 펼친 기도 · 목록 시트 · 오늘 드린 것. */
+    var prayerOpen by mutableStateOf<String?>(null)
+    var prayersOpen by mutableStateOf(false)
+    private var prayedIds by mutableStateOf(store.prayedOn(java.time.LocalDate.now().toEpochDay()))
+    fun prayed(id: String) = id in prayedIds && store.prayedOn(today().toEpochDay()).contains(id)
+    fun markPrayed(id: String) { val d = today().toEpochDay(); prayedIds = store.prayedOn(d) + id; store.setPrayed(d, prayedIds) }
+
     /** 묵상 한 줄 (A4) · 설교 노트 (A2). */
     var notes by mutableStateOf(store.loadNotes())
     private fun saveNotes(list: List<io.github.graviton94.todaybible.data.Store.Note>) { notes = list; Thread { runCatching { store.saveNotes(list) } }.start() }

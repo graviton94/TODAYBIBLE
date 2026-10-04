@@ -226,6 +226,10 @@ class Store(val context: Context) {
         tmp.writeText(marks.joinToString("") { "${it.translation.name}\t${it.key.raw}\t${it.epochDay}\n" }); tmp.renameTo(f)
     }
 
+    /** 오늘 드린 기도문 (날 · 아이디들). 날이 바뀌면 비어요. */
+    fun prayedOn(day: Long): Set<String> = prefs.getString("prayed", "")!!.split('|').let { p -> if (p.firstOrNull() == day.toString()) p.drop(1).toSet() else emptySet() }
+    fun setPrayed(day: Long, ids: Set<String>) = prefs.edit().putString("prayed", (listOf(day.toString()) + ids).joinToString("|")).apply()
+
     /** 마음에 새기는 말씀 (번역 · 절 · 담은 날). */
     private val memoryFile get() = java.io.File(context.filesDir, "memory.tsv")
     fun loadMemory(): List<Mark> = readMarks(memoryFile)

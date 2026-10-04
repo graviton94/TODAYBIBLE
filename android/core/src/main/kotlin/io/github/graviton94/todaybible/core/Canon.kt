@@ -37,7 +37,7 @@ object Canon {
     fun byOsis(osis: String): Book? = books.firstOrNull { it.osis == osis }
     fun inGroup(g: Group): List<Book> = books.filter { it.group == g }
     /** 무료로 열려 있는 권: 창세기 · 시편 · 잠언 · 마가복음. */
-    val free: Set<Int> = setOf(0, 18, 19, 40)
+    val free: Set<Int> = setOf(0, 18, 19, 40, 42)
 }
 
 /** 번역에 독립적이지 않은 장절 키: BBCCCVVV (권 1~66). 기록은 번역마다 따로 쌓는다. */

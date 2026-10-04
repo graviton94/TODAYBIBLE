@@ -103,7 +103,7 @@
     <string name="benefit_books">66권 · 1,189장 전체</string>
     <string name="benefit_plates">화첩 판화 모두</string>
     <string name="benefit_once">한 번 결제, 평생</string>
-    <string name="free_books">창세기 · 시편 · 잠언 · 마가복음은 무료예요</string>
+    <string name="free_books">창세기 · 시편 · 잠언 · 마가복음 · 요한복음은 무료예요</string>
     <string name="buy_lifetime">평생권 받기 · %1$s</string>
     <string name="restore">구매 복원</string>
     <string name="not_ready">지금은 결제할 수 없어요</string>
@@ -632,4 +632,21 @@
     <string name="scroll_like_bus">버스 한 대보다 길어요</string>
     <string name="scroll_like_field">축구장 하나보다 길어요</string>
     <string name="scroll_like_km">1km를 넘었어요</string>
+    <string name="prayer_title">기도문</string>
+    <string name="prayer_row">주기도문 · 아침 · 낮 · 저녁 · 밤</string>
+    <string name="prayer_list_hint">모두 성경 말씀 그대로예요.</string>
+    <string name="prayer_note">모두 성경 말씀 그대로예요. 천천히, 소리 내어 또는 마음으로 드려요.</string>
+    <string name="prayer_lords">주기도문</string>
+    <string name="prayer_morning">아침 기도</string>
+    <string name="prayer_noon">낮 기도</string>
+    <string name="prayer_evening">저녁 기도</string>
+    <string name="prayer_night">잠들기 전 기도</string>
+    <string name="prayer_blessing">아론의 축복</string>
+    <string name="prayer_shepherd">여호와는 나의 목자시니</string>
+    <string name="prayer_go">기도하기 ›</string>
+    <string name="prayer_listen">들으며 기도</string>
+    <string name="prayer_write">따라 쓰기</string>
+    <string name="prayer_amen">아멘</string>
+    <string name="prayer_prayed">오늘 드렸어요 · 아멘</string>
+    <string name="prayer_prayed_short">드렸어요</string>
 </resources>
