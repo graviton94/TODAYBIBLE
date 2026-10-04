@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -114,8 +117,8 @@ fun CoachOverlay(s: AppState, screen: String) {
         val below = hole.center.y < h / 2
         val gap = with(dens) { Tokens.Space.s3.toPx() }
         var bubbleH by remember(id) { mutableIntStateOf(0) }
-        val top = androidx.compose.foundation.layout.WindowInsets.statusBars.getTop(dens) + with(dens) { Tokens.Space.s2.roundToPx() }
-        val bottom = androidx.compose.foundation.layout.WindowInsets.navigationBars.getBottom(dens)
+        val top = WindowInsets.statusBars.getTop(dens) + with(dens) { Tokens.Space.s2.roundToPx() }
+        val bottom = WindowInsets.navigationBars.getBottom(dens)
         val y = if (below) hole.bottom + gap else hole.top - gap - bubbleH
         Column(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s5)
             // 상태 표시줄 · 아래 이름표에 걸리지 않게
