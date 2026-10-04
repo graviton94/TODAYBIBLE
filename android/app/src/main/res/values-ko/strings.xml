@@ -675,4 +675,16 @@
     <string name="intro_tap_open">눌러서 펼치기</string>
     <string name="intro_tap_start">눌러서 시작하기</string>
     <string name="narration_fallback">낭독 음원을 받지 못해 폰 목소리로 읽어요. 인터넷 연결을 확인해 주세요.</string>
+    <string name="theme_candle">촛불빛</string>
+    <string name="language">언어</string>
+    <string name="lang_system">폰 설정 따르기</string>
+    <string name="lang_ko">한국어 · 개역한글 · 한국어 낭독</string>
+    <string name="lang_en">English · King James Version · English narration</string>
+    <string name="language_hint">앱 글, 성경 본문, 낭독 목소리가 함께 바뀌어요. 언어마다 쓴 기록은 그대로 남아요.</string>
+    <string name="set_display">언어와 화면</string>
+    <string name="set_listen">듣기와 낭독</string>
+    <string name="set_write">쓰기와 꾸미기</string>
+    <string name="set_alerts">알림</string>
+    <string name="set_keep">기록과 보관</string>
+    <string name="set_help">평생권과 도움</string>
 </resources>

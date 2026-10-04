@@ -164,6 +164,10 @@ class Store(val context: Context) {
         get() = prefs.getBoolean("contrast", false)
         set(v) = prefs.edit().putBoolean("contrast", v).apply()
     /** 밤 필사: 밤 9시 ~ 새벽 5시에 촛불빛 화면. */
+    /** 앱 언어: system · ko · en. */
+    var language: String
+        get() = prefs.getString("language", "system")!!
+        set(v) = prefs.edit().putString("language", v).apply()
     var candle: Boolean
         get() = prefs.getBoolean("candle", true)
         set(v) = prefs.edit().putBoolean("candle", v).apply()

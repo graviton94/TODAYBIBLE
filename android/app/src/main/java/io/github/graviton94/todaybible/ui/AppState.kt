@@ -243,7 +243,7 @@ class AppState(val store: Store) {
     var forceYear = false
     /** 캡처용: 밤 필사 고정. */
     var nightOverride: Boolean? = null
-    fun checkNight() { val h = java.time.LocalTime.now().hour; night = nightOverride ?: (candle && (h >= 21 || h < 5)) }
+    fun checkNight() { night = nightOverride ?: (theme == ThemeChoice.CANDLE) }
     /** 캡처용 고정 날짜 (개발자 도구). */
     var fixedToday: LocalDate? = null
 
@@ -271,7 +271,15 @@ class AppState(val store: Store) {
         book = b; chapter = ch; target = null; store.setBookmark(translation, b, ch); page = COPY; widgets()
     }
     fun chooseTranslation(t: Translation) { translation = t; store.translation = t; narrator = store.narratorFor(t); narration = emptyMap(); val bm = store.bookmark(t); book = bm.first; chapter = bm.second; widgets() }
-    fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t; widgets() }
+    fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t; checkNight(); widgets() }
+    /** 언어 (시스템 · ko · en): 화면 글 · 성경 번역 · 낭독 목소리를 한 번에. 화면 글은 다시 그릴 때 (recreate) 바뀌어요. */
+    var language by mutableStateOf(store.language)
+    fun chooseLanguage(l: String) {
+        language = l; store.language = l
+        Lang.applyAppLocale(store.context, l)
+        val tr = when (l) { "ko" -> Translation.KRV; "en" -> Translation.KJV; else -> if (java.util.Locale.getDefault().language == "ko") Translation.KRV else Translation.KJV }
+        if (tr != translation) chooseTranslation(tr)
+    }
     fun setTextScale(s: Float) { scale = s; store.textScale = s }
     fun setStampMark(s: String) { stamp = s; store.stamp = s; widgets() }
     /** 나의 성경 PDF: 평생권이 필요하면 평생권 화면으로. */

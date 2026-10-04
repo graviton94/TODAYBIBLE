@@ -68,7 +68,7 @@ class VerseWidget : AppWidgetProvider() {
         }
 
         fun dark(ctx: Context): Boolean = when (Store(ctx).theme) {
-            ThemeChoice.DARK -> true; ThemeChoice.LIGHT -> false
+            ThemeChoice.DARK, ThemeChoice.CANDLE -> true; ThemeChoice.LIGHT -> false
             ThemeChoice.SYSTEM -> (ctx.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         }
 

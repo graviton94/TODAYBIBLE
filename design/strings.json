@@ -672,5 +672,17 @@
   "intro_tap_enter": {"en": "Tap to enter", "ko": "눌러서 들어가기"},
   "intro_tap_open": {"en": "Tap to open", "ko": "눌러서 펼치기"},
   "intro_tap_start": {"en": "Tap to begin", "ko": "눌러서 시작하기"},
-  "narration_fallback": {"en": "Couldnt download the narration, so your phones voice is reading. Check your internet connection.", "ko": "낭독 음원을 받지 못해 폰 목소리로 읽어요. 인터넷 연결을 확인해 주세요."}
+  "narration_fallback": {"en": "Couldnt download the narration, so your phones voice is reading. Check your internet connection.", "ko": "낭독 음원을 받지 못해 폰 목소리로 읽어요. 인터넷 연결을 확인해 주세요."},
+  "theme_candle": {"en": "Candlelight", "ko": "촛불빛"},
+  "language": {"en": "Language", "ko": "언어"},
+  "lang_system": {"en": "Same as my phone", "ko": "폰 설정 따르기"},
+  "lang_ko": {"en": "한국어 · 개역한글 · 한국어 낭독", "ko": "한국어 · 개역한글 · 한국어 낭독"},
+  "lang_en": {"en": "English · King James Version · English narration", "ko": "English · King James Version · English narration"},
+  "language_hint": {"en": "Changes the app's words, the Bible text and the narrating voice together. Your records in each language are kept.", "ko": "앱 글, 성경 본문, 낭독 목소리가 함께 바뀌어요. 언어마다 쓴 기록은 그대로 남아요."},
+  "set_display": {"en": "Language & display", "ko": "언어와 화면"},
+  "set_listen": {"en": "Listening", "ko": "듣기와 낭독"},
+  "set_write": {"en": "Writing", "ko": "쓰기와 꾸미기"},
+  "set_alerts": {"en": "Reminders", "ko": "알림"},
+  "set_keep": {"en": "Records & backup", "ko": "기록과 보관"},
+  "set_help": {"en": "Lifetime pass & help", "ko": "평생권과 도움"}
 }

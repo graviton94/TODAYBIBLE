@@ -675,4 +675,16 @@
     <string name="intro_tap_open">Tap to open</string>
     <string name="intro_tap_start">Tap to begin</string>
     <string name="narration_fallback">Couldnt download the narration, so your phones voice is reading. Check your internet connection.</string>
+    <string name="theme_candle">Candlelight</string>
+    <string name="language">Language</string>
+    <string name="lang_system">Same as my phone</string>
+    <string name="lang_ko">한국어 · 개역한글 · 한국어 낭독</string>
+    <string name="lang_en">English · King James Version · English narration</string>
+    <string name="language_hint">Changes the app\'s words, the Bible text and the narrating voice together. Your records in each language are kept.</string>
+    <string name="set_display">Language &amp; display</string>
+    <string name="set_listen">Listening</string>
+    <string name="set_write">Writing</string>
+    <string name="set_alerts">Reminders</string>
+    <string name="set_keep">Records &amp; backup</string>
+    <string name="set_help">Lifetime pass &amp; help</string>
 </resources>

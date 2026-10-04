@@ -18,6 +18,9 @@ import io.github.graviton94.todaybible.ui.Root
 import java.time.LocalDate
 
 class MainActivity : ComponentActivity() {
+    // 앱 안에서 고른 언어로 화면 글 (안드로이드 13 이상은 시스템이 앱별 언어로도 맞춰요)
+    override fun attachBaseContext(base: android.content.Context) { super.attachBaseContext(io.github.graviton94.todaybible.ui.Lang.wrap(base)) }
+
     private var state: AppState? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,7 +38,7 @@ class MainActivity : ComponentActivity() {
         io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
         s.widgets(); s.warmPlan()
         setContent {
-            val dark = s.night || when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK -> true }
+            val dark = s.night || when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK, ThemeChoice.CANDLE -> true }
             LaunchedEffect(dark) {
                 val bar = if (dark) SystemBarStyle.dark(android.graphics.Color.TRANSPARENT) else SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
                 enableEdgeToEdge(bar, bar)

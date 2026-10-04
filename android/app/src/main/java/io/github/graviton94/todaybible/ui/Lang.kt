@@ -42,6 +42,22 @@ object Lang {
             else -> c.getString(R.string.ref_range, book, chapter, from, to)
         }
     }
+    /** 고른 앱 언어 (없으면 시스템). */
+    fun uiLocale(ctx: Context): Locale? = when (ctx.getSharedPreferences("today", Context.MODE_PRIVATE).getString("language", "system")) { "ko" -> Locale.KOREAN; "en" -> Locale.ENGLISH; else -> null }
+    /** 화면 글을 고른 언어로 (Activity · 알림 · 위젯이 쓰는 컨텍스트에). */
+    fun wrap(ctx: Context): Context {
+        val l = uiLocale(ctx) ?: return ctx
+        val c = Configuration(ctx.resources.configuration); c.setLocale(l)
+        return ctx.createConfigurationContext(c)
+    }
+    /** 안드로이드 13 이상: 시스템의 앱별 언어 설정에도 같은 값을 (설정 앱에서 보이게 · 알림 글도 따라오게). */
+    fun applyAppLocale(ctx: Context, lang: String) {
+        if (android.os.Build.VERSION.SDK_INT < 33) return
+        runCatching {
+            ctx.getSystemService(android.app.LocaleManager::class.java)?.applicationLocales =
+                if (lang == "system") android.os.LocaleList.getEmptyLocaleList() else android.os.LocaleList.forLanguageTags(lang)
+        }
+    }
     fun speechTag(ctx: Context, tr: Translation): String = content(ctx, tr).getString(R.string.speech_lang)
 }
 

@@ -64,20 +64,20 @@ fun SettingsPage(s: AppState) {
             Text(stringResource(R.string.settings), style = Theme.title(k), maxLines = 1)
         }
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+            Section(stringResource(R.string.set_display))
+            // 언어: 화면 글 · 성경 번역 · 낭독 목소리를 한 번에 (한국어 = 개역한글 · 한국어 낭독, English = KJV · 영어 낭독)
+            Group(stringResource(R.string.language)) {
+                Column {
+                    listOf("system" to R.string.lang_system, "ko" to R.string.lang_ko, "en" to R.string.lang_en).forEach { (id, name) ->
+                        ChoiceRow(stringResource(name), s.language == id) { s.chooseLanguage(id); (ctx0 as? android.app.Activity)?.recreate() }
+                    }
+                }
+                Text(stringResource(R.string.language_hint), style = Theme.small())
+            }
             Group(stringResource(R.string.theme)) {
-                UnderlineTabs(listOf(stringResource(R.string.theme_system), stringResource(R.string.theme_light), stringResource(R.string.theme_dark)), s.theme.ordinal) {
+                UnderlineTabs(listOf(stringResource(R.string.theme_system), stringResource(R.string.theme_light), stringResource(R.string.theme_dark), stringResource(R.string.theme_candle)), s.theme.ordinal) {
                     s.setThemeChoice(ThemeChoice.entries[it])
                 }
-            }
-            Group(stringResource(R.string.translation)) {
-                Column {
-                    ChoiceRow(stringResource(R.string.tr_krv), s.translation == Translation.KRV) { s.chooseTranslation(Translation.KRV) }
-                    ChoiceRow(stringResource(R.string.tr_kjv), s.translation == Translation.KJV) { s.chooseTranslation(Translation.KJV) }
-                }
-            }
-            Group(stringResource(R.string.simple_h)) {
-                ChoiceRow(stringResource(R.string.simple_mode), s.simple) { s.flipSimple() }
-                Text(stringResource(R.string.simple_hint), style = Theme.small())
             }
             Group(stringResource(R.string.text_size)) {
                 UnderlineTabs(listOf(stringResource(R.string.size_regular), stringResource(R.string.size_large), stringResource(R.string.size_larger), stringResource(R.string.size_huge)),
@@ -89,11 +89,46 @@ fun SettingsPage(s: AppState) {
                     VerseText(s, 1, s.text(0).verse(1, 1))
                 }
             }
+            Group(stringResource(R.string.simple_h)) {
+                ChoiceRow(stringResource(R.string.simple_mode), s.simple) { s.flipSimple() }
+                Text(stringResource(R.string.simple_hint), style = Theme.small())
+            }
+            Section(stringResource(R.string.set_listen))
+            Group(stringResource(R.string.guide_settings)) { GuideVoiceSettings(s) }
+            Section(stringResource(R.string.set_write))
             Group(stringResource(R.string.daily_goal)) {
                 GoalChooser(s, title = false)
                 // 읽기 계획 (오늘 화면에서 옮겨 옴)
                 ChoiceRow(s.plan?.let { planName(androidx.compose.ui.platform.LocalContext.current, it.id) } ?: stringResource(R.string.plan_choose), s.plan != null) { s.planOpen = true }
             }
+            Group(stringResource(R.string.owner_name)) {
+                NameField(s)
+                Text(stringResource(R.string.owner_note), style = Theme.small())
+            }
+            Group(stringResource(R.string.hand_settings)) {
+                // 펜 (손글씨 화면에서 옮겨 옴)
+                listOf(io.github.graviton94.todaybible.data.Ink.FOUNTAIN to R.string.pen_fountain, io.github.graviton94.todaybible.data.Ink.BRUSH to R.string.pen_brush, io.github.graviton94.todaybible.data.Ink.PENCIL to R.string.pen_pencil)
+                    .forEach { (id, name) -> ChoiceRow(stringResource(name), s.pen == id) { s.choosePen(id) } }
+                ChoiceRow(stringResource(R.string.guide_setting), s.handGuide) { s.flipGuide() }
+                ChoiceRow(stringResource(R.string.pen_sound), s.penSound) { s.flipPenSound() }
+                ChoiceRow(stringResource(R.string.paper_haptic), s.paperHaptic) { s.flipPaperHaptic() }
+            }
+            // 꾸미기: 도장 · 표지
+            Group(stringResource(R.string.stamp)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                    STAMPS.forEach { m ->
+                        val on = m == s.stamp
+                        Box(
+                            Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (on) c.paper else c.leaf)
+                                .drawBehind { if (on) drawLine(c.rubric, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.rule.toPx() * 2) }
+                                .clickable(role = Role.RadioButton) { s.setStampMark(m) },
+                            contentAlignment = Alignment.Center,
+                        ) { StampMark(m, if (on) c.rubric else c.inkSoft, Modifier.size(Tokens.Size.iconMd)) }
+                    }
+                }
+            }
+            Group(stringResource(R.string.my_cover)) { CoverPicker(s) }
+            Section(stringResource(R.string.set_alerts))
             Group(stringResource(R.string.reminder)) {
                 // 매일 알림: 끄기 · 켜기, 켜면 정각 아무 시나 (안드로이드 13+ 는 처음 켤 때 알림 허락을 물음)
                 val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -120,20 +155,7 @@ fun SettingsPage(s: AppState) {
                 }
                 Text(stringResource(R.string.prayer_reminder_note), style = Theme.small())
             }
-            Group(stringResource(R.string.owner_name)) {
-                NameField(s)
-                Text(stringResource(R.string.owner_note), style = Theme.small())
-            }
-            Group(stringResource(R.string.guide_settings)) { GuideVoiceSettings(s) }
-            Group(stringResource(R.string.hand_settings)) {
-                // 펜 (손글씨 화면에서 옮겨 옴)
-                listOf(io.github.graviton94.todaybible.data.Ink.FOUNTAIN to R.string.pen_fountain, io.github.graviton94.todaybible.data.Ink.BRUSH to R.string.pen_brush, io.github.graviton94.todaybible.data.Ink.PENCIL to R.string.pen_pencil)
-                    .forEach { (id, name) -> ChoiceRow(stringResource(name), s.pen == id) { s.choosePen(id) } }
-                ChoiceRow(stringResource(R.string.guide_setting), s.handGuide) { s.flipGuide() }
-                ChoiceRow(stringResource(R.string.pen_sound), s.penSound) { s.flipPenSound() }
-                ChoiceRow(stringResource(R.string.paper_haptic), s.paperHaptic) { s.flipPaperHaptic() }
-                ChoiceRow(stringResource(R.string.candle_setting), s.candle) { s.flipCandle() }
-            }
+            Section(stringResource(R.string.set_keep))
             Group(stringResource(R.string.voice_keep)) {
                 Text(stringResource(R.string.voice_keep_hint), style = Theme.small())
                 val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -146,24 +168,6 @@ fun SettingsPage(s: AppState) {
                 if (voice > 0) BookButton(stringResource(if (sure) R.string.rec_clear_sure else R.string.rec_clear), Modifier.fillMaxWidth(), quiet = true) {
                     if (!sure) sure = true else { java.io.File(ctx.filesDir, "voice").deleteRecursively(); s.voiceRev++; sure = false; s.toast = ctx.getString(R.string.rec_cleared) }
                 }
-            }
-            // 꾸미기: 도장 · 표지
-            Group(stringResource(R.string.stamp)) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                    STAMPS.forEach { m ->
-                        val on = m == s.stamp
-                        Box(
-                            Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (on) c.paper else c.leaf)
-                                .drawBehind { if (on) drawLine(c.rubric, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.rule.toPx() * 2) }
-                                .clickable(role = Role.RadioButton) { s.setStampMark(m) },
-                            contentAlignment = Alignment.Center,
-                        ) { StampMark(m, if (on) c.rubric else c.inkSoft, Modifier.size(Tokens.Size.iconMd)) }
-                    }
-                }
-            }
-            Group(stringResource(R.string.my_cover)) { CoverPicker(s) }
-            Group(stringResource(R.string.lifetime)) {
-                ChoiceRow(stringResource(if (s.lifetime.owned) R.string.owned else R.string.lifetime_head), s.lifetime.owned) { s.purchaseOpen = true }
             }
             Group(stringResource(R.string.backup)) {
                 Text(stringResource(R.string.backup_hint), style = Theme.small())
@@ -202,6 +206,10 @@ fun SettingsPage(s: AppState) {
                 }
                 BookButton(stringResource(R.string.backup_import), Modifier.fillMaxWidth(), quiet = true) { pick.launch(arrayOf("application/zip", "application/octet-stream")) }
             }
+            Section(stringResource(R.string.set_help))
+            Group(stringResource(R.string.lifetime)) {
+                ChoiceRow(stringResource(if (s.lifetime.owned) R.string.owned else R.string.lifetime_head), s.lifetime.owned) { s.purchaseOpen = true }
+            }
             Group(stringResource(R.string.feedback)) { Feedback(s) }
             Group(stringResource(R.string.coach_again_h)) {
                 ChoiceRow(stringResource(R.string.coach_again), false) { s.coachReset(); s.settingsOpen = false; s.toast = ctx0.getString(R.string.coach_again_done) }
@@ -210,6 +218,14 @@ fun SettingsPage(s: AppState) {
             Footer(s)
         }
     }
+}
+
+/** 설정의 큰 갈래: 붉은 제목과 가는 줄. */
+@Composable
+private fun Section(title: String) {
+    val c = Theme.c
+    Text(title, style = Theme.label().copy(color = c.rubric), maxLines = 1, modifier = Modifier.fillMaxWidth().padding(top = Tokens.Space.s4)
+        .drawBehind { drawLine(c.hair, Offset(0f, size.height + Tokens.Space.s2.toPx()), Offset(size.width, size.height + Tokens.Space.s2.toPx()), Tokens.Stroke.hair.toPx()) })
 }
 
 @Composable
@@ -319,13 +335,17 @@ private fun GuideVoiceSettings(s: AppState) {
         if (s.narrator != N.DEVICE) BookButton(stringResource(if (player != null) R.string.guide_ai_stop else R.string.narr_preview), Modifier.fillMaxWidth(), quiet = true) {
             player?.let { runCatching { it.release() }; player = null; return@BookButton }
             guide.stop()
-            player = runCatching {
-                android.media.MediaPlayer().apply {
-                    ctx.assets.openFd("voice/${s.narrator}_ps23_1.m4a").use { setDataSource(it.fileDescriptor, it.startOffset, it.length) }
-                    setOnCompletionListener { mp -> mp.release(); player = null }
-                    prepare(); start()
-                }
+            // 견본: 앱에 든 것이 있으면 그것, 없으면 (영어 목소리 등) 시편 23편 음원을 받아서 1절
+            val v = s.narrator
+            fun play(src: android.media.MediaPlayer.() -> Unit) = runCatching {
+                android.media.MediaPlayer().apply { src(); setOnCompletionListener { mp -> mp.release(); player = null }; prepare(); start() }
             }.getOrNull()
+            val asset = runCatching { ctx.assets.openFd("voice/${v}_ps23_1.m4a") }.getOrNull()
+            if (asset != null) player = play { asset.use { setDataSource(it.fileDescriptor, it.startOffset, it.length) } }
+            else Thread {
+                val ok = N.fetch(ctx, v, 18, 23)
+                main.post { if (ok) player = play { setDataSource(N.file(ctx, v, 18, 23, 1).path) } else s.toast = ctx.getString(R.string.narration_fallback) }
+            }.start()
         }
         val used = remember(s.narration) { N.usage(ctx) }
         if (used > 0) Text(stringResource(R.string.narr_usage, "%.0fMB".format(used / 1_000_000f)), style = Theme.small())

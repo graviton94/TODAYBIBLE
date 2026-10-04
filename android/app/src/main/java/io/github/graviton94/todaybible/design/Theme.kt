@@ -15,7 +15,8 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import io.github.graviton94.todaybible.R
 
-enum class ThemeChoice { SYSTEM, LIGHT, DARK }
+/** 테마: 시스템 · 밝게 · 어둡게 · 촛불빛 (밤에 눈이 편한 따뜻한 어둠). */
+enum class ThemeChoice { SYSTEM, LIGHT, DARK, CANDLE }
 
 object Fonts {
     val serifKr = FontFamily(Font(R.font.serif_kr_medium, FontWeight.Medium), Font(R.font.serif_kr_bold, FontWeight.Bold))
@@ -57,8 +58,8 @@ object Theme {
 
 @Composable
 fun TodayTheme(choice: ThemeChoice, scale: Float, night: Boolean = false, contrast: Boolean = false, content: @Composable () -> Unit) {
-    val dark = when (choice) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK -> true }
-    CompositionLocalProvider(LocalPalette provides (if (night) Tokens.candle else if (dark) Tokens.dark else Tokens.light).let { p -> if (contrast) sharper(p) else p }, LocalScale provides scale, content = content)
+    val dark = when (choice) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK, ThemeChoice.CANDLE -> true }
+    CompositionLocalProvider(LocalPalette provides (if (night || choice == ThemeChoice.CANDLE) Tokens.candle else if (dark) Tokens.dark else Tokens.light).let { p -> if (contrast) sharper(p) else p }, LocalScale provides scale, content = content)
 }
 
 /** 또렷하게: 흐린 글자는 한 단계씩 진하게, 가는 줄은 더 보이게 (같은 재료 색에서 끌어옴). */
