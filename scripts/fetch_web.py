@@ -59,10 +59,15 @@ def main():
     empty = sum(1 for b in books for c in b["chapters"] for v in c if not v)
     summary = {"books": len(books), "chapters": sum(len(b["chapters"]) for b in books), "verses": total, "empty": empty}
     print("web", summary, problems)
+    print(f"::notice::web {summary} problems={problems[:12]}")
     if problems or len(books) != 66 or abs(total - 31102) > 200: sys.exit(f"확인 필요: {problems} {summary}")
     json.dump({"id": "web", "module": "engwebu", "books": books}, open(os.path.join(OUT, "web.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     s = json.load(open(os.path.join(OUT, "summary.json"))) if os.path.exists(os.path.join(OUT, "summary.json")) else {}
     s["web"] = summary; json.dump(s, open(os.path.join(OUT, "summary.json"), "w"), indent=1)
 
 if __name__ == "__main__":
-    main()
+    try: main()
+    except SystemExit as e:
+        print(f"::error::{e}"); raise
+    except Exception as e:
+        print(f"::error::{type(e).__name__}: {e}"); raise
