@@ -23,14 +23,16 @@ open() { adb shell am force-stop $P; timeout 40 adb shell am start -W -n $P/.Mai
 swipe_up() { adb shell input swipe 540 1800 540 700 500; }
 
 adb shell settings put global hide_error_dialogs 1
-sleep 30; adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null
+sleep "${WARM:-30}"; adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 
-# 처음 한 번: 소개 일곱 장
+# 처음 한 번: 소개 일곱 장 (일부 장면만 찍을 땐 건너뜀)
+# @scene w0
 open --ez tb.reset true --es tb.theme LIGHT; sleep 15
 for i in 0 1 2; do open --ez tb.reset true --es tb.theme LIGHT --ei tb.welcomeStep $i; shot w0${i}_welcome 4; done
+# @end
 # 일부 장면만 찍을 때: 앞 장면들이 깔아 두던 기록을 한 번에
-[ -n "${FILTERED:-}" ] && { open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT; sleep 6; }
+[ -n "${FILTERED:-}" ] && { open --ez tb.reset true --es tb.theme LIGHT; sleep 4; open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT; sleep 4; }
 # 여는 순간: A 금박 새김 (매일) · C 표지 넘김 (하루 첫 열기). 눌러야 들어가요
 # @scene o0
 open --ez tb.seed true --es tb.theme LIGHT; sleep 4

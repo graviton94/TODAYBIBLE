@@ -52,7 +52,17 @@ jobs:
           PICK: ${{ github.event.inputs.only }}
         # 마지막 [shots:…] 를 써요 (설명 속 예시와 헷갈리지 않게)
         run: echo "ONLY=${PICK:-$(printf '%s' "$MSG" | grep -oP '\[shots:\K[^\]]+' | tail -1)}" >> "$GITHUB_ENV"
-      - name: Run on emulator and capture
+      # 에뮬레이터 상태를 캐시해 두고 다음부터는 이어서 켜요 (부팅 몇 분 → 수십 초)
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-34-google_apis-x86_64-pixel_6-v1
+      - name: Create AVD snapshot
+        if: steps.avd.outputs.cache-hit != 'true'
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -61,10 +71,24 @@ jobs:
           profile: pixel_6
           disk-size: 4096M
           cores: 2
-          disable-animations: false
+          force-avd-creation: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: false
+          script: echo "snapshot ready"
+      - name: Run on emulator and capture
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          force-avd-creation: false
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disk-size: 4096M
+          cores: 2
+          disable-animations: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           # 장면 하나가 멈춰도 잡이 통째로 취소되지 않게: 시간 제한 뒤 찍은 것 + 로그를 그대로 올려요
-          script: adb install -r android/app/build/outputs/apk/debug/app-debug.apk && (ONLY="$ONLY" timeout 36m bash scripts/android_shots.sh shots || echo "capture stopped early" > shots/STOPPED.txt); mkdir -p shots; adb logcat -d | tail -n 4000 > shots/logcat_tail.txt; true
+          script: adb install -r android/app/build/outputs/apk/debug/app-debug.apk && (ONLY="$ONLY" WARM="${ONLY:+5}" timeout 36m bash scripts/android_shots.sh shots || echo "capture stopped early" > shots/STOPPED.txt); mkdir -p shots; adb logcat -d | tail -n 4000 > shots/logcat_tail.txt; true
       - name: Push to screenshots-android branch
         if: always()
         run: |
