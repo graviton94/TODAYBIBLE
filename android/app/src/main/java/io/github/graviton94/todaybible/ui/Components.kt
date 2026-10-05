@@ -68,7 +68,7 @@ fun RunningHead(left: String, right: String, korean: Boolean, modifier: Modifier
  * quiet = 바탕 없이 머리카락 테 한 줄. 비활성 = 옅은 바탕 · 흐린 테.
  */
 @Composable
-fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = false, enabled: Boolean = true, onClick: () -> Unit) {
+fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = false, enabled: Boolean = true, locked: Boolean = false, onClick: () -> Unit) {
     val c = Theme.c
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
@@ -78,10 +78,15 @@ fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = fal
         modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(fill)
             .drawBehind { giltFrame(line, bands = !quiet && enabled) }
             .clickable(source, null, enabled = enabled, role = Role.Button, onClick = onClick)
-            .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3),
+            .padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s3),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = Theme.label().copy(color = if (quiet) c.ink else if (enabled) c.leatherInk else c.inkSoft, textAlign = TextAlign.Center), maxLines = 2, overflow = TextOverflow.Ellipsis)
+        val ink = if (quiet) c.ink else if (enabled) c.leatherInk else c.inkSoft
+        // 평생권 기능: "· 평생권" 글자 대신 작은 금빛 자물쇠 (좁은 버튼에서도 말이 잘리지 않게)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1, Alignment.CenterHorizontally)) {
+            if (locked) LockMark(if (quiet) c.giltText else c.gilt, Modifier.size(Tokens.Size.lock))
+            Text(text, style = Theme.label().copy(color = ink, textAlign = TextAlign.Center), maxLines = 2)
+        }
     }
 }
 

@@ -238,4 +238,22 @@ class CoreTest {
         assertEquals(Hour.MORNING, Prayers.hourAt(6)); assertEquals(Hour.NIGHT, Prayers.hourAt(23)); assertEquals(Hour.NIGHT, Prayers.hourAt(2))
         assertEquals(4, Hour.entries.count { h -> Prayers.all.any { it.hour == h } })
     }
+
+    @Test fun narrationSyncFollowsPhrasesAndBreaths() {
+        val ko = "땅이 혼돈하고 공허하며 흑암이 깊음 위에 있고 하나님의 신은 수면에 운행하시니라"
+        // scripts/narrate.py 와 같은 구절 나누기
+        assertEquals(listOf("땅이 혼돈하고 공허하며", "흑암이 깊음 위에 있고", "하나님의 신은 수면에 운행하시니라"), NarrationSync.phrases(ko, false))
+        val en = "And the earth was without form and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters."
+        assertEquals(3, NarrationSync.phrases(en, true).size)
+        assertEquals(en, NarrationSync.phrases(en, true).joinToString(" "))
+        val dur = 6000
+        val seq = (0..dur step 50).map { NarrationSync.lit(ko, false, "m5", it, dur) }
+        assertEquals(seq, seq.sorted())                       // 뒤로 가지 않음
+        assertEquals(ko.length, NarrationSync.lit(ko, false, "m5", dur, dur))
+        // 첫 구절이 끝나면 숨 쉬는 동안은 그 자리에 머물러요
+        val first = "땅이 혼돈하고 공허하며".length
+        assertTrue(seq.count { it == first } >= 6)
+        // 모르는 목소리는 고르게
+        assertEquals(ko.length / 2, NarrationSync.lit(ko, false, "x", dur / 2, dur))
+    }
 }

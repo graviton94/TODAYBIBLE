@@ -282,7 +282,8 @@ private fun ChoiceRow(text: String, on: Boolean, onClick: () -> Unit) {
             .drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(text, style = Theme.body().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        // 긴 이름 (English · King James Version · English narration) 도 잘리지 않게 두 줄까지
+        Text(text, style = Theme.body().copy(color = if (on) c.ink else c.inkSoft), maxLines = 2, modifier = Modifier.weight(1f).padding(vertical = Tokens.Space.s2).padding(end = Tokens.Space.s3))
         // 켜짐 · 꺼짐이 늘 보이게: 빈 동그라미 / 붉은 점이 든 동그라미
         Box(Modifier.size(Tokens.Size.iconSm).drawBehind {
             drawCircle(if (on) c.rubric else c.inkSoft, size.minDimension / 2 - Tokens.Stroke.rule.toPx(), style = androidx.compose.ui.graphics.drawscope.Stroke(Tokens.Stroke.rule.toPx()))

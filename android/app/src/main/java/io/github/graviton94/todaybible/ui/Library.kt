@@ -236,7 +236,7 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
         Text(s.bookName(b), style = Theme.title(s.korean))
         Text(stringResource(R.string.choose_chapter), style = Theme.small())
         Text(stringResource(R.string.grid_legend), style = Theme.small().copy(color = c.inkSoft))
-        if (p.bookDone(s.translation, t)) BookButton(stringResource(R.string.my_bible_pdf) + if (s.premiumOn) " · " + stringResource(R.string.premium_tag) else "", Modifier.fillMaxWidth(), quiet = true) { s.requestPdf(b) }
+        if (p.bookDone(s.translation, t)) BookButton(stringResource(R.string.my_bible_pdf), Modifier.fillMaxWidth(), locked = s.premiumOn, quiet = true) { s.requestPdf(b) }
         val ctx = androidx.compose.ui.platform.LocalContext.current
         // 내 목소리로 읽은 장이 있으면: 한 권 오디오북
         val voiced by androidx.compose.runtime.produceState(0, b, s.voiceRev) {
@@ -256,10 +256,10 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
                 else -> BookButton(stringResource(R.string.keep_book, t.chapterCount * KEEP_MB_PER_CH / 10), Modifier.fillMaxWidth(), quiet = true, enabled = s.keeping == null) { s.keepNarration(b) }
             }
         }
-        if (voiced > 0) BookButton(stringResource(R.string.audiobook_make, voiced) + if (s.premiumOn) " · " + stringResource(R.string.premium_tag) else "", Modifier.fillMaxWidth(), quiet = true, enabled = !s.exporting) { s.picker = null; s.requestAudiobook(b) }
+        if (voiced > 0) BookButton(stringResource(R.string.audiobook_make, voiced), Modifier.fillMaxWidth(), locked = s.premiumOn, quiet = true, enabled = !s.exporting) { s.picker = null; s.requestAudiobook(b) }
         if (io.github.graviton94.todaybible.data.Ink.chapters(ctx, s.translation.id, b).isNotEmpty()) Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             BookButton(stringResource(R.string.hand_book_open), Modifier.weight(1f), quiet = true) { s.picker = null; s.handBook = b }
-            BookButton(stringResource(R.string.notes_pdf) + if (s.premiumOn) " · " + stringResource(R.string.premium_tag) else "", Modifier.weight(1f), quiet = true) { s.requestNotes(b) }
+            BookButton(stringResource(R.string.notes_pdf), Modifier.weight(1f), locked = s.premiumOn, quiet = true) { s.requestNotes(b) }
         }
         Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             (1..t.chapterCount).chunked(6).forEach { row ->

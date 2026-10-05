@@ -703,5 +703,7 @@
   "prayer_next_passage": {"en": "Next passage · %1$s", "ko": "다음 말씀 · %1$s"},
   "prayer_return": {"en": "Back to the prayer", "ko": "기도문으로 돌아가기"},
   "prayer_keep_chapter": {"en": "Keep writing this chapter", "ko": "이 장 이어 쓰기"},
-  "prayer_free_note": {"en": "Prayer verses are free to write, in every book.", "ko": "기도문 말씀은 어느 책이든 무료로 옮겨 쓸 수 있어요."}
+  "prayer_free_note": {"en": "Prayer verses are free to write, in every book.", "ko": "기도문 말씀은 어느 책이든 무료로 옮겨 쓸 수 있어요."},
+  "resp_leader": {"en": "Leader", "ko": "인도"},
+  "resp_people": {"en": "People · you", "ko": "회중 · 나"}
 }

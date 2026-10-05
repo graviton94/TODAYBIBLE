@@ -85,7 +85,8 @@ class GuideVoice(ctx: Context, private val korean: Boolean, private val preferre
                 val tick = object : Runnable {
                     override fun run() {
                         val p = player ?: return
-                        val at = (runCatching { p.currentPosition }.getOrDefault(0).toFloat() / dur * text.length).toInt().coerceIn(0, text.length)
+                        // 구절 사이 숨까지 음원과 똑같이 나눠서 (고르게 나누면 숨 쉬는 동안 글자가 앞서 가요)
+                        val at = io.github.graviton94.todaybible.core.NarrationSync.lit(text, !korean, narrator, runCatching { p.currentPosition }.getOrDefault(0), dur)
                         onRange(0, at); ui.postDelayed(this, 80)
                     }
                 }

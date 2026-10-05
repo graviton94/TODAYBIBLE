@@ -706,4 +706,6 @@
     <string name="prayer_return">Back to the prayer</string>
     <string name="prayer_keep_chapter">Keep writing this chapter</string>
     <string name="prayer_free_note">Prayer verses are free to write, in every book.</string>
+    <string name="resp_leader">Leader</string>
+    <string name="resp_people">People · you</string>
 </resources>

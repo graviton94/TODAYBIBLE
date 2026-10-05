@@ -706,4 +706,6 @@
     <string name="prayer_return">기도문으로 돌아가기</string>
     <string name="prayer_keep_chapter">이 장 이어 쓰기</string>
     <string name="prayer_free_note">기도문 말씀은 어느 책이든 무료로 옮겨 쓸 수 있어요.</string>
+    <string name="resp_leader">인도</string>
+    <string name="resp_people">회중 · 나</string>
 </resources>

@@ -359,6 +359,30 @@ private fun ChapterDoneNote(s: AppState) {
     }
 }
 
+/** 교독 한 쌍: 인도 절 (낭독 목소리) 과 회중 절 (나) 을 위아래로. 지금 읽는 쪽은 종이 바탕, 다른 쪽은 옅게. */
+@Composable
+private fun ResponsivePair(s: AppState, verse: Int, source: String, at: Int, guideTurn: Boolean) {
+    val c = Theme.c; val t = s.text(); val all = t.fillable(s.chapter); val i = all.indexOf(verse)
+    val other = if (guideTurn) all.getOrNull(i + 1) else all.getOrNull(i - 1)
+    val leader = stringResource(R.string.resp_leader); val people = stringResource(R.string.resp_people)
+    @Composable fun part(label: String, now: Boolean, content: @Composable () -> Unit) {
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(if (now) c.paper else androidx.compose.ui.graphics.Color.Transparent).padding(Tokens.Space.s3),
+            verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+            Text(label, style = Theme.small().copy(color = if (now) c.rubric else c.inkSoft), maxLines = 1)
+            content()
+        }
+    }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        if (guideTurn) {
+            part(leader, true) { VerseText(s, verse, source, lit = at) }
+            other?.let { v -> part(people, false) { VerseText(s, v, t.verse(s.chapter, v), faint = true) } }
+        } else {
+            other?.let { v -> part(leader, false) { VerseText(s, v, t.verse(s.chapter, v)) } }
+            part(people, true) { VerseText(s, verse, source, lit = at) }
+        }
+    }
+}
+
 /** 기도문 말씀을 다 옮겨 썼을 때: 다음 말씀 · 기도문으로 · (열린 책이면) 이 장 이어 쓰기. */
 @Composable
 private fun PrayerDoneNote(s: AppState, id: String, i: Int) {
@@ -700,7 +724,9 @@ private fun AloudTab(s: AppState, verse: Int) {
         NarrationBanner(s, narrLoading, narr == -1)
         AloudControls(s, guideReady)
         val at = if (spoken >= 0) spoken else lit
-        if (s.aloudBig) AloudLines(s, verse, plain, at, emptyList(), guiding = spoken >= 0)
+        // 교독: 인도 절과 회중 절을 한 화면에 함께
+        if (mode == 0) ResponsivePair(s, verse, source, at, guideTurn)
+        else if (s.aloudBig) AloudLines(s, verse, plain, at, emptyList(), guiding = spoken >= 0)
         else VerseText(s, verse, source, lit = at)
         justRecorded?.let { v -> RecordedBar(s, v, onKeep = { justRecorded = null }, onAgain = { justRecorded = null; s.reread = Triple(s.book, s.chapter, v) }) }
         val micLabel = stringResource(R.string.aloud_listen)
@@ -843,11 +869,11 @@ private fun VoiceRow(s: AppState) {
                 }
                 next()
             }
-            BookButton(stringResource(R.string.voice_export_audio) + if (s.premiumOn) " · " + stringResource(R.string.premium_tag) else "", Modifier.weight(1f), enabled = !s.exporting) { export(false) }
-            BookButton(stringResource(R.string.voice_export_video) + if (s.premiumOn) " · " + stringResource(R.string.premium_tag) else "", Modifier.weight(1f), enabled = !s.exporting) { export(true) }
+            BookButton(stringResource(R.string.voice_export_audio), Modifier.weight(1f), locked = s.premiumOn, enabled = !s.exporting) { export(false) }
+            BookButton(stringResource(R.string.voice_export_video), Modifier.weight(1f), locked = s.premiumOn, enabled = !s.exporting) { export(true) }
         }
         // 가족에게 보내기 (U1): 표지 카드 한 장 + 이 장 낭독을 함께
-        BookButton(stringResource(R.string.gift_send) + if (s.premiumOn) " · " + stringResource(R.string.premium_tag) else "", Modifier.fillMaxWidth(), enabled = !s.exporting) {
+        BookButton(stringResource(R.string.gift_send), Modifier.fillMaxWidth(), locked = s.premiumOn, enabled = !s.exporting) {
             if (s.gated()) { s.purchaseOpen = true; return@BookButton }
             s.exporting = true
             scope.launch {
