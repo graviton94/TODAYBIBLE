@@ -148,9 +148,8 @@ fun Root(s: AppState) {
         val payNote = s.lifetime.note
         LaunchedEffect(payNote) {
             val n = payNote ?: return@LaunchedEffect
-            val L = io.github.graviton94.todaybible.data.Lifetime.Note
-            s.toast = ctx0.getString(when (n) { L.BOUGHT -> R.string.pay_done_life; L.SUBSCRIBED -> R.string.pay_done_sub; L.RESTORED -> R.string.pay_restored; L.NOTHING -> R.string.pay_none; L.PENDING -> R.string.pay_pending; L.FAILED -> R.string.pay_failed })
-            if (n == L.BOUGHT || n == L.SUBSCRIBED) { s.purchaseOpen = false; s.peekBook = null }
+            s.toast = ctx0.getString(when (n) { io.github.graviton94.todaybible.data.Lifetime.Note.BOUGHT -> R.string.pay_done_life; io.github.graviton94.todaybible.data.Lifetime.Note.SUBSCRIBED -> R.string.pay_done_sub; io.github.graviton94.todaybible.data.Lifetime.Note.RESTORED -> R.string.pay_restored; io.github.graviton94.todaybible.data.Lifetime.Note.NOTHING -> R.string.pay_none; io.github.graviton94.todaybible.data.Lifetime.Note.PENDING -> R.string.pay_pending; io.github.graviton94.todaybible.data.Lifetime.Note.FAILED -> R.string.pay_failed })
+            if (n == io.github.graviton94.todaybible.data.Lifetime.Note.BOUGHT || n == io.github.graviton94.todaybible.data.Lifetime.Note.SUBSCRIBED) { s.purchaseOpen = false; s.peekBook = null }
             s.lifetime.note = null
         }
         // 하던 일을 두고 나갈지 묻는 창은 모든 창 위에
