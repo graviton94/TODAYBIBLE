@@ -5,7 +5,12 @@ set -u
 # 일부 장면만 (ONLY="q01|p05"): 이름이 맞지 않는 shot 줄은 빼고 다시 실행 (준비 줄은 그대로)
 if [ -n "${ONLY:-}" ] && [ -z "${FILTERED:-}" ]; then
   f=$(mktemp)
-  awk -v re="shot (${ONLY})[a-z0-9_]* " '!/shot [a-z0-9_]+ [0-9.]+/ || $0 ~ re' "$0" > "$f"
+  # shot 줄은 이름이 맞을 때만, '# @scene 태그' … '# @end' 묶음 (여는 순간 · 카드처럼 무거운 장면) 은 태그가 맞을 때만
+  awk -v re="shot (${ONLY})[a-z0-9_]* " -v only="${ONLY}" '
+    /^# @scene / { tag = substr($0, 10); skip = (tag !~ "^(" only ")" && only !~ tag); next }
+    /^# @end/ { skip = 0; next }
+    skip { next }
+    !/shot [a-z0-9_]+ [0-9.]+/ || $0 ~ re' "$0" > "$f"
   FILTERED=1 exec bash "$f" "$@"
 fi
 P=io.github.graviton94.todaybible
@@ -27,6 +32,7 @@ for i in 0 1 2; do open --ez tb.reset true --es tb.theme LIGHT --ei tb.welcomeSt
 # 일부 장면만 찍을 때: 앞 장면들이 깔아 두던 기록을 한 번에
 [ -n "${FILTERED:-}" ] && { open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT; sleep 6; }
 # 여는 순간: A 금박 새김 (매일) · C 표지 넘김 (하루 첫 열기). 눌러야 들어가요
+# @scene o0
 open --ez tb.seed true --es tb.theme LIGHT; sleep 4
 adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro A >/dev/null
 sleep 5; snap o01_daily_drawing; sleep 3; snap o02_daily_ready
@@ -34,6 +40,7 @@ adb shell input tap 540 1200; sleep 1.5; snap o03_daily_entered
 adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro C >/dev/null
 sleep 7; snap o04_cover; adb shell input tap 540 1200; sleep 0.7; snap o05_cover_turning; sleep 3.5; snap o06_title_page
 adb shell input tap 540 1200; sleep 1.5; snap o07_cover_entered
+# @end
 # 오늘 · 필사 (책 · 노트) · 서재 · 기록
 open --es tb.owner 은혜;                                             shot h01_today 5
 swipe_up;                                                          shot h02_today_more 2
@@ -56,7 +63,9 @@ open --ez tb.settings true;                                        shot s01_sett
 swipe_up;                                                          shot s02_settings_cover 2
 open --ez tb.planSheet true;                                       shot p01_plan_sheet 4
 open --es tb.plan mark30;                                          shot p02_today_plan 5
+# @scene p03
 open --es tb.cover navy --es tb.owner 김은혜 --es tb.intro C; sleep 7; snap p03_cover_navy_name
+# @end
 open --es tb.plan none --es tb.cover burgundy --es tb.owner ""
 open --ei tb.page 2 --ei tb.copyTab 0;                             shot p04_aloud_mic 3
 open --ei tb.page 2 --ei tb.copyTab 0 --ez tb.voice true; swipe_up; swipe_up; shot p05_aloud_voice 3
@@ -95,10 +104,12 @@ open --ef tb.scale 1.6 --ez tb.contrast true --ei tb.page 2 --ei tb.copyTab 0; s
 open --ef tb.scale 1.0 --ez tb.contrast false
 open --ei tb.page 3;                                               shot r00_record_stats 5
 open --ei tb.page 0 --ei tb.toast 5;                               shot t01_toast 1.5
+# @scene cards
 open --ez tb.cardShots true
 C=/sdcard/Android/data/$P/files/cards
 for i in $(seq 1 45); do adb shell ls $C/done >/dev/null 2>&1 && break; sleep 2; done
 mkdir -p "$OUT/cards"; adb pull $C/. "$OUT/cards/" >/dev/null 2>&1; rm -f "$OUT/cards/done"; ls "$OUT/cards"
+# @end
 # 마지막 다듬기: 낱말 찾기 · 마음에 새기기 · 주일 설교 노트 · 묵상 한 줄 · 서가와 두루마리 · 듣기 타이머
 open --ez tb.seed true --es tb.find 목자;                            shot g01_find 4
 open --es tb.memory "19:23:1" --ez tb.memoryOpen true;             shot g02_memory 4
@@ -154,10 +165,12 @@ open --ef tb.scale 1.0
 open --es tb.theme DARK;                                           shot d01_today 5
 open --ei tb.page 2;                                               shot d02_copy_grid 4
 open --es tb.plate noah;                                           shot d04_plate 4
+# @scene d05|d06
 adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro A >/dev/null
 sleep 8; snap d05_daily
 adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro C >/dev/null
 sleep 7; adb shell input tap 540 1200; sleep 4.2; snap d06_title_page
+# @end
 open --es tb.theme LIGHT
 # 영어 (KJV): 실제로 쳐 보기
 adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
