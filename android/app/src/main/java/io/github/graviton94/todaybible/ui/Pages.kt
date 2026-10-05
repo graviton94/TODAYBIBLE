@@ -235,7 +235,6 @@ private fun Gear(modifier: Modifier) {
     })
 }
 
-/** 아래 이름표 세 개: 고른 장 위에 붉은 한 줄. */
 /** 듣는 중 띠: 다른 화면에 있어도 지금 듣는 것 · 누르면 그 화면으로 · 멈추기. 듣는 화면에서는 숨겨요. */
 @Composable
 private fun NowPlayingBar(s: AppState) {
@@ -256,6 +255,7 @@ private fun NowPlayingBar(s: AppState) {
     }
 }
 
+/** 아래 이름표: 고른 장 위에 붉은 한 줄. */
 @Composable
 private fun PageTabs(current: Int, onSelect: (Int) -> Unit) {
     val c = Theme.c
