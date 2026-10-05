@@ -182,7 +182,7 @@ private fun ChapterText(s: AppState, book: Int, ch: Int, voiceAt: Int?, picked: 
     LaunchedEffect(jump) { jump?.let { v -> verses.indexOf(v).takeIf { it >= 0 }?.let { list.scrollToItem(it + 1); s.readVerse = null } } }
     val filled = s.progress.filled(s.translation)
     // 한영 대조 (I2): 다른 번역의 같은 절을 아래에 작게 (절 번호가 없는 곳은 비워요)
-    val otherTr = if (s.translation == io.github.graviton94.todaybible.core.Translation.KRV) io.github.graviton94.todaybible.core.Translation.KJV else io.github.graviton94.todaybible.core.Translation.KRV
+    val otherTr = if (s.translation == io.github.graviton94.todaybible.core.Translation.KRV) s.store.englishBible else io.github.graviton94.todaybible.core.Translation.KRV
     val other = if (s.parallel) remember(book, otherTr) { s.store.book(otherTr, book) } else null
     LazyColumn(state = list, modifier = Modifier.fillMaxSize(),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3),

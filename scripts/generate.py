@@ -65,7 +65,7 @@ def strings():
 
 def bible():
     out = {}
-    for tr in ("krv", "kjv"):
+    for tr in ("krv", "kjv", "web"):
         d = json.load(open(os.path.join(ROOT, "data", "bible", f"{tr}.json"), encoding="utf-8"))
         for i, b in enumerate(d["books"]):
             lines = []

@@ -49,7 +49,7 @@
     <string name="stamp">도장</string>
     <string name="reminder">매일 알림</string>
     <string name="about">정보</string>
-    <string name="about_text">개신교 66권 · 개역한글(1961) · KJV(1611) · 판화 귀스타브 도레(1866)</string>
+    <string name="about_text">개신교 66권 · 개역한글(1961) · World English Bible · KJV(1611) · 판화 귀스타브 도레(1866)</string>
     <string name="back">뒤로</string>
     <string name="ms_BEGINNING_name">태초에</string>
     <string name="ms_BEGINNING_rule">첫 절을 채우다</string>
@@ -557,7 +557,7 @@
     <string name="about_us">하루의 성경은 하루 한 장씩 소리 내어 읽고, 타자와 손글씨로 옮겨 쓰며 성경 한 권을 내 것으로 만드는 앱이에요. 계정 · 광고 · 분석 도구가 없고, 쓰신 기록은 폰 안에만 있어요. 나이와 상관없이 교회에 다니는 분들을 위해 개인 개발자가 만들었어요.</string>
     <string name="about_contact">문의 · 제안: %1$s</string>
     <string name="credit_text">성경 본문</string>
-    <string name="credit_text_d">개역한글(1961) — 저작권 보호 기간이 끝난 판. King James Version(1611) — 공개 도메인(영국은 왕실 특허). 본문은 CrossWire SWORD 모듈에서.</string>
+    <string name="credit_text_d">개역한글(1961) — 저작권 보호 기간이 끝난 판. King James Version(1611) — 공개 도메인(영국은 왕실 특허). World English Bible Updated — 공개 도메인, 고치지 않고 그대로 (\'World English Bible\' 은 eBible.org 의 상표). 본문은 CrossWire SWORD 모듈과 eBible.org 에서.</string>
     <string name="credit_art">판화</string>
     <string name="credit_art_d">귀스타브 도레, 성경 삽화 (1866) — 공개 도메인, Wikimedia Commons에서.</string>
     <string name="credit_voice">낭독 목소리</string>
@@ -677,7 +677,7 @@
     <string name="language">언어</string>
     <string name="lang_system">폰 설정 따르기</string>
     <string name="lang_ko">한국어 · 개역한글 · 한국어 낭독</string>
-    <string name="lang_en">English · King James Version · English narration</string>
+    <string name="lang_en">English · %1$s · English narration</string>
     <string name="language_hint">앱 글, 성경 본문, 낭독 목소리가 함께 바뀌어요. 언어마다 쓴 기록은 그대로 남아요.</string>
     <string name="set_display">언어와 화면</string>
     <string name="set_listen">듣기와 낭독</string>
@@ -754,4 +754,8 @@
     <string name="cmp_plans">읽기 계획</string>
     <string name="cmp_gift">가족에게 보내기</string>
     <string name="cmp_prayers">기도문 (듣기 · 쓰기)</string>
+    <string name="tr_web">World English Bible</string>
+    <string name="english_bible">영어 성경</string>
+    <string name="web_desc">World English Bible · 오늘의 영어 (공개 도메인)</string>
+    <string name="kjv_desc">King James Version · 1611 고전 영어</string>
 </resources>

@@ -49,7 +49,7 @@
     <string name="stamp">Stamp</string>
     <string name="reminder">Daily reminder</string>
     <string name="about">About</string>
-    <string name="about_text">Protestant 66 books · Korean Revised Version (1961) · King James Version (1611) · engravings by Gustave Doré (1866)</string>
+    <string name="about_text">Protestant 66 books · Korean Revised Version (1961) · World English Bible · King James Version (1611) · engravings by Gustave Doré (1866)</string>
     <string name="back">Back</string>
     <string name="ms_BEGINNING_name">In the Beginning</string>
     <string name="ms_BEGINNING_rule">Complete your first verse</string>
@@ -557,7 +557,7 @@
     <string name="about_us">Bible by Hand helps you make the whole Bible your own, one chapter a day — reading it aloud, typing it and writing it by hand. There are no accounts, ads or analytics; what you write stays on your phone. Made by an independent developer for churchgoers of every age.</string>
     <string name="about_contact">Questions and suggestions: %1$s</string>
     <string name="credit_text">Bible texts</string>
-    <string name="credit_text_d">Korean Revised Version (개역한글, 1961) — its copyright term has ended. King James Version (1611) — public domain (Crown patent in the UK). Texts from the CrossWire SWORD modules.</string>
+    <string name="credit_text_d">Korean Revised Version (개역한글, 1961) — its copyright term has ended. King James Version (1611) — public domain (Crown patent in the UK). World English Bible Updated — public domain, unchanged ("World English Bible" is a trademark of eBible.org). Texts from the CrossWire SWORD modules and eBible.org.</string>
     <string name="credit_art">Engravings</string>
     <string name="credit_art_d">Gustave Doré, illustrations for the Bible (1866) — public domain, via Wikimedia Commons.</string>
     <string name="credit_voice">Narration</string>
@@ -677,7 +677,7 @@
     <string name="language">Language</string>
     <string name="lang_system">Same as my phone</string>
     <string name="lang_ko">한국어 · 개역한글 · 한국어 낭독</string>
-    <string name="lang_en">English · King James Version · English narration</string>
+    <string name="lang_en">English · %1$s · English narration</string>
     <string name="language_hint">Changes the app\'s words, the Bible text and the narrating voice together. Your records in each language are kept.</string>
     <string name="set_display">Language &amp; display</string>
     <string name="set_listen">Listening</string>
@@ -754,4 +754,8 @@
     <string name="cmp_plans">Reading plans</string>
     <string name="cmp_gift">Send to family</string>
     <string name="cmp_prayers">Prayers (listen · write)</string>
+    <string name="tr_web">World English Bible</string>
+    <string name="english_bible">English Bible</string>
+    <string name="web_desc">World English Bible · modern English (public domain)</string>
+    <string name="kjv_desc">King James Version · 1611 classic English</string>
 </resources>

@@ -47,7 +47,7 @@
   "stamp": {"en": "Stamp", "ko": "도장"},
   "reminder": {"en": "Daily reminder", "ko": "매일 알림"},
   "about": {"en": "About", "ko": "정보"},
-  "about_text": {"en": "Protestant 66 books · Korean Revised Version (1961) · King James Version (1611) · engravings by Gustave Doré (1866)", "ko": "개신교 66권 · 개역한글(1961) · KJV(1611) · 판화 귀스타브 도레(1866)"},
+  "about_text": {"en": "Protestant 66 books · Korean Revised Version (1961) · World English Bible · King James Version (1611) · engravings by Gustave Doré (1866)", "ko": "개신교 66권 · 개역한글(1961) · World English Bible · KJV(1611) · 판화 귀스타브 도레(1866)"},
   "back": {"en": "Back", "ko": "뒤로"},
   "ms_BEGINNING_name": {"en": "In the Beginning", "ko": "태초에"},
   "ms_BEGINNING_rule": {"en": "Complete your first verse", "ko": "첫 절을 채우다"},
@@ -555,7 +555,7 @@
   "about_us": {"en": "Bible by Hand helps you make the whole Bible your own, one chapter a day — reading it aloud, typing it and writing it by hand. There are no accounts, ads or analytics; what you write stays on your phone. Made by an independent developer for churchgoers of every age.", "ko": "하루의 성경은 하루 한 장씩 소리 내어 읽고, 타자와 손글씨로 옮겨 쓰며 성경 한 권을 내 것으로 만드는 앱이에요. 계정 · 광고 · 분석 도구가 없고, 쓰신 기록은 폰 안에만 있어요. 나이와 상관없이 교회에 다니는 분들을 위해 개인 개발자가 만들었어요."},
   "about_contact": {"en": "Questions and suggestions: %1$s", "ko": "문의 · 제안: %1$s"},
   "credit_text": {"en": "Bible texts", "ko": "성경 본문"},
-  "credit_text_d": {"en": "Korean Revised Version (개역한글, 1961) — its copyright term has ended. King James Version (1611) — public domain (Crown patent in the UK). Texts from the CrossWire SWORD modules.", "ko": "개역한글(1961) — 저작권 보호 기간이 끝난 판. King James Version(1611) — 공개 도메인(영국은 왕실 특허). 본문은 CrossWire SWORD 모듈에서."},
+  "credit_text_d": {"en": "Korean Revised Version (개역한글, 1961) — its copyright term has ended. King James Version (1611) — public domain (Crown patent in the UK). World English Bible Updated — public domain, unchanged (\"World English Bible\" is a trademark of eBible.org). Texts from the CrossWire SWORD modules and eBible.org.", "ko": "개역한글(1961) — 저작권 보호 기간이 끝난 판. King James Version(1611) — 공개 도메인(영국은 왕실 특허). World English Bible Updated — 공개 도메인, 고치지 않고 그대로 ('World English Bible' 은 eBible.org 의 상표). 본문은 CrossWire SWORD 모듈과 eBible.org 에서."},
   "credit_art": {"en": "Engravings", "ko": "판화"},
   "credit_art_d": {"en": "Gustave Doré, illustrations for the Bible (1866) — public domain, via Wikimedia Commons.", "ko": "귀스타브 도레, 성경 삽화 (1866) — 공개 도메인, Wikimedia Commons에서."},
   "credit_voice": {"en": "Narration", "ko": "낭독 목소리"},
@@ -675,7 +675,7 @@
   "language": {"en": "Language", "ko": "언어"},
   "lang_system": {"en": "Same as my phone", "ko": "폰 설정 따르기"},
   "lang_ko": {"en": "한국어 · 개역한글 · 한국어 낭독", "ko": "한국어 · 개역한글 · 한국어 낭독"},
-  "lang_en": {"en": "English · King James Version · English narration", "ko": "English · King James Version · English narration"},
+  "lang_en": {"en": "English · %1$s · English narration", "ko": "English · %1$s · English narration"},
   "language_hint": {"en": "Changes the app's words, the Bible text and the narrating voice together. Your records in each language are kept.", "ko": "앱 글, 성경 본문, 낭독 목소리가 함께 바뀌어요. 언어마다 쓴 기록은 그대로 남아요."},
   "set_display": {"en": "Language & display", "ko": "언어와 화면"},
   "set_listen": {"en": "Listening", "ko": "듣기와 낭독"},
@@ -751,5 +751,9 @@
   "pay_failed": {"en": "The payment didn't go through. Please try again in a moment.", "ko": "결제가 끝나지 않았어요. 잠시 뒤 다시 해 주세요."},
   "cmp_plans": {"en": "Reading plans", "ko": "읽기 계획"},
   "cmp_gift": {"en": "Send to family", "ko": "가족에게 보내기"},
-  "cmp_prayers": {"en": "Prayers (listen · write)", "ko": "기도문 (듣기 · 쓰기)"}
+  "cmp_prayers": {"en": "Prayers (listen · write)", "ko": "기도문 (듣기 · 쓰기)"},
+  "tr_web": {"en": "World English Bible", "ko": "World English Bible"},
+  "english_bible": {"en": "English Bible", "ko": "영어 성경"},
+  "web_desc": {"en": "World English Bible · modern English (public domain)", "ko": "World English Bible · 오늘의 영어 (공개 도메인)"},
+  "kjv_desc": {"en": "King James Version · 1611 classic English", "ko": "King James Version · 1611 고전 영어"}
 }

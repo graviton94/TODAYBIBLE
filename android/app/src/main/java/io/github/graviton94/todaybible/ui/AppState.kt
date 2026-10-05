@@ -327,9 +327,11 @@ class AppState(val store: Store) {
     fun chooseLanguage(l: String) {
         language = l; store.language = l
         Lang.applyAppLocale(store.context, l)
-        val tr = when (l) { "ko" -> Translation.KRV; "en" -> Translation.KJV; else -> if (android.content.res.Resources.getSystem().configuration.locales[0].language == "ko") Translation.KRV else Translation.KJV }
+        val tr = when (l) { "ko" -> Translation.KRV; "en" -> store.englishBible; else -> if (android.content.res.Resources.getSystem().configuration.locales[0].language == "ko") Translation.KRV else store.englishBible }
         if (tr != translation) chooseTranslation(tr)
     }
+    /** 영어 성경 고르기 (WEB · KJV): 영어로 보고 있으면 바로 그 번역으로. 기록은 번역마다 따로 남아요. */
+    fun chooseEnglishBible(t: Translation) { store.englishBible = t; if (translation != Translation.KRV) chooseTranslation(t) }
     fun setTextScale(s: Float) { scale = s; store.textScale = s }
     fun setStampMark(s: String) { stamp = s; store.stamp = s; widgets() }
     /** 나의 성경 PDF: 평생권이 필요하면 평생권 화면으로. */

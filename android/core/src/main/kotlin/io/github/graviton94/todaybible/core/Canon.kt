@@ -52,7 +52,8 @@ value class VerseKey(val raw: Int) {
 }
 
 /** 번역. total = 채울 수 있는 절 수 (CoreTest 가 본문에서 확인). */
-enum class Translation(val id: String, val total: Int) { KRV("krv", 31084), KJV("kjv", 31102) }
+/** 번역: 개역한글 · KJV (1611) · World English Bible Updated (오늘의 영어, 공개 도메인. 사도행전 8:37 처럼 뒤 사본에만 있는 절 다섯은 비어 있어 뺌). */
+enum class Translation(val id: String, val total: Int) { KRV("krv", 31084), KJV("kjv", 31102), WEB("web", 31098) }
 
 /** 장절 찾기: "요 3:16", "요한복음 3장 16절", "John 3:16", "ps23" 같은 글을 (권, 장, 절?) 로. */
 object Reference {

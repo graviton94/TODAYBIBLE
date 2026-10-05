@@ -202,8 +202,13 @@ class Store(val context: Context) {
     var narratorEn: String
         get() = prefs.getString("narrator_en", null) ?: Narration.MALE_EN.ifEmpty { Narration.DEVICE }
         set(v) = prefs.edit().putString("narrator_en", v).apply()
-    fun narratorFor(tr: Translation) = if (tr == Translation.KRV) narrator else narratorEn
-    fun setNarrator(tr: Translation, v: String) { if (tr == Translation.KRV) narrator = v else narratorEn = v }
+    /** 영어 목소리는 하나만 고르고 (남 · 여), 번역에 맞는 음원으로 바꿔 써요 (KJV en_* · WEB web_*). */
+    fun narratorFor(tr: Translation) = when (tr) { Translation.KRV -> narrator; Translation.KJV -> narratorEn; Translation.WEB -> narratorEn.replace("en_", "web_") }
+    fun setNarrator(tr: Translation, v: String) { if (tr == Translation.KRV) narrator = v else narratorEn = v.replace("web_", "en_") }
+    /** 영어를 고르면 쓸 영어 성경: World English Bible (기본) · KJV. */
+    var englishBible: Translation
+        get() = if (prefs.getString("english_bible", "web") == "kjv") Translation.KJV else Translation.WEB
+        set(v) = prefs.edit().putString("english_bible", v.id).apply()
     var guideVoice: String
         get() = prefs.getString("guide_voice", "")!!
         set(v) = prefs.edit().putString("guide_voice", v).apply()
@@ -289,5 +294,5 @@ class Store(val context: Context) {
         return b.toString()
     }
 
-    private fun defaultTranslation() = if (android.content.res.Resources.getSystem().configuration.locales[0].language == "ko") Translation.KRV else Translation.KJV
+    private fun defaultTranslation() = if (android.content.res.Resources.getSystem().configuration.locales[0].language == "ko") Translation.KRV else englishBible
 }

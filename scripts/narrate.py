@@ -42,10 +42,14 @@ TUNE = {  # 빠르기, 낮춤(재생 비율), 구절 사이 쉼(초)
     # 영어 (KJV): 견본 (0.88) 결 그대로, 남성은 한국어처럼 조금 낮게
     "EN_M5": (0.88, 0.97, 0.36),
     "EN_F5": (0.88, 1.00, 0.32),
+    "WEB_M5": (0.88, 0.97, 0.36),
+    "WEB_F5": (0.88, 1.00, 0.32),
 }
-english = voice.upper().startswith("EN_")
-style_id = voice[3:].upper() if english else voice
-tr, lang = ("kjv", "en") if english else ("krv", "ko")
+# 목소리: M5 · F5 (개역한글) · EN_M5 · EN_F5 (KJV) · WEB_M5 · WEB_F5 (World English Bible, 같은 영어 목소리)
+web = voice.upper().startswith("WEB_")
+english = voice.upper().startswith("EN_") or web
+style_id = voice.split("_", 1)[1].upper() if english else voice
+tr, lang = ("web", "en") if web else (("kjv", "en") if english else ("krv", "ko"))
 speed, deepen, gap = TUNE.get(voice.upper(), (0.92, 1.0, 0.32) if english else (0.9, 1.0, 0.35))
 CONT = re.compile(r"(며|고|니|되|나|여|서|면|매|요|라|은|는|도)$")
 

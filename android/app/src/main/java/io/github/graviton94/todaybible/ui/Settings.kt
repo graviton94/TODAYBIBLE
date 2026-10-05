@@ -73,8 +73,17 @@ fun SettingsPage(s: AppState) {
             // 언어: 화면 글 · 성경 번역 · 낭독 목소리를 한 번에 (한국어 = 개역한글 · 한국어 낭독, English = KJV · 영어 낭독)
             Group(stringResource(R.string.language)) {
                 Column {
-                    listOf("system" to R.string.lang_system, "ko" to R.string.lang_ko, "en" to R.string.lang_en).forEach { (id, name) ->
-                        ChoiceRow(stringResource(name), s.language == id) { if (s.language != id) askLang = id }
+                    val enName = stringResource(if (s.store.englishBible == io.github.graviton94.todaybible.core.Translation.KJV) R.string.tr_kjv else R.string.tr_web)
+                    listOf("system" to stringResource(R.string.lang_system), "ko" to stringResource(R.string.lang_ko), "en" to stringResource(R.string.lang_en, enName)).forEach { (id, name) ->
+                        ChoiceRow(name, s.language == id) { if (s.language != id) askLang = id }
+                    }
+                }
+            }
+            // 영어 성경: 오늘의 영어 (WEB, 기본) · 1611 고전 영어 (KJV). 영어로 볼 때만
+            if (s.translation != io.github.graviton94.todaybible.core.Translation.KRV) Group(stringResource(R.string.english_bible)) {
+                Column {
+                    listOf(io.github.graviton94.todaybible.core.Translation.WEB to R.string.web_desc, io.github.graviton94.todaybible.core.Translation.KJV to R.string.kjv_desc).forEach { (t, name) ->
+                        ChoiceRow(stringResource(name), s.translation == t) { if (s.translation != t) s.chooseEnglishBible(t) }
                     }
                 }
             }
@@ -98,7 +107,7 @@ fun SettingsPage(s: AppState) {
                 Text(stringResource(R.string.simple_hint), style = Theme.small())
             }
             }
-            Section(stringResource(R.string.set_listen), stringResource(when (s.narrator) { io.github.graviton94.todaybible.data.Narration.DEVICE -> R.string.narr_device; io.github.graviton94.todaybible.data.Narration.MALE, io.github.graviton94.todaybible.data.Narration.MALE_EN -> R.string.narr_male; else -> R.string.narr_female }), openSec == "set_listen") { openSec = if (openSec == "set_listen") null else "set_listen" }
+            Section(stringResource(R.string.set_listen), stringResource(when { s.narrator == io.github.graviton94.todaybible.data.Narration.DEVICE -> R.string.narr_device; io.github.graviton94.todaybible.data.Narration.isMale(s.narrator) -> R.string.narr_male; else -> R.string.narr_female }), openSec == "set_listen") { openSec = if (openSec == "set_listen") null else "set_listen" }
             if (openSec == "set_listen") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
             Group(stringResource(R.string.guide_settings)) { GuideVoiceSettings(s) }
             }
@@ -357,9 +366,9 @@ private fun GuideVoiceSettings(s: AppState) {
     // 미리 만든 낭독 목소리 (개역한글): 듣기는 받은 권이 있으면 그 음원으로
     val N = io.github.graviton94.todaybible.data.Narration
     // 번역마다 따로 (개역한글 M5 · F5, KJV 는 영어 목소리가 생기면)
-    if (N.choices(s.korean).size > 1) {
-        N.choices(s.korean).forEach { v ->
-            val id = when (v) { N.DEVICE -> R.string.narr_device; N.MALE, N.MALE_EN -> R.string.narr_male; else -> R.string.narr_female }
+    if (N.choices(s.translation).size > 1) {
+        N.choices(s.translation).forEach { v ->
+            val id = when { v == N.DEVICE -> R.string.narr_device; N.isMale(v) -> R.string.narr_male; else -> R.string.narr_female }
             ChoiceRow(stringResource(id), s.narrator == v) { s.chooseNarrator(v) }
         }
         var player by remember { mutableStateOf<android.media.MediaPlayer?>(null) }

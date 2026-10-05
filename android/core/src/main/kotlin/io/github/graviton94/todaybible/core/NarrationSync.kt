@@ -8,7 +8,7 @@ package io.github.graviton94.todaybible.core
 object NarrationSync {
     /** narrate.py 의 TUNE (낮춤 · 숨 길이 초). 낮추면 소리가 늘어나 숨도 그만큼 길어져요. */
     private class Tune(val deepen: Double, val gap: Double)
-    private val TUNE = mapOf("m5" to Tune(0.96, 0.42), "f5" to Tune(1.0, 0.35), "en_m5" to Tune(0.97, 0.36), "en_f5" to Tune(1.0, 0.32))
+    private val TUNE = mapOf("m5" to Tune(0.96, 0.42), "f5" to Tune(1.0, 0.35), "web_m5" to Tune(0.97, 0.36), "web_f5" to Tune(1.0, 0.32), "en_m5" to Tune(0.97, 0.36), "en_f5" to Tune(1.0, 0.32))
     private const val TAIL = 0.12
     private val CONT = Regex("(며|고|니|되|나|여|서|면|매|요|라|은|는|도)$")
 
