@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -23,6 +24,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
@@ -56,7 +60,12 @@ fun PrayerCard(s: AppState) {
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
         Text(prayerName(p), style = Theme.small().copy(color = c.rubric), maxLines = 1)
         Text(Markup.plain(s.store.book(s.translation, first.book).verse(first.chapter, first.from)), style = Theme.verse(s.korean), maxLines = 3, overflow = TextOverflow.Ellipsis)
-        Text(stringResource(if (prayed) R.string.prayer_prayed else R.string.prayer_go), style = Theme.small().copy(color = if (prayed) c.giltText else c.rubric), maxLines = 1)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(if (prayed) R.string.prayer_prayed else R.string.prayer_go), style = Theme.small().copy(color = if (prayed) c.giltText else c.rubric), maxLines = 1, modifier = Modifier.weight(1f))
+            // 다른 기도문들로 (주기도문 · 아론의 축복 …)
+            Text(stringResource(R.string.prayer_all), style = Theme.small().copy(color = c.rubric), maxLines = 1,
+                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.prayersOpen = true })
+        }
     }
 }
 
@@ -76,7 +85,10 @@ fun PrayerPage(s: AppState, id: String) {
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         Text(stringResource(R.string.prayer_back), style = Theme.small().copy(color = c.rubric), maxLines = 1,
             modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.prayerOpen = null })
-        Text(prayerName(p), style = Theme.title(k, Tokens.Text.title))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(prayerName(p), style = Theme.title(k, Tokens.Text.title), modifier = Modifier.weight(1f))
+            PrayerBell(s, p.id)
+        }
         p.passages.forEach { ps ->
             val t = s.store.book(s.translation, ps.book)
             Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
@@ -111,10 +123,13 @@ fun PrayerPage(s: AppState, id: String) {
 fun PrayerList(s: AppState, except: String? = null) {
     val c = Theme.c
     Prayers.all.filter { it.id != except }.forEach { p ->
-        Column(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clickable(role = Role.Button) { s.prayerOpen = p.id }.padding(vertical = Tokens.Space.s1),
-            verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-            Text(prayerName(p) + if (s.prayed(p.id)) " · " + stringResource(R.string.prayer_prayed_short) else "", style = Theme.label().copy(color = if (s.prayed(p.id)) c.giltText else c.ink), maxLines = 1)
-            Text(s.prayerRefs(p), style = Theme.small(), maxLines = 2)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f).heightIn(min = Tokens.Size.row).clickable(role = Role.Button) { s.prayersOpen = false; s.prayerOpen = p.id }.padding(vertical = Tokens.Space.s1),
+                verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                Text(prayerName(p) + if (s.prayed(p.id)) " · " + stringResource(R.string.prayer_prayed_short) else "", style = Theme.label().copy(color = if (s.prayed(p.id)) c.giltText else c.ink), maxLines = 2)
+                Text(s.prayerRefs(p), style = Theme.small(), maxLines = 2)
+            }
+            PrayerBell(s, p.id)
         }
     }
 }
@@ -131,3 +146,61 @@ fun PrayersSheet(s: AppState) {
     }
 }
 
+
+/** 기도 알림 시각 글 (폰 · 앱 언어의 짧은 시각). */
+@Composable
+fun prayerTime(minutes: Int): String = java.time.LocalTime.of(minutes / 60, minutes % 60)
+    .format(java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT).withLocale(androidx.compose.ui.platform.LocalConfiguration.current.locales[0]))
+
+/** 기도문 옆 종: 켜졌으면 붉은 종 + 시각, 누르면 시각 고르는 창. */
+@Composable
+fun PrayerBell(s: AppState, id: String) {
+    val c = Theme.c; val ctx = LocalContext.current
+    val at = s.prayerTimes[id]
+    val label = stringResource(R.string.prayer_bell)
+    Row(Modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).clickable(role = Role.Button) { s.prayerBell = id }
+        .semantics { contentDescription = label }.padding(horizontal = Tokens.Space.s2),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+        BellMark(if (at != null) c.rubric else c.inkSoft, at != null, Modifier.size(Tokens.Size.iconSm))
+        if (at != null) Text(prayerTime(at), style = Theme.small().copy(color = c.rubric), maxLines = 1)
+    }
+}
+
+/** 기도 알림 정하기: 끄기 / 자주 쓰는 시각 / 다른 시각 (시계). 켤 때 알림 허락이 없으면 먼저 물어요. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+fun PrayerBellSheet(s: AppState, id: String) {
+    val c = Theme.c; val ctx = LocalContext.current
+    val p = Prayers.byId(id) ?: return
+    val at = s.prayerTimes[id]
+    var want by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Int?>(null) }
+    val ask = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { ok ->
+        if (ok) want?.let { s.setPrayerTime(id, it) } else s.toast = ctx.getString(R.string.reminder_denied)
+    }
+    fun choose(m: Int) {
+        if (android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) { want = m; ask.launch(android.Manifest.permission.POST_NOTIFICATIONS) }
+        else s.setPrayerTime(id, m)
+    }
+    BookSheet({ s.prayerBell = null }) {
+        Text(stringResource(R.string.prayer_bell_h, prayerName(p)), style = Theme.title(s.korean))
+        Text(stringResource(R.string.prayer_bell_note), style = Theme.small())
+        // 이 기도의 때에 맞춘 시각을 앞에
+        val presets = when (p.hour) {
+            io.github.graviton94.todaybible.core.Hour.MORNING -> listOf(5 * 60, 5 * 60 + 30, 6 * 60, 6 * 60 + 30, 7 * 60, 7 * 60 + 30, 8 * 60, 9 * 60)
+            io.github.graviton94.todaybible.core.Hour.NOON -> listOf(11 * 60 + 30, 12 * 60, 12 * 60 + 30, 13 * 60)
+            io.github.graviton94.todaybible.core.Hour.EVENING -> listOf(17 * 60, 18 * 60, 18 * 60 + 30, 19 * 60, 20 * 60)
+            io.github.graviton94.todaybible.core.Hour.NIGHT -> listOf(21 * 60, 21 * 60 + 30, 22 * 60, 22 * 60 + 30, 23 * 60)
+            null -> listOf(6 * 60, 7 * 60, 12 * 60, 18 * 60, 21 * 60, 22 * 60)
+        }
+        androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            BookButton(stringResource(R.string.reminder_off), quiet = at != null) { s.setPrayerTime(id, null); s.prayerBell = null }
+            (presets + listOfNotNull(at?.takeIf { it !in presets })).forEach { m ->
+                BookButton(prayerTime(m), quiet = m != at) { choose(m); s.prayerBell = null }
+            }
+        }
+        BookButton(stringResource(R.string.prayer_bell_other), Modifier.fillMaxWidth(), quiet = true) {
+            val start = at ?: presets.first()
+            android.app.TimePickerDialog(ctx, { _, h, mi -> choose(h * 60 + mi); s.prayerBell = null }, start / 60, start % 60, android.text.format.DateFormat.is24HourFormat(ctx)).show()
+        }
+    }
+}

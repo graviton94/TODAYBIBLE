@@ -717,5 +717,13 @@
   "leave_rec_keep": {"en": "Keep reading", "ko": "계속 읽기"},
   "now_playing": {"en": "Now playing · %1$s", "ko": "듣는 중 · %1$s"},
   "now_playing_open": {"en": "Open", "ko": "열기"},
-  "aloud_paused": {"en": "Reading aloud paused when you left the app.", "ko": "앱을 나가서 소리 내어 읽기를 멈췄어요."}
+  "aloud_paused": {"en": "Reading aloud paused when you left the app.", "ko": "앱을 나가서 소리 내어 읽기를 멈췄어요."},
+  "prayer_all": {"en": "All prayers ›", "ko": "기도문 모음 ›"},
+  "prayer_bell": {"en": "Reminder", "ko": "알림"},
+  "prayer_bell_h": {"en": "%1$s · reminder", "ko": "%1$s · 알림"},
+  "prayer_bell_on": {"en": "On", "ko": "켜기"},
+  "prayer_bell_other": {"en": "Other time…", "ko": "다른 시각…"},
+  "prayer_bell_note": {"en": "At that time you get the first words of this prayer. If you already prayed it today, it stays quiet.", "ko": "그 시각에 이 기도의 첫 말씀으로 알려 드려요. 오늘 이미 드렸으면 울리지 않아요."},
+  "prayer_reminder_none": {"en": "Tap the bell next to a prayer to get a reminder.", "ko": "기도문 옆 종을 누르면 알림을 켤 수 있어요."},
+  "prayer_reminder_manage": {"en": "Set reminders per prayer", "ko": "기도문마다 알림 정하기"}
 }

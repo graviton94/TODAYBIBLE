@@ -159,15 +159,10 @@ fun SettingsPage(s: AppState) {
                 }
             }
             Group(stringResource(R.string.prayer_reminder)) {
-                // 기도 알림: 끄기 · 아침과 저녁 · 하루 네 번 (알림 허락이 없으면 먼저 물음)
-                val ctx = androidx.compose.ui.platform.LocalContext.current
-                var want by remember { mutableIntStateOf(0) }
-                val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (ok) s.choosePrayerReminder(want) else s.toast = ctx.getString(R.string.reminder_denied) }
-                UnderlineTabs(listOf(stringResource(R.string.reminder_off), stringResource(R.string.prayer_twice), stringResource(R.string.prayer_four)), s.prayerReminder) { m ->
-                    if (m > 0 && android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) { want = m; ask.launch(android.Manifest.permission.POST_NOTIFICATIONS) }
-                    else s.choosePrayerReminder(m)
-                }
-                Text(stringResource(R.string.prayer_reminder_note), style = Theme.small())
+                // 기도 알림은 기도문마다 (종): 여기서는 켜진 것만 한눈에
+                val on = io.github.graviton94.todaybible.core.Prayers.all.mapNotNull { p -> s.prayerTimes[p.id]?.let { prayerName(p) + " " + prayerTime(it) } }
+                Text(if (on.isEmpty()) stringResource(R.string.prayer_reminder_none) else on.joinToString(" · "), style = Theme.small())
+                BookButton(stringResource(R.string.prayer_reminder_manage), Modifier.fillMaxWidth(), quiet = true) { s.prayersOpen = true }
             }
             }
             Section(stringResource(R.string.set_keep), stringResource(R.string.set_keep_sum), openSec == "set_keep") { openSec = if (openSec == "set_keep") null else "set_keep" }

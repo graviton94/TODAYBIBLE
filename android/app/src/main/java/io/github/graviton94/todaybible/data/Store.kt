@@ -245,6 +245,17 @@ class Store(val context: Context) {
     var prayerReminder: Int
         get() = prefs.getInt("prayer_reminder", 0)
         set(v) = prefs.edit().putInt("prayer_reminder", v).apply()
+    /** 기도문마다 알림 시각 (아이디 → 하루 중 분). 없으면 꺼짐. 예전 '아침과 저녁 · 네 번' 설정은 처음 읽을 때 옮겨요. */
+    var prayerTimes: Map<String, Int>
+        get() {
+            val raw = prefs.getString("prayer_times", null)
+            if (raw == null) {
+                val old = when (prayerReminder) { 1 -> mapOf("morning" to 7 * 60, "evening" to 18 * 60); 2 -> mapOf("morning" to 7 * 60, "noon" to 12 * 60, "evening" to 18 * 60, "night" to 21 * 60 + 30); else -> emptyMap() }
+                return old
+            }
+            return raw.split(',').mapNotNull { e -> e.split('=').takeIf { it.size == 2 }?.let { (k, v) -> v.toIntOrNull()?.let { k to it } } }.toMap()
+        }
+        set(v) = prefs.edit().putString("prayer_times", v.entries.joinToString(",") { "${it.key}=${it.value}" }).apply()
     /** 오늘 드린 기도문 (날 · 아이디들). 날이 바뀌면 비어요. */
     fun prayedOn(day: Long): Set<String> = prefs.getString("prayed", "")!!.split('|').let { p -> if (p.firstOrNull() == day.toString()) p.drop(1).toSet() else emptySet() }
     fun setPrayed(day: Long, ids: Set<String>) = prefs.edit().putString("prayed", (listOf(day.toString()) + ids).joinToString("|")).apply()

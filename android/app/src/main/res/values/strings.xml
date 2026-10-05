@@ -720,4 +720,12 @@
     <string name="now_playing">Now playing · %1$s</string>
     <string name="now_playing_open">Open</string>
     <string name="aloud_paused">Reading aloud paused when you left the app.</string>
+    <string name="prayer_all">All prayers ›</string>
+    <string name="prayer_bell">Reminder</string>
+    <string name="prayer_bell_h">%1$s · reminder</string>
+    <string name="prayer_bell_on">On</string>
+    <string name="prayer_bell_other">Other time…</string>
+    <string name="prayer_bell_note">At that time you get the first words of this prayer. If you already prayed it today, it stays quiet.</string>
+    <string name="prayer_reminder_none">Tap the bell next to a prayer to get a reminder.</string>
+    <string name="prayer_reminder_manage">Set reminders per prayer</string>
 </resources>

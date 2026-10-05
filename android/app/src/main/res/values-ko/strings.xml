@@ -720,4 +720,12 @@
     <string name="now_playing">듣는 중 · %1$s</string>
     <string name="now_playing_open">열기</string>
     <string name="aloud_paused">앱을 나가서 소리 내어 읽기를 멈췄어요.</string>
+    <string name="prayer_all">기도문 모음 ›</string>
+    <string name="prayer_bell">알림</string>
+    <string name="prayer_bell_h">%1$s · 알림</string>
+    <string name="prayer_bell_on">켜기</string>
+    <string name="prayer_bell_other">다른 시각…</string>
+    <string name="prayer_bell_note">그 시각에 이 기도의 첫 말씀으로 알려 드려요. 오늘 이미 드렸으면 울리지 않아요.</string>
+    <string name="prayer_reminder_none">기도문 옆 종을 누르면 알림을 켤 수 있어요.</string>
+    <string name="prayer_reminder_manage">기도문마다 알림 정하기</string>
 </resources>

@@ -138,6 +138,7 @@ fun Root(s: AppState) {
         if (s.sermonOpen != null) SermonSheet(s)
         if (s.prayersOpen) PrayersSheet(s)
         s.prayerOpen?.let { id -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PrayerPage(s, id) } }
+        s.prayerBell?.let { PrayerBellSheet(s, it) }
         s.exportJob?.let { ExportSheet(s, it) }
         s.plateView?.let { pl -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PlatePage(s, pl) } }
         // 평생권은 어느 창에서 열어도 맨 위에

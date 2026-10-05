@@ -290,6 +290,24 @@ fun PremiumTag(modifier: Modifier = Modifier) {
     }
 }
 
+/** 종 (기도 알림): 켜졌으면 채운 종, 꺼졌으면 테두리만. */
+@Composable
+fun BellMark(color: Color, on: Boolean, modifier: Modifier = Modifier) {
+    Box(modifier.drawBehind {
+        val w = Tokens.Stroke.giltFine.toPx() * 1.6f; val W = size.width; val H = size.height
+        val body = androidx.compose.ui.graphics.Path().apply {
+            moveTo(W * 0.18f, H * 0.74f)
+            cubicTo(W * 0.26f, H * 0.62f, W * 0.24f, H * 0.5f, W * 0.26f, H * 0.4f)
+            cubicTo(W * 0.3f, H * 0.2f, W * 0.7f, H * 0.2f, W * 0.74f, H * 0.4f)
+            cubicTo(W * 0.76f, H * 0.5f, W * 0.74f, H * 0.62f, W * 0.82f, H * 0.74f)
+            close()
+        }
+        if (on) drawPath(body, color) else drawPath(body, color, style = Stroke(w, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+        drawCircle(color, W * 0.07f, Offset(W / 2, H * 0.84f))
+        drawLine(color, Offset(W / 2, H * 0.12f), Offset(W / 2, H * 0.2f), w)
+    })
+}
+
 @Composable
 fun LockMark(color: Color, modifier: Modifier = Modifier) {
     Box(modifier.drawBehind {

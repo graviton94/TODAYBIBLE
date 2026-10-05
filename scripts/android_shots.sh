@@ -121,6 +121,9 @@ open --es tb.prayer lords --ef tb.scale 1.6;                       shot h14_pray
 open --ez tb.lock true --es tb.prayerWrite lords;                  shot h19_prayer_write_locked 5
 open --es tb.prayer morning --es tb.prayerPlay morning;             sleep 4; adb shell input keyevent 4; shot h20_leave_listening 2
 open --es tb.prayerPlay morning --ei tb.page 0;                    shot h21_now_playing_bar 4
+open --ez tb.prayers true --es tb.prayerTimes "morning=420,night=1290";  shot h22_prayer_bells 4
+open --es tb.prayer morning --es tb.prayerBell morning;            shot h23_prayer_bell_sheet 4
+open --ei tb.page 0;                                               shot h24_today_prayer_link 4
 open --es tb.listen "43:3" --ez tb.parallel true --ef tb.scale 1.0; shot h15_parallel 4
 open --es tb.listen "43:3" --ez tb.parallel false;                 sleep 1
 open --ei tb.picker 19;                                            shot h16_keep_narration 4

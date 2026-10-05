@@ -202,8 +202,14 @@ class AppState(val store: Store) {
     /** 기도문: 펼친 기도 · 목록 시트 · 오늘 드린 것. */
     var prayerOpen by mutableStateOf<String?>(null)
     var prayersOpen by mutableStateOf(false)
-    var prayerReminder by mutableIntStateOf(store.prayerReminder)
-    fun choosePrayerReminder(m: Int) { prayerReminder = m; store.prayerReminder = m; Thread { io.github.graviton94.todaybible.data.PrayerReminder.schedule(store.context) }.start() }
+    /** 기도문마다 알림 시각 (아이디 → 하루 중 분) · 종을 누른 기도문 (시각 고르는 창). */
+    var prayerTimes by mutableStateOf(store.prayerTimes)
+    var prayerBell by mutableStateOf<String?>(null)
+    fun setPrayerTime(id: String, minutes: Int?) {
+        prayerTimes = if (minutes == null) prayerTimes - id else prayerTimes + (id to minutes)
+        store.prayerTimes = prayerTimes
+        Thread { io.github.graviton94.todaybible.data.PrayerReminder.schedule(store.context) }.start()
+    }
     private var prayedIds by mutableStateOf(store.prayedOn(java.time.LocalDate.now().toEpochDay()))
     fun prayed(id: String) = id in prayedIds && store.prayedOn(today().toEpochDay()).contains(id)
     fun markPrayed(id: String) { val d = today().toEpochDay(); prayedIds = store.prayedOn(d) + id; store.setPrayed(d, prayedIds) }
@@ -306,7 +312,7 @@ class AppState(val store: Store) {
     /** 덮인 창들 모두 닫기 (알림 · 위젯으로 들어올 때). */
     fun closeOverlays() {
         settingsOpen = false; purchaseOpen = false; plateView = null; finished = null; picker = null; marksOpen = false; found = null
-        memoryOpen = null; sermonOpen = null; prayersOpen = false; prayerOpen = null; shareVerse = null; handBook = null; planOpen = false; award = null; opening = false; leaveAsk = null
+        memoryOpen = null; sermonOpen = null; prayersOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; handBook = null; planOpen = false; award = null; opening = false; leaveAsk = null
     }
     /** 앱을 처음부터 다시 (언어처럼 화면 전체가 바뀌는 설정 뒤에). 여는 순간은 이번만 건너뛰어요. */
     fun restartApp(a: android.app.Activity) {

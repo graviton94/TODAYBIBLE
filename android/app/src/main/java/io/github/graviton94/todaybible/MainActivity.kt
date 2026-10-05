@@ -178,6 +178,8 @@ class MainActivity : ComponentActivity() {
         }
         i.getStringExtra("tb.prayer")?.let { s.prayerOpen = it }
         i.getStringExtra("tb.prayerWrite")?.let { s.writePrayer(it) }
+        i.getStringExtra("tb.prayerBell")?.let { s.prayerBell = it }
+        i.getStringExtra("tb.prayerTimes")?.let { v -> v.split(',').forEach { e -> e.split('=').takeIf { it.size == 2 }?.let { (k, m) -> m.toIntOrNull()?.let { s.setPrayerTime(k, it) } } } }
         i.getStringExtra("tb.prayerPlay")?.let { id -> io.github.graviton94.todaybible.core.Prayers.byId(id)?.let { io.github.graviton94.todaybible.data.ListenService.startPassages(this, it.passages, 1f, "prayer:$id") } }
         s.debugSection = i.getStringExtra("tb.section"); s.debugAskLang = i.getStringExtra("tb.askLang")
         if (i.getBooleanExtra("tb.prayers", false)) s.prayersOpen = true
