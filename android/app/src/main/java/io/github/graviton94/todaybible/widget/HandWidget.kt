@@ -79,7 +79,7 @@ class HandWidget : AppWidgetProvider() {
                 val ref = m.measure("$name 23:1", TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.small, color = c.rubric))
                 val bottom = size.height - pad - ref.size.height
                 drawText(ref, topLeft = Offset(pad, bottom))
-                val style = TextStyle(fontFamily = Fonts.pen, fontSize = Tokens.Text.title, lineHeight = Tokens.Leading.body.em, color = c.penInk)
+                val style = TextStyle(fontFamily = Fonts.pen, fontSize = Tokens.Text.title, lineHeight = androidx.compose.ui.unit.TextUnit(Tokens.Leading.body, androidx.compose.ui.unit.TextUnitType.Em), color = c.penInk)
                 val lay = m.measure(verse, style, overflow = androidx.compose.ui.text.style.TextOverflow.Clip, constraints = Constraints(maxWidth = w.toInt(), maxHeight = (bottom - pad - Tokens.Space.s1.toPx()).toInt()))
                 for (i in 0 until lay.lineCount) { val y = pad + lay.getLineBottom(i); drawLine(c.noteLine, Offset(pad, y), Offset(size.width - pad, y), Tokens.Stroke.hair.toPx()) }
                 drawText(lay, topLeft = Offset(pad, pad))
