@@ -268,6 +268,7 @@ fun StampMark(mark: String, color: Color, modifier: Modifier = Modifier) {
 @Composable
 fun LifetimeCard(s: AppState, modifier: Modifier = Modifier) {
     if (s.lifetime.owned) return
+    val life = s.lifetime
     val c = Theme.c
     Column(modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leather).drawBehind { giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = true) }
         .clickable(role = Role.Button) { s.purchaseOpen = true }.padding(Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
@@ -276,7 +277,13 @@ fun LifetimeCard(s: AppState, modifier: Modifier = Modifier) {
             Text(stringResource(R.string.lifetime), style = Theme.title(s.korean).copy(color = c.gilt), maxLines = 1)
         }
         Text(stringResource(R.string.lifetime_card_line), style = Theme.small().copy(color = c.leatherInk))
-        Text(stringResource(R.string.lifetime_card_go, s.lifetime.price ?: stringResource(R.string.lifetime_price_hint)), style = Theme.label().copy(color = c.leatherInk), maxLines = 1)
+        // 구독 중이면 할인된 평생권, 아니면 월 구독 가격부터 (부담이 적은 쪽을 먼저)
+        val go = when {
+            life.subscribed && life.lifetimePrice != null -> stringResource(R.string.lifetime_card_sub, life.lifetimePrice!!)
+            life.monthlyPrice != null -> stringResource(R.string.lifetime_card_from, life.monthlyPrice!!)
+            else -> stringResource(R.string.lifetime_card_go, life.price ?: stringResource(R.string.lifetime_price_hint))
+        }
+        Text(go, style = Theme.label().copy(color = c.leatherInk), maxLines = 2)
     }
 }
 

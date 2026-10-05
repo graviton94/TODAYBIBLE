@@ -265,7 +265,7 @@ class AppState(val store: Store) {
     fun today(): LocalDate = fixedToday ?: LocalDate.now()
     fun text(b: Int = book) = store.book(translation, b)
     /** 무료 네 권 밖은 평생권이 있어야 열림. Play 에 닿지 않는 곳(직접 설치 등)에서는 잠그지 않음. */
-    fun locked(b: Int) = b !in Canon.free && !lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)
+    fun locked(b: Int) = b !in Canon.free && !lifetime.unlocked && (lifetime.ready || lifetime.forceReady || forceLock)
     fun widgets() {
         val ctx = store.context
         // 목표 계산 (길잡이 책들을 읽음) 과 위젯 그리기는 화면 줄 밖에서
@@ -339,7 +339,7 @@ class AppState(val store: Store) {
     var audiobookBook by mutableStateOf<Int?>(null)
     fun requestAudiobook(b: Int) { if (gated()) purchaseOpen = true else audiobookBook = b }
     fun requestNotes(b: Int?) { if (gated()) purchaseOpen = true else notesBook = b ?: -1 }
-    fun requestPdf(b: Int) { if (!lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)) purchaseOpen = true else pdfBook = b }
+    fun requestPdf(b: Int) { if (!lifetime.unlocked && (lifetime.ready || lifetime.forceReady || forceLock)) purchaseOpen = true else pdfBook = b }
     fun setGoal(g: Int) { dailyGoal = g; store.dailyGoal = g; widgets() }
     fun toggleNotebook() { notebook = !notebook; store.notebook = notebook; typeView = if (notebook) 1 else 0; store.typeView = typeView }
     /** 타자 보기: 0 책 · 1 노트 · 2 원고지. */
@@ -401,10 +401,10 @@ class AppState(val store: Store) {
     }
     /** 평생권이 있어야 하는데 없는 상태 (Play 에 닿을 때만 잠금). */
     /** 평생권으로 열리는 권인지 (보여 주기용: 결제를 쓸 수 없는 시험판에서도 표시). */
-    fun premium(b: Int) = b !in Canon.free && !lifetime.owned
+    fun premium(b: Int) = b !in Canon.free && !lifetime.unlocked
     /** 평생권 기능 표시 (붓펜 · 연필 · 표지 · PDF · 녹음 …). */
-    val premiumOn: Boolean get() = !lifetime.owned
-    fun gated() = !lifetime.owned && (lifetime.ready || lifetime.forceReady || forceLock)
+    val premiumOn: Boolean get() = !lifetime.unlocked
+    fun gated() = !lifetime.unlocked && (lifetime.ready || lifetime.forceReady || forceLock)
     fun toggleVoice() { if (gated()) { purchaseOpen = true; return }; voiceOn = !voiceOn; store.voiceOn = voiceOn }
     fun chooseCover(c: String) { cover = c; store.cover = c }
     fun setOwner(n: String) { ownerName = n; store.ownerName = n; widgets() }

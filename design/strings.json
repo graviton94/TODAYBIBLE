@@ -725,5 +725,15 @@
   "prayer_bell_other": {"en": "Other time…", "ko": "다른 시각…"},
   "prayer_bell_note": {"en": "At that time you get the first words of this prayer. If you already prayed it today, it stays quiet.", "ko": "그 시각에 이 기도의 첫 말씀으로 알려 드려요. 오늘 이미 드렸으면 울리지 않아요."},
   "prayer_reminder_none": {"en": "Tap the bell next to a prayer to get a reminder.", "ko": "기도문 옆 종을 누르면 알림을 켤 수 있어요."},
-  "prayer_reminder_manage": {"en": "Set reminders per prayer", "ko": "기도문마다 알림 정하기"}
+  "prayer_reminder_manage": {"en": "Set reminders per prayer", "ko": "기도문마다 알림 정하기"},
+  "plans_title": {"en": "Monthly or lifetime", "ko": "월 구독 · 평생권"},
+  "cmp_paid": {"en": "Subscribed", "ko": "구독 · 평생권"},
+  "subscribe_monthly": {"en": "Subscribe · %1$s a month", "ko": "월 구독 · 월 %1$s"},
+  "subscribe_note": {"en": "About a cup of coffee a month. Cancel anytime in Google Play.", "ko": "한 달에 커피 한 잔 값이에요. Google Play에서 언제든 해지할 수 있어요."},
+  "subscribed_now": {"en": "You're subscribed · everything is open", "ko": "구독 중이에요 · 모두 열려 있어요"},
+  "member_note": {"en": "Subscribers get Lifetime for less. After you get it, cancel the subscription in Google Play.", "ko": "구독 중이라 평생권을 더 싸게 받을 수 있어요. 평생권을 받은 뒤 Google Play에서 구독을 해지해 주세요."},
+  "manage_sub": {"en": "Manage subscription ›", "ko": "구독 관리 ›"},
+  "lifetime_or": {"en": "Or keep it for good", "ko": "또는 한 번에 평생"},
+  "lifetime_card_from": {"en": "From %1$s a month · see plans ›", "ko": "월 %1$s부터 · 둘러보기 ›"},
+  "lifetime_card_sub": {"en": "Subscribed · Lifetime for %1$s ›", "ko": "구독 중 · 평생권으로 바꾸면 %1$s ›"}
 }

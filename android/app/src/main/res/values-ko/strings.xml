@@ -728,4 +728,14 @@
     <string name="prayer_bell_note">그 시각에 이 기도의 첫 말씀으로 알려 드려요. 오늘 이미 드렸으면 울리지 않아요.</string>
     <string name="prayer_reminder_none">기도문 옆 종을 누르면 알림을 켤 수 있어요.</string>
     <string name="prayer_reminder_manage">기도문마다 알림 정하기</string>
+    <string name="plans_title">월 구독 · 평생권</string>
+    <string name="cmp_paid">구독 · 평생권</string>
+    <string name="subscribe_monthly">월 구독 · 월 %1$s</string>
+    <string name="subscribe_note">한 달에 커피 한 잔 값이에요. Google Play에서 언제든 해지할 수 있어요.</string>
+    <string name="subscribed_now">구독 중이에요 · 모두 열려 있어요</string>
+    <string name="member_note">구독 중이라 평생권을 더 싸게 받을 수 있어요. 평생권을 받은 뒤 Google Play에서 구독을 해지해 주세요.</string>
+    <string name="manage_sub">구독 관리 ›</string>
+    <string name="lifetime_or">또는 한 번에 평생</string>
+    <string name="lifetime_card_from">월 %1$s부터 · 둘러보기 ›</string>
+    <string name="lifetime_card_sub">구독 중 · 평생권으로 바꾸면 %1$s ›</string>
 </resources>

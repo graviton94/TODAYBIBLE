@@ -202,6 +202,8 @@ object Tokens {
         const val wideVerse = 1.15f
     }
     object Alpha {
+        const val aloudAhead = 0.62f
+        const val aloudLitBg = 0.1f
         const val faint = 0.5f
         const val goldCell = 0.55f
         const val coachScrim = 0.85f

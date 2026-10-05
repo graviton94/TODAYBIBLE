@@ -56,7 +56,7 @@ fun PurchasePage(s: AppState) {
     Column(Modifier.fillMaxSize().background(c.leaf)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(Tokens.Size.touch).semantics { contentDescription = backLabel }.clickable(role = Role.Button) { close() }, contentAlignment = Alignment.Center) { BackArrow(Modifier.size(Tokens.Size.icon)) }
-            Text(stringResource(R.string.lifetime), style = Theme.title(k), maxLines = 1)
+            Text(stringResource(R.string.plans_title), style = Theme.title(k), maxLines = 1)
         }
         Column(
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3),
@@ -70,7 +70,23 @@ fun PurchasePage(s: AppState) {
             Compare(s)
             when {
                 life.owned -> Text(stringResource(R.string.owned), style = Theme.label().copy(color = c.giltText))
-                life.ready || life.forceReady -> BookButton(stringResource(R.string.buy_lifetime, life.price ?: ""), Modifier.fillMaxWidth()) { (ctx as? Activity)?.let { life.buy(it) } }
+                life.ready || life.forceReady -> {
+                    // 1) 월 구독 (커피 한 잔 값) · 2) 평생권 (구독 중이면 할인)
+                    if (life.subscribed) Text(stringResource(R.string.subscribed_now), style = Theme.label().copy(color = c.giltText, textAlign = TextAlign.Center))
+                    else if (life.canSubscribe || life.monthlyPrice != null) {
+                        BookButton(stringResource(R.string.subscribe_monthly, life.monthlyPrice ?: ""), Modifier.fillMaxWidth()) { (ctx as? Activity)?.let { life.subscribe(it) } }
+                        Text(stringResource(R.string.subscribe_note), style = Theme.small().copy(textAlign = TextAlign.Center))
+                        Text(stringResource(R.string.lifetime_or), style = Theme.small().copy(color = c.inkSoft, textAlign = TextAlign.Center))
+                    }
+                    BookButton(stringResource(R.string.buy_lifetime, life.lifetimePrice ?: ""), Modifier.fillMaxWidth(), quiet = !life.subscribed && (life.canSubscribe || life.monthlyPrice != null)) { (ctx as? Activity)?.let { life.buy(it) } }
+                    if (life.subscribed) {
+                        Text(stringResource(R.string.member_note), style = Theme.small().copy(textAlign = TextAlign.Center))
+                        Text(stringResource(R.string.manage_sub), style = Theme.small().copy(color = c.rubric), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
+                            .heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
+                                runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/account/subscriptions?sku=${io.github.graviton94.todaybible.data.Lifetime.MONTHLY}&package=${ctx.packageName}"))) }
+                            })
+                    }
+                }
                 else -> BookButton(stringResource(R.string.not_ready), Modifier.fillMaxWidth(), enabled = false) {}
             }
             if (!life.owned) BookButton(stringResource(R.string.restore), Modifier.fillMaxWidth(), quiet = true) { life.restore() }
@@ -119,7 +135,7 @@ private fun Compare(s: AppState) {
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s2)) {
             Box(Modifier.weight(1.4f)); Text(stringResource(R.string.cmp_free), style = Theme.small().copy(textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
-            Text(stringResource(R.string.lifetime), style = Theme.small().copy(color = c.rubric, textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.cmp_paid), style = Theme.small().copy(color = c.rubric, textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
         }
         rows.forEach { (name, free, life) ->
             Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).drawBehind { drawLine(c.hair, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) },

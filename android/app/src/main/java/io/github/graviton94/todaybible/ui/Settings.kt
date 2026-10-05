@@ -304,7 +304,7 @@ fun BackArrow(modifier: Modifier = Modifier) {
 @Composable
 private fun CoverPicker(s: AppState) {
     val c = Theme.c
-    val gated = !s.lifetime.owned && (s.lifetime.ready || s.lifetime.forceReady || s.forceLock)
+    val gated = !s.lifetime.unlocked && (s.lifetime.ready || s.lifetime.forceReady || s.forceLock)
     val covers = listOf("burgundy" to R.string.cover_burgundy, "navy" to R.string.cover_navy, "olive" to R.string.cover_olive, "ebony" to R.string.cover_ebony)
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         covers.forEach { (id, name) ->

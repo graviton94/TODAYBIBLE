@@ -160,7 +160,8 @@ class MainActivity : ComponentActivity() {
         if (i.getBooleanExtra("tb.planSheet", false)) s.planOpen = true
         if (i.hasExtra("tb.voice") && s.voiceOn != i.getBooleanExtra("tb.voice", false)) s.toggleVoice()
         if (i.hasExtra("tb.welcomeStep")) s.welcomeStep = i.getIntExtra("tb.welcomeStep", 0)
-        s.lifetime.debugSet(if (i.hasExtra("tb.owned")) i.getBooleanExtra("tb.owned", false) else null, i.getStringExtra("tb.price"))
+        s.lifetime.debugSet(if (i.hasExtra("tb.owned")) i.getBooleanExtra("tb.owned", false) else null, i.getStringExtra("tb.price"),
+            i.getStringExtra("tb.monthPrice"), i.getStringExtra("tb.memberPrice"), if (i.hasExtra("tb.subscribed")) i.getBooleanExtra("tb.subscribed", false) else null)
         if (i.getBooleanExtra("tb.purchase", false)) s.purchaseOpen = true
         s.shareVerse = i.getIntExtra("tb.share", 0).takeIf { it > 0 }?.let { io.github.graviton94.todaybible.core.VerseKey(s.book, s.chapter, it) }
         if (i.getBooleanExtra("tb.cardShots", false)) Thread { cardShots(s) }.start()

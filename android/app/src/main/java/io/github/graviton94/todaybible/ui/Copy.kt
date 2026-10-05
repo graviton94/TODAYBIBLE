@@ -362,6 +362,17 @@ private fun ChapterDoneNote(s: AppState) {
     }
 }
 
+/** 낭독할 절의 앞 · 뒤 절 (작게 두 줄까지): 흐름을 놓치지 않게. */
+@Composable
+private fun AloudNeighbor(s: AppState, v: Int, before: Boolean) {
+    val c = Theme.c
+    Text(buildAnnotatedString {
+        withStyle(SpanStyle(color = c.rubric.copy(alpha = Tokens.Alpha.faint))) { append("$v ") }
+        append(Markup.plain(s.text().verse(s.chapter, v)))
+    }, style = Theme.small().copy(color = if (before) c.inkSoft else c.unwritten), maxLines = 2,
+        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth())
+}
+
 /** 교독 한 쌍: 인도 절 (낭독 목소리) 과 회중 절 (나) 을 위아래로. 지금 읽는 쪽은 종이 바탕, 다른 쪽은 옅게. */
 @Composable
 private fun ResponsivePair(s: AppState, verse: Int, source: String, at: Int, guideTurn: Boolean) {
@@ -436,8 +447,11 @@ fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null, marks: L
                 }
             } else {
                 val cut = if (lit == null) sp.text.length else (lit - i).coerceIn(0, sp.text.length)
-                withStyle(style.copy(color = if (faint) c.unwritten else c.ink)) { append(sp.text.substring(0, cut)) }
-                if (cut < sp.text.length) withStyle(style.copy(color = c.unwritten)) { append(sp.text.substring(cut)) }
+                // 낭독 중 (lit): 읽은 데까지 붉은 먹 + 옅은 붉은 바탕, 남은 글자는 더 옅게 — 라이트에서도 어디까지 읽었는지 한눈에
+                val read = if (lit == null) style.copy(color = if (faint) c.unwritten else c.ink)
+                    else style.copy(color = c.rubric, background = c.rubric.copy(alpha = Tokens.Alpha.aloudLitBg))
+                withStyle(read) { append(sp.text.substring(0, cut)) }
+                if (cut < sp.text.length) withStyle(style.copy(color = c.unwritten.copy(alpha = Tokens.Alpha.aloudAhead))) { append(sp.text.substring(cut)) }
             }
             i += sp.text.length
         }
@@ -504,6 +518,9 @@ private fun AloudLines(s: AppState, verse: Int, plain: String, at: Int, missed: 
     val cur = parts.indexOfFirst { at <= it.last }.let { if (it < 0) parts.lastIndex else it }
     Column(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.aloudBox), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3, Alignment.CenterVertically)) {
         Text(stringResource(R.string.line_of, verse, cur + 1, parts.size), style = Theme.small().copy(color = c.rubric), maxLines = 1)
+        // 앞 토막 (읽은 것) 을 작게 위에: 어디서 이어지는지
+        Text(parts.getOrNull(cur - 1)?.let { plain.substring(it.first, it.last + 1) }.orEmpty(), style = Theme.small().copy(color = c.inkSoft, textAlign = TextAlign.Center), maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth())
         // 꼭 한 줄: 화면 너비에 맞춰 글자 크기를 줄여서라도 한 줄로
         Box(Modifier.fillMaxWidth()) {
             val r = parts.getOrNull(cur)
@@ -521,12 +538,16 @@ private fun AloudLines(s: AppState, verse: Int, plain: String, at: Int, missed: 
                 if (ri != null) Text(buildAnnotatedString {
                     for (j in ri) {
                         val miss = missed.any { j in it }
-                        val color = when { miss -> c.rubric; j < at -> if (guiding) c.giltText else c.ink; else -> c.unwritten }
-                        withStyle(SpanStyle(color = color, textDecoration = if (miss) TextDecoration.Underline else null)) { append(plain[j]) }
+                        val color = when { miss -> c.rubric; j < at -> c.rubric; else -> c.unwritten.copy(alpha = Tokens.Alpha.aloudAhead) }
+                        withStyle(SpanStyle(color = color, background = if (j < at && !miss) c.rubric.copy(alpha = Tokens.Alpha.aloudLitBg) else androidx.compose.ui.graphics.Color.Unspecified,
+                            textDecoration = if (miss) TextDecoration.Underline else null)) { append(plain[j]) }
                     }
                 }, style = base.copy(fontSize = size, lineHeight = size * Tokens.Leading.title, textAlign = TextAlign.Center), maxLines = 1, softWrap = false, modifier = Modifier.fillMaxWidth())
             }
         }
+        // 다음 토막을 작게 아래에: 미리 눈에 담게
+        Text(parts.getOrNull(cur + 1)?.let { plain.substring(it.first, it.last + 1) }.orEmpty(), style = Theme.small().copy(color = c.unwritten, textAlign = TextAlign.Center), maxLines = 1,
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.fillMaxWidth())
         // 구절 진행: 점 하나씩
         Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
             parts.indices.forEach { i -> Box(Modifier.size(Tokens.Size.dot).clip(androidx.compose.foundation.shape.CircleShape).background(if (i <= cur) c.rubric else c.hair)) }
@@ -730,8 +751,14 @@ private fun AloudTab(s: AppState, verse: Int) {
         val at = if (spoken >= 0) spoken else lit
         // 교독: 인도 절과 회중 절을 한 화면에 함께
         if (mode == 0) ResponsivePair(s, verse, source, at, guideTurn)
-        else if (s.aloudBig) AloudLines(s, verse, plain, at, emptyList(), guiding = spoken >= 0)
-        else VerseText(s, verse, source, lit = at)
+        else {
+            // 앞뒤 절도 조금: 앞 절은 두 줄까지 옅게, 다음 절은 두 줄까지 더 옅게
+            val all = s.text().fillable(s.chapter); val vi = all.indexOf(verse)
+            all.getOrNull(vi - 1)?.let { v -> AloudNeighbor(s, v, before = true) }
+            if (s.aloudBig) AloudLines(s, verse, plain, at, emptyList(), guiding = spoken >= 0)
+            else VerseText(s, verse, source, lit = at)
+            all.getOrNull(vi + 1)?.let { v -> AloudNeighbor(s, v, before = false) }
+        }
         justRecorded?.let { v -> RecordedBar(s, v, onKeep = { justRecorded = null }, onAgain = { justRecorded = null; s.reread = Triple(s.book, s.chapter, v) }) }
         val micLabel = stringResource(R.string.aloud_listen)
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {

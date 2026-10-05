@@ -728,4 +728,14 @@
     <string name="prayer_bell_note">At that time you get the first words of this prayer. If you already prayed it today, it stays quiet.</string>
     <string name="prayer_reminder_none">Tap the bell next to a prayer to get a reminder.</string>
     <string name="prayer_reminder_manage">Set reminders per prayer</string>
+    <string name="plans_title">Monthly or lifetime</string>
+    <string name="cmp_paid">Subscribed</string>
+    <string name="subscribe_monthly">Subscribe · %1$s a month</string>
+    <string name="subscribe_note">About a cup of coffee a month. Cancel anytime in Google Play.</string>
+    <string name="subscribed_now">You\'re subscribed · everything is open</string>
+    <string name="member_note">Subscribers get Lifetime for less. After you get it, cancel the subscription in Google Play.</string>
+    <string name="manage_sub">Manage subscription ›</string>
+    <string name="lifetime_or">Or keep it for good</string>
+    <string name="lifetime_card_from">From %1$s a month · see plans ›</string>
+    <string name="lifetime_card_sub">Subscribed · Lifetime for %1$s ›</string>
 </resources>
