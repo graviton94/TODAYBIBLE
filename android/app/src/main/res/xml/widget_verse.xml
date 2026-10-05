@@ -10,5 +10,5 @@
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="3600000"
     android:widgetCategory="home_screen"
-    android:previewLayout="@layout/widget_verse"
+    android:previewImage="@drawable/widget_preview_verse"
     android:initialLayout="@layout/widget_verse" />
