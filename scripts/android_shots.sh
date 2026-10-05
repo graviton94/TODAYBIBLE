@@ -191,7 +191,7 @@ open --ez tb.reset true --ei tb.welcomeStep 2;                     shot e4_welco
 open --ez tb.seed true --es tb.tr KJV --es tb.plate prodigal;      shot e5_plate 5
 open --ez tb.lock true --es tb.price "'\$6.99'" --es tb.monthPrice "'\$1.99'" --es tb.memberPrice "'\$4.99'" --ez tb.purchase true; shot e6_purchase 4
 # 영어 화면 한 바퀴 (en): 오늘 · 성경 · 읽기 · 기도 · 설정 · 기록 · 큰 글씨
-open --ez tb.seed true --es tb.theme LIGHT --es tb.tr KJV --ei tb.page 0;  shot en01_today 5
+open --ez tb.seed true --es tb.theme LIGHT --es tb.tr WEB --ei tb.page 0;  shot en01_today 5
 swipe_up;                                                          shot en02_today_more 2
 open --ei tb.page 1;                                               shot en03_library 4
 swipe_up; swipe_up;                                                shot en04_library_books 2

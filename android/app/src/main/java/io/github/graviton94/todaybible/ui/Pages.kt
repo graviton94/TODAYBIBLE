@@ -280,7 +280,11 @@ private fun PageTabs(current: Int, onSelect: (Int) -> Unit) {
                     if (on) { val w = size.width * 0.32f; drawRect(c.rubric, Offset((size.width - w) / 2, 0f), Size(w, Tokens.Stroke.rule.toPx())) }
                 },
                 contentAlignment = Alignment.Center,
-            ) { Text(n, style = Theme.label().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1) }
+            ) {
+                // 아래 이름표는 네 칸이라 아주 큰 글씨에서도 한 줄로: 크기를 Tokens.Text.tabMax 까지만
+                val st = Theme.label(); val size = if (st.fontSize.value > Tokens.Text.tabMax.value) Tokens.Text.tabMax else st.fontSize
+                Text(n, style = st.copy(color = if (on) c.ink else c.inkSoft, fontSize = size), maxLines = 1, softWrap = false)
+            }
         }
     }
 }

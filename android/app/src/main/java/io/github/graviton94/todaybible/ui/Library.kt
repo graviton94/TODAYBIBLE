@@ -114,9 +114,10 @@ fun LibraryPage(s: AppState) {
         FindBox(s)
         // 기도문: 주기도문 · 때마다의 기도
         Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).clickable(role = Role.Button) { s.prayersOpen = true }
-            .padding(horizontal = Tokens.Space.s4), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.prayer_title), style = Theme.label(), modifier = Modifier.weight(1f), maxLines = 1)
-            Text(stringResource(R.string.prayer_row), style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            .padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
+            // 이름이 잘리지 않게: 이름은 제 크기, 목록 글이 남은 자리를 쓰고 넘치면 두 줄
+            Text(stringResource(R.string.prayer_title), style = Theme.label(), maxLines = 1, modifier = Modifier.padding(end = Tokens.Space.s3))
+            Text(stringResource(R.string.prayer_row), style = Theme.small().copy(textAlign = androidx.compose.ui.text.style.TextAlign.End), maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         }
         // 구약 · 신약
         Row(Modifier.fillMaxWidth().coach("lib_testament").drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {

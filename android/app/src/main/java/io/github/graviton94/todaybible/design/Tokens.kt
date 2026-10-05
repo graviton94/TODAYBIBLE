@@ -102,6 +102,7 @@ object Tokens {
         val verseEn = 22.sp
         val body = 16.sp
         val label = 15.sp
+        val tabMax = 17.sp
         val small = 13.sp
         val brand = 20.sp
         val title = 24.sp

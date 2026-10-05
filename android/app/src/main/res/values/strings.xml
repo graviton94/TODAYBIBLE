@@ -673,7 +673,7 @@
     <string name="intro_tap_open">Tap to open</string>
     <string name="intro_tap_start">Tap to begin</string>
     <string name="narration_fallback">Couldnt download the narration, so your phones voice is reading. Check your internet connection.</string>
-    <string name="theme_candle">Candlelight</string>
+    <string name="theme_candle">Candle</string>
     <string name="language">Language</string>
     <string name="lang_system">Same as my phone</string>
     <string name="lang_ko">한국어 · 개역한글 · 한국어 낭독</string>
@@ -727,7 +727,7 @@
     <string name="prayer_reminder_none">Tap the bell next to a prayer to get a reminder.</string>
     <string name="prayer_reminder_manage">Set reminders per prayer</string>
     <string name="plans_title">Monthly or lifetime</string>
-    <string name="cmp_paid">Subscribed</string>
+    <string name="cmp_paid">Plus</string>
     <string name="subscribe_monthly">Subscribe · %1$s a month</string>
     <string name="subscribe_note">About a cup of coffee a month. Cancel anytime in Google Play.</string>
     <string name="subscribed_now">You\'re subscribed · everything is open</string>

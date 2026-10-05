@@ -10,7 +10,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        voice: [m5, f5, en_m5, en_f5]
+        voice: [m5, f5, en_m5, en_f5, web_m5, web_f5]
         part: [ot, nt]
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_ACCESS_KEY_ID }}
