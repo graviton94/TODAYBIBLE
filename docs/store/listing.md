@@ -18,6 +18,8 @@
 
 하루의 성경은 성경을 하루 한 장씩 소리 내어 읽고, 원고지에 타자로, 공책에 손글씨로 옮겨 쓰며 나만의 성경 한 권을 완성하는 앱이에요.
 
+개신교 66권 · 개역한글(1961) · 영어 KJV(1611).
+
 ■ 세 가지로 옮겨 쓰기
 · 낭독: 밝아지는 글자를 따라 천천히 읽으면 채워져요. 예배 때처럼 인도 목소리와 한 절씩 주고받는 교독도 있어요.
 · 타자: 원고지 칸의 옅은 글자를 따라 한 글자씩. 한 절을 마치면 금빛으로 반짝이며 다음 절로.
@@ -61,6 +63,8 @@
 **Full description:**
 
 Bible by Hand helps you make a whole Bible your own, one chapter a day, by reading it aloud, typing it into manuscript squares and writing it by hand.
+
+Protestant 66-book Bible · King James Version (1611) · Korean Revised Version (1961).
 
 ■ Three ways to write
 · Read aloud: follow the light across the words and the verse fills as you read. Responsive reading lets a reading voice and you take turns, verse by verse.

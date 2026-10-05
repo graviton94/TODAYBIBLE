@@ -47,7 +47,7 @@
   "stamp": {"en": "Stamp", "ko": "도장"},
   "reminder": {"en": "Daily reminder", "ko": "매일 알림"},
   "about": {"en": "About", "ko": "정보"},
-  "about_text": {"en": "Korean Revised Version (1961) · King James Version (1611) · engravings by Gustave Doré (1866)", "ko": "개역한글(1961) · KJV(1611) · 판화 귀스타브 도레(1866)"},
+  "about_text": {"en": "Protestant 66 books · Korean Revised Version (1961) · King James Version (1611) · engravings by Gustave Doré (1866)", "ko": "개신교 66권 · 개역한글(1961) · KJV(1611) · 판화 귀스타브 도레(1866)"},
   "back": {"en": "Back", "ko": "뒤로"},
   "ms_BEGINNING_name": {"en": "In the Beginning", "ko": "태초에"},
   "ms_BEGINNING_rule": {"en": "Complete your first verse", "ko": "첫 절을 채우다"},
