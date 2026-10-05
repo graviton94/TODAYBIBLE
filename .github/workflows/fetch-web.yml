@@ -1,0 +1,21 @@
+name: Fetch WEB text
+# eBible.org 의 World English Bible Updated (공개 도메인) 를 받아 data/bible/web.json 에 올린다 (scripts/fetch_web.py)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["scripts/fetch_web.py", ".github/workflows/fetch-web.yml"]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python3 scripts/fetch_web.py
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/bible && (git diff --cached --quiet || (git commit -m "Bible text: World English Bible Updated from eBible.org" && git push))
