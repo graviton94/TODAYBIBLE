@@ -4,6 +4,11 @@ name: Android screenshots
 # 필요할 때만 돈다: 커밋 메시지에 [shots] 가 있을 때, 또는 직접 실행.
 on:
   workflow_dispatch:
+    inputs:
+      only:
+        description: "찍을 장면 (예: q01|p05). 비우면 전부"
+        required: false
+        default: ""
   push:
     branches: [main]
     paths: ["android/**", "design/**", "scripts/android_shots.sh", ".github/workflows/android-screens.yml"]
@@ -44,7 +49,9 @@ jobs:
         # 커밋 말에 [shots:q01|p05] 처럼 쓰면 그 장면만 (빠름). [shots] 는 전부.
         env:
           MSG: ${{ github.event.head_commit.message }}
-        run: echo "ONLY=$(printf '%s' "$MSG" | grep -oP '\[shots:\K[^\]]+' | head -1)" >> "$GITHUB_ENV"
+          PICK: ${{ github.event.inputs.only }}
+        # 마지막 [shots:…] 를 써요 (설명 속 예시와 헷갈리지 않게)
+        run: echo "ONLY=${PICK:-$(printf '%s' "$MSG" | grep -oP '\[shots:\K[^\]]+' | tail -1)}" >> "$GITHUB_ENV"
       - name: Run on emulator and capture
         uses: reactivecircus/android-emulator-runner@v2
         with:
