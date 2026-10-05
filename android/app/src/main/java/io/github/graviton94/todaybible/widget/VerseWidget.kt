@@ -99,22 +99,25 @@ class VerseWidget : AppWidgetProvider() {
                 drawText(count, topLeft = Offset(size.width - pad - count.size.width, pad))
                 val ruleY = pad + head.size.height + Tokens.Space.s1.toPx()
                 drawLine(c.hair, Offset(pad, ruleY), Offset(size.width - pad, ruleY), Tokens.Stroke.hair.toPx())
-                // 아래: 이번 주 도장 (주일부터) · 오늘 쓴 절
-                val cell = Tokens.Size.icon.toPx()
-                val bottomY = size.height - pad - cell
+                // 아래: 이번 주 도장 (주일부터) · 오늘 쓴 절. 좁으면 도장 칸을 줄이고, 낮으면 (2×1) 도장 줄은 빼고 말씀만
+                val gap = Tokens.Space.s1.toPx()
+                val showWeek = hDp >= Tokens.Size.widgetWeekMinH.value
+                val cell = minOf(Tokens.Size.icon.toPx(), (w - 6 * gap) / 7f)
+                val bottomY = if (showWeek) size.height - pad - cell else size.height - pad
                 val sunday = today.minusDays((today.dayOfWeek.value % 7).toLong())
                 val letters = ctx.getString(R.string.weekdays)
-                for (i in 0 until 7) {
-                    val day = sunday.plusDays(i.toLong()); val cx = pad + cell / 2 + i * (cell + Tokens.Space.s1.toPx())
+                if (showWeek) for (i in 0 until 7) {
+                    val day = sunday.plusDays(i.toLong()); val cx = pad + cell / 2 + i * (cell + gap)
                     if (day.toEpochDay() in days) stamp(store.stamp, c.rubric, Offset(cx, bottomY + cell / 2), cell)
                     else {
                         val l = m.measure(letters[i].toString(), TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = if (day == today) c.ink else c.unwritten, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(cell.toInt()))
                         drawText(l, topLeft = Offset(cx - cell / 2, bottomY + (cell - l.size.height) / 2))
                     }
                 }
-                if (todayN > 0) {
+                // 오늘 쓴 절: 도장 줄 옆에 자리가 있을 때만
+                if (todayN > 0 && showWeek) {
                     val t = m.measure(ctx.getString(R.string.verses_n, todayN), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.small, color = c.rubric))
-                    drawText(t, topLeft = Offset(size.width - pad - t.size.width, bottomY + (cell - t.size.height) / 2))
+                    if (pad + 7 * cell + 6 * gap + gap + t.size.width <= size.width - pad) drawText(t, topLeft = Offset(size.width - pad - t.size.width, bottomY + (cell - t.size.height) / 2))
                 }
                 // 가운데: 다음 한 절 (자리에 맞게 줄 수 · 넘치면 말줄임)
                 val top = ruleY + Tokens.Space.s2.toPx(); val avail = bottomY - Tokens.Space.s2.toPx() - top

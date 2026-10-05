@@ -37,9 +37,9 @@ class WidgetTick : BroadcastReceiver() {
                 v.setImageViewBitmap(io.github.graviton94.todaybible.R.id.widget_image, bmp)
                 m.setWidgetPreview(android.content.ComponentName(ctx, cls), android.appwidget.AppWidgetProviderInfo.WIDGET_CATEGORY_HOME_SCREEN, v)
             }
-            runCatching { put(VerseWidget::class.java, VerseWidget.bitmap(ctx, 250, 110, dark)) }
-            runCatching { put(HandWidget::class.java, HandWidget.bitmap(ctx, 250, 110, dark)) }
-            runCatching { put(GoalWidget::class.java, GoalWidget().draw(ctx, 110, 110, dark)) }
+            runCatching { put(VerseWidget::class.java, VerseWidget.bitmap(ctx, 160, 160, dark)) }
+            runCatching { put(HandWidget::class.java, HandWidget.bitmap(ctx, 160, 160, dark)) }
+            runCatching { put(GoalWidget::class.java, GoalWidget().draw(ctx, 160, 160, dark)) }
             p.edit().putLong("widget_preview_day", day).apply()
         }
 
@@ -48,9 +48,9 @@ class WidgetTick : BroadcastReceiver() {
             val ctx = io.github.graviton94.todaybible.ui.Lang.wrap(ctx0)
             dir.mkdirs()
             fun save(name: String, bmp: android.graphics.Bitmap) = java.io.File(dir, "$name.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
-            runCatching { save("widget_preview_verse", VerseWidget.bitmap(ctx, 250, 110, false)) }
-            runCatching { save("widget_preview_hand", HandWidget.bitmap(ctx, 250, 110, false)) }
-            runCatching { save("widget_preview_today", GoalWidget().draw(ctx, 110, 110, false)) }
+            runCatching { save("widget_preview_verse", VerseWidget.bitmap(ctx, 160, 160, false)) }
+            runCatching { save("widget_preview_hand", HandWidget.bitmap(ctx, 160, 160, false)) }
+            runCatching { save("widget_preview_today", GoalWidget().draw(ctx, 160, 160, false)) }
             java.io.File(dir, "done").writeText("ok")
         }
 

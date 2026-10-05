@@ -63,6 +63,7 @@ object Tokens {
         val bar = 4.dp
         val bigAction = 76.dp
         val widgetPad = 16.dp
+        val widgetWeekMinH = 100.dp
         val lock = 14.dp
         val coverW = 132.dp
         val cardEdge = 22.dp
