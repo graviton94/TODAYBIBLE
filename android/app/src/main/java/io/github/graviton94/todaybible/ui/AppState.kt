@@ -291,10 +291,22 @@ class AppState(val store: Store) {
     /** 캡처용: 설정의 펼친 갈래 · 언어 묻기 창. */
     var debugSection: String? = null
     var debugAskLang: String? = null
+    /** 듣는 화면으로 (듣는 중 띠 · 알림): 기도문이면 그 기도문, 아니면 성경 읽기의 그 장. */
+    fun goToListening() {
+        val n = io.github.graviton94.todaybible.data.ListenService.now.value ?: return
+        val o = io.github.graviton94.todaybible.data.ListenService.origin.value
+        if (o.startsWith("prayer:")) prayerOpen = o.removePrefix("prayer:")
+        else { listenAt = n.book to n.chapter; page = BIBLE }
+    }
+    /** 하던 일 (듣기 · 소리 내어 읽기) 을 두고 뒤로 갈 때 묻는 창. */
+    class LeaveAsk(val recording: Boolean, val onStop: () -> Unit, val onKeep: (() -> Unit)?)
+    var leaveAsk by mutableStateOf<LeaveAsk?>(null)
+    /** 타자로 쓰다 만 절 ("번역:권:장:절" to 글): 다른 화면에 다녀와도 그대로. */
+    var typeDraft: Pair<String, String>? = null
     /** 덮인 창들 모두 닫기 (알림 · 위젯으로 들어올 때). */
     fun closeOverlays() {
         settingsOpen = false; purchaseOpen = false; plateView = null; finished = null; picker = null; marksOpen = false; found = null
-        memoryOpen = null; sermonOpen = null; prayersOpen = false; prayerOpen = null; shareVerse = null; handBook = null; planOpen = false; award = null; opening = false
+        memoryOpen = null; sermonOpen = null; prayersOpen = false; prayerOpen = null; shareVerse = null; handBook = null; planOpen = false; award = null; opening = false; leaveAsk = null
     }
     /** 앱을 처음부터 다시 (언어처럼 화면 전체가 바뀌는 설정 뒤에). 여는 순간은 이번만 건너뛰어요. */
     fun restartApp(a: android.app.Activity) {

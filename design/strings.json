@@ -705,5 +705,17 @@
   "prayer_keep_chapter": {"en": "Keep writing this chapter", "ko": "이 장 이어 쓰기"},
   "prayer_free_note": {"en": "Prayer verses are free to write, in every book.", "ko": "기도문 말씀은 어느 책이든 무료로 옮겨 쓸 수 있어요."},
   "resp_leader": {"en": "Leader", "ko": "인도"},
-  "resp_people": {"en": "People · you", "ko": "회중 · 나"}
+  "resp_people": {"en": "People · you", "ko": "회중 · 나"},
+  "leave_listen_h": {"en": "Stop listening?", "ko": "듣기를 멈출까요?"},
+  "leave_listen_b": {"en": "You can keep listening on other screens. Tap the bar at the bottom to come back here.", "ko": "들으면서 다른 화면으로 가도 돼요. 아래 '듣는 중' 띠를 누르면 이 화면으로 돌아와요."},
+  "leave_stop": {"en": "Stop and go back", "ko": "멈추고 나가기"},
+  "leave_keep": {"en": "Keep listening", "ko": "들으며 나가기"},
+  "leave_stay": {"en": "Stay here", "ko": "머물기"},
+  "leave_rec_h": {"en": "Stop reading aloud?", "ko": "소리 내어 읽기를 멈출까요?"},
+  "leave_rec_b": {"en": "The verse you are reading now won't be saved. Verses you finished are kept.", "ko": "지금 읽던 절은 저장되지 않아요. 다 읽은 절은 그대로 남아요."},
+  "leave_rec_stop": {"en": "Stop", "ko": "멈추기"},
+  "leave_rec_keep": {"en": "Keep reading", "ko": "계속 읽기"},
+  "now_playing": {"en": "Now playing · %1$s", "ko": "듣는 중 · %1$s"},
+  "now_playing_open": {"en": "Open", "ko": "열기"},
+  "aloud_paused": {"en": "Reading aloud paused when you left the app.", "ko": "앱을 나가서 소리 내어 읽기를 멈췄어요."}
 }

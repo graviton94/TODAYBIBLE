@@ -708,4 +708,16 @@
     <string name="prayer_free_note">Prayer verses are free to write, in every book.</string>
     <string name="resp_leader">Leader</string>
     <string name="resp_people">People · you</string>
+    <string name="leave_listen_h">Stop listening?</string>
+    <string name="leave_listen_b">You can keep listening on other screens. Tap the bar at the bottom to come back here.</string>
+    <string name="leave_stop">Stop and go back</string>
+    <string name="leave_keep">Keep listening</string>
+    <string name="leave_stay">Stay here</string>
+    <string name="leave_rec_h">Stop reading aloud?</string>
+    <string name="leave_rec_b">The verse you are reading now won\'t be saved. Verses you finished are kept.</string>
+    <string name="leave_rec_stop">Stop</string>
+    <string name="leave_rec_keep">Keep reading</string>
+    <string name="now_playing">Now playing · %1$s</string>
+    <string name="now_playing_open">Open</string>
+    <string name="aloud_paused">Reading aloud paused when you left the app.</string>
 </resources>

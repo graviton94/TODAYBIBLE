@@ -139,7 +139,7 @@ fun CopyPage(s: AppState) {
                     Ribbon(if (marked) Theme.c.rubric else Theme.c.inkSoft, marked, Modifier.size(Tokens.Size.iconSm))
                 }
                 // 듣기: 성경 탭에서 이 장을 책 읽어 주듯 이어서
-                Row(Modifier.heightIn(min = Tokens.Size.tab).clip(RoundedCornerShape(Tokens.Radius.chip)).background(Theme.c.paper).clickable(role = Role.Button) { if (pass != null) io.github.graviton94.todaybible.data.ListenService.startPassages(ctx0, listOf(pass), s.aloudRate()) else { s.read(s.book, s.chapter); io.github.graviton94.todaybible.data.ListenService.start(ctx0, s.book, s.chapter, 1, s.aloudRate()) } }
+                Row(Modifier.heightIn(min = Tokens.Size.tab).clip(RoundedCornerShape(Tokens.Radius.chip)).background(Theme.c.paper).clickable(role = Role.Button) { if (pass != null) io.github.graviton94.todaybible.data.ListenService.startPassages(ctx0, listOf(pass), s.aloudRate(), s.prayerWrite?.let { "prayer:${it.first}" } ?: "read") else { s.read(s.book, s.chapter); io.github.graviton94.todaybible.data.ListenService.start(ctx0, s.book, s.chapter, 1, s.aloudRate()) } }
                     .padding(horizontal = Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                     PlayMark(Theme.c.rubric, false, Modifier.size(Tokens.Size.iconSm))
                     Text(stringResource(R.string.listen_mode), style = Theme.small().copy(color = Theme.c.ink), maxLines = 1)
@@ -183,7 +183,10 @@ private fun WritePage(s: AppState, verse: Int?) {
     var sealing by remember(s.book, s.chapter) { mutableStateOf<Pair<Int, String>?>(null) }
     val shown = sealing?.first ?: verse
     val source = shown?.let { t.verse(s.chapter, it) }.orEmpty()
-    var value by remember(s.translation, s.book, s.chapter, verse) { mutableStateOf(TextFieldValue("")) }
+    // 쓰다 만 글은 다른 화면에 다녀와도 그대로 (같은 절일 때)
+    val draftKey = "${s.translation.id}:${s.book}:${s.chapter}:$verse"
+    var value by remember(s.translation, s.book, s.chapter, verse) { mutableStateOf(s.typeDraft?.takeIf { it.first == draftKey }?.second.orEmpty().let { TextFieldValue(it, androidx.compose.ui.text.TextRange(it.length)) }) }
+    LaunchedEffect(value.text, draftKey) { s.typeDraft = draftKey to value.text }
     val typed = sealing?.second ?: value.text
     val marks = if (shown != null) TypeJudge.marks(source, typed) else emptyList()
     val gold = remember(s.book, s.chapter) { androidx.compose.animation.core.Animatable(0f) }
@@ -659,7 +662,7 @@ private fun AloudTab(s: AppState, verse: Int) {
         // 앱을 내리면 읽기를 멈춤 (마이크 · 녹음 · 가이드)
         val owner = androidx.lifecycle.compose.LocalLifecycleOwner.current
         DisposableEffect(owner) {
-            val obs = androidx.lifecycle.LifecycleEventObserver { _, e -> if (e == androidx.lifecycle.Lifecycle.Event.ON_STOP) running = false }
+            val obs = androidx.lifecycle.LifecycleEventObserver { _, e -> if (e == androidx.lifecycle.Lifecycle.Event.ON_STOP && running) { running = false; s.toast = ctx.getString(R.string.aloud_paused) } }
             owner.lifecycle.addObserver(obs); onDispose { owner.lifecycle.removeObserver(obs) }
         }
         // 소리 내어 읽은 시간 (U2)
@@ -721,6 +724,7 @@ private fun AloudTab(s: AppState, verse: Int) {
                 if (session != null) { if (finished) session.stop() else session.discard() }
             }
         }
+        LeaveGuard(s, running, recording = true, onStop = { running = false })
         NarrationBanner(s, narrLoading, narr == -1)
         AloudControls(s, guideReady)
         val at = if (spoken >= 0) spoken else lit

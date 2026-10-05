@@ -68,6 +68,8 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     BackHandler { s.listenAt = null }
     val now by ListenService.now.collectAsState()
+    val origin by ListenService.origin.collectAsState()
+    LeaveGuard(s, now != null && origin == "read", recording = false, onStop = { ListenService.stop(ctx); s.listenAt = null }, onKeep = { s.listenAt = null })
     val count = s.text(book).chapterCount
     val pager = rememberPagerState(initialPage = (chapter - 1).coerceIn(0, count - 1)) { count }
     // 목소리가 다음 장으로 넘어가면 따라가요

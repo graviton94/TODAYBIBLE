@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -124,6 +125,7 @@ fun Root(s: AppState) {
                     }
                 }
             }
+            if (!typing) NowPlayingBar(s)
             if (!typing) PageTabs(pager.currentPage) { turnTo(it) }
         }
         if (s.settingsOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { SettingsPage(s) }
@@ -140,6 +142,8 @@ fun Root(s: AppState) {
         s.plateView?.let { pl -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PlatePage(s, pl) } }
         // 평생권은 어느 창에서 열어도 맨 위에
         if (s.purchaseOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PurchasePage(s) }
+        // 하던 일을 두고 나갈지 묻는 창은 모든 창 위에
+        s.leaveAsk?.let { LeaveSheet(s, it) }
         // 나의 성경 PDF: 만들어서 나누기 창으로
         val ctx = androidx.compose.ui.platform.LocalContext.current
         LaunchedEffect(s.pdfBook) {
@@ -232,6 +236,27 @@ private fun Gear(modifier: Modifier) {
 }
 
 /** 아래 이름표 세 개: 고른 장 위에 붉은 한 줄. */
+@Composable
+/** 듣는 중 띠: 다른 화면에 있어도 지금 듣는 것 · 누르면 그 화면으로 · 멈추기. 듣는 화면에서는 숨겨요. */
+@Composable
+private fun NowPlayingBar(s: AppState) {
+    val c = Theme.c; val ctx = androidx.compose.ui.platform.LocalContext.current
+    val now = io.github.graviton94.todaybible.data.ListenService.now.collectAsState().value ?: return
+    val origin = io.github.graviton94.todaybible.data.ListenService.origin.collectAsState().value
+    val prayer = origin.removePrefix("prayer:").takeIf { origin.startsWith("prayer:") }?.let { io.github.graviton94.todaybible.core.Prayers.byId(it) }
+    if (prayer == null && s.listenAt != null && s.page == AppState.BIBLE) return
+    val what = if (prayer != null) prayerName(prayer) else s.chapterRef(now.book, now.chapter)
+    Row(Modifier.fillMaxWidth().background(c.leaf).clickable(role = Role.Button) { s.goToListening() }
+        .drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }
+        .padding(horizontal = Tokens.Space.s5).heightIn(min = Tokens.Size.touch),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        PlayMark(c.rubric, true, Modifier.size(Tokens.Size.iconSm))
+        Text(stringResource(R.string.now_playing, what), style = Theme.label().copy(color = c.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Text(stringResource(R.string.listen_stop), style = Theme.label().copy(color = c.rubric), maxLines = 1,
+            modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { io.github.graviton94.todaybible.data.ListenService.stop(ctx) })
+    }
+}
+
 @Composable
 private fun PageTabs(current: Int, onSelect: (Int) -> Unit) {
     val c = Theme.c

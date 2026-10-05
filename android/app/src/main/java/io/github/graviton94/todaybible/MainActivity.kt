@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; s.opening = false; intent.removeExtra("page") }
         openAloud(s, intent)
         intent.getStringExtra("prayer")?.let { s.prayerOpen = it; s.opening = false; intent.removeExtra("prayer") }
+        if (intent.getBooleanExtra("listening", false)) { s.opening = false; s.goToListening(); intent.removeExtra("listening") }
         // 알림 다시 맞추기 (끈 상태면 남은 알림을 지움) · 위젯 새로 그리기 (되살리기 · 업데이트 뒤에도 맞게)
         io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
         s.widgets(); s.warmPlan()
@@ -91,7 +92,8 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         val s = state ?: return
         // 알림 · 위젯으로 들어오면 위에 덮인 창들은 닫고 그 자리로
-        if (intent.hasExtra("page") || intent.hasExtra("prayer") || intent.hasExtra("at") || intent.hasExtra("aloud")) s.closeOverlays()
+        if (intent.hasExtra("page") || intent.hasExtra("prayer") || intent.hasExtra("at") || intent.hasExtra("aloud") || intent.hasExtra("listening")) s.closeOverlays()
+        if (intent.getBooleanExtra("listening", false)) { s.goToListening(); intent.removeExtra("listening") }
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; intent.removeExtra("page") }
         openAloud(s, intent); intent.getStringExtra("prayer")?.let { id -> s.prayerOpen = id; intent.removeExtra("prayer") }
     }
@@ -176,6 +178,7 @@ class MainActivity : ComponentActivity() {
         }
         i.getStringExtra("tb.prayer")?.let { s.prayerOpen = it }
         i.getStringExtra("tb.prayerWrite")?.let { s.writePrayer(it) }
+        i.getStringExtra("tb.prayerPlay")?.let { id -> io.github.graviton94.todaybible.core.Prayers.byId(id)?.let { io.github.graviton94.todaybible.data.ListenService.startPassages(this, it.passages, 1f, "prayer:$id") } }
         s.debugSection = i.getStringExtra("tb.section"); s.debugAskLang = i.getStringExtra("tb.askLang")
         if (i.getBooleanExtra("tb.prayers", false)) s.prayersOpen = true
         if (i.hasExtra("tb.parallel") && s.parallel != i.getBooleanExtra("tb.parallel", false)) s.flipParallel()

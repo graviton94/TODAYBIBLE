@@ -70,6 +70,8 @@ fun PrayerPage(s: AppState, id: String) {
     val p = Prayers.byId(id) ?: return
     BackHandler { s.prayerOpen = null }
     val now by ListenService.now.collectAsState()
+    val origin by ListenService.origin.collectAsState()
+    LeaveGuard(s, now != null && origin == "prayer:${p.id}", recording = false, onStop = { ListenService.stop(ctx); s.prayerOpen = null }, onKeep = { s.prayerOpen = null })
     Column(Modifier.fillMaxSize().background(c.leaf).verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         Text(stringResource(R.string.prayer_back), style = Theme.small().copy(color = c.rubric), maxLines = 1,
@@ -91,7 +93,7 @@ fun PrayerPage(s: AppState, id: String) {
         val playing = now != null
         Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             BookButton(stringResource(if (playing) R.string.listen_stop else R.string.prayer_listen), Modifier.weight(1f)) {
-                if (playing) ListenService.stop(ctx) else ListenService.startPassages(ctx, p.passages, s.aloudRate())
+                if (playing) ListenService.stop(ctx) else ListenService.startPassages(ctx, p.passages, s.aloudRate(), "prayer:${p.id}")
             }
             BookButton(stringResource(R.string.prayer_write), Modifier.weight(1f), quiet = true) { s.writePrayer(p.id) }
         }

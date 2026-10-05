@@ -101,6 +101,24 @@ fun DrawScope.giltFrame(color: Color, bands: Boolean) {
     }
 }
 
+/** 하던 일이 있으면 뒤로 가기를 한 번 붙잡아 물어요 (멈추고 나가기 · 들으며 나가기 · 머물기). 화면의 다른 BackHandler 보다 뒤에 두세요. */
+@Composable
+fun LeaveGuard(s: AppState, active: Boolean, recording: Boolean, onStop: () -> Unit, onKeep: (() -> Unit)? = null) {
+    BackHandler(enabled = active && s.leaveAsk == null) { s.leaveAsk = AppState.LeaveAsk(recording, onStop, onKeep) }
+}
+
+/** 나가기 확인 창 (앱 맨 위에 그려요). */
+@Composable
+fun LeaveSheet(s: AppState, a: AppState.LeaveAsk) {
+    BookSheet({ s.leaveAsk = null }) {
+        Text(stringResource(if (a.recording) R.string.leave_rec_h else R.string.leave_listen_h), style = Theme.title(s.korean))
+        Text(stringResource(if (a.recording) R.string.leave_rec_b else R.string.leave_listen_b), style = Theme.body())
+        BookButton(stringResource(if (a.recording) R.string.leave_rec_stop else R.string.leave_stop), Modifier.fillMaxWidth()) { s.leaveAsk = null; a.onStop() }
+        a.onKeep?.let { k -> BookButton(stringResource(R.string.leave_keep), Modifier.fillMaxWidth(), quiet = true) { s.leaveAsk = null; k() } }
+        BookButton(stringResource(if (a.recording) R.string.leave_rec_keep else R.string.leave_stay), Modifier.fillMaxWidth(), quiet = true) { s.leaveAsk = null }
+    }
+}
+
 /**
  * 시트 (아래에서 올라오는 한 장): 장 고르기 · 발자취 · 확인 창 공통.
  * 종이 바탕 + 위쪽 금선 두 줄 (책등 띠) + 금빛 손잡이. 바깥을 누르거나 뒤로 가면 닫힘.

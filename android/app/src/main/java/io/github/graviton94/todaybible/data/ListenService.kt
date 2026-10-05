@@ -32,14 +32,19 @@ class ListenService : Service() {
         private const val CHANNEL = "listen"; private const val ID = 11
         private val _now = MutableStateFlow<Now?>(null)
         val now: StateFlow<Now?> = _now
+        /** 듣기를 시작한 화면: "read" (성경 읽기) · "prayer:아이디" (기도문). 듣는 중 띠 · 알림이 그리로 데려가요. */
+        private val _origin = MutableStateFlow("read")
+        val origin: StateFlow<String> = _origin
 
         fun start(ctx: Context, book: Int, chapter: Int, verse: Int, rate: Float) {
+            _origin.value = "read"
             val i = Intent(ctx, ListenService::class.java).putExtra("b", book).putExtra("c", chapter).putExtra("v", verse).putExtra("r", rate)
             if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i) else ctx.startService(i)
         }
         /** 기도문처럼 정한 절들만 차례로 (장 · 절 범위 여러 개) 듣고 멈춰요. */
-        fun startPassages(ctx: Context, list: List<io.github.graviton94.todaybible.core.Reference.Passage>, rate: Float) {
+        fun startPassages(ctx: Context, list: List<io.github.graviton94.todaybible.core.Reference.Passage>, rate: Float, origin: String = "read") {
             if (list.isEmpty()) return
+            _origin.value = origin
             val q = list.flatMap { listOf(it.book, it.chapter, it.from, it.to) }.toIntArray()
             val i = Intent(ctx, ListenService::class.java).putExtra("q", q).putExtra("r", rate)
             if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i) else ctx.startService(i)
@@ -102,7 +107,7 @@ class ListenService : Service() {
     private fun foreground() {
         val nm = getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, getString(R.string.listen_channel), NotificationManager.IMPORTANCE_LOW))
-        val open = PendingIntent.getActivity(this, 5, Intent(this, MainActivity::class.java).putExtra("page", io.github.graviton94.todaybible.ui.AppState.COPY).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP), PendingIntent.FLAG_IMMUTABLE)
+        val open = PendingIntent.getActivity(this, 5, Intent(this, MainActivity::class.java).putExtra("listening", true).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val stop = PendingIntent.getService(this, 6, Intent(this, ListenService::class.java).setAction("stop"), PendingIntent.FLAG_IMMUTABLE)
         val name = Canon.books[book].let { if (store.translation == io.github.graviton94.todaybible.core.Translation.KRV) it.ko else it.en }
         val n = Notification.Builder(this, CHANNEL).setSmallIcon(R.drawable.ic_stat_cross).setContentTitle(getString(R.string.listen_title, name, chapter))
