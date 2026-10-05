@@ -222,7 +222,7 @@
   "notes_cover": {"en": "My handwritten notebook", "ko": "내 손글씨 필사 노트"},
   "storage": {"en": "Saved on this phone", "ko": "이 폰에 저장한 것"},
   "storage_line": {"en": "Voice %1$s · Handwriting %2$s", "ko": "목소리 %1$s · 손글씨 %2$s"},
-  "cmp_voice": {"en": "My voice", "ko": "내 목소리"},
+  "cmp_voice": {"en": "My voice · audiobook", "ko": "내 목소리 · 오디오북"},
   "cmp_notes": {"en": "Handwriting PDF", "ko": "손글씨 PDF"},
   "duration_ms": {"en": "%1$d:%2$02d", "ko": "%1$d분 %2$d초"},
   "backup": {"en": "Backup", "ko": "기록 보관"},
@@ -742,5 +742,14 @@
   "plan_life_note": {"en": "One payment, yours for good", "ko": "한 번 결제로 평생"},
   "plan_life_member": {"en": "Subscribers: %1$s", "ko": "구독하면 %1$s"},
   "plan_life_discount": {"en": "Subscriber price", "ko": "구독자 할인가"},
-  "widget_streak": {"en": "%1$d days in a row", "ko": "%1$d일째 이어 쓰기"}
+  "widget_streak": {"en": "%1$d days in a row", "ko": "%1$d일째 이어 쓰기"},
+  "pay_done_life": {"en": "Lifetime is open. Thank you.", "ko": "평생권이 열렸어요. 고마워요."},
+  "pay_done_sub": {"en": "You're subscribed · everything is open", "ko": "구독이 시작됐어요 · 모두 열렸어요"},
+  "pay_restored": {"en": "Your purchase is back", "ko": "구매를 되찾았어요"},
+  "pay_none": {"en": "Nothing to restore · check you're on the same Google account", "ko": "되찾을 구매가 없어요 · 같은 Google 계정인지 확인해 주세요"},
+  "pay_pending": {"en": "Payment is being confirmed. It opens by itself when done.", "ko": "결제를 확인하는 중이에요. 끝나면 저절로 열려요."},
+  "pay_failed": {"en": "The payment didn't go through. Please try again in a moment.", "ko": "결제가 끝나지 않았어요. 잠시 뒤 다시 해 주세요."},
+  "cmp_plans": {"en": "Reading plans", "ko": "읽기 계획"},
+  "cmp_gift": {"en": "Send to family", "ko": "가족에게 보내기"},
+  "cmp_prayers": {"en": "Prayers (listen · write)", "ko": "기도문 (듣기 · 쓰기)"}
 }

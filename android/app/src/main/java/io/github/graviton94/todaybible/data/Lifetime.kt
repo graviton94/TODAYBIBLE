@@ -36,6 +36,10 @@ class Lifetime(context: Context) {
         private set
     var memberPrice by mutableStateOf<String?>(null)
         private set
+    /** 결제 · 되찾기 결과 한 줄 (화면이 토스트로 보여 주고 지워요). */
+    enum class Note { BOUGHT, SUBSCRIBED, RESTORED, NOTHING, PENDING, FAILED }
+    var note by mutableStateOf<Note?>(null)
+    private fun note(n: Note) { note = n }
     /** 잠긴 것이 모두 열려 있음 (평생권이거나 구독 중). */
     val unlocked: Boolean get() = owned || subscribed
     val ready: Boolean get() = details != null || monthly != null
@@ -49,7 +53,14 @@ class Lifetime(context: Context) {
     private val client: BillingClient = BillingClient.newBuilder(context.applicationContext)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .enableAutoServiceReconnection()
-        .setListener { r, list -> if (r.responseCode == BillingClient.BillingResponseCode.OK) list?.forEach(::grant) }
+        .setListener { r, list ->
+            when (r.responseCode) {
+                BillingClient.BillingResponseCode.OK -> list?.forEach { p -> if (p.purchaseState == Purchase.PurchaseState.PENDING) note(Note.PENDING) else { grant(p); note(if (MONTHLY in p.products) Note.SUBSCRIBED else Note.BOUGHT) } }
+                BillingClient.BillingResponseCode.USER_CANCELED -> {}   // 스스로 닫았으면 말없이
+                BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> restore(asked = true)
+                else -> note(Note.FAILED)
+            }
+        }
         .build()
 
     fun connect() {
@@ -84,15 +95,24 @@ class Lifetime(context: Context) {
     }
 
     /** 이미 산 평생권 · 살아 있는 구독 다시 받기 (다른 폰 · 다시 설치 · 해지 뒤). */
-    fun restore() {
+    /** asked = 사용자가 '구매 복원' 을 눌렀을 때: 결과를 한 줄로 알려요. */
+    fun restore(asked: Boolean = false) {
+        if (asked && !client.isReady) { note(Note.FAILED); connect(); return }
+        val left = java.util.concurrent.atomic.AtomicInteger(2); val found = java.util.concurrent.atomic.AtomicBoolean(false)
+        fun done() { if (left.decrementAndGet() == 0 && asked) note(if (found.get()) Note.RESTORED else Note.NOTHING) }
         client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build()) { r, list ->
-            if (r.responseCode == BillingClient.BillingResponseCode.OK) list.forEach(::grant)
+            if (r.responseCode == BillingClient.BillingResponseCode.OK) list.forEach { p ->
+                if ((ID in p.products || MEMBER in p.products) && p.purchaseState == Purchase.PurchaseState.PURCHASED) found.set(true); grant(p) }
+            done()
         }
         client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()) { r, list ->
-            if (r.responseCode != BillingClient.BillingResponseCode.OK) return@queryPurchasesAsync
-            // 해지 · 만료된 구독은 Play 가 돌려주지 않아요: 없으면 닫힘
-            val live = list.filter { MONTHLY in it.products && it.purchaseState == Purchase.PurchaseState.PURCHASED }
-            markSubscribed(live.isNotEmpty()); live.forEach(::acknowledge)
+            if (r.responseCode == BillingClient.BillingResponseCode.OK) {
+                // 해지 · 만료된 구독은 Play 가 돌려주지 않아요: 없으면 닫힘
+                val live = list.filter { MONTHLY in it.products && it.purchaseState == Purchase.PurchaseState.PURCHASED }
+                if (live.isNotEmpty()) found.set(true)
+                markSubscribed(live.isNotEmpty()); live.forEach(::acknowledge)
+            }
+            done()
         }
     }
 

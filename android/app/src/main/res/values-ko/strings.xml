@@ -224,7 +224,7 @@
     <string name="notes_cover">내 손글씨 필사 노트</string>
     <string name="storage">이 폰에 저장한 것</string>
     <string name="storage_line">목소리 %1$s · 손글씨 %2$s</string>
-    <string name="cmp_voice">내 목소리</string>
+    <string name="cmp_voice">내 목소리 · 오디오북</string>
     <string name="cmp_notes">손글씨 PDF</string>
     <string name="duration_ms">%1$d분 %2$d초</string>
     <string name="backup">기록 보관</string>
@@ -745,4 +745,13 @@
     <string name="plan_life_member">구독하면 %1$s</string>
     <string name="plan_life_discount">구독자 할인가</string>
     <string name="widget_streak">%1$d일째 이어 쓰기</string>
+    <string name="pay_done_life">평생권이 열렸어요. 고마워요.</string>
+    <string name="pay_done_sub">구독이 시작됐어요 · 모두 열렸어요</string>
+    <string name="pay_restored">구매를 되찾았어요</string>
+    <string name="pay_none">되찾을 구매가 없어요 · 같은 Google 계정인지 확인해 주세요</string>
+    <string name="pay_pending">결제를 확인하는 중이에요. 끝나면 저절로 열려요.</string>
+    <string name="pay_failed">결제가 끝나지 않았어요. 잠시 뒤 다시 해 주세요.</string>
+    <string name="cmp_plans">읽기 계획</string>
+    <string name="cmp_gift">가족에게 보내기</string>
+    <string name="cmp_prayers">기도문 (듣기 · 쓰기)</string>
 </resources>

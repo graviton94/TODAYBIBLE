@@ -95,7 +95,7 @@ fun PurchasePage(s: AppState) {
                 else -> BookButton(stringResource(R.string.not_ready), Modifier.fillMaxWidth(), enabled = false) {}
             }
             Compare(s)
-            if (!life.owned) BookButton(stringResource(R.string.restore), Modifier.fillMaxWidth(), quiet = true) { life.restore() }
+            if (!life.owned) BookButton(stringResource(R.string.restore), Modifier.fillMaxWidth(), quiet = true) { life.restore(asked = true) }
             // 교회 · 소그룹에서 받은 선물 코드 (Play 프로모션 코드): Play 의 코드 쓰기 화면으로
             if (!life.owned) Text(stringResource(R.string.gift_code), style = Theme.small().copy(color = Theme.c.rubric), modifier = Modifier.fillMaxWidth()
                 .heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = androidx.compose.ui.semantics.Role.Button) {
@@ -149,9 +149,13 @@ private fun Compare(s: AppState) {
     val rows = listOf(
         Triple(stringResource(R.string.cmp_books), stringResource(R.string.books_n, Canon.free.size), stringResource(R.string.books_n, Canon.books.size)),
         Triple(stringResource(R.string.cmp_plates), stringResource(R.string.cmp_some), stringResource(R.string.cmp_all)),
+        // 기도문은 어느 책이든 무료 · 계획은 무료 권으로만 된 것만
+        Triple(stringResource(R.string.cmp_prayers), "✓", "✓"),
+        Triple(stringResource(R.string.cmp_plans), stringResource(R.string.cmp_some), stringResource(R.string.cmp_all)),
         Triple(stringResource(R.string.my_bible_pdf), "–", "✓"),
         Triple(stringResource(R.string.cmp_voice), "–", "✓"),
         Triple(stringResource(R.string.cmp_notes), "–", "✓"),
+        Triple(stringResource(R.string.cmp_gift), "–", "✓"),
         Triple(stringResource(R.string.cmp_pens), stringResource(R.string.pen_fountain), stringResource(R.string.cmp_pens_all)),
         Triple(stringResource(R.string.cmp_ads), stringResource(R.string.cmp_none), stringResource(R.string.cmp_none)),
     )
@@ -163,11 +167,14 @@ private fun Compare(s: AppState) {
         rows.forEach { (name, free, life) ->
             Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).drawBehind { drawLine(c.hair, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) },
                 verticalAlignment = Alignment.CenterVertically) {
-                Text(name, style = Theme.body(), maxLines = 1, modifier = Modifier.weight(1.4f))
-                Text(free, style = Theme.body().copy(color = c.inkSoft, textAlign = TextAlign.Center), maxLines = 1, modifier = Modifier.weight(1f))
+                Text(name, style = Theme.body(), maxLines = 2, modifier = Modifier.weight(1.4f).padding(vertical = Tokens.Space.s1))
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    if (free == "✓") StampMark(STAMP_CROSS, c.inkSoft, Modifier.size(Tokens.Size.iconSm))
+                    else Text(free, style = Theme.body().copy(color = c.inkSoft, textAlign = TextAlign.Center), maxLines = 2)
+                }
                 Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                     if (life == "✓") StampMark(STAMP_CROSS, c.rubric, Modifier.size(Tokens.Size.iconSm))
-                    else Text(life, style = Theme.label().copy(color = c.rubric, textAlign = TextAlign.Center), maxLines = 1)
+                    else Text(life, style = Theme.label().copy(color = c.rubric, textAlign = TextAlign.Center), maxLines = 2)
                 }
             }
         }

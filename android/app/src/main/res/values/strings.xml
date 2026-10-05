@@ -224,7 +224,7 @@
     <string name="notes_cover">My handwritten notebook</string>
     <string name="storage">Saved on this phone</string>
     <string name="storage_line">Voice %1$s · Handwriting %2$s</string>
-    <string name="cmp_voice">My voice</string>
+    <string name="cmp_voice">My voice · audiobook</string>
     <string name="cmp_notes">Handwriting PDF</string>
     <string name="duration_ms">%1$d:%2$02d</string>
     <string name="backup">Backup</string>
@@ -745,4 +745,13 @@
     <string name="plan_life_member">Subscribers: %1$s</string>
     <string name="plan_life_discount">Subscriber price</string>
     <string name="widget_streak">%1$d days in a row</string>
+    <string name="pay_done_life">Lifetime is open. Thank you.</string>
+    <string name="pay_done_sub">You\'re subscribed · everything is open</string>
+    <string name="pay_restored">Your purchase is back</string>
+    <string name="pay_none">Nothing to restore · check you\'re on the same Google account</string>
+    <string name="pay_pending">Payment is being confirmed. It opens by itself when done.</string>
+    <string name="pay_failed">The payment didn\'t go through. Please try again in a moment.</string>
+    <string name="cmp_plans">Reading plans</string>
+    <string name="cmp_gift">Send to family</string>
+    <string name="cmp_prayers">Prayers (listen · write)</string>
 </resources>

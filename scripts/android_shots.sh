@@ -189,7 +189,22 @@ adb shell input tap 540 1200; sleep 2; adb shell input text "And%she%sgoeth%sup%
 open --ei tb.page 2;                         shot e3_notebook 4
 open --ez tb.reset true --ei tb.welcomeStep 2;                     shot e4_welcome_goal 4
 open --ez tb.seed true --es tb.tr KJV --es tb.plate prodigal;      shot e5_plate 5
-open --ez tb.lock true --es tb.price "'\$29.99'" --ez tb.purchase true; shot e6_purchase 4
+open --ez tb.lock true --es tb.price "'\$6.99'" --es tb.monthPrice "'\$1.99'" --es tb.memberPrice "'\$4.99'" --ez tb.purchase true; shot e6_purchase 4
+# 영어 화면 한 바퀴 (en): 오늘 · 성경 · 읽기 · 기도 · 설정 · 기록 · 큰 글씨
+open --ez tb.seed true --es tb.theme LIGHT --es tb.tr KJV --ei tb.page 0;  shot en01_today 5
+swipe_up;                                                          shot en02_today_more 2
+open --ei tb.page 1;                                               shot en03_library 4
+swipe_up; swipe_up;                                                shot en04_library_books 2
+open --es tb.listen "41:3";                                        shot en05_reader 4
+open --es tb.prayer lords --es tb.prayerTimes "morning=420";       shot en06_prayer 4
+open --ez tb.prayers true;                                         shot en07_prayers 4
+open --ez tb.settings true;                                        shot en08_settings 4
+open --ez tb.settings true --es tb.section set_listen;             shot en09_settings_listen 4
+open --ei tb.page 3;                                               shot en10_record 5
+open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 2;         shot en11_aloud 4
+open --ef tb.scale 1.6 --ei tb.page 0;                             shot en12_huge_today 5
+open --ef tb.scale 1.6 --ez tb.lock true --es tb.price "'\$6.99'" --es tb.monthPrice "'\$1.99'" --ez tb.purchase true; shot en13_huge_purchase 4
+open --ef tb.scale 1.0
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # 큰 글자 · 작은 화면
 open --ez tb.seed true --es tb.tr KRV --ef tb.scale 1.3 --ei tb.page 2; shot x01_large_copy 5

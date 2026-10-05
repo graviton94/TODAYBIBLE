@@ -114,7 +114,8 @@ private fun CalendarPanel(s: AppState, days: Set<Long>) {
     var yearView by remember { mutableStateOf(false) }
     var month by remember { mutableStateOf(YearMonth.from(today)) }
     var picked by remember { mutableStateOf<LocalDate?>(null) }
-    val loc = if (k) java.util.Locale.KOREAN else java.util.Locale.ENGLISH
+    // 날짜 · 요일은 앱에서 고른 언어로 (폰 언어가 아니라)
+    val loc = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
     Column(Modifier.coach("rec_calendar"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         Row(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
             listOf(false to R.string.cal_month, true to R.string.cal_year).forEach { (y, id) ->
@@ -320,7 +321,7 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
 @Composable
 private fun MilestoneList(s: AppState, list: List<Milestone>) {
     val c = Theme.c; val ctx = LocalContext.current
-    val fmt = DateTimeFormatter.ofPattern(androidx.compose.ui.res.stringResource(R.string.fmt_ymd), java.util.Locale.getDefault())
+    val fmt = DateTimeFormatter.ofPattern(androidx.compose.ui.res.stringResource(R.string.fmt_ymd), androidx.compose.ui.platform.LocalConfiguration.current.locales[0])
     Column(Modifier.coach("rec_miles")) {
         list.forEach { m ->
             val day = s.earned[m]
@@ -401,7 +402,7 @@ private fun MarkList(s: AppState) {
     val c = Theme.c; val k = s.korean
     var all by remember { mutableStateOf(false) }
     val list = s.marks.filter { it.translation == s.translation }.sortedByDescending { it.epochDay }
-    val fmt = java.time.format.DateTimeFormatter.ofPattern(androidx.compose.ui.res.stringResource(R.string.fmt_md), java.util.Locale.getDefault())
+    val fmt = java.time.format.DateTimeFormatter.ofPattern(androidx.compose.ui.res.stringResource(R.string.fmt_md), androidx.compose.ui.platform.LocalConfiguration.current.locales[0])
     Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         (if (all) list else list.take(MARKS_SHOWN)).forEach { m ->
             val v = m.key
@@ -438,7 +439,7 @@ private fun YearCard(s: AppState, year: Int) {
     val days = inYear.map { it.epochDay }.toSet()
     val topBook = inYear.groupingBy { it.key.book }.eachCount().maxByOrNull { it.value }?.key ?: 0
     val first = inYear.minBy { it.atMillis }
-    val fmt = java.time.format.DateTimeFormatter.ofPattern(androidx.compose.ui.res.stringResource(R.string.fmt_md), java.util.Locale.getDefault())
+    val fmt = java.time.format.DateTimeFormatter.ofPattern(androidx.compose.ui.res.stringResource(R.string.fmt_md), androidx.compose.ui.platform.LocalConfiguration.current.locales[0])
     val plates = s.store.plates.count { s.plateFraction(it) >= 1f }
     val title = if (s.ownerName.isNotBlank()) stringResource(R.string.year_title_named, s.ownerName, year) else stringResource(R.string.year_title, year)
     val big = stringResource(R.string.year_big, "%,d".format(verses))

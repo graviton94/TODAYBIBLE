@@ -143,6 +143,16 @@ fun Root(s: AppState) {
         s.plateView?.let { pl -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PlatePage(s, pl) } }
         // 평생권은 어느 창에서 열어도 맨 위에
         if (s.purchaseOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PurchasePage(s) }
+        // 결제 · 되찾기 결과 한 줄
+        val ctx0 = androidx.compose.ui.platform.LocalContext.current
+        val payNote = s.lifetime.note
+        LaunchedEffect(payNote) {
+            val n = payNote ?: return@LaunchedEffect
+            val L = io.github.graviton94.todaybible.data.Lifetime.Note
+            s.toast = ctx0.getString(when (n) { L.BOUGHT -> R.string.pay_done_life; L.SUBSCRIBED -> R.string.pay_done_sub; L.RESTORED -> R.string.pay_restored; L.NOTHING -> R.string.pay_none; L.PENDING -> R.string.pay_pending; L.FAILED -> R.string.pay_failed })
+            if (n == L.BOUGHT || n == L.SUBSCRIBED) { s.purchaseOpen = false; s.peekBook = null }
+            s.lifetime.note = null
+        }
         // 하던 일을 두고 나갈지 묻는 창은 모든 창 위에
         s.leaveAsk?.let { LeaveSheet(s, it) }
         // 나의 성경 PDF: 만들어서 나누기 창으로
