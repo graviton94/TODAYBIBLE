@@ -59,7 +59,7 @@ open --es tb.finished 1:7;                                         shot f01_fini
 adb shell input tap 540 1810;                                      shot f02_finished_lifted 3
 swipe_up;                                                          shot f03_finished_text 2
 open --es tb.award OLIVE;                                          shot a01_award 4
-open --ez tb.lock true --es tb.price ₩9,900 --es tb.monthPrice ₩2,900 --ez tb.purchase true; shot e01_purchase_compare 4
+open --ez tb.lock true --es tb.price ₩9,900 --es tb.monthPrice ₩2,900 --es tb.memberPrice ₩6,900 --ez tb.purchase true; shot e01_purchase_compare 4
 open --ez tb.lock true --es tb.price ₩9,900 --es tb.monthPrice ₩2,900 --es tb.memberPrice ₩6,900 --ez tb.subscribed true --ez tb.purchase true; shot e03_purchase_subscribed 4
 open --ez tb.lock true --es tb.price ₩14,900 --ei tb.peek 43;      shot e02_purchase_peek 4
 open --ez tb.settings true;                                        shot s01_settings 4

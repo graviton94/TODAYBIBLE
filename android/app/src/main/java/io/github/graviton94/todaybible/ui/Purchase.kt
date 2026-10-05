@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.wrapContentHeight
 import io.github.graviton94.todaybible.core.Canon
 import androidx.compose.foundation.rememberScrollState
@@ -67,18 +69,21 @@ fun PurchasePage(s: AppState) {
                 Cover(Modifier.width(Tokens.Size.coverW))
                 Text(stringResource(R.string.lifetime_head), style = Theme.title(k).copy(textAlign = TextAlign.Center))
             }
-            Compare(s)
             when {
                 life.owned -> Text(stringResource(R.string.owned), style = Theme.label().copy(color = c.giltText))
                 life.ready || life.forceReady -> {
-                    // 1) 월 구독 (커피 한 잔 값) · 2) 평생권 (구독 중이면 할인)
-                    if (life.subscribed) Text(stringResource(R.string.subscribed_now), style = Theme.label().copy(color = c.giltText, textAlign = TextAlign.Center))
-                    else if (life.canSubscribe || life.monthlyPrice != null) {
-                        BookButton(stringResource(R.string.subscribe_monthly, life.monthlyPrice ?: ""), Modifier.fillMaxWidth()) { (ctx as? Activity)?.let { life.subscribe(it) } }
-                        Text(stringResource(R.string.subscribe_note), style = Theme.small().copy(textAlign = TextAlign.Center))
-                        Text(stringResource(R.string.lifetime_or), style = Theme.small().copy(color = c.inkSoft, textAlign = TextAlign.Center))
+                    // 두 길을 나란히: 월 구독 · 평생권 (구독 중이면 평생권이 할인가로)
+                    Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                        if (life.canSubscribe || life.monthlyPrice != null || life.subscribed)
+                            PlanCard(Modifier.weight(1f), stringResource(R.string.plan_month),
+                                if (life.subscribed) stringResource(R.string.plan_month_on) else stringResource(R.string.plan_month_price, life.monthlyPrice ?: ""),
+                                null, stringResource(R.string.plan_month_note), primary = !life.subscribed, enabled = !life.subscribed) { (ctx as? Activity)?.let { life.subscribe(it) } }
+                        val member = life.subscribed && life.memberPrice != null
+                        PlanCard(Modifier.weight(1f), stringResource(R.string.plan_life), life.lifetimePrice ?: "",
+                            if (member) life.price else null,
+                            when { member -> stringResource(R.string.plan_life_discount); life.memberPrice != null -> stringResource(R.string.plan_life_member, life.memberPrice!!); else -> stringResource(R.string.plan_life_note) },
+                            primary = life.subscribed || !(life.canSubscribe || life.monthlyPrice != null)) { (ctx as? Activity)?.let { life.buy(it) } }
                     }
-                    BookButton(stringResource(R.string.buy_lifetime, life.lifetimePrice ?: ""), Modifier.fillMaxWidth(), quiet = !life.subscribed && (life.canSubscribe || life.monthlyPrice != null)) { (ctx as? Activity)?.let { life.buy(it) } }
                     if (life.subscribed) {
                         Text(stringResource(R.string.member_note), style = Theme.small().copy(textAlign = TextAlign.Center))
                         Text(stringResource(R.string.manage_sub), style = Theme.small().copy(color = c.rubric), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
@@ -89,6 +94,7 @@ fun PurchasePage(s: AppState) {
                 }
                 else -> BookButton(stringResource(R.string.not_ready), Modifier.fillMaxWidth(), enabled = false) {}
             }
+            Compare(s)
             if (!life.owned) BookButton(stringResource(R.string.restore), Modifier.fillMaxWidth(), quiet = true) { life.restore() }
             // 교회 · 소그룹에서 받은 선물 코드 (Play 프로모션 코드): Play 의 코드 쓰기 화면으로
             if (!life.owned) Text(stringResource(R.string.gift_code), style = Theme.small().copy(color = Theme.c.rubric), modifier = Modifier.fillMaxWidth()
@@ -98,6 +104,23 @@ fun PurchasePage(s: AppState) {
             Text(stringResource(R.string.free_books), style = Theme.small().copy(textAlign = TextAlign.Center))
             Text(stringResource(R.string.pay_note), style = Theme.small().copy(textAlign = TextAlign.Center))
         }
+    }
+}
+
+/** 고를 수 있는 길 하나 (월 구독 · 평생권): 이름 · 가격 (할인 전 가격은 줄 그어) · 한 줄 · 고르기. primary = 가죽 바탕으로 먼저 눈에. */
+@Composable
+private fun PlanCard(modifier: Modifier, name: String, price: String, was: String?, note: String, primary: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
+    val c = Theme.c
+    val bg = if (primary) c.leather else c.paper
+    val fg = if (primary) c.leatherInk else c.ink
+    Column(modifier.fillMaxHeight().clip(RoundedCornerShape(Tokens.Radius.card)).background(bg)
+        .drawBehind { giltFrame(if (primary) c.gilt.copy(alpha = Tokens.Alpha.frame) else c.hair, bands = primary) }
+        .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(Tokens.Space.s4),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+        Text(name, style = Theme.small().copy(color = if (primary) c.gilt else c.rubric, textAlign = TextAlign.Center), maxLines = 1)
+        was?.let { Text(it, style = Theme.small().copy(color = fg.copy(alpha = Tokens.Alpha.faint), textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough, textAlign = TextAlign.Center), maxLines = 1) }
+        Text(price, style = Theme.title(true).copy(color = fg, textAlign = TextAlign.Center), maxLines = 2)
+        Text(note, style = Theme.small().copy(color = fg, textAlign = TextAlign.Center), maxLines = 3)
     }
 }
 

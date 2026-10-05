@@ -175,7 +175,7 @@
     <string name="books_n">%1$d books</string>
     <string name="feast_reward_on">Write that day to earn “%1$s”</string>
     <string name="plan">Reading plan</string>
-    <string name="plan_choose">Choose a plan</string>
+    <string name="plan_choose">Choose</string>
     <string name="plan_none">No plan · at my own pace</string>
     <string name="plan_mark30">Mark in a month</string>
     <string name="plan_prov31">Proverbs in a month</string>
@@ -738,4 +738,12 @@
     <string name="lifetime_or">Or keep it for good</string>
     <string name="lifetime_card_from">From %1$s a month · see plans ›</string>
     <string name="lifetime_card_sub">Subscribed · Lifetime for %1$s ›</string>
+    <string name="plan_month">Monthly</string>
+    <string name="plan_month_price">%1$s / month</string>
+    <string name="plan_month_note">About a coffee a month · cancel anytime</string>
+    <string name="plan_month_on">Subscribed</string>
+    <string name="plan_life">Lifetime</string>
+    <string name="plan_life_note">One payment, yours for good</string>
+    <string name="plan_life_member">Subscribers: %1$s</string>
+    <string name="plan_life_discount">Subscriber price</string>
 </resources>

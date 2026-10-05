@@ -173,7 +173,7 @@
   "books_n": {"en": "%1$d books", "ko": "%1$d권"},
   "feast_reward_on": {"en": "Write that day to earn “%1$s”", "ko": "그날 쓰면 ‘%1$s’ 발자취를 받아요"},
   "plan": {"en": "Reading plan", "ko": "읽기 계획"},
-  "plan_choose": {"en": "Choose a plan", "ko": "읽기 계획 고르기"},
+  "plan_choose": {"en": "Choose", "ko": "고르기"},
   "plan_none": {"en": "No plan · at my own pace", "ko": "계획 없이 · 내 속도로"},
   "plan_mark30": {"en": "Mark in a month", "ko": "마가복음 한 달"},
   "plan_prov31": {"en": "Proverbs in a month", "ko": "잠언 한 달"},
@@ -735,5 +735,13 @@
   "manage_sub": {"en": "Manage subscription ›", "ko": "구독 관리 ›"},
   "lifetime_or": {"en": "Or keep it for good", "ko": "또는 한 번에 평생"},
   "lifetime_card_from": {"en": "From %1$s a month · see plans ›", "ko": "월 %1$s부터 · 둘러보기 ›"},
-  "lifetime_card_sub": {"en": "Subscribed · Lifetime for %1$s ›", "ko": "구독 중 · 평생권으로 바꾸면 %1$s ›"}
+  "lifetime_card_sub": {"en": "Subscribed · Lifetime for %1$s ›", "ko": "구독 중 · 평생권으로 바꾸면 %1$s ›"},
+  "plan_month": {"en": "Monthly", "ko": "월 구독"},
+  "plan_month_price": {"en": "%1$s / month", "ko": "월 %1$s"},
+  "plan_month_note": {"en": "About a coffee a month · cancel anytime", "ko": "한 달 커피 한 잔 값 · 언제든 해지"},
+  "plan_month_on": {"en": "Subscribed", "ko": "구독 중"},
+  "plan_life": {"en": "Lifetime", "ko": "평생권"},
+  "plan_life_note": {"en": "One payment, yours for good", "ko": "한 번 결제로 평생"},
+  "plan_life_member": {"en": "Subscribers: %1$s", "ko": "구독하면 %1$s"},
+  "plan_life_discount": {"en": "Subscriber price", "ko": "구독자 할인가"}
 }

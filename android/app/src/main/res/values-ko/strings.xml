@@ -175,7 +175,7 @@
     <string name="books_n">%1$d권</string>
     <string name="feast_reward_on">그날 쓰면 ‘%1$s’ 발자취를 받아요</string>
     <string name="plan">읽기 계획</string>
-    <string name="plan_choose">읽기 계획 고르기</string>
+    <string name="plan_choose">고르기</string>
     <string name="plan_none">계획 없이 · 내 속도로</string>
     <string name="plan_mark30">마가복음 한 달</string>
     <string name="plan_prov31">잠언 한 달</string>
@@ -738,4 +738,12 @@
     <string name="lifetime_or">또는 한 번에 평생</string>
     <string name="lifetime_card_from">월 %1$s부터 · 둘러보기 ›</string>
     <string name="lifetime_card_sub">구독 중 · 평생권으로 바꾸면 %1$s ›</string>
+    <string name="plan_month">월 구독</string>
+    <string name="plan_month_price">월 %1$s</string>
+    <string name="plan_month_note">한 달 커피 한 잔 값 · 언제든 해지</string>
+    <string name="plan_month_on">구독 중</string>
+    <string name="plan_life">평생권</string>
+    <string name="plan_life_note">한 번 결제로 평생</string>
+    <string name="plan_life_member">구독하면 %1$s</string>
+    <string name="plan_life_discount">구독자 할인가</string>
 </resources>
