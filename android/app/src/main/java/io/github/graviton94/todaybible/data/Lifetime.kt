@@ -92,7 +92,7 @@ class Lifetime(context: Context) {
             if (r.responseCode != BillingClient.BillingResponseCode.OK) return@queryPurchasesAsync
             // 해지 · 만료된 구독은 Play 가 돌려주지 않아요: 없으면 닫힘
             val live = list.filter { MONTHLY in it.products && it.purchaseState == Purchase.PurchaseState.PURCHASED }
-            setSubscribed(live.isNotEmpty()); live.forEach(::acknowledge)
+            markSubscribed(live.isNotEmpty()); live.forEach(::acknowledge)
         }
     }
 
@@ -111,7 +111,7 @@ class Lifetime(context: Context) {
         return client.launchBillingFlow(activity, BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(p)).build()).responseCode == BillingClient.BillingResponseCode.OK
     }
 
-    private fun setSubscribed(on: Boolean) { subscribed = on; prefs.edit().putBoolean("subscribed", on).apply() }
+    private fun markSubscribed(on: Boolean) { subscribed = on; prefs.edit().putBoolean("subscribed", on).apply() }
     private fun acknowledge(p: Purchase) {
         if (!p.isAcknowledged) client.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder().setPurchaseToken(p.purchaseToken).build()) {}
     }
@@ -120,7 +120,7 @@ class Lifetime(context: Context) {
         if (p.purchaseState != Purchase.PurchaseState.PURCHASED) return
         when {
             ID in p.products || MEMBER in p.products -> { owned = true; prefs.edit().putBoolean("lifetime", true).apply() }
-            MONTHLY in p.products -> setSubscribed(true)
+            MONTHLY in p.products -> markSubscribed(true)
             else -> return
         }
         acknowledge(p)
