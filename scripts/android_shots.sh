@@ -59,7 +59,7 @@ open --es tb.plan mark30;                                          shot p02_toda
 open --es tb.cover navy --es tb.owner 김은혜 --es tb.intro C; sleep 7; snap p03_cover_navy_name
 open --es tb.plan none --es tb.cover burgundy --es tb.owner ""
 open --ei tb.page 2 --ei tb.copyTab 0;                             shot p04_aloud_mic 3
-open --ei tb.page 2 --ei tb.copyTab 0 --ez tb.voice true;          shot p05_aloud_voice 3
+open --ei tb.page 2 --ei tb.copyTab 0 --ez tb.voice true; swipe_up; swipe_up; shot p05_aloud_voice 3
 open --ez tb.settings true --es tb.section set_listen;              shot p06_settings_voice 3
 # 손글씨: 빈 공책 → 몇 획 그은 공책
 open --ei tb.page 2 --ei tb.copyTab 2;                             shot p07_hand_empty 3
