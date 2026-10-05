@@ -41,7 +41,9 @@ def book(text: str):
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    data = urllib.request.urlopen(URL).read()
+    # eBible 은 기본 파이썬 요청을 막아요: 보통 브라우저처럼
+    req = urllib.request.Request(URL, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36", "Accept": "*/*"})
+    data = urllib.request.urlopen(req).read()
     z = zipfile.ZipFile(io.BytesIO(data))
     files = {}
     for n in z.namelist():
