@@ -79,8 +79,9 @@ private fun frame(ctx: Context, wDp: Int, hDp: Int, dark: Boolean, block: androi
 
 /** 오늘 (2×2): 오늘의 분량 고리 + 며칠째 이어 쓰는지. 다 채우면 금빛 고리 안에 도장. (예전 '이어 쓴 날' 위젯을 합쳤어요) */
 class GoalWidget : SmallWidget() {
-    override fun draw(ctx: Context, wDp: Int, hDp: Int, dark: Boolean): Bitmap = frame(ctx, wDp, hDp, dark) { m, c ->
-        val (n, goal, run) = today(ctx)
+    override fun draw(ctx: Context, wDp: Int, hDp: Int, dark: Boolean): Bitmap { val (n, goal, run) = today(ctx); return paint(ctx, wDp, hDp, dark, n, goal, run) }
+    /** 값을 받아 그리기 (위젯 고르는 화면의 미리보기는 보기 좋은 예시 값으로). */
+    fun paint(ctx: Context, wDp: Int, hDp: Int, dark: Boolean, n: Int, goal: Int, run: Int): Bitmap = frame(ctx, wDp, hDp, dark) { m, c ->
         val met = if (goal < 0) n >= Goal.LONG * Goal.chapters(goal) else n >= goal
         val side = minOf(size.width, size.height) * 0.56f; val w = Tokens.Stroke.rule.toPx() * 2.5f
         val tl = Offset((size.width - side) / 2, size.height * 0.1f)

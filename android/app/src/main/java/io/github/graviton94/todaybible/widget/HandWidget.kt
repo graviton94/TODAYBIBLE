@@ -57,12 +57,34 @@ class HandWidget : AppWidgetProvider() {
         }
 
         /** 손으로 쓴 절들 (번역 · 권 · 장 · 절). */
+        /** 손으로 쓴 절이 하나라도 있는지. */
+        fun hasInk(ctx: Context) = written(ctx).isNotEmpty()
         private fun written(ctx: Context): List<Triple<Translation, Triple<Int, Int, Int>, java.io.File>> =
             Ink.dir(ctx).listFiles()?.mapNotNull { f ->
                 val p = f.name.removeSuffix(".ink").split('_')
                 if (!f.name.endsWith(".ink") || p.size != 4) null
                 else Translation.entries.firstOrNull { it.id == p[0] }?.let { tr -> runCatching { Triple(tr, Triple(p[1].toInt(), p[2].toInt(), p[3].toInt()), f) }.getOrNull() }
             }?.sortedBy { it.third.name }.orEmpty()
+
+        /** 위젯 고르는 화면의 미리보기: 아직 손글씨가 없어도 어떤 모습인지 (줄 노트 위에 손글씨 꼴로 시편 23:1). */
+        fun sample(ctx: Context, wDp: Int, hDp: Int, dark: Boolean): Bitmap {
+            val d = ctx.resources.displayMetrics.density
+            val c = if (dark) Tokens.dark else Tokens.light
+            val store = Store(ctx); val tr = store.translation
+            val verse = io.github.graviton94.todaybible.core.Markup.plain(store.book(tr, 18).verse(23, 1))
+            val name = if (tr == Translation.KRV) Canon.books[18].ko else Canon.books[18].en
+            return Cards.render(ctx, (wDp * d).toInt(), (hDp * d).toInt(), Density(d, 1f)) { m ->
+                val pad = Tokens.Size.widgetPad.toPx(); val w = size.width - 2 * pad
+                drawRoundRect(c.leaf, cornerRadius = CornerRadius(Tokens.Radius.page.toPx()))
+                val ref = m.measure("$name 23:1", TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.small, color = c.rubric))
+                val bottom = size.height - pad - ref.size.height
+                drawText(ref, topLeft = Offset(pad, bottom))
+                val style = TextStyle(fontFamily = Fonts.pen, fontSize = Tokens.Text.title, lineHeight = Tokens.Leading.body.em, color = c.penInk)
+                val lay = m.measure(verse, style, overflow = androidx.compose.ui.text.style.TextOverflow.Clip, constraints = Constraints(maxWidth = w.toInt(), maxHeight = (bottom - pad - Tokens.Space.s1.toPx()).toInt()))
+                for (i in 0 until lay.lineCount) { val y = pad + lay.getLineBottom(i); drawLine(c.noteLine, Offset(pad, y), Offset(size.width - pad, y), Tokens.Stroke.hair.toPx()) }
+                drawText(lay, topLeft = Offset(pad, pad))
+            }
+        }
 
         /** 위젯 그림 (dp 크기). 캡처용으로도 씀. */
         fun bitmap(ctx: Context, wDp: Int, hDp: Int, dark: Boolean, today: LocalDate = LocalDate.now()): Bitmap {

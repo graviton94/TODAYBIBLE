@@ -38,7 +38,7 @@ class WidgetTick : BroadcastReceiver() {
                 m.setWidgetPreview(android.content.ComponentName(ctx, cls), android.appwidget.AppWidgetProviderInfo.WIDGET_CATEGORY_HOME_SCREEN, v)
             }
             runCatching { put(VerseWidget::class.java, VerseWidget.bitmap(ctx, 160, 160, dark)) }
-            runCatching { put(HandWidget::class.java, HandWidget.bitmap(ctx, 160, 160, dark)) }
+            runCatching { put(HandWidget::class.java, if (HandWidget.hasInk(ctx)) HandWidget.bitmap(ctx, 160, 160, dark) else HandWidget.sample(ctx, 160, 160, dark)) }
             runCatching { put(GoalWidget::class.java, GoalWidget().draw(ctx, 160, 160, dark)) }
             p.edit().putLong("widget_preview_day", day).apply()
         }
@@ -49,8 +49,8 @@ class WidgetTick : BroadcastReceiver() {
             dir.mkdirs()
             fun save(name: String, bmp: android.graphics.Bitmap) = java.io.File(dir, "$name.png").outputStream().use { bmp.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
             runCatching { save("widget_preview_verse", VerseWidget.bitmap(ctx, 160, 160, false)) }
-            runCatching { save("widget_preview_hand", HandWidget.bitmap(ctx, 160, 160, false)) }
-            runCatching { save("widget_preview_today", GoalWidget().draw(ctx, 160, 160, false)) }
+            runCatching { save("widget_preview_hand", HandWidget.sample(ctx, 160, 160, false)) }
+            runCatching { save("widget_preview_today", GoalWidget().paint(ctx, 160, 160, false, 6, 10, 12)) }
             java.io.File(dir, "done").writeText("ok")
         }
 
