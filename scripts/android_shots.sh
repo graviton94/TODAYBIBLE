@@ -6,9 +6,9 @@ P=io.github.graviton94.todaybible
 OUT=${1:-shots}
 mkdir -p "$OUT"
 DAY=2026-10-02
-snap() { adb exec-out screencap -p > "$OUT/$1.png"; echo "shot $1"; }
+snap() { timeout 30 adb exec-out screencap -p > "$OUT/$1.png" || echo "snap timed out: $1" | tee -a "$OUT/STUCK.txt"; echo "shot $1"; }
 shot() { sleep "$2"; adb shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS >/dev/null; snap "$1"; }
-open() { adb shell am force-stop $P; adb shell am start -W -n $P/.MainActivity --es tb.today $DAY --ez tb.coach false "$@" >/dev/null; }
+open() { adb shell am force-stop $P; timeout 40 adb shell am start -W -n $P/.MainActivity --es tb.today $DAY --ez tb.coach false "$@" >/dev/null || echo "open timed out: $*" | tee -a "$OUT/STUCK.txt"; }
 swipe_up() { adb shell input swipe 540 1800 540 700 500; }
 
 adb shell settings put global hide_error_dialogs 1

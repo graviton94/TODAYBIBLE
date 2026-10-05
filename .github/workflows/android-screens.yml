@@ -51,7 +51,8 @@ jobs:
           cores: 2
           disable-animations: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
-          script: adb install -r android/app/build/outputs/apk/debug/app-debug.apk && bash scripts/android_shots.sh shots
+          # 장면 하나가 멈춰도 잡이 통째로 취소되지 않게: 시간 제한 뒤 찍은 것 + 로그를 그대로 올려요
+          script: adb install -r android/app/build/outputs/apk/debug/app-debug.apk && (timeout 36m bash scripts/android_shots.sh shots || echo "capture stopped early" > shots/STOPPED.txt); mkdir -p shots; adb logcat -d | tail -n 4000 > shots/logcat_tail.txt; true
       - name: Push to screenshots-android branch
         if: always()
         run: |
