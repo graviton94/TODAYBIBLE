@@ -19,7 +19,7 @@ env:
   NARRATION_URL: ${{ vars.CF_R2_PUBLIC_URL }}
 jobs:
   shots:
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[shots]')
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[shots')
     runs-on: ubuntu-latest
     timeout-minutes: 50
     steps:
@@ -40,6 +40,11 @@ jobs:
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Pick scenes
+        # 커밋 말에 [shots:q01|p05] 처럼 쓰면 그 장면만 (빠름). [shots] 는 전부.
+        env:
+          MSG: ${{ github.event.head_commit.message }}
+        run: echo "ONLY=$(printf '%s' "$MSG" | grep -oP '\[shots:\K[^\]]+' | head -1)" >> "$GITHUB_ENV"
       - name: Run on emulator and capture
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -52,7 +57,7 @@ jobs:
           disable-animations: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           # 장면 하나가 멈춰도 잡이 통째로 취소되지 않게: 시간 제한 뒤 찍은 것 + 로그를 그대로 올려요
-          script: adb install -r android/app/build/outputs/apk/debug/app-debug.apk && (timeout 36m bash scripts/android_shots.sh shots || echo "capture stopped early" > shots/STOPPED.txt); mkdir -p shots; adb logcat -d | tail -n 4000 > shots/logcat_tail.txt; true
+          script: adb install -r android/app/build/outputs/apk/debug/app-debug.apk && (ONLY="$ONLY" timeout 36m bash scripts/android_shots.sh shots || echo "capture stopped early" > shots/STOPPED.txt); mkdir -p shots; adb logcat -d | tail -n 4000 > shots/logcat_tail.txt; true
       - name: Push to screenshots-android branch
         if: always()
         run: |

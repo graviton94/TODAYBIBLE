@@ -2,6 +2,12 @@
 # 에뮬레이터에서 앱을 열어 장면마다 캡처 (.github/workflows/android-screens.yml).
 # 디버그 빌드만 tb.* 실행 옵션을 읽는다 (MainActivity.debugSetup). 장: 0 오늘 · 1 성경 · 2 필사 · 3 기록
 set -u
+# 일부 장면만 (ONLY="q01|p05"): 이름이 맞지 않는 shot 줄은 빼고 다시 실행 (준비 줄은 그대로)
+if [ -n "${ONLY:-}" ] && [ -z "${FILTERED:-}" ]; then
+  f=$(mktemp)
+  awk -v re="shot (${ONLY})[a-z0-9_]* " '!/shot [a-z0-9_]+ [0-9.]+/ || $0 ~ re' "$0" > "$f"
+  FILTERED=1 exec bash "$f" "$@"
+fi
 P=io.github.graviton94.todaybible
 OUT=${1:-shots}
 mkdir -p "$OUT"
@@ -18,6 +24,8 @@ adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # 처음 한 번: 소개 일곱 장
 open --ez tb.reset true --es tb.theme LIGHT; sleep 15
 for i in 0 1 2; do open --ez tb.reset true --es tb.theme LIGHT --ei tb.welcomeStep $i; shot w0${i}_welcome 4; done
+# 일부 장면만 찍을 때: 앞 장면들이 깔아 두던 기록을 한 번에
+[ -n "${FILTERED:-}" ] && { open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT; sleep 6; }
 # 여는 순간: A 금박 새김 (매일) · C 표지 넘김 (하루 첫 열기). 눌러야 들어가요
 open --ez tb.seed true --es tb.theme LIGHT; sleep 4
 adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro A >/dev/null
