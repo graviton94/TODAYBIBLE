@@ -58,7 +58,6 @@ class MainActivity : ComponentActivity() {
             save("widget_light", io.github.graviton94.todaybible.widget.VerseWidget.bitmap(this, 360, 170, false, day))
             save("widget_dark", io.github.graviton94.todaybible.widget.VerseWidget.bitmap(this, 360, 170, true, day))
             save("widget_goal", io.github.graviton94.todaybible.widget.GoalWidget().draw(this, 110, 110, false))
-            save("widget_run", io.github.graviton94.todaybible.widget.RunWidget().draw(this, 110, 110, false))
             save("widget_goal_dark", io.github.graviton94.todaybible.widget.GoalWidget().draw(this, 110, 110, true))
             save("widget_hand", io.github.graviton94.todaybible.widget.HandWidget.bitmap(this, 360, 170, false, day))
             val k = s.korean; val now = day.atTime(7, 12)
@@ -165,6 +164,7 @@ class MainActivity : ComponentActivity() {
         if (i.getBooleanExtra("tb.purchase", false)) s.purchaseOpen = true
         s.shareVerse = i.getIntExtra("tb.share", 0).takeIf { it > 0 }?.let { io.github.graviton94.todaybible.core.VerseKey(s.book, s.chapter, it) }
         if (i.getBooleanExtra("tb.cardShots", false)) Thread { cardShots(s) }.start()
+        if (i.getBooleanExtra("tb.widgetPreviews", false)) Thread { io.github.graviton94.todaybible.widget.WidgetTick.exportPreviews(this, java.io.File(getExternalFilesDir(null), "previews")) }.start()
         // 마지막 다듬기 캡처: 낱말 찾기 · 마음에 새기기 · 설교 노트 · 묵상 한 줄
         i.getStringExtra("tb.find")?.let { w -> s.found = w to io.github.graviton94.todaybible.core.Search.find((0 until 66).asSequence().map { s.store.book(s.translation, it) }, w, 200) }
         i.getStringExtra("tb.memory")?.split(':')?.let { val k = io.github.graviton94.todaybible.core.VerseKey(it[0].toInt() - 1, it[1].toInt(), it[2].toInt()); if (!s.isMemory(k)) s.toggleMemory(k); if (i.getBooleanExtra("tb.memoryOpen", false)) s.memoryOpen = k }

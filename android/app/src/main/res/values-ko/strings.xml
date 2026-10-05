@@ -208,9 +208,7 @@
     <string name="aloud_hint">기기 안에서 알아듣고, 글자만 채워요</string>
     <string name="aloud_no_mic">마이크 없이 읽는 빠르기로 밝아져요</string>
     <string name="widget_goal">오늘의 분량</string>
-    <string name="widget_goal_desc">오늘 쓴 절 고리</string>
-    <string name="widget_run">이어 쓴 날</string>
-    <string name="widget_run_desc">며칠째 이어 쓰는지</string>
+    <string name="widget_goal_desc">오늘 쓴 절 고리와 며칠째 이어 쓰는지</string>
     <string name="run_label">일째 이어 씀</string>
     <string name="voice_keep">내 목소리</string>
     <string name="voice_keep_hint">소리 내어 읽으면 이 폰에만 녹음돼요. 마음에 들지 않으면 지울 수 있어요.</string>
@@ -746,4 +744,5 @@
     <string name="plan_life_note">한 번 결제로 평생</string>
     <string name="plan_life_member">구독하면 %1$s</string>
     <string name="plan_life_discount">구독자 할인가</string>
+    <string name="widget_streak">%1$d일째 이어 쓰기</string>
 </resources>

@@ -54,7 +54,7 @@ abstract class SmallWidget : AppWidgetProvider() {
     companion object {
         fun refreshAll(ctx: Context) {
             val m = AppWidgetManager.getInstance(ctx)
-            listOf(GoalWidget::class.java, RunWidget::class.java).forEach { cls ->
+            listOf(GoalWidget::class.java).forEach { cls ->
                 val ids = m.getAppWidgetIds(ComponentName(ctx, cls)); if (ids.isNotEmpty()) ctx.sendBroadcast(Intent(ctx, cls).setAction(AppWidgetManager.ACTION_APPWIDGET_UPDATE).putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids))
             }
         }
@@ -77,12 +77,12 @@ private fun frame(ctx: Context, wDp: Int, hDp: Int, dark: Boolean, block: androi
     }
 }
 
-/** 오늘의 분량 고리 (1×1). 다 채우면 금빛 고리 안에 도장. */
+/** 오늘 (2×2): 오늘의 분량 고리 + 며칠째 이어 쓰는지. 다 채우면 금빛 고리 안에 도장. (예전 '이어 쓴 날' 위젯을 합쳤어요) */
 class GoalWidget : SmallWidget() {
     override fun draw(ctx: Context, wDp: Int, hDp: Int, dark: Boolean): Bitmap = frame(ctx, wDp, hDp, dark) { m, c ->
-        val (n, goal, _) = today(ctx)
+        val (n, goal, run) = today(ctx)
         val met = if (goal < 0) n >= Goal.LONG * Goal.chapters(goal) else n >= goal
-        val side = minOf(size.width, size.height) * 0.62f; val w = Tokens.Stroke.rule.toPx() * 2.5f
+        val side = minOf(size.width, size.height) * 0.56f; val w = Tokens.Stroke.rule.toPx() * 2.5f
         val tl = Offset((size.width - side) / 2, size.height * 0.1f)
         drawArc(c.hair, 0f, 360f, false, tl, Size(side, side), style = Stroke(w))
         // 장 목표면 한 장 몫 (LONG 절) 에 견줘 고리를 채워요
@@ -95,20 +95,9 @@ class GoalWidget : SmallWidget() {
             drawText(t, topLeft = Offset(tl.x, center.y - t.size.height / 2))
         }
         val l = m.measure(ctx.getString(R.string.widget_goal), TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = c.inkSoft, textAlign = TextAlign.Center), maxLines = 1, constraints = Constraints.fixedWidth(size.width.toInt()))
-        drawText(l, topLeft = Offset(0f, size.height * 0.9f - l.size.height))
+        drawText(l, topLeft = Offset(0f, tl.y + side + Tokens.Space.s1.toPx()))
+        // 며칠째 이어 쓰는지 (이어 쓴 날이 있으면 붉은 글씨)
+        val r = m.measure(ctx.getString(R.string.widget_streak, run), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.small, color = if (run > 0) c.rubric else c.inkSoft, textAlign = TextAlign.Center), maxLines = 1, constraints = Constraints.fixedWidth(size.width.toInt()))
+        drawText(r, topLeft = Offset(0f, size.height * 0.93f - r.size.height))
     }
 }
-
-/** 이어 쓴 날 (1×1): 큰 숫자 하나. */
-class RunWidget : SmallWidget() {
-    override fun draw(ctx: Context, wDp: Int, hDp: Int, dark: Boolean): Bitmap = frame(ctx, wDp, hDp, dark) { m, c ->
-        val (_, _, run) = today(ctx)
-        val n = m.measure("$run", TextStyle(fontFamily = Fonts.titleKr, fontSize = Tokens.Text.display * 1.2f, color = c.ink, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(size.width.toInt()))
-        drawText(n, topLeft = Offset(0f, size.height * 0.46f - n.size.height / 2))
-        val l = m.measure(ctx.getString(R.string.run_label), TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = c.inkSoft, textAlign = TextAlign.Center), maxLines = 1, constraints = Constraints.fixedWidth(size.width.toInt()))
-        drawText(l, topLeft = Offset(0f, size.height * 0.9f - l.size.height))
-        if (run > 0) stamp(io.github.graviton94.todaybible.ui.STAMP_CROSS, c.rubric, Offset(size.width / 2, size.height * 0.16f), Tokens.Size.iconSm.toPx())
-    }
-}
-
-

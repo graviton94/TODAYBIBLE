@@ -107,6 +107,12 @@ open --ef tb.scale 1.6 --ez tb.contrast true --ei tb.page 2 --ei tb.copyTab 0; s
 open --ef tb.scale 1.0 --ez tb.contrast false
 open --ei tb.page 3;                                               shot r00_record_stats 5
 open --ei tb.page 0 --ei tb.toast 5;                               shot t01_toast 1.5
+# @scene wp
+open --ez tb.seed true --ez tb.widgetPreviews true
+W=/sdcard/Android/data/$P/files/previews
+for i in $(seq 1 30); do adb shell ls $W/done >/dev/null 2>&1 && break; sleep 2; done
+mkdir -p "$OUT/previews"; adb pull $W/. "$OUT/previews/" >/dev/null 2>&1; rm -f "$OUT/previews/done"; ls "$OUT/previews"
+# @end
 # @scene cards
 open --ez tb.cardShots true
 C=/sdcard/Android/data/$P/files/cards

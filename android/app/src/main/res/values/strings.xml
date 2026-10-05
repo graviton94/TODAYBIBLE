@@ -208,9 +208,7 @@
     <string name="aloud_hint">Your voice is recognized right on this phone</string>
     <string name="aloud_no_mic">Without the microphone, the words light up at a reading pace</string>
     <string name="widget_goal">Today\'s portion</string>
-    <string name="widget_goal_desc">A ring showing today\'s verses</string>
-    <string name="widget_run">Days in a row</string>
-    <string name="widget_run_desc">How many days in a row you\'ve written</string>
+    <string name="widget_goal_desc">Today\'s verses as a ring, and how many days in a row</string>
     <string name="run_label">days in a row</string>
     <string name="voice_keep">My voice</string>
     <string name="voice_keep_hint">When you read aloud, it\'s recorded on this phone only. You can delete any recording.</string>
@@ -746,4 +744,5 @@
     <string name="plan_life_note">One payment, yours for good</string>
     <string name="plan_life_member">Subscribers: %1$s</string>
     <string name="plan_life_discount">Subscriber price</string>
+    <string name="widget_streak">%1$d days in a row</string>
 </resources>

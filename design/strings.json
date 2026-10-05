@@ -206,9 +206,7 @@
   "aloud_hint": {"en": "Your voice is recognized right on this phone", "ko": "기기 안에서 알아듣고, 글자만 채워요"},
   "aloud_no_mic": {"en": "Without the microphone, the words light up at a reading pace", "ko": "마이크 없이 읽는 빠르기로 밝아져요"},
   "widget_goal": {"en": "Today's portion", "ko": "오늘의 분량"},
-  "widget_goal_desc": {"en": "A ring showing today's verses", "ko": "오늘 쓴 절 고리"},
-  "widget_run": {"en": "Days in a row", "ko": "이어 쓴 날"},
-  "widget_run_desc": {"en": "How many days in a row you've written", "ko": "며칠째 이어 쓰는지"},
+  "widget_goal_desc": {"en": "Today's verses as a ring, and how many days in a row", "ko": "오늘 쓴 절 고리와 며칠째 이어 쓰는지"},
   "run_label": {"en": "days in a row", "ko": "일째 이어 씀"},
   "voice_keep": {"en": "My voice", "ko": "내 목소리"},
   "voice_keep_hint": {"en": "When you read aloud, it's recorded on this phone only. You can delete any recording.", "ko": "소리 내어 읽으면 이 폰에만 녹음돼요. 마음에 들지 않으면 지울 수 있어요."},
@@ -743,5 +741,6 @@
   "plan_life": {"en": "Lifetime", "ko": "평생권"},
   "plan_life_note": {"en": "One payment, yours for good", "ko": "한 번 결제로 평생"},
   "plan_life_member": {"en": "Subscribers: %1$s", "ko": "구독하면 %1$s"},
-  "plan_life_discount": {"en": "Subscriber price", "ko": "구독자 할인가"}
+  "plan_life_discount": {"en": "Subscriber price", "ko": "구독자 할인가"},
+  "widget_streak": {"en": "%1$d days in a row", "ko": "%1$d일째 이어 쓰기"}
 }
