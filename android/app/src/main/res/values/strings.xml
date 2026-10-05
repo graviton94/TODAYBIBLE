@@ -701,4 +701,9 @@
     <string name="set_write_sum">Daily amount · name · pen · stamp · cover</string>
     <string name="set_keep_sum">Recordings · Google Drive backup</string>
     <string name="set_help_sum">Lifetime pass · feedback · guide again</string>
+    <string name="prayer_written">You\'ve written out this prayer.</string>
+    <string name="prayer_next_passage">Next passage · %1$s</string>
+    <string name="prayer_return">Back to the prayer</string>
+    <string name="prayer_keep_chapter">Keep writing this chapter</string>
+    <string name="prayer_free_note">Prayer verses are free to write, in every book.</string>
 </resources>

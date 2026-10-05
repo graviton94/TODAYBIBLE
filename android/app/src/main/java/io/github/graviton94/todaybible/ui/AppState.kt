@@ -268,7 +268,21 @@ class AppState(val store: Store) {
 
     fun open(b: Int, ch: Int) {
         if (locked(b)) { peekBook = b; purchaseOpen = true; return }
+        prayerWrite = null
         book = b; chapter = ch; target = null; store.setBookmark(translation, b, ch); page = COPY; widgets()
+    }
+    /** 기도문 따라 쓰기 (기도문 아이디, 몇 번째 말씀): 기도문 범위는 어느 책이든 무료. */
+    var prayerWrite by mutableStateOf<Pair<String, Int>?>(null)
+    /** 지금 펼친 장이 따라 쓰는 기도문 말씀이면 그 범위. */
+    fun prayerPassHere(): io.github.graviton94.todaybible.core.Reference.Passage? = prayerWrite?.let { (id, i) -> io.github.graviton94.todaybible.core.Prayers.byId(id)?.passages?.getOrNull(i) }
+        ?.takeIf { it.book == book && it.chapter == chapter }
+    fun writePrayer(id: String, i: Int = 0) {
+        val ps = io.github.graviton94.todaybible.core.Prayers.byId(id)?.passages?.getOrNull(i) ?: return
+        prayerOpen = null; prayerWrite = id to i
+        book = ps.book; chapter = ps.chapter
+        target = (ps.from..ps.to).firstOrNull { !progress.isFilled(translation, io.github.graviton94.todaybible.core.VerseKey(ps.book, ps.chapter, it)) } ?: ps.from
+        if (!locked(ps.book)) store.setBookmark(translation, ps.book, ps.chapter)
+        page = COPY
     }
     fun chooseTranslation(t: Translation) { translation = t; store.translation = t; narrator = store.narratorFor(t); narration = emptyMap(); val bm = store.bookmark(t); book = bm.first; chapter = bm.second; widgets() }
     fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t; checkNight(); widgets() }

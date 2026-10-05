@@ -698,5 +698,10 @@
   "lang_en_short": {"en": "English", "ko": "English"},
   "set_write_sum": {"en": "Daily amount · name · pen · stamp · cover", "ko": "하루 분량 · 이름 · 펜 · 도장 · 표지"},
   "set_keep_sum": {"en": "Recordings · Google Drive backup", "ko": "녹음 · 구글 드라이브 보관"},
-  "set_help_sum": {"en": "Lifetime pass · feedback · guide again", "ko": "평생권 · 의견 보내기 · 안내 다시 보기"}
+  "set_help_sum": {"en": "Lifetime pass · feedback · guide again", "ko": "평생권 · 의견 보내기 · 안내 다시 보기"},
+  "prayer_written": {"en": "You've written out this prayer.", "ko": "이 기도문 말씀을 다 옮겨 썼어요."},
+  "prayer_next_passage": {"en": "Next passage · %1$s", "ko": "다음 말씀 · %1$s"},
+  "prayer_return": {"en": "Back to the prayer", "ko": "기도문으로 돌아가기"},
+  "prayer_keep_chapter": {"en": "Keep writing this chapter", "ko": "이 장 이어 쓰기"},
+  "prayer_free_note": {"en": "Prayer verses are free to write, in every book.", "ko": "기도문 말씀은 어느 책이든 무료로 옮겨 쓸 수 있어요."}
 }

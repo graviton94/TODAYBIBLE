@@ -110,6 +110,7 @@ open --es tb.prayer morning;                                       shot h11_pray
 swipe_up;                                                          shot h12_prayer_more 2
 open --ez tb.prayers true --ei tb.page 1;                          shot h13_prayer_list 4
 open --es tb.prayer lords --ef tb.scale 1.6;                       shot h14_prayer_huge 4
+open --ez tb.lock true --es tb.prayerWrite lords;                  shot h19_prayer_write_locked 5
 open --es tb.listen "43:3" --ez tb.parallel true --ef tb.scale 1.0; shot h15_parallel 4
 open --es tb.listen "43:3" --ez tb.parallel false;                 sleep 1
 open --ei tb.picker 19;                                            shot h16_keep_narration 4

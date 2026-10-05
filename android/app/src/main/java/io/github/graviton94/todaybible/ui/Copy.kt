@@ -114,8 +114,13 @@ fun CopyPage(s: AppState) {
     val ctx0 = LocalContext.current
     val k = s.korean
     val t = s.text(); val p = s.progress
-    val fillable = t.fillable(s.chapter)
-    val next = s.target?.takeIf { it in fillable && !p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) } ?: p.nextVerse(s.translation, t, s.chapter)
+    // 기도문 따라 쓰기: 그 범위의 절만 (잠긴 책이어도 무료)
+    val pass = s.prayerPassHere()
+    val fillable = t.fillable(s.chapter).let { all -> if (pass != null) all.filter { it in pass.from..pass.to } else all }
+    val next = s.target?.takeIf { it in fillable && !p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) }
+        ?: if (pass != null) fillable.firstOrNull { !p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) } else p.nextVerse(s.translation, t, s.chapter)
+    // 기도문 밖으로 잠긴 장에 왔으면 (다른 장 고르기 등) 평생권 안내
+    if (pass == null && s.locked(s.book)) { LaunchedEffect(s.book, s.chapter) { s.peekBook = s.book; s.purchaseOpen = true }; Box(Modifier.fillMaxSize().padding(Tokens.Space.s5)) { LifetimeCard(s) }; return }
     val doneCount = fillable.count { p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) }
     // 낭독 · 타자 · 손글씨 (교인 인터뷰: 낭독을 가장 많이 씀). 마지막에 고른 방식으로 열려요.
     var tab by remember { mutableIntStateOf(s.store.copyTab) }
@@ -134,7 +139,7 @@ fun CopyPage(s: AppState) {
                     Ribbon(if (marked) Theme.c.rubric else Theme.c.inkSoft, marked, Modifier.size(Tokens.Size.iconSm))
                 }
                 // 듣기: 성경 탭에서 이 장을 책 읽어 주듯 이어서
-                Row(Modifier.heightIn(min = Tokens.Size.tab).clip(RoundedCornerShape(Tokens.Radius.chip)).background(Theme.c.paper).clickable(role = Role.Button) { s.read(s.book, s.chapter); io.github.graviton94.todaybible.data.ListenService.start(ctx0, s.book, s.chapter, 1, s.aloudRate()) }
+                Row(Modifier.heightIn(min = Tokens.Size.tab).clip(RoundedCornerShape(Tokens.Radius.chip)).background(Theme.c.paper).clickable(role = Role.Button) { if (pass != null) io.github.graviton94.todaybible.data.ListenService.startPassages(ctx0, listOf(pass), s.aloudRate()) else { s.read(s.book, s.chapter); io.github.graviton94.todaybible.data.ListenService.start(ctx0, s.book, s.chapter, 1, s.aloudRate()) } }
                     .padding(horizontal = Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                     PlayMark(Theme.c.rubric, false, Modifier.size(Tokens.Size.iconSm))
                     Text(stringResource(R.string.listen_mode), style = Theme.small().copy(color = Theme.c.ink), maxLines = 1)
@@ -345,10 +350,27 @@ private fun HandNoteLine(date: String, verse: Int, ink: io.github.graviton94.tod
 /** 이 장을 이미 다 썼을 때. */
 @Composable
 private fun ChapterDoneNote(s: AppState) {
+    val pw = s.prayerWrite
+    if (pw != null && s.prayerPassHere() != null) { PrayerDoneNote(s, pw.first, pw.second); return }
     Column(Modifier.padding(top = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         Text(stringResource(R.string.chapter_done, s.bookName(), s.chapter), style = Theme.title(s.korean))
         val (nb, nc) = s.nextChapter()
         BookButton(stringResource(R.string.continue_at, s.bookName(nb), nc), Modifier.fillMaxWidth()) { s.open(nb, nc) }
+    }
+}
+
+/** 기도문 말씀을 다 옮겨 썼을 때: 다음 말씀 · 기도문으로 · (열린 책이면) 이 장 이어 쓰기. */
+@Composable
+private fun PrayerDoneNote(s: AppState, id: String, i: Int) {
+    val pr = io.github.graviton94.todaybible.core.Prayers.byId(id) ?: return
+    Column(Modifier.padding(top = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        Text(stringResource(R.string.prayer_written), style = Theme.title(s.korean))
+        pr.passages.getOrNull(i + 1)?.let { n ->
+            BookButton(stringResource(R.string.prayer_next_passage, Lang.passage(s.store.context, s.translation, s.bookName(n.book), n.chapter, n.from, n.to)), Modifier.fillMaxWidth()) { s.writePrayer(id, i + 1) }
+        }
+        BookButton(stringResource(R.string.prayer_return), Modifier.fillMaxWidth(), quiet = pr.passages.size > i + 1) { s.prayerWrite = null; s.prayerOpen = id }
+        if (!s.locked(s.book)) BookButton(stringResource(R.string.prayer_keep_chapter), Modifier.fillMaxWidth(), quiet = true) { s.open(s.book, s.chapter) }
+        else Text(stringResource(R.string.prayer_free_note), style = Theme.small())
     }
 }
 

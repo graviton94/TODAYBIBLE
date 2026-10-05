@@ -93,9 +93,7 @@ fun PrayerPage(s: AppState, id: String) {
             BookButton(stringResource(if (playing) R.string.listen_stop else R.string.prayer_listen), Modifier.weight(1f)) {
                 if (playing) ListenService.stop(ctx) else ListenService.startPassages(ctx, p.passages, s.aloudRate())
             }
-            BookButton(stringResource(R.string.prayer_write) + if (s.premium(p.passages.first().book)) " · " + stringResource(R.string.premium_tag) else "", Modifier.weight(1f), quiet = true) {
-                val first = p.passages.first(); s.prayerOpen = null; s.open(first.book, first.chapter); if (!s.locked(first.book)) s.target = first.from
-            }
+            BookButton(stringResource(R.string.prayer_write), Modifier.weight(1f), quiet = true) { s.writePrayer(p.id) }
         }
         BookButton(stringResource(if (s.prayed(p.id)) R.string.prayer_prayed else R.string.prayer_amen), Modifier.fillMaxWidth(), quiet = s.prayed(p.id)) {
             s.markPrayed(p.id); s.prayerOpen = null

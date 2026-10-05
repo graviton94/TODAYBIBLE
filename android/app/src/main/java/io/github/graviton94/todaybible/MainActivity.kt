@@ -175,6 +175,7 @@ class MainActivity : ComponentActivity() {
             android.os.Handler(mainLooper).postDelayed({ io.github.graviton94.todaybible.data.ListenService.setTimer(this, 30) }, 2500)
         }
         i.getStringExtra("tb.prayer")?.let { s.prayerOpen = it }
+        i.getStringExtra("tb.prayerWrite")?.let { s.writePrayer(it) }
         s.debugSection = i.getStringExtra("tb.section"); s.debugAskLang = i.getStringExtra("tb.askLang")
         if (i.getBooleanExtra("tb.prayers", false)) s.prayersOpen = true
         if (i.hasExtra("tb.parallel") && s.parallel != i.getBooleanExtra("tb.parallel", false)) s.flipParallel()
