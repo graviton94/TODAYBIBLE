@@ -751,7 +751,7 @@
   "pay_failed": {"en": "The payment didn't go through. Please try again in a moment.", "ko": "결제가 끝나지 않았어요. 잠시 뒤 다시 해 주세요."},
   "cmp_plans": {"en": "Reading plans", "ko": "읽기 계획"},
   "cmp_gift": {"en": "Send to family", "ko": "가족에게 보내기"},
-  "cmp_prayers": {"en": "Prayers (listen · write)", "ko": "기도문 (듣기 · 쓰기)"},
+  "cmp_prayers": {"en": "Prayers", "ko": "기도문 (듣기 · 쓰기)"},
   "tr_web": {"en": "World English Bible", "ko": "World English Bible"},
   "english_bible": {"en": "English Bible", "ko": "영어 성경"},
   "web_desc": {"en": "World English Bible · modern English (public domain)", "ko": "World English Bible · 오늘의 영어 (공개 도메인)"},

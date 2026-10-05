@@ -753,7 +753,7 @@
     <string name="pay_failed">The payment didn\'t go through. Please try again in a moment.</string>
     <string name="cmp_plans">Reading plans</string>
     <string name="cmp_gift">Send to family</string>
-    <string name="cmp_prayers">Prayers (listen · write)</string>
+    <string name="cmp_prayers">Prayers</string>
     <string name="tr_web">World English Bible</string>
     <string name="english_bible">English Bible</string>
     <string name="web_desc">World English Bible · modern English (public domain)</string>
