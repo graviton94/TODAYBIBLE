@@ -215,6 +215,34 @@ open --ei tb.page 0;                                               shot x03_smal
 open --ez tb.reset true --ei tb.welcomeStep 2;                     shot x04_small_welcome 4
 adb shell wm size reset; adb shell wm density reset
 
+# @scene st
+# 스토어 그림 (Play): 상태 표시줄을 깔끔하게 (9:00 · 배터리 가득 · 알림 없음), 알림판은 접고 찍어요
+adb shell settings put global sysui_demo_allowed 1
+adb shell am broadcast -a com.android.systemui.demo -e command enter >/dev/null
+adb shell am broadcast -a com.android.systemui.demo -e command clock -e hhmm 0900 >/dev/null
+adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 100 -e plugged false >/dev/null
+adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 >/dev/null
+adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false >/dev/null
+stsnap() { sleep "$2"; adb shell cmd statusbar collapse >/dev/null 2>&1; sleep 1; snap "$1"; }
+adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --es tb.owner 은혜 --ei tb.page 0; stsnap st_ko_1_today 6
+open --ei tb.page 2 --ei tb.copyTab 1;                             stsnap st_ko_2_type 4
+open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0;         stsnap st_ko_3_aloud 6
+open --es tb.listen "41:3" --ez tb.parallel true;                  stsnap st_ko_4_reader 5
+open --es tb.prayer morning;                                       stsnap st_ko_5_prayer 4
+open --es tb.plate noah;                                           stsnap st_ko_6_plate 5
+open --ez tb.parallel false --ei tb.page 3;                        stsnap st_ko_7_record 5
+adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
+open --ez tb.seed true --es tb.tr WEB --es tb.theme LIGHT --es tb.owner "''" --ei tb.page 0; stsnap st_en_1_today 6
+open --ei tb.page 2 --ei tb.copyTab 1; sleep 3; adb shell input tap 540 2150; sleep 2; adb shell input text "He%swent%sup%sinto%sthe%smountain"; stsnap st_en_2_type 2
+open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0;         stsnap st_en_3_aloud 6
+open --es tb.listen "41:3" --ez tb.parallel true;                  stsnap st_en_4_reader 5
+open --es tb.prayer lords;                                         stsnap st_en_5_prayer 4
+open --es tb.plate prodigal;                                       stsnap st_en_6_plate 5
+open --ez tb.parallel false --ei tb.page 3;                        stsnap st_en_7_record 5
+adb shell am broadcast -a com.android.systemui.demo -e command exit >/dev/null
+adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
+# @end
 adb logcat -d -s AndroidRuntime:E > "$OUT/logcat.txt" || true
 echo "app ANR: $(adb logcat -d | grep -c "ANR in $P")" > "$OUT/anr.txt"; cat "$OUT/anr.txt"
 ls -la "$OUT"
