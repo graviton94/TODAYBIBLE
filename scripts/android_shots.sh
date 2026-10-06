@@ -243,6 +243,21 @@ open --ez tb.parallel false --ei tb.page 3;                        stsnap st_en_
 adb shell am broadcast -a com.android.systemui.demo -e command exit >/dev/null
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # @end
+# @scene fgs
+# Play 포그라운드 서비스 신고용 영상 (영어): 듣기 시작 → 홈으로 나가도 재생 → 알림판의 재생 알림 → 앱으로 돌아오기
+adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
+open --ez tb.seed true --es tb.tr WEB --es tb.theme LIGHT --es tb.listen "19:23"; sleep 5
+adb shell screenrecord --time-limit 35 --size 720x1600 /sdcard/fgs.mp4 &
+sleep 2
+open --es tb.listen "19:23" --ez tb.listenPlay true; sleep 9
+adb shell input keyevent 3; sleep 5
+adb shell cmd statusbar expand-notifications; sleep 7
+adb shell cmd statusbar collapse; sleep 1
+adb shell am start -n $P/.MainActivity --ez listening true >/dev/null; sleep 6
+wait; sleep 2
+adb pull /sdcard/fgs.mp4 "$OUT/fgs_demo.mp4" >/dev/null 2>&1; ls -la "$OUT/fgs_demo.mp4"
+adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
+# @end
 adb logcat -d -s AndroidRuntime:E > "$OUT/logcat.txt" || true
 echo "app ANR: $(adb logcat -d | grep -c "ANR in $P")" > "$OUT/anr.txt"; cat "$OUT/anr.txt"
 ls -la "$OUT"
