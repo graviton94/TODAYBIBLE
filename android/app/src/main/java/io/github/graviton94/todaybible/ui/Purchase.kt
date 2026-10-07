@@ -121,9 +121,9 @@ private fun PlanCard(modifier: Modifier, name: String, price: String, was: Strin
         was?.let { Text(it, style = Theme.small().copy(color = fg.copy(alpha = Tokens.Alpha.faint), textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough, textAlign = TextAlign.Center), maxLines = 1) }
         // ‘월 ₩2,900’ 이 두 줄로 갈라지지 않게: 한 줄로 두고 넘치면 글씨를 조금씩 줄여요
         val base = Theme.title(true).copy(color = fg, textAlign = TextAlign.Center)
-        var size by androidx.compose.runtime.remember(price) { androidx.compose.runtime.mutableStateOf(base.fontSize) }
-        Text(price.replace(' ', '\u00A0'), style = base.copy(fontSize = size), maxLines = 1, softWrap = false,
-            onTextLayout = { if (it.didOverflowWidth && size.value > base.fontSize.value * 0.6f) size = size * 0.9f })
+        val size = androidx.compose.runtime.remember(price) { androidx.compose.runtime.mutableFloatStateOf(1f) }
+        Text(price.replace(' ', '\u00A0'), style = base.copy(fontSize = base.fontSize * size.floatValue), maxLines = 1, softWrap = false,
+            onTextLayout = { if (it.didOverflowWidth && size.floatValue > 0.6f) size.floatValue *= 0.9f })
         Text(note, style = Theme.small().copy(color = fg, textAlign = TextAlign.Center), maxLines = 3)
     }
 }
