@@ -246,8 +246,11 @@ adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # @scene fgs
 # Play 포그라운드 서비스 신고용 영상 (영어): 듣기 시작 → 홈으로 나가도 재생 → 알림판의 재생 알림 → 앱으로 돌아오기
 adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
+# 재생 알림이 보이게 알림 허락을 주고, 알림판은 접은 채로 시작
+adb shell pm grant $P android.permission.POST_NOTIFICATIONS 2>/dev/null
 open --ez tb.seed true --es tb.tr WEB --es tb.theme LIGHT --es tb.listen "19:23"; sleep 5
-adb shell screenrecord --time-limit 35 --size 720x1600 /sdcard/fgs.mp4 &
+adb shell cmd statusbar collapse; sleep 1
+adb shell screenrecord --time-limit 38 --size 720x1600 /sdcard/fgs.mp4 &
 sleep 2
 open --es tb.listen "19:23" --ez tb.listenPlay true; sleep 9
 adb shell input keyevent 3; sleep 5
