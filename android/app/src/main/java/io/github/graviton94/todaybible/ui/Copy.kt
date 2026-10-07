@@ -652,8 +652,8 @@ private fun AloudTab(s: AppState, verse: Int) {
                             if (!running || s.book != atB || s.chapter != atC || finished) return@post
                             if (record) {
                                 val target = Voice.file(ctx, s.translation.id, s.book, s.chapter, verse)
-                                // 미리 만든 음원은 내 녹음과 같은 결이라 그대로, 폰 목소리는 파일로 만들어 바꿔서
-                                if (voiceFile != null) Thread { runCatching { target.parentFile?.mkdirs(); voiceFile.copyTo(target, overwrite = true) } }.start()
+                                // 미리 만든 음원은 내 녹음 크기에 맞게 키워서, 폰 목소리는 파일로 만들어 바꿔서
+                                if (voiceFile != null) Thread { runCatching { target.parentFile?.mkdirs(); Voice.copyLifted(voiceFile, target) } }.start()
                                 else {
                                     val wav = java.io.File(ctx.cacheDir, "guide_${s.book}_${s.chapter}_$verse.wav")
                                     guide.synthesize(plain, s.aloudRate(), wav) { ok -> if (ok) Thread { Voice.encodeWav(wav, target); wav.delete() }.start() }
@@ -843,7 +843,7 @@ private fun RecordedBar(s: AppState, v: Int, onKeep: () -> Unit, onAgain: () -> 
                     // 녹음 줄이 파일을 마저 쓸 때까지 잠깐
                     repeat(30) { if (f.exists()) return@repeat; delay(100) }
                     player?.release()
-                    player = runCatching { android.media.MediaPlayer().apply { setDataSource(f.path); prepare(); start() } }.getOrNull()
+                    player = runCatching { io.github.graviton94.todaybible.data.Sound.player { setDataSource(f.path) }.apply { start() } }.getOrNull()
                 }
             }
             BookButton(stringResource(R.string.rec_redo), Modifier.weight(1f), quiet = true) { player?.release(); player = null; f.delete(); s.voiceRev++; onAgain() }
@@ -895,7 +895,7 @@ private fun VoiceRow(s: AppState) {
                 var i = 0
                 fun next() {
                     if (i >= parts.size) { player?.release(); player = null; return }
-                    val mp = runCatching { android.media.MediaPlayer().apply { setDataSource(parts[i++].second.path); prepare() } }.getOrNull() ?: return next()
+                    val mp = runCatching { io.github.graviton94.todaybible.data.Sound.player { setDataSource(parts[i++].second.path) } }.getOrNull() ?: return next()
                     mp.setOnCompletionListener { it.release(); next() }; player = mp; mp.start()
                 }
                 next()
@@ -932,7 +932,7 @@ private fun VoiceRow(s: AppState) {
                 val sec = ((lengths[v] ?: 0L) / 1000).toInt()
                 Text(stringResource(R.string.rec_row, v, sec / 60, sec % 60), style = Theme.body(), modifier = Modifier.weight(1f))
                 Text(stringResource(R.string.voice_play), style = Theme.small().copy(color = c.ink), modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
-                    player?.release(); player = runCatching { android.media.MediaPlayer().apply { setDataSource(f.path); prepare(); setOnCompletionListener { it.release(); player = null }; start() } }.getOrNull()
+                    player?.release(); player = runCatching { io.github.graviton94.todaybible.data.Sound.player { setDataSource(f.path) }.apply { setOnCompletionListener { it.release(); player = null }; start() } }.getOrNull()
                 })
                 Text(stringResource(R.string.rec_delete), style = Theme.small().copy(color = c.rubric), modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
                     player?.release(); player = null; f.delete(); s.voiceRev++; s.toast = ctx.getString(R.string.rec_deleted, v)

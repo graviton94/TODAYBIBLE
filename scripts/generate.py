@@ -43,7 +43,7 @@ def tokens():
     L.append("    object Motion {")
     for k, v in t["motion"].items(): L.append(f"        const val {k} = {v}" + ("f" if isinstance(v, float) else ""))
     L.append("    }")
-    for group in ("ratio", "alpha", "leading", "tracking", "px"):
+    for group in ("ratio", "alpha", "leading", "tracking", "px", "sound"):
         L.append(f"    object {group.capitalize()} {{")
         for k, v in t[group].items(): L.append(f"        const val {k} = {float(v)}f")
         L.append("    }")

@@ -245,4 +245,10 @@ object Tokens {
         const val medalTop = 0.24f
         const val scrollCellCm = 1.0f
     }
+    object Sound {
+        const val narrationGainDb = 7.0f
+        const val voiceTargetRms = 0.1f
+        const val voiceMaxGain = 8.0f
+        const val penLevel = 0.075f
+    }
 }

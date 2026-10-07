@@ -8,7 +8,7 @@ import android.media.AudioTrack
 import kotlin.random.Random
 
 /**
- * 펜 소리: 종이에 긋는 사각사각 (녹음이 아니라 걸러 낸 잡음으로 그때그때 만듦).
+ * 펜 소리: 종이에 긋는 사각사각 (녹음이 아니라 걸러 낸 잡음으로 그때그때 만듦). 낭독과 같은 미디어 볼륨을 따르고, 말소리보다 한참 작게.
  * 긋는 빠르기만큼 커지고, 손을 떼면 잦아들어요. 무음 · 진동 모드에서는 소리를 내지 않아요.
  */
 class PenFeel(private val ctx: Context) {
@@ -34,7 +34,7 @@ class PenFeel(private val ctx: Context) {
             val min = AudioTrack.getMinBufferSize(rate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT)
             val track = runCatching {
                 AudioTrack.Builder()
-                    .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION).setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION).build())
+                    .setAudioAttributes(Sound.effect)
                     .setAudioFormat(AudioFormat.Builder().setSampleRate(rate).setEncoding(AudioFormat.ENCODING_PCM_16BIT).setChannelMask(AudioFormat.CHANNEL_OUT_MONO).build())
                     .setBufferSizeInBytes(maxOf(min, 2048)).setTransferMode(AudioTrack.MODE_STREAM).build()
             }.getOrNull() ?: run { running = false; return@Thread }
@@ -43,7 +43,7 @@ class PenFeel(private val ctx: Context) {
             var gain = 0f; var lp = 0f; var prev = 0f; var idle = 0
             while (running) {
                 for (i in buf.indices) {
-                    gain += (target * 0.22f - gain) * 0.004f
+                    gain += (target * io.github.graviton94.todaybible.design.Tokens.Sound.penLevel - gain) * 0.004f
                     // 흰 잡음 → 고역 통과(긁는 결) → 살짝 저역 통과(종이에 먹힌 소리)
                     val n = Random.nextFloat() * 2f - 1f
                     val hp = n - prev; prev = n

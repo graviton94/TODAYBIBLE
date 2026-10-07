@@ -383,7 +383,7 @@ private fun GuideVoiceSettings(s: AppState) {
             // 견본: 앱에 든 것이 있으면 그것, 없으면 (영어 목소리 등) 시편 23편 음원을 받아서 1절
             val v = s.narrator
             fun play(src: android.media.MediaPlayer.() -> Unit) = runCatching {
-                android.media.MediaPlayer().apply { src(); setOnCompletionListener { mp -> mp.release(); player = null }; prepare(); start() }
+                io.github.graviton94.todaybible.data.Sound.player(lift = true, src).apply { setOnCompletionListener { mp -> mp.release(); player = null }; start() }
             }.getOrNull()
             val asset = runCatching { ctx.assets.openFd("voice/${v}_ps23_1.m4a") }.getOrNull()
             if (asset != null) player = play { asset.use { setDataSource(it.fileDescriptor, it.startOffset, it.length) } }

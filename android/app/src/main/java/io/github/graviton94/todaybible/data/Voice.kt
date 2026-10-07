@@ -93,6 +93,7 @@ object Voice {
                 var track = -1; var started = false
                 val info = MediaCodec.BufferInfo()
                 val pcm = ByteArray(4096); var samples = 0L
+                val leveler = Sound.Leveler()
                 fun drain(end: Boolean) {
                     var waits = 0
                     while (true) {
@@ -126,6 +127,8 @@ object Voice {
                             while (sb.remaining() >= 2) { val a = sb.get().toInt(); val b = sb.get().toInt(); ob.putShort(((a + b) / 2).toShort()); m += 2 }
                             toRecognizer.offer(half.copyOf(m))
                         }
+                        // 저장할 녹음만 말소리 크기로 (음성 인식에는 원래 소리)
+                        leveler.apply(pcm, n)
                         var off = 0
                         while (off < n) {
                             val ii = enc.dequeueInputBuffer(10_000); if (ii < 0) { drain(false); continue }
@@ -190,7 +193,44 @@ object Voice {
             val a = mono[k].toInt(); val c = mono[minOf(k + 1, mono.size - 1)].toInt()
             pcm.putShort((a + (c - a) * f).toInt().toShort())
         }
-        val bytes = pcm.array()
+        encodePcm(pcm.array(), out)
+    }.getOrDefault(false)
+
+    /**
+     * 낭독 음원 (조용하게 만든 -25 LUFS) 을 내 녹음 자리에 둘 때: 풀어서 낭독 재생과 같은 만큼 키우고 다시 묶어요.
+     * 그래야 녹음을 이어 들을 때 인도 목소리와 내 목소리 크기가 비슷해요. 실패하면 그대로 복사.
+     */
+    fun copyLifted(src: File, out: File): Boolean = runCatching {
+        val ex = android.media.MediaExtractor(); ex.setDataSource(src.path)
+        val ti = (0 until ex.trackCount).first { ex.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true }
+        ex.selectTrack(ti); val inFmt = ex.getTrackFormat(ti)
+        val rate = inFmt.getInteger(MediaFormat.KEY_SAMPLE_RATE); val ch = inFmt.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+        val dec = MediaCodec.createDecoderByType(inFmt.getString(MediaFormat.KEY_MIME)!!)
+        dec.configure(inFmt, null, null, 0); dec.start()
+        val o = java.io.ByteArrayOutputStream(); val info = MediaCodec.BufferInfo(); var inDone = false
+        while (true) {
+            if (!inDone) { val ii = dec.dequeueInputBuffer(10_000); if (ii >= 0) { val n = ex.readSampleData(dec.getInputBuffer(ii)!!, 0); if (n < 0) { dec.queueInputBuffer(ii, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM); inDone = true } else { dec.queueInputBuffer(ii, 0, n, ex.sampleTime, 0); ex.advance() } } }
+            val i = dec.dequeueOutputBuffer(info, 10_000)
+            if (i >= 0) { val bb = dec.getOutputBuffer(i)!!; val arr = ByteArray(info.size); bb.position(info.offset); bb.get(arr); o.write(arr); dec.releaseOutputBuffer(i, false); if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) break }
+        }
+        runCatching { dec.stop() }; dec.release(); ex.release()
+        val sh = ByteBuffer.wrap(o.toByteArray()).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer()
+        val all = ShortArray(sh.remaining()).also { sh.get(it) }
+        val mono = if (ch == 1) all else ShortArray(all.size / ch) { i -> (0 until ch).sumOf { all[i * ch + it].toInt() }.div(ch).toShort() }
+        val g = Math.pow(10.0, io.github.graviton94.todaybible.design.Tokens.Sound.narrationGainDb / 20.0).toFloat()
+        val n = (mono.size.toLong() * RATE / rate).toInt()
+        val pcm = ByteBuffer.allocate(n * 2).order(ByteOrder.LITTLE_ENDIAN)
+        for (i in 0 until n) {
+            val k = (i.toLong() * rate / RATE).toInt().coerceAtMost(mono.size - 1)
+            val x = mono[k] / 32768f * g
+            val y = if (kotlin.math.abs(x) <= 0.7f) x else kotlin.math.sign(x) * (0.7f + 0.3f * kotlin.math.tanh((kotlin.math.abs(x) - 0.7f) / 0.3f))
+            pcm.putShort((y * 32767f).toInt().coerceIn(-32768, 32767).toShort())
+        }
+        encodePcm(pcm.array(), out)
+    }.getOrElse { runCatching { src.copyTo(out, overwrite = true); true }.getOrDefault(false) }
+
+    /** 32kHz 모노 16비트 PCM → 내 녹음과 같은 결의 AAC (m4a). */
+    private fun encodePcm(bytes: ByteArray, out: File): Boolean = runCatching {
         out.parentFile?.mkdirs()
         val fmt = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, RATE, 1).apply {
             setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)

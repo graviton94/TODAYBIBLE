@@ -74,8 +74,7 @@ class GuideVoice(ctx: Context, private val korean: Boolean, private val preferre
         // 미리 만든 음원: 재생 위치만큼 글자를 밝혀요 (빠르기는 재생 속도로, 음높이는 그대로)
         if (file != null) {
             val mp = runCatching {
-                android.media.MediaPlayer().apply {
-                    setDataSource(file.path); prepare()
+                Sound.player(lift = true) { setDataSource(file.path) }.apply {
                     if (rate != 1f) playbackParams = playbackParams.setSpeed(rate)
                 }
             }.getOrNull()
@@ -101,7 +100,7 @@ class GuideVoice(ctx: Context, private val korean: Boolean, private val preferre
         val id = "v${System.nanoTime()}"
         curId = id; curRange = onRange; curDone = onDone
         // 엔진이 받지 못하면 기다리지 않고 바로 끝난 것으로
-        if (t.speak(text, TextToSpeech.QUEUE_FLUSH, Bundle(), id) != TextToSpeech.SUCCESS) { curId = null; onDone() }
+        if (t.speak(text, TextToSpeech.QUEUE_FLUSH, Bundle().apply { putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1f) }, id) != TextToSpeech.SUCCESS) { curId = null; onDone() }
     }
 
     /** 같은 목소리 · 빠르기로 WAV 파일 만들기 (교독 녹음용). 다 되면 onDone(성공). */

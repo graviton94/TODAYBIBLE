@@ -141,8 +141,7 @@ class ListenService : Service() {
                     if (f != null) {
                         runCatching { player?.release() }
                         player = runCatching {
-                            MediaPlayer().apply {
-                                setDataSource(f.path); prepare()
+                            Sound.player(lift = true) { setDataSource(f.path) }.apply {
                                 if (rate != 1f) playbackParams = playbackParams.setSpeed(rate)
                                 setOnCompletionListener { after() }
                                 start()
