@@ -129,9 +129,13 @@ fun CopyPage(s: AppState) {
 
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                RunningHead(s.chapterRef(), stringResource(R.string.verse_of, doneCount, fillable.size), k,
-                    Modifier.weight(1f).clickable(role = Role.Button) { s.picker = s.book })
+            // 큰 글씨 (폰 글꼴 130%+): 권 · 장을 한 줄 다 쓰고 책갈피 · 듣기는 그 아래로 (‘마가…’ 로 잘리지 않게)
+            val big = androidx.compose.ui.platform.LocalDensity.current.fontScale >= Tokens.Ratio.bigFont
+            @Composable fun head(m: Modifier) = RunningHead(s.chapterRef(), stringResource(R.string.verse_of, doneCount, fillable.size), k,
+                m.clickable(role = Role.Button) { s.picker = s.book })
+            if (big) head(Modifier.fillMaxWidth())
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3, Alignment.End), modifier = Modifier.fillMaxWidth()) {
+                if (!big) head(Modifier.weight(1f))
                 // 이 장 책갈피
                 val marked = s.isBookmarked(s.book, s.chapter)
                 Box(Modifier.size(Tokens.Size.tab).clickable(role = Role.Button) { s.toggleBookmark(s.book, s.chapter, next ?: 1) }

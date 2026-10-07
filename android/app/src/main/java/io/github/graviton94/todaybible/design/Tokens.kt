@@ -187,6 +187,7 @@ object Tokens {
     }
     object Ratio {
         const val plateAspect = 0.766f
+        const val bigFont = 1.3f
         const val veilInset = 0.06f
         const val veilMark = 0.16f
         const val plateWidth = 0.82f

@@ -159,7 +159,9 @@ fun HelpButton(s: AppState, screen: String, modifier: Modifier = Modifier) {
     Box(modifier.heightIn(min = Tokens.Size.touch).semantics { contentDescription = label }.clickable(role = Role.Button) { s.coachAgain(screen) }
         .padding(horizontal = Tokens.Space.s2), contentAlignment = Alignment.Center) {
         Box(Modifier.size(Tokens.Size.icon).border(Tokens.Stroke.rule, c.inkSoft, CircleShape), contentAlignment = Alignment.Center) {
-            Text("?", style = Theme.small().copy(color = c.inkSoft, fontWeight = FontWeight.SemiBold), maxLines = 1)
+            // 동그라미 크기는 고정이라 물음표도 폰 글자 크기와 상관없이 같은 크기로
+            val q = with(androidx.compose.ui.platform.LocalDensity.current) { (Tokens.Size.icon * 0.62f).toPx().toSp() / fontScale }
+            Text("?", style = Theme.small().copy(color = c.inkSoft, fontWeight = FontWeight.SemiBold, fontSize = q), maxLines = 1)
         }
     }
 }
