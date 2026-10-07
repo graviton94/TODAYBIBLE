@@ -6,7 +6,7 @@
 - 구독자 평생권 `lifetime_member` (한 번 결제, 구독 중일 때만 앱이 보여 줌): ₩6,900 · US$4.99 (제안)
 - 무료 권: 창세기 · 시편 · 잠언 · 마가복음 · 요한복음
 국가: 한국 · 미국 · 캐나다 · 호주 · 뉴질랜드 · 아일랜드 등 영어권. **영국 제외** (KJV 왕실 특허).
-분류: 도서 및 참고자료 · 콘텐츠 등급: 전체 이용가 · 가격: 무료 (앱 안에서 평생권)
+분류: 도서 및 참고자료 · 콘텐츠 등급: 전체 이용가 · 가격: 무료 (앱 안에서 월 구독 · 평생권) · 기본 언어: 영어(en-US), 번역: 한국어(ko-KR)
 
 ## 한국어
 
@@ -18,7 +18,11 @@
 
 하루의 성경은 성경을 하루 한 장씩 소리 내어 읽고, 원고지에 타자로, 공책에 손글씨로 옮겨 쓰며 나만의 성경 한 권을 완성하는 앱이에요.
 
-개신교 66권 · 개역한글(1961) · 영어 KJV(1611).
+개신교 66권 · 개역한글(1961) · 영어 World English Bible · KJV(1611).
+
+■ 무료와 구독
+· 창세기 · 시편 · 잠언 · 마가복음 · 요한복음은 무료로 다 쓸 수 있어요.
+· 월 구독이나 한 번 결제하는 평생권으로 66권 전체와 판화 · PDF · 붓펜 · 연필 · 내 목소리 오디오북이 열려요.
 
 ■ 세 가지로 옮겨 쓰기
 · 낭독: 밝아지는 글자를 따라 천천히 읽으면 채워져요. 예배 때처럼 인도 목소리와 한 절씩 주고받는 교독도 있어요.
@@ -52,11 +56,11 @@
 ■ 내 기록은 내 폰에만
 · 계정 · 광고 · 분석 도구가 없어요. 필사 · 손글씨 · 녹음은 폰 안에만 있고, 원하시면 내 Google 드라이브에 백업해요.
 
-본문: 개역한글(1961) · KJV(1611) · 판화: 귀스타브 도레(1866)
+본문: 개역한글(1961) · World English Bible (공개 도메인) · KJV(1611) · 판화: 귀스타브 도레(1866)
 
 ## English (United States, and other English-speaking countries except the UK)
 
-**App name:** Bible by Hand – Read Aloud & Copy Scripture
+**App name (30자):** Bible by Hand: Read & Copy
 
 **Short description:** One chapter a day: read it aloud, type it, write it by hand, and pray with Scripture.
 
@@ -64,7 +68,11 @@
 
 Bible by Hand helps you make a whole Bible your own, one chapter a day, by reading it aloud, typing it into manuscript squares and writing it by hand.
 
-Protestant 66-book Bible · King James Version (1611) · Korean Revised Version (1961).
+Protestant 66-book Bible · World English Bible (modern English) · King James Version (1611) · Korean Revised Version (1961).
+
+■ Free and Plus
+· Genesis, Psalms, Proverbs, Mark and John are free to use in full.
+· A monthly subscription or a one-time Lifetime purchase opens all 66 books, every engraving, PDFs, brush pen and pencil, and your-voice audiobooks.
 
 ■ Three ways to write
 · Read aloud: follow the light across the words and the verse fills as you read. Responsive reading lets a reading voice and you take turns, verse by verse.
@@ -98,7 +106,7 @@ Protestant 66-book Bible · King James Version (1611) · Korean Revised Version 
 ■ Your record stays on your phone
 · No account, no ads, no analytics. Copies, handwriting and recordings stay on your phone, with optional backup to your own Google Drive.
 
-Texts: King James Version (1611), Korean Revised Version (1961). Engravings: Gustave Doré (1866).
+Texts: World English Bible (public domain), King James Version (1611), Korean Revised Version (1961). Engravings: Gustave Doré (1866).
 
 ## 데이터 보안 양식 답 (Play Console)
 
