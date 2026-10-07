@@ -187,20 +187,18 @@ object Tokens {
     }
     object Ratio {
         const val plateAspect = 0.766f
-        const val bigFont = 1.3f
+        const val systemFontMax = 1.15f
         const val veilInset = 0.06f
         const val veilMark = 0.16f
         const val plateWidth = 0.82f
         const val stampInCell = 0.62f
         const val photoAspect = 1.3333f
         const val scaleLarge = 1.15f
-        const val scaleLarger = 1.3f
         const val shineWidth = 0.18f
         const val welcomeArt = 1.25f
         const val initialFinish = 1.25f
         const val heatGap = 0.18f
         const val barMax = 0.8f
-        const val scaleHuge = 1.6f
         const val spineMin = 0.62f
         const val wideVerse = 1.15f
     }

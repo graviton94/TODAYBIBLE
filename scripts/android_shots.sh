@@ -207,7 +207,7 @@ open --ef tb.scale 1.6 --ez tb.lock true --es tb.price "'\$6.99'" --es tb.monthP
 open --ef tb.scale 1.0
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # 큰 글자 · 작은 화면
-open --ez tb.seed true --es tb.tr KRV --ef tb.scale 1.3 --ei tb.page 2; shot x01_large_copy 5
+open --ez tb.seed true --es tb.tr KRV --ef tb.scale 1.15 --ei tb.page 2; shot x01_large_copy 5
 open --ei tb.page 0;                                               shot x02_large_today 4
 open --ef tb.scale 1.0
 adb shell wm size 720x1280; adb shell wm density 320
@@ -227,7 +227,7 @@ swipe_up;                                                          shot hp7_sett
 open --ez tb.tour true;                                            shot hp8_tour 4
 # @end
 # @scene fs
-# 폰 글자 크기를 키웠을 때 (시스템 글꼴 130% · 200%): 잘리거나 겹치는 곳 · 기도 알림 늦음 안내
+# 폰 글자 크기를 키웠을 때 (시스템 글꼴 130% · 200%): 앱 안에서는 ‘크게’(115%) 까지만 커져야 해요
 for fs in 1.3 2.0; do
   n=${fs/./}; adb shell settings put system font_scale $fs; sleep 2
   open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 0; shot fs${n}_today 5

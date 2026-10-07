@@ -55,7 +55,8 @@ class Store(val context: Context) {
         get() = runCatching { Translation.valueOf(prefs.getString("tr", defaultTranslation().name)!!) }.getOrDefault(Translation.KRV)
         set(v) = prefs.edit().putString("tr", v.name).apply()
     var textScale: Float
-        get() = prefs.getFloat("scale", 1f)
+        // 예전 ‘더 크게 · 아주 크게’ 는 ‘크게’ 로
+        get() = if (prefs.getFloat("scale", 1f) > 1.01f) io.github.graviton94.todaybible.design.Tokens.Ratio.scaleLarge else 1f
         set(v) = prefs.edit().putFloat("scale", v).apply()
     var stamp: String
         get() = prefs.getString("stamp", "✠")!!

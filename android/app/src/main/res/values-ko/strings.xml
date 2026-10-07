@@ -45,7 +45,6 @@
     <string name="text_size">글자 크기</string>
     <string name="size_regular">보통</string>
     <string name="size_large">크게</string>
-    <string name="size_larger">더 크게</string>
     <string name="stamp">도장</string>
     <string name="reminder">매일 알림</string>
     <string name="about">정보</string>
@@ -347,7 +346,6 @@
     <string name="mic_why_h">마이크를 쓰는 까닭</string>
     <string name="mic_why">소리 내어 읽은 말씀이 맞는지 폰 안에서만 알아들어요. 읽은 목소리는 이 폰에만 남고, 언제든 지울 수 있어요.</string>
     <string name="mic_allow">마이크 허락하기</string>
-    <string name="size_huge">아주 크게</string>
     <string name="contrast_setting">또렷하게 (흐린 글자를 진하게, 줄을 또렷하게)</string>
     <string name="feedback">의견 보내기</string>
     <string name="feedback_bad">불편했던 점 (어디서, 무엇이)</string>

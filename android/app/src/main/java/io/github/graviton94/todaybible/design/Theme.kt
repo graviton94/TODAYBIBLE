@@ -59,7 +59,10 @@ object Theme {
 @Composable
 fun TodayTheme(choice: ThemeChoice, scale: Float, night: Boolean = false, contrast: Boolean = false, content: @Composable () -> Unit) {
     val dark = when (choice) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK, ThemeChoice.CANDLE -> true }
-    CompositionLocalProvider(LocalPalette provides (if (night || choice == ThemeChoice.CANDLE) Tokens.candle else if (dark) Tokens.dark else Tokens.light).let { p -> if (contrast) sharper(p) else p }, LocalScale provides scale, content = content)
+    // 폰 글자 크기는 ‘크게’ 까지만 따라가요 (130% · 200% 에서는 버튼 · 머리줄이 무너져 앱을 쓸 수 없어서)
+    val d = androidx.compose.ui.platform.LocalDensity.current
+    val capped = androidx.compose.ui.unit.Density(d.density, d.fontScale.coerceAtMost(Tokens.Ratio.systemFontMax))
+    CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides capped, LocalPalette provides (if (night || choice == ThemeChoice.CANDLE) Tokens.candle else if (dark) Tokens.dark else Tokens.light).let { p -> if (contrast) sharper(p) else p }, LocalScale provides scale, content = content)
 }
 
 /** 또렷하게: 흐린 글자는 한 단계씩 진하게, 가는 줄은 더 보이게 (같은 재료 색에서 끌어옴). */

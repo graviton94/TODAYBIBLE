@@ -45,7 +45,6 @@
     <string name="text_size">Text size</string>
     <string name="size_regular">Regular</string>
     <string name="size_large">Large</string>
-    <string name="size_larger">Larger</string>
     <string name="stamp">Stamp</string>
     <string name="reminder">Daily reminder</string>
     <string name="about">About</string>
@@ -347,7 +346,6 @@
     <string name="mic_why_h">Why the microphone?</string>
     <string name="mic_why">Your phone listens, right on the device, to check the verse you read aloud. Your reading is kept only on this phone, and you can delete it anytime.</string>
     <string name="mic_allow">Allow microphone</string>
-    <string name="size_huge">Largest</string>
     <string name="contrast_setting">High contrast (darker faint text, clearer lines)</string>
     <string name="feedback">Send feedback</string>
     <string name="feedback_bad">What was hard or confusing?</string>

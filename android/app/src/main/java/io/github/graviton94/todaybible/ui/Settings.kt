@@ -47,7 +47,8 @@ import io.github.graviton94.todaybible.design.Theme
 import io.github.graviton94.todaybible.design.ThemeChoice
 import io.github.graviton94.todaybible.design.Tokens
 
-private val SCALES = listOf(1f, Tokens.Ratio.scaleLarge, Tokens.Ratio.scaleLarger, Tokens.Ratio.scaleHuge)
+// 글자 크기는 두 단계 (보통 · 크게): 더 키우면 화면이 쓸 수 없을 만큼 무너져요
+private val SCALES = listOf(1f, Tokens.Ratio.scaleLarge)
 
 /** 설정: 한 장짜리. 고르는 것은 모두 밑줄 탭 · 한 줄 목록. */
 @Composable
@@ -93,7 +94,7 @@ fun SettingsPage(s: AppState) {
                 }
             }
             Group(stringResource(R.string.text_size)) {
-                UnderlineTabs(listOf(stringResource(R.string.size_regular), stringResource(R.string.size_large), stringResource(R.string.size_larger), stringResource(R.string.size_huge)),
+                UnderlineTabs(listOf(stringResource(R.string.size_regular), stringResource(R.string.size_large)),
                     SCALES.indexOfFirst { kotlin.math.abs(it - s.scale) < 0.01f }.coerceAtLeast(0)) { s.setTextScale(SCALES[it]) }
                 // 또렷하게 (나2): 흐린 글자를 진하게, 가는 줄을 또렷하게
                 ChoiceRow(stringResource(R.string.contrast_setting), s.contrast) { s.flipContrast() }
