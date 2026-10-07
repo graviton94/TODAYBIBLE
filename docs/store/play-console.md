@@ -87,7 +87,7 @@
 
 ### 알림 · 부팅 후 다시 맞추기
 
-`POST_NOTIFICATIONS` · `RECEIVE_BOOT_COMPLETED`: 신고 없음 (기도 · 읽기 알림).
+`POST_NOTIFICATIONS` · `RECEIVE_BOOT_COMPLETED` · `SCHEDULE_EXACT_ALARM`: 신고 없음 (기도 · 읽기 알림). 정확한 알람은 사용자가 폰 설정에서 허락할 때만 쓰고, 없으면 10분 창으로 울려요. (`USE_EXACT_ALARM` 은 쓰지 않아 신고 대상 아님)
 
 ## 10. 광고 ID
 
@@ -112,6 +112,8 @@
 
 - AAB: GitHub Actions › **Android release (Play)** › 실행 (버전 이름 예: 0.9.0) → 그 실행의 Artifacts 에서 `app-release-0.9.0` 받기 (14일 보관)
 - 버전 코드: 1000 + 실행 번호 (시험 APK 와 겹치지 않음)
+- R8 매핑: 같은 Artifact 의 `mapping.txt` 를 Play Console › 해당 버전 › App bundle 탐색기 › 다운로드 › **ReTrace 매핑 파일 업로드** 에 올려요 (오류 보고서의 줄 위치가 보이게).
+- 처음 받는 테스터: 시험 APK (HaruBible.zip) 를 먼저 지워야 해요 (서명 키가 달라 덮어 설치 안 됨). 기록은 설정 › 백업으로 먼저 내보내기.
 - 출시 노트 (한국어):
 
 ```
