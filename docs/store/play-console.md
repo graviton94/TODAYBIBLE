@@ -79,7 +79,7 @@
 - 유형: **미디어 재생**
 - 설명 (한국어): "사용자가 '듣기'를 누르면 성경 낭독을 이어서 재생합니다. 화면을 끄거나 다른 앱으로 가도 낭독이 이어지고, 알림에서 멈출 수 있습니다."
 - 설명 (영어): "When the user taps Listen, the app plays Bible narration continuously. Playback continues with the screen off or in other apps, and can be stopped from the notification."
-- 동영상 링크: 듣기를 시작 → 홈 화면으로 나가도 재생 · 알림에서 멈추기 를 보여 주는 짧은 화면 녹화 (YouTube 비공개 링크 등). 필요하면 에뮬레이터로 녹화해 드릴게요.
+- 동영상 링크: `graphics/fgs_demo.mp4` (38초, 영어 화면 · 소리 없음: 시편 23편 듣기 시작 → 홈으로 나가도 재생 → 알림판의 "Listening · Psalms 23" → 앱으로 돌아오면 계속 재생 중). YouTube 에 **일부 공개** 로 올리거나 Google 드라이브 공유 링크로 붙여요.
 
 ### 마이크 (`RECORD_AUDIO`)
 
