@@ -62,7 +62,7 @@
 
 **App name (30자):** Bible by Hand: Read & Copy
 
-**Short description:** One chapter a day: read it aloud, type it, write it by hand, and pray with Scripture.
+**Short description:** Read aloud, type and handwrite one chapter a day, and pray with Scripture.
 
 **Full description:**
 
