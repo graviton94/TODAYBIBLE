@@ -750,7 +750,7 @@ private fun AloudTab(s: AppState, verse: Int) {
         AloudControls(s, guideReady)
         val at = if (spoken >= 0) spoken else lit
         // 교독: 인도 절과 회중 절을 한 화면에 함께
-        if (mode == 0) ResponsivePair(s, verse, source, at, guideTurn)
+        if (mode == 0) Box(Modifier.coach("resp_pair")) { ResponsivePair(s, verse, source, at, guideTurn) }
         else {
             // 앞뒤 절도 조금: 앞 절은 두 줄까지 옅게, 다음 절은 두 줄까지 더 옅게
             val all = s.text().fillable(s.chapter); val vi = all.indexOf(verse)

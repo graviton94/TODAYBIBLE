@@ -86,6 +86,9 @@ fun Welcome(s: AppState) {
     }
     // 처음은 시편 23편: 첫 절을 소리 내어 읽고 시작해요
     fun done() = s.finishOnboarding(18, 23)
+    // 소개 다시 보기: 소개 · 첫 절 두 장만, 설정은 그대로
+    fun endTour() { s.tour = false; s.welcomeStep = 0 }
+    if (s.tour) androidx.activity.compose.BackHandler { endTour() }
     val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (ok) s.setReminder(7); done() }
     var read by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize().background(c.leaf).systemBarsPadding().imePadding().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5),
@@ -114,12 +117,13 @@ fun Welcome(s: AppState) {
         }
         // 점 셋
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2, Alignment.CenterHorizontally)) {
-            for (i in 0..2) Box(Modifier.size(Tokens.Size.dot).clip(CircleShape).background(if (i == s.welcomeStep) c.rubric else c.hair))
+            for (i in 0..(if (s.tour) 1 else 2)) Box(Modifier.size(Tokens.Size.dot).clip(CircleShape).background(if (i == s.welcomeStep) c.rubric else c.hair))
         }
         when (s.welcomeStep) {
             0 -> BookButton(stringResource(R.string.next), Modifier.fillMaxWidth()) { s.welcomeStep++ }
             // 첫 절: 읽었으면 다음, 아니면 나중에
-            1 -> BookButton(stringResource(if (read) R.string.next else R.string.ob_skip_read), Modifier.fillMaxWidth(), quiet = !read) { s.welcomeStep++ }
+            1 -> if (s.tour) BookButton(stringResource(R.string.coach_done), Modifier.fillMaxWidth()) { endTour() }
+                else BookButton(stringResource(if (read) R.string.next else R.string.ob_skip_read), Modifier.fillMaxWidth(), quiet = !read) { s.welcomeStep++ }
             // 마지막: 아침 알림을 물어보고 시작
             else -> Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                 Text(stringResource(R.string.ob_reminder), style = Theme.body())

@@ -107,7 +107,7 @@ fun Root(s: AppState) {
 
     Box(Modifier.fillMaxSize().background(c.paper)) {
         Column(Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
-            TopBar(s)
+            TopBar(s, coachScreen(s, pager.currentPage))
             HorizontalPager(
                 pager, Modifier.weight(1f).fillMaxWidth(), beyondViewportPageCount = 0,
                 // 페이지는 아래 이름표로만 옮겨요 (옆으로 밀기는 위아래 스크롤과 다퉈서 없앰)
@@ -192,17 +192,11 @@ fun Root(s: AppState) {
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
         // 첫 안내: 덮개 (설정 · 장 마침 · 판화 …) 가 없을 때 지금 화면의 것
         val calm = s.onboarded && !s.opening && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null &&
-            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && !s.prayersOpen && s.prayerOpen == null && s.exportJob == null && !s.exporting && s.shareVerse == null && !s.planOpen && !typing && !pager.isScrollInProgress
-        val screen = when (pager.currentPage) {
-            AppState.TODAY -> "today"
-            AppState.BIBLE -> if (s.listenAt != null) "reader" else "library"
-            AppState.COPY -> "copy${s.copyTabNow}"
-            else -> "record"
-        }
-        if (calm) CoachOverlay(s, screen)
+            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && !s.prayersOpen && s.prayerBell == null && s.leaveAsk == null && s.exportJob == null && !s.exporting && s.shareVerse == null && !s.planOpen && !typing && !pager.isScrollInProgress
+        if (calm) CoachOverlay(s, coachScreen(s, pager.currentPage))
         // 여는 순간이 먼저, 처음 설치했으면 그다음에 첫 안내
         if (s.opening) { if (s.firstOfDay) IntroCover(s) { s.opening = false } else IntroDaily(s) { s.opening = false } }
-        else if (!s.onboarded) Welcome(s)
+        else if (!s.onboarded || s.tour) Welcome(s)
         // 낭독 음원을 못 받아 폰 목소리로 읽을 때: 한 번 알려요
         val fell by io.github.graviton94.todaybible.data.Narration.fellBack.collectAsState()
         LaunchedEffect(fell) { if (fell) { s.toast = ctx.getString(R.string.narration_fallback); io.github.graviton94.todaybible.data.Narration.fellBack.value = false } }
@@ -214,12 +208,26 @@ fun Root(s: AppState) {
     }
 }
 
-/** 맨 위 한 줄: 앱 이름 (표제 글꼴) · 오른쪽 톱니. */
+/** 지금 보이는 화면의 안내 이름 (첫 안내 · (?) 가 함께 써요). */
 @Composable
-private fun TopBar(s: AppState) {
+private fun coachScreen(s: AppState, page: Int): String {
+    val now by io.github.graviton94.todaybible.data.ListenService.now.collectAsState()
+    return when {
+        s.prayerOpen != null -> "prayer"
+        page == AppState.TODAY -> "today"
+        page == AppState.BIBLE -> s.listenAt?.let { (b, ch) -> if (now?.let { it.book == b && it.chapter == ch } == true) "listening" else "reader" } ?: "library"
+        page == AppState.COPY -> "copy${s.copyTabNow}"
+        else -> "record"
+    }
+}
+
+/** 맨 위 한 줄: 앱 이름 (표제 글꼴) · (?) · 오른쪽 톱니. */
+@Composable
+private fun TopBar(s: AppState, screen: String) {
     val c = Theme.c
     Row(Modifier.fillMaxWidth().padding(start = Tokens.Space.s5, end = Tokens.Space.s1), verticalAlignment = Alignment.CenterVertically) {
         Text(stringResource(R.string.app_name), style = Theme.brand(s.korean), maxLines = 1, modifier = Modifier.weight(1f))
+        HelpButton(s, screen)
         val label = stringResource(R.string.settings)
         // 톱니만으로는 알기 어려워서 ‘설정’ 글자도 함께
         Row(Modifier.coach("settings").heightIn(min = Tokens.Size.touch).semantics { contentDescription = label }.clickable(role = Role.Button) { s.settingsOpen = true }

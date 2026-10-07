@@ -88,7 +88,8 @@ fun PrayerPage(s: AppState, id: String) {
             modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.prayerOpen = null })
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(prayerName(p), style = Theme.title(k, Tokens.Text.title), modifier = Modifier.weight(1f))
-            PrayerBell(s, p.id)
+            PrayerBell(s, p.id, Modifier.coach("prayer_bell"))
+            HelpButton(s, "prayer")
         }
         p.passages.forEach { ps ->
             val t = s.store.book(s.translation, ps.book)
@@ -105,12 +106,12 @@ fun PrayerPage(s: AppState, id: String) {
         Text(stringResource(R.string.prayer_note), style = Theme.small())
         val playing = now != null
         Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            BookButton(stringResource(if (playing) R.string.listen_stop else R.string.prayer_listen), Modifier.weight(1f)) {
+            BookButton(stringResource(if (playing) R.string.listen_stop else R.string.prayer_listen), Modifier.weight(1f).coach("prayer_listen")) {
                 if (playing) ListenService.stop(ctx) else ListenService.startPassages(ctx, p.passages, s.aloudRate(), "prayer:${p.id}")
             }
-            BookButton(stringResource(R.string.prayer_write), Modifier.weight(1f), quiet = true) { s.writePrayer(p.id) }
+            BookButton(stringResource(R.string.prayer_write), Modifier.weight(1f).coach("prayer_write"), quiet = true) { s.writePrayer(p.id) }
         }
-        BookButton(stringResource(if (s.prayed(p.id)) R.string.prayer_prayed else R.string.prayer_amen), Modifier.fillMaxWidth(), quiet = s.prayed(p.id)) {
+        BookButton(stringResource(if (s.prayed(p.id)) R.string.prayer_prayed else R.string.prayer_amen), Modifier.fillMaxWidth().coach("prayer_amen"), quiet = s.prayed(p.id)) {
             s.markPrayed(p.id); s.prayerOpen = null
         }
         // 다른 기도문
@@ -155,11 +156,11 @@ fun prayerTime(minutes: Int): String = java.time.LocalTime.of(minutes / 60, minu
 
 /** 기도문 옆 종: 켜졌으면 붉은 종 + 시각, 누르면 시각 고르는 창. */
 @Composable
-fun PrayerBell(s: AppState, id: String) {
+fun PrayerBell(s: AppState, id: String, modifier: Modifier = Modifier) {
     val c = Theme.c; val ctx = LocalContext.current
     val at = s.prayerTimes[id]
     val label = stringResource(R.string.prayer_bell)
-    Row(Modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).clickable(role = Role.Button) { s.prayerBell = id }
+    Row(modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).clickable(role = Role.Button) { s.prayerBell = id }
         .semantics { contentDescription = label }.padding(horizontal = Tokens.Space.s2),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
         BellMark(if (at != null) c.rubric else c.inkSoft, at != null, Modifier.size(Tokens.Size.iconSm))

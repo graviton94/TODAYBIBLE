@@ -489,7 +489,7 @@
     <string name="coach_next">다음 ›</string>
     <string name="coach_done">알겠어요</string>
     <string name="coach_again_h">사용법</string>
-    <string name="coach_again">사용법 다시 보기</string>
+    <string name="coach_again">모든 화면 안내 다시 보기</string>
     <string name="coach_again_done">화면마다 안내가 다시 나와요.</string>
     <string name="coach_today_card">오늘의 장이에요. 하루 한 장이 목표이고, 막대가 얼마나 썼는지 보여 줘요.</string>
     <string name="coach_today_go">이어 쓰기: 멈춘 절부터 바로 옮겨 써요.</string>
@@ -760,4 +760,16 @@
     <string name="english_bible">영어 성경</string>
     <string name="web_desc">World English Bible · 오늘의 영어 (공개 도메인)</string>
     <string name="kjv_desc">King James Version · 1611 고전 영어</string>
+    <string name="help">이 화면 도움말</string>
+    <string name="help_hint">화면 위쪽의 (?)를 누르면 그 화면의 안내를 바로 다시 볼 수 있어요.</string>
+    <string name="tour_again">처음 소개 다시 보기</string>
+    <string name="coach_feedback">막히는 곳이 있나요? 의견 보내기 ›</string>
+    <string name="coach_resp_pair">위는 인도 목소리, 아래는 내 차례예요. 지금 읽을 절이 밝게 보여요.</string>
+    <string name="coach_listen_speed">읽는 빠르기를 바꿔요. 누를 때마다 다음 빠르기로 바뀌어요.</string>
+    <string name="coach_listen_timer">잠들기 타이머: 정한 시간이 지나거나 이 장이 끝나면 멈춰요.</string>
+    <string name="coach_listen_stop">여기서 멈춰요. 알림이나 아래 재생 띠에서도 멈출 수 있어요.</string>
+    <string name="coach_prayer_bell">이 기도를 알려 줄 시각을 정해요.</string>
+    <string name="coach_prayer_listen">말씀을 들으며 함께 기도해요.</string>
+    <string name="coach_prayer_write">이 기도문을 타자나 손글씨로 옮겨 써요.</string>
+    <string name="coach_prayer_amen">기도를 마치면 아멘을 눌러요. 오늘 드린 기도로 금빛 표시가 돼요.</string>
 </resources>

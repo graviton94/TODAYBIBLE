@@ -58,7 +58,8 @@ fun RunningHead(left: String, right: String, korean: Boolean, modifier: Modifier
             .padding(bottom = Tokens.Space.s2),
         verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(left, style = Theme.head(korean), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+        // 큰 글씨에서는 ‘마가…’ 로 자르지 않고 두 줄로
+        Text(left, style = Theme.head(korean), maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
         Text(right, style = Theme.small(), maxLines = 1, modifier = Modifier.padding(start = Tokens.Space.s3))
     }
 }

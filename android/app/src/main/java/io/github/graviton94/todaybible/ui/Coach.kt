@@ -2,6 +2,13 @@ package io.github.graviton94.todaybible.ui
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -63,10 +70,12 @@ object Coach {
             "tabs" to R.string.coach_tabs, "settings" to R.string.coach_settings),
         "library" to listOf("lib_marks" to R.string.coach_lib_marks, "lib_find" to R.string.coach_lib_find, "lib_testament" to R.string.coach_lib_testament, "lib_book" to R.string.coach_lib_book),
         "reader" to listOf("read_text" to R.string.coach_read_text, "read_bookmark" to R.string.coach_read_bookmark, "read_listen" to R.string.coach_read_listen, "read_copy" to R.string.coach_read_copy),
-        "copy0" to listOf("copy_tabs" to R.string.coach_copy_tabs, "aloud_modes" to R.string.coach_aloud_modes, "aloud_mic" to R.string.coach_aloud_mic),
+        "copy0" to listOf("copy_tabs" to R.string.coach_copy_tabs, "aloud_modes" to R.string.coach_aloud_modes, "resp_pair" to R.string.coach_resp_pair, "aloud_mic" to R.string.coach_aloud_mic),
         "copy1" to listOf("type_grid" to R.string.coach_type_grid, "type_start" to R.string.coach_type_start),
         "copy2" to listOf("hand_sheet" to R.string.coach_hand_sheet, "hand_buttons" to R.string.coach_hand_buttons),
         "record" to listOf("rec_calendar" to R.string.coach_rec_calendar, "rec_plates" to R.string.coach_rec_plates, "rec_miles" to R.string.coach_rec_miles),
+        "listening" to listOf("listen_speed" to R.string.coach_listen_speed, "listen_timer" to R.string.coach_listen_timer, "read_listen" to R.string.coach_listen_stop),
+        "prayer" to listOf("prayer_bell" to R.string.coach_prayer_bell, "prayer_listen" to R.string.coach_prayer_listen, "prayer_write" to R.string.coach_prayer_write, "prayer_amen" to R.string.coach_prayer_amen),
     )
 }
 
@@ -135,6 +144,22 @@ fun CoachOverlay(s: AppState, screen: String) {
                 Text(stringResource(if (i < steps.lastIndex) R.string.coach_next else R.string.coach_done), style = Theme.label().copy(color = c.rubric), maxLines = 1,
                     modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { if (i < steps.lastIndex) i++ else done() })
             }
+            // 마지막 말풍선: 막히는 곳은 바로 의견으로 (설정 › 도움 › 의견 보내기)
+            if (i == steps.lastIndex) Text(stringResource(R.string.coach_feedback), style = Theme.small().copy(color = c.rubric),
+                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { done(); s.prayerOpen = null; s.debugSection = "set_help"; s.settingsOpen = true })
+        }
+    }
+}
+
+/** 화면 위 (?) : 누르면 이 화면의 안내를 처음부터 다시. */
+@Composable
+fun HelpButton(s: AppState, screen: String, modifier: Modifier = Modifier) {
+    val c = Theme.c
+    val label = stringResource(R.string.help)
+    Box(modifier.heightIn(min = Tokens.Size.touch).semantics { contentDescription = label }.clickable(role = Role.Button) { s.coachAgain(screen) }
+        .padding(horizontal = Tokens.Space.s2), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(Tokens.Size.icon).border(Tokens.Stroke.rule, c.inkSoft, CircleShape), contentAlignment = Alignment.Center) {
+            Text("?", style = Theme.small().copy(color = c.inkSoft, fontWeight = FontWeight.SemiBold), maxLines = 1)
         }
     }
 }

@@ -487,7 +487,7 @@
   "coach_next": {"en": "Next ›", "ko": "다음 ›"},
   "coach_done": {"en": "Got it", "ko": "알겠어요"},
   "coach_again_h": {"en": "How to use", "ko": "사용법"},
-  "coach_again": {"en": "Show tips again", "ko": "사용법 다시 보기"},
+  "coach_again": {"en": "Show tips on every screen again", "ko": "모든 화면 안내 다시 보기"},
   "coach_again_done": {"en": "Tips will show again on each screen.", "ko": "화면마다 안내가 다시 나와요."},
   "coach_today_card": {"en": "Today's chapter. One chapter a day is the goal, and the bar shows how far you've come.", "ko": "오늘의 장이에요. 하루 한 장이 목표이고, 막대가 얼마나 썼는지 보여 줘요."},
   "coach_today_go": {"en": "Continue copying from the verse where you stopped.", "ko": "이어 쓰기: 멈춘 절부터 바로 옮겨 써요."},
@@ -757,5 +757,17 @@
   "tr_web": {"en": "World English Bible", "ko": "World English Bible"},
   "english_bible": {"en": "English Bible", "ko": "영어 성경"},
   "web_desc": {"en": "World English Bible · modern English (public domain)", "ko": "World English Bible · 오늘의 영어 (공개 도메인)"},
-  "kjv_desc": {"en": "King James Version · 1611 classic English", "ko": "King James Version · 1611 고전 영어"}
+  "kjv_desc": {"en": "King James Version · 1611 classic English", "ko": "King James Version · 1611 고전 영어"},
+  "help": {"en": "Help for this screen", "ko": "이 화면 도움말"},
+  "help_hint": {"en": "You can also tap (?) at the top of each screen to see its tips again.", "ko": "화면 위쪽의 (?)를 누르면 그 화면의 안내를 바로 다시 볼 수 있어요."},
+  "tour_again": {"en": "See the welcome again", "ko": "처음 소개 다시 보기"},
+  "coach_feedback": {"en": "Stuck somewhere? Send feedback ›", "ko": "막히는 곳이 있나요? 의견 보내기 ›"},
+  "coach_resp_pair": {"en": "The upper verse is the leader's, the lower one is yours. The verse to read now is brighter.", "ko": "위는 인도 목소리, 아래는 내 차례예요. 지금 읽을 절이 밝게 보여요."},
+  "coach_listen_speed": {"en": "Change the reading speed. Each tap moves to the next speed.", "ko": "읽는 빠르기를 바꿔요. 누를 때마다 다음 빠르기로 바뀌어요."},
+  "coach_listen_timer": {"en": "Sleep timer: stop after a set time or at the end of the chapter.", "ko": "잠들기 타이머: 정한 시간이 지나거나 이 장이 끝나면 멈춰요."},
+  "coach_listen_stop": {"en": "Stop here. You can also stop from the notification or the bar at the bottom.", "ko": "여기서 멈춰요. 알림이나 아래 재생 띠에서도 멈출 수 있어요."},
+  "coach_prayer_bell": {"en": "Set a reminder time for this prayer.", "ko": "이 기도를 알려 줄 시각을 정해요."},
+  "coach_prayer_listen": {"en": "Pray along while the verses are read aloud.", "ko": "말씀을 들으며 함께 기도해요."},
+  "coach_prayer_write": {"en": "Copy this prayer by typing or by hand.", "ko": "이 기도문을 타자나 손글씨로 옮겨 써요."},
+  "coach_prayer_amen": {"en": "When you have prayed, tap Amen. It is marked in gold for today.", "ko": "기도를 마치면 아멘을 눌러요. 오늘 드린 기도로 금빛 표시가 돼요."}
 }

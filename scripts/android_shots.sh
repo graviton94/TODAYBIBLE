@@ -215,6 +215,17 @@ open --ei tb.page 0;                                               shot x03_smal
 open --ez tb.reset true --ei tb.welcomeStep 2;                     shot x04_small_welcome 4
 adb shell wm size reset; adb shell wm density reset
 
+# @scene hp
+# 도움말: (?) · 기도 · 듣기 첫 안내 · 설정 도움 · 소개 다시 보기 · 교독 안내
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 0; shot hp1_topbar 5
+open --ez tb.coach true --es tb.prayer morning;                    shot hp2_prayer_coach 6
+adb shell input tap 540 1200; sleep 1; adb shell input tap 540 1200; sleep 1; adb shell input tap 540 1200; shot hp3_prayer_last 1
+open --ez tb.coach true --es tb.listen "19:23" --ez tb.listenPlay true; shot hp4_listen_coach 8
+open --ez tb.coach true --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0; shot hp5_copy0_coach 7
+open --ez tb.settings true --es tb.section set_help;               shot hp6_settings_help 4
+swipe_up;                                                          shot hp7_settings_help2 2
+open --ez tb.tour true;                                            shot hp8_tour 4
+# @end
 # @scene fs
 # 폰 글자 크기를 키웠을 때 (시스템 글꼴 130% · 200%): 잘리거나 겹치는 곳 · 기도 알림 늦음 안내
 for fs in 1.3 2.0; do

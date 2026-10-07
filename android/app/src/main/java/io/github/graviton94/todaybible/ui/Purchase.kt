@@ -119,7 +119,11 @@ private fun PlanCard(modifier: Modifier, name: String, price: String, was: Strin
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
         Text(name, style = Theme.small().copy(color = if (primary) c.gilt else c.rubric, textAlign = TextAlign.Center), maxLines = 1)
         was?.let { Text(it, style = Theme.small().copy(color = fg.copy(alpha = Tokens.Alpha.faint), textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough, textAlign = TextAlign.Center), maxLines = 1) }
-        Text(price, style = Theme.title(true).copy(color = fg, textAlign = TextAlign.Center), maxLines = 2)
+        // ‘월 ₩2,900’ 이 두 줄로 갈라지지 않게: 한 줄로 두고 넘치면 글씨를 조금씩 줄여요
+        val base = Theme.title(true).copy(color = fg, textAlign = TextAlign.Center)
+        var size by androidx.compose.runtime.remember(price) { androidx.compose.runtime.mutableStateOf(base.fontSize) }
+        Text(price.replace(' ', '\u00A0'), style = base.copy(fontSize = size), maxLines = 1, softWrap = false,
+            onTextLayout = { if (it.didOverflowWidth && size.value > base.fontSize.value * 0.6f) size = size * 0.9f })
         Text(note, style = Theme.small().copy(color = fg, textAlign = TextAlign.Center), maxLines = 3)
     }
 }

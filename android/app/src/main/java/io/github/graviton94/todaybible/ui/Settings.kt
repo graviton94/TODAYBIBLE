@@ -66,7 +66,7 @@ fun SettingsPage(s: AppState) {
             Text(stringResource(R.string.settings), style = Theme.title(k), maxLines = 1)
         }
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
-            var openSec by remember { mutableStateOf<String?>(s.debugSection ?: "set_display") }
+            var openSec by remember { mutableStateOf<String?>((s.debugSection ?: "set_display").also { if (!BuildConfig.DEV_TOOLS) s.debugSection = null }) }
             LifetimeCard(s)
             Section(stringResource(R.string.set_display), listOf(stringResource(when (s.language) { "ko" -> R.string.lang_ko_short; "en" -> R.string.lang_en_short; else -> R.string.lang_system }), stringResource(listOf(R.string.theme_system, R.string.theme_light, R.string.theme_dark, R.string.theme_candle)[s.theme.ordinal])).joinToString(" · "), openSec == "set_display") { openSec = if (openSec == "set_display") null else "set_display" }
             if (openSec == "set_display") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
@@ -229,10 +229,12 @@ fun SettingsPage(s: AppState) {
             }
             Section(stringResource(R.string.set_help), stringResource(R.string.set_help_sum), openSec == "set_help") { openSec = if (openSec == "set_help") null else "set_help" }
             if (openSec == "set_help") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
-            Group(stringResource(R.string.feedback)) { Feedback(s) }
             Group(stringResource(R.string.coach_again_h)) {
-                ChoiceRow(stringResource(R.string.coach_again), false) { s.coachReset(); s.settingsOpen = false; s.toast = ctx0.getString(R.string.coach_again_done) }
+                BookButton(stringResource(R.string.coach_again), Modifier.fillMaxWidth(), quiet = true) { s.coachReset(); s.settingsOpen = false; s.toast = ctx0.getString(R.string.coach_again_done) }
+                BookButton(stringResource(R.string.tour_again), Modifier.fillMaxWidth(), quiet = true) { s.welcomeStep = 0; s.tour = true; s.settingsOpen = false }
+                Text(stringResource(R.string.help_hint), style = Theme.small())
             }
+            Group(stringResource(R.string.feedback)) { Feedback(s) }
             }
             // 맨 아래: 여느 앱처럼 앱 소개 · 개인정보 처리방침 · 출처와 라이선스 · 문의, 판 번호
             Footer(s)

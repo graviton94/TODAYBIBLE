@@ -489,7 +489,7 @@
     <string name="coach_next">Next ›</string>
     <string name="coach_done">Got it</string>
     <string name="coach_again_h">How to use</string>
-    <string name="coach_again">Show tips again</string>
+    <string name="coach_again">Show tips on every screen again</string>
     <string name="coach_again_done">Tips will show again on each screen.</string>
     <string name="coach_today_card">Today\'s chapter. One chapter a day is the goal, and the bar shows how far you\'ve come.</string>
     <string name="coach_today_go">Continue copying from the verse where you stopped.</string>
@@ -760,4 +760,16 @@
     <string name="english_bible">English Bible</string>
     <string name="web_desc">World English Bible · modern English (public domain)</string>
     <string name="kjv_desc">King James Version · 1611 classic English</string>
+    <string name="help">Help for this screen</string>
+    <string name="help_hint">You can also tap (?) at the top of each screen to see its tips again.</string>
+    <string name="tour_again">See the welcome again</string>
+    <string name="coach_feedback">Stuck somewhere? Send feedback ›</string>
+    <string name="coach_resp_pair">The upper verse is the leader\'s, the lower one is yours. The verse to read now is brighter.</string>
+    <string name="coach_listen_speed">Change the reading speed. Each tap moves to the next speed.</string>
+    <string name="coach_listen_timer">Sleep timer: stop after a set time or at the end of the chapter.</string>
+    <string name="coach_listen_stop">Stop here. You can also stop from the notification or the bar at the bottom.</string>
+    <string name="coach_prayer_bell">Set a reminder time for this prayer.</string>
+    <string name="coach_prayer_listen">Pray along while the verses are read aloud.</string>
+    <string name="coach_prayer_write">Copy this prayer by typing or by hand.</string>
+    <string name="coach_prayer_amen">When you have prayed, tap Amen. It is marked in gold for today.</string>
 </resources>

@@ -147,8 +147,8 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
             Row(Modifier.fillMaxWidth().background(c.paper).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s1), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 val speedName = stringResource(when (s.aloudSpeed) { 0 -> R.string.aloud_slow; 2 -> R.string.aloud_fast; else -> R.string.aloud_normal })
                 val timerName = when (timer) { 0 -> stringResource(R.string.reminder_off); ListenService.TIMER_CHAPTER -> stringResource(R.string.timer_chapter); else -> stringResource(R.string.timer_min, timer) }
-                ListenChip(stringResource(R.string.listen_speed, speedName), Modifier.weight(1f)) { s.chooseAloudSpeed((s.aloudSpeed + 1) % 3); ListenService.setRate(ctx, s.aloudRate()) }
-                ListenChip(stringResource(R.string.listen_timer, timerName), Modifier.weight(1f), on = timer != 0) {
+                ListenChip(stringResource(R.string.listen_speed, speedName), Modifier.weight(1f).coach("listen_speed")) { s.chooseAloudSpeed((s.aloudSpeed + 1) % 3); ListenService.setRate(ctx, s.aloudRate()) }
+                ListenChip(stringResource(R.string.listen_timer, timerName), Modifier.weight(1f).coach("listen_timer"), on = timer != 0) {
                     val t = ListenService.TIMERS; ListenService.setTimer(ctx, t[(t.indexOf(timer) + 1) % t.size])
                 }
             }

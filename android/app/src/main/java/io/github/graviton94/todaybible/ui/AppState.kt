@@ -149,6 +149,10 @@ class AppState(val store: Store) {
     var coachSeen by mutableStateOf(store.coachSeen)
     fun coachDone(screen: String) { coachSeen = coachSeen + screen; store.coachSeen = coachSeen }
     fun coachReset() { coachSeen = emptySet(); store.coachSeen = coachSeen }
+    /** (?) : 이 화면 안내만 다시. */
+    fun coachAgain(screen: String) { coachSeen = coachSeen - screen; store.coachSeen = coachSeen }
+    /** 처음 소개 다시 보기 (이름 · 분량 · 알림은 묻지 않고 소개 두 장만). */
+    var tour by mutableStateOf(false)
     fun isBookmarked(b: Int, ch: Int) = bookmarks.any { it.translation == translation && it.key.book == b && it.key.chapter == ch }
     /** 이 장 책갈피 꽂기 · 빼기 (한 장에 하나, 꽂은 절 기억). */
     fun toggleBookmark(b: Int, ch: Int, v: Int = 1) {
