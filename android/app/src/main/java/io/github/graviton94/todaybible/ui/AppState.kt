@@ -342,7 +342,7 @@ class AppState(val store: Store) {
     }
     /** 영어 성경 고르기 (WEB · KJV): 영어로 보고 있으면 바로 그 번역으로. 기록은 번역마다 따로 남아요. */
     fun chooseEnglishBible(t: Translation) { store.englishBible = t; if (translation != Translation.KRV) chooseTranslation(t) }
-    fun setTextScale(s: Float) { scale = s; store.textScale = s }
+    fun setTextScale(s: Float) { val v = if (s > 1.01f) io.github.graviton94.todaybible.design.Tokens.Ratio.scaleLarge else 1f; scale = v; store.textScale = v }
     fun setStampMark(s: String) { stamp = s; store.stamp = s; widgets() }
     /** 나의 성경 PDF: 평생권이 필요하면 평생권 화면으로. */
     /** 노트 PDF 를 만들 권 (-1 = 전체). */

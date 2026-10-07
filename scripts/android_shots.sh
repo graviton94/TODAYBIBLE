@@ -103,7 +103,7 @@ swipe_up; swipe_up;                                                shot s04_sett
 swipe_up; swipe_up;                                                shot s05_settings_feedback 2
 open --ez tb.night true;                                           shot n01_night_today 4
 open --ez tb.night true --ei tb.page 2 --ei tb.copyTab 0;          shot n02_night_aloud 4
-open --ef tb.scale 1.6 --ez tb.contrast true --ei tb.page 2 --ei tb.copyTab 0; shot x05_huge_contrast 4
+open --ef tb.scale 1.15 --ez tb.contrast true --ei tb.page 2 --ei tb.copyTab 0; shot x05_huge_contrast 4
 open --ef tb.scale 1.0 --ez tb.contrast false
 open --ei tb.page 3;                                               shot r00_record_stats 5
 open --ei tb.page 0 --ei tb.toast 5;                               shot t01_toast 1.5
@@ -137,7 +137,7 @@ adb shell am startservice -a stop -n $P/.data.ListenService >/dev/null 2>&1 || t
 open --es tb.prayer morning;                                       shot h11_prayer_morning 4
 swipe_up;                                                          shot h12_prayer_more 2
 open --ez tb.prayers true --ei tb.page 1;                          shot h13_prayer_list 4
-open --es tb.prayer lords --ef tb.scale 1.6;                       shot h14_prayer_huge 4
+open --es tb.prayer lords --ef tb.scale 1.15;                       shot h14_prayer_huge 4
 open --ez tb.lock true --es tb.prayerWrite lords;                  shot h19_prayer_write_locked 5
 open --es tb.prayer morning --es tb.prayerPlay morning;             sleep 4; adb shell input keyevent 4; shot h20_leave_listening 2
 open --es tb.prayerPlay morning --ei tb.page 0;                    shot h21_now_playing_bar 4
@@ -161,14 +161,14 @@ open --ei tb.page 1; swipe_up; swipe_up;                           shot j06_libr
 open --ei tb.page 2 --ei tb.copyTab 1; adb shell input tap 540 2150; sleep 2
 adb shell input text "zz"; sleep 1.5;                              shot j07_typing_wrong 1
 # 아주 크게 (B3): 새 화면들을 큰 글씨로
-open --ef tb.scale 1.6 --ez tb.seed true;                          shot x06_huge_today 5
-open --ef tb.scale 1.6 --es tb.today 2026-10-04 --ez tb.sermonOpen true; shot x07_huge_sermon 4
-open --ef tb.scale 1.6 --es tb.memory "19:23:1" --ez tb.memoryOpen true --ei tb.memoryLevel 1; shot x08_huge_memory 4
-open --ef tb.scale 1.6 --ei tb.page 3;                             shot x09_huge_record 5
-open --ef tb.scale 1.6 --ei tb.page 1;                             shot x10_huge_library 5
-open --ef tb.scale 1.6 --es tb.listen "41:3";                      shot x11_huge_reader 4
-open --ef tb.scale 1.6 --ez tb.settings true;                      shot x12_huge_settings 4
-open --ef tb.scale 1.6 --ei tb.page 2 --ei tb.copyTab 1;           shot x13_huge_type 4
+open --ef tb.scale 1.15 --ez tb.seed true;                          shot x06_huge_today 5
+open --ef tb.scale 1.15 --es tb.today 2026-10-04 --ez tb.sermonOpen true; shot x07_huge_sermon 4
+open --ef tb.scale 1.15 --es tb.memory "19:23:1" --ez tb.memoryOpen true --ei tb.memoryLevel 1; shot x08_huge_memory 4
+open --ef tb.scale 1.15 --ei tb.page 3;                             shot x09_huge_record 5
+open --ef tb.scale 1.15 --ei tb.page 1;                             shot x10_huge_library 5
+open --ef tb.scale 1.15 --es tb.listen "41:3";                      shot x11_huge_reader 4
+open --ef tb.scale 1.15 --ez tb.settings true;                      shot x12_huge_settings 4
+open --ef tb.scale 1.15 --ei tb.page 2 --ei tb.copyTab 1;           shot x13_huge_type 4
 open --ef tb.scale 1.0
 # 다크
 open --es tb.theme DARK;                                           shot d01_today 5
@@ -202,8 +202,8 @@ open --ez tb.settings true;                                        shot en08_set
 open --ez tb.settings true --es tb.section set_listen;             shot en09_settings_listen 4
 open --ei tb.page 3;                                               shot en10_record 5
 open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 2;         shot en11_aloud 4
-open --ef tb.scale 1.6 --ei tb.page 0;                             shot en12_huge_today 5
-open --ef tb.scale 1.6 --ez tb.lock true --es tb.price "'\$6.99'" --es tb.monthPrice "'\$1.99'" --ez tb.purchase true; shot en13_huge_purchase 4
+open --ef tb.scale 1.15 --ei tb.page 0;                             shot en12_huge_today 5
+open --ef tb.scale 1.15 --ez tb.lock true --es tb.price "'\$6.99'" --es tb.monthPrice "'\$1.99'" --ez tb.purchase true; shot en13_huge_purchase 4
 open --ef tb.scale 1.0
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # 큰 글자 · 작은 화면
