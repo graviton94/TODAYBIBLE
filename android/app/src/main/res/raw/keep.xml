@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 리소스 줄이기 (R8) 가 지우지 않게: 이름을 만들어 찾는 글 (getIdentifier) -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:shrinkMode="safe"
+    tools:keep="@string/feast_*,@string/plan_*,@string/prayer_*,@string/ms_*" />

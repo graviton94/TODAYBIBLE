@@ -185,6 +185,7 @@ fun PrayerBellSheet(s: AppState, id: String) {
     BookSheet({ s.prayerBell = null }) {
         Text(stringResource(R.string.prayer_bell_h, prayerName(p)), style = Theme.title(s.korean))
         Text(stringResource(R.string.prayer_bell_note), style = Theme.small())
+        ExactAlarmNote(s)
         // 이 기도의 때에 맞춘 시각을 앞에
         val presets = when (p.hour) {
             io.github.graviton94.todaybible.core.Hour.MORNING -> listOf(5 * 60, 5 * 60 + 30, 6 * 60, 6 * 60 + 30, 7 * 60, 7 * 60 + 30, 8 * 60, 9 * 60)

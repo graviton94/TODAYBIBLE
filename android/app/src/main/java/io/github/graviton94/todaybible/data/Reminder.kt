@@ -106,3 +106,13 @@ class ReminderBoot : BroadcastReceiver() {
         io.github.graviton94.todaybible.widget.WidgetTick.schedule(ctx)
     }
 }
+
+/** 정확한 알람: 안드로이드 12+ 는 사용자가 허락해야 해요 (14+ 새 설치는 기본 꺼짐). */
+object ExactAlarm {
+    fun allowed(ctx: Context): Boolean = Build.VERSION.SDK_INT < 31 || ctx.getSystemService(android.app.AlarmManager::class.java).canScheduleExactAlarms()
+    /** 폰 설정의 ‘알람 및 리마인더’ 화면 (이 앱). */
+    fun openSettings(ctx: Context) {
+        if (Build.VERSION.SDK_INT < 31) return
+        runCatching { ctx.startActivity(Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, android.net.Uri.parse("package:" + ctx.packageName)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    }
+}

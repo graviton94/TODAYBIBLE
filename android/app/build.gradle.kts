@@ -13,7 +13,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = (System.getenv("GITHUB_RUN_NUMBER") ?: "1").toInt()
-        versionName = System.getenv("TB_VERSION_NAME") ?: "0.1.0"
+        versionName = System.getenv("TB_VERSION_NAME") ?: "1.0.0"
         // 개발자 도구(캡처용 시험 데이터 · 장면 열기): debug 빌드에만
         buildConfigField("boolean", "DEV_TOOLS", "true")
         // 낭독 음원 공개 주소 (Cloudflare R2). 비밀이 아니라 GitHub Variables 에서 빌드할 때 넣음. 비면 GitHub 릴리스만.
@@ -38,9 +38,12 @@ android {
     }
 
     buildTypes {
-        debug { signingConfig = signingConfigs.getByName("sideload") }
+        debug { signingConfig = signingConfigs.getByName("sideload"); versionNameSuffix = "-dev" }
         release {
-            isMinifyEnabled = false
+            // R8: 줄이고 섞기. 오류 위치는 mapping.txt 로 되찾아요 (출시 워크플로가 함께 올림)
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("play") ?: signingConfigs.getByName("sideload")
             buildConfigField("boolean", "DEV_TOOLS", "false")
         }

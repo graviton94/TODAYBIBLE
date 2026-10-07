@@ -372,6 +372,8 @@
   "rec_clear_sure": {"en": "Tap again to delete all", "ko": "한 번 더 누르면 모두 지워요"},
   "rec_cleared": {"en": "All recordings deleted", "ko": "녹음을 모두 지웠어요"},
   "reminder_on": {"en": "Daily reminder", "ko": "매일 알림"},
+  "alarm_late": {"en": "Reminders may arrive up to 10 minutes late. To get them on time, allow alarms and reminders for this app.", "ko": "알림이 10분쯤 늦게 올 수 있어요. 제시각에 받으려면 이 앱의 ‘알람 및 리마인더’를 허용해 주세요."},
+  "alarm_late_open": {"en": "Open settings", "ko": "설정 열기"},
   "reminder_denied": {"en": "Notifications are off for this app. Turn them on in the phone settings.", "ko": "이 앱의 알림이 꺼져 있어요. 폰 설정에서 켜 주세요."},
   "read_back": {"en": "‹ Books", "ko": "‹ 책 목록"},
   "bookmark": {"en": "Bookmark", "ko": "책갈피"},

@@ -173,6 +173,7 @@ fun SettingsPage(s: AppState) {
                 Text(if (on.isEmpty()) stringResource(R.string.prayer_reminder_none) else on.joinToString(" · "), style = Theme.small())
                 BookButton(stringResource(R.string.prayer_reminder_manage), Modifier.fillMaxWidth(), quiet = true) { s.prayersOpen = true }
             }
+            ExactAlarmNote(s)
             }
             Section(stringResource(R.string.set_keep), stringResource(R.string.set_keep_sum), openSec == "set_keep") { openSec = if (openSec == "set_keep") null else "set_keep" }
             if (openSec == "set_keep") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
@@ -412,6 +413,17 @@ private fun GuideVoiceSettings(s: AppState) {
         }
     }
 
+}
+
+/** 알림이 조금 늦을 수 있음 (정확한 알람 허락 없음): 한 줄 + 설정 열기. 켜진 알림이 있을 때만. */
+@Composable
+fun ExactAlarmNote(s: AppState) {
+    if (s.exactAlarm || (s.reminderHour < 0 && s.prayerTimes.isEmpty())) return
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Text(stringResource(R.string.alarm_late), style = Theme.small())
+        BookButton(stringResource(R.string.alarm_late_open), Modifier.fillMaxWidth(), quiet = true) { io.github.graviton94.todaybible.data.ExactAlarm.openSettings(ctx) }
+    }
 }
 
 /** 의견 보내기 (라1): 불편했던 점 · 좋았던 점을 적어 카카오톡 · 문자 등으로. 기기 · 앱 버전이 아래에 붙어요. 서버 없이 나누기 창으로. */

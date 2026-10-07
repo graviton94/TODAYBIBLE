@@ -33,8 +33,10 @@ object PrayerReminder {
             val m = times[p.id] ?: return@forEachIndexed
             var at = LocalDate.now().atTime(m / 60, m % 60)
             if (!at.isAfter(LocalDateTime.now())) at = at.plusDays(1)
-            // 대략이어도 되는 알림이라 정확한 알람 권한 없이 10분 창으로
-            am.setWindow(AlarmManager.RTC_WAKEUP, at.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli(), 10 * 60_000L, pi)
+            // 허락이 있으면 그 시각에, 없으면 10분 창 안에서
+            val ms = at.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            if (ExactAlarm.allowed(ctx)) am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, ms, pi)
+            else am.setWindow(AlarmManager.RTC_WAKEUP, ms, 10 * 60_000L, pi)
         }
     }
 

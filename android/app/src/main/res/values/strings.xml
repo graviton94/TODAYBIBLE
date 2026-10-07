@@ -374,6 +374,8 @@
     <string name="rec_clear_sure">Tap again to delete all</string>
     <string name="rec_cleared">All recordings deleted</string>
     <string name="reminder_on">Daily reminder</string>
+    <string name="alarm_late">Reminders may arrive up to 10 minutes late. To get them on time, allow alarms and reminders for this app.</string>
+    <string name="alarm_late_open">Open settings</string>
     <string name="reminder_denied">Notifications are off for this app. Turn them on in the phone settings.</string>
     <string name="read_back">‹ Books</string>
     <string name="bookmark">Bookmark</string>

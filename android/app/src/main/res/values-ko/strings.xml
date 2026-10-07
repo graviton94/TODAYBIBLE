@@ -374,6 +374,8 @@
     <string name="rec_clear_sure">한 번 더 누르면 모두 지워요</string>
     <string name="rec_cleared">녹음을 모두 지웠어요</string>
     <string name="reminder_on">매일 알림</string>
+    <string name="alarm_late">알림이 10분쯤 늦게 올 수 있어요. 제시각에 받으려면 이 앱의 ‘알람 및 리마인더’를 허용해 주세요.</string>
+    <string name="alarm_late_open">설정 열기</string>
     <string name="reminder_denied">이 앱의 알림이 꺼져 있어요. 폰 설정에서 켜 주세요.</string>
     <string name="read_back">‹ 책 목록</string>
     <string name="bookmark">책갈피</string>

@@ -63,15 +63,34 @@ class Lifetime(context: Context) {
         }
         .build()
 
+    private val main = android.os.Handler(android.os.Looper.getMainLooper())
+    private var tries = 0
+    private var connecting = false
+
     fun connect() {
         if (client.isReady) { query(); return }
+        if (connecting) return
+        connecting = true
         runCatching {
             client.startConnection(object : BillingClientStateListener {
-                override fun onBillingSetupFinished(r: BillingResult) { if (r.responseCode == BillingClient.BillingResponseCode.OK) query() }
-                override fun onBillingServiceDisconnected() {}
+                override fun onBillingSetupFinished(r: BillingResult) {
+                    connecting = false
+                    if (r.responseCode == BillingClient.BillingResponseCode.OK) { tries = 0; query() } else retry()
+                }
+                // 끊긴 뒤 다음 호출은 자동 재연결이 맡아요. 가격을 아직 못 받았으면 다시 붙어 받아요.
+                override fun onBillingServiceDisconnected() { connecting = false; if (!ready) retry() }
             })
-        }
+        }.onFailure { connecting = false; retry() }
     }
+
+    /** 연결이 안 되면 1 · 2 · 4 · 8 초 뒤 다시 (4번까지). 화면에 다시 들어오면 처음부터. */
+    private fun retry() {
+        if (tries >= 4) return
+        main.postDelayed({ connect() }, 1000L shl tries++)
+    }
+
+    /** 앱으로 돌아올 때: 그 사이 해지 · 환불 · 보류 끝난 결제를 반영해요. */
+    fun refresh() { if (debugged) return; if (client.isReady) restore() else { tries = 0; connect() } }
 
     private fun product(id: String, type: String) = QueryProductDetailsParams.Product.newBuilder().setProductId(id).setProductType(type).build()
 
@@ -97,12 +116,16 @@ class Lifetime(context: Context) {
     /** 이미 산 평생권 · 살아 있는 구독 다시 받기 (다른 폰 · 다시 설치 · 해지 뒤). */
     /** asked = 사용자가 '구매 복원' 을 눌렀을 때: 결과를 한 줄로 알려요. */
     fun restore(asked: Boolean = false) {
+        if (debugged) return
         if (asked && !client.isReady) { note(Note.FAILED); connect(); return }
         val left = java.util.concurrent.atomic.AtomicInteger(2); val found = java.util.concurrent.atomic.AtomicBoolean(false)
         fun done() { if (left.decrementAndGet() == 0 && asked) note(if (found.get()) Note.RESTORED else Note.NOTHING) }
         client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.INAPP).build()) { r, list ->
-            if (r.responseCode == BillingClient.BillingResponseCode.OK) list.forEach { p ->
-                if ((ID in p.products || MEMBER in p.products) && p.purchaseState == Purchase.PurchaseState.PURCHASED) found.set(true); grant(p) }
+            if (r.responseCode == BillingClient.BillingResponseCode.OK) {
+                list.forEach { p -> if ((ID in p.products || MEMBER in p.products) && p.purchaseState == Purchase.PurchaseState.PURCHASED) found.set(true); grant(p) }
+                // 환불 · 취소된 평생권은 Play 가 돌려주지 않아요: 없으면 다시 잠금 (Play 에 닿았을 때만)
+                if (list.none { (ID in it.products || MEMBER in it.products) && it.purchaseState == Purchase.PurchaseState.PURCHASED }) markOwned(false)
+            }
             done()
         }
         client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()) { r, list ->
@@ -118,6 +141,7 @@ class Lifetime(context: Context) {
 
     /** 평생권 사기: 구독 중이면 할인 상품으로. */
     fun buy(activity: Activity): Boolean {
+        if (!client.isReady) { tries = 0; connect() }
         val d = (if (subscribed) member else null) ?: details ?: return false
         val p = BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(d).build()
         return client.launchBillingFlow(activity, BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(p)).build()).responseCode == BillingClient.BillingResponseCode.OK
@@ -125,12 +149,14 @@ class Lifetime(context: Context) {
 
     /** 월 구독 시작. */
     fun subscribe(activity: Activity): Boolean {
+        if (!client.isReady) { tries = 0; connect() }
         val d = monthly ?: return false
         val token = d.subscriptionOfferDetails?.firstOrNull()?.offerToken ?: return false
         val p = BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(d).setOfferToken(token).build()
         return client.launchBillingFlow(activity, BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(p)).build()).responseCode == BillingClient.BillingResponseCode.OK
     }
 
+    private fun markOwned(on: Boolean) { owned = on; prefs.edit().putBoolean("lifetime", on).apply() }
     private fun markSubscribed(on: Boolean) { subscribed = on; prefs.edit().putBoolean("subscribed", on).apply() }
     private fun acknowledge(p: Purchase) {
         if (!p.isAcknowledged) client.acknowledgePurchase(AcknowledgePurchaseParams.newBuilder().setPurchaseToken(p.purchaseToken).build()) {}
@@ -139,7 +165,7 @@ class Lifetime(context: Context) {
     private fun grant(p: Purchase) {
         if (p.purchaseState != Purchase.PurchaseState.PURCHASED) return
         when {
-            ID in p.products || MEMBER in p.products -> { owned = true; prefs.edit().putBoolean("lifetime", true).apply() }
+            ID in p.products || MEMBER in p.products -> markOwned(true)
             MONTHLY in p.products -> markSubscribed(true)
             else -> return
         }
@@ -148,12 +174,15 @@ class Lifetime(context: Context) {
 
     /** 캡처 · 시험용 (debug 빌드만). */
     fun debugSet(own: Boolean?, readyPrice: String?, monthPrice: String? = null, memberP: String? = null, sub: Boolean? = null) {
+        debugged = own != null || sub != null
         own?.let { owned = it }
         readyPrice?.let { price = it; forceReady = true }
         monthPrice?.let { monthlyPrice = it }; memberP?.let { memberPrice = it }; sub?.let { subscribed = it }
     }
     var forceReady = false
         private set
+    /** 캡처가 정한 구매 상태: Play 확인으로 덮지 않아요. */
+    private var debugged = false
 
     fun close() = runCatching { client.endConnection() }
 }

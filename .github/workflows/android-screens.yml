@@ -52,6 +52,11 @@ jobs:
           PICK: ${{ github.event.inputs.only }}
         # 마지막 [shots:…] 를 써요 (설명 속 예시와 헷갈리지 않게)
         run: echo "ONLY=${PICK:-$(printf '%s' "$MSG" | grep -oP '\[shots:\K[^\]]+' | tail -1)}" >> "$GITHUB_ENV"
+      # [shots:rel] (또는 rel 이 든 목록): R8 로 줄인 release APK 를 monkey 로 눌러 보는 시험도
+      - name: Build release APK (R8 smoke)
+        if: contains(env.ONLY, 'rel')
+        working-directory: android
+        run: ./gradlew :app:assembleRelease
       # 에뮬레이터 상태를 캐시해 두고 다음부터는 이어서 켜요 (부팅 몇 분 → 수십 초)
       - name: AVD cache
         uses: actions/cache@v4
@@ -88,7 +93,7 @@ jobs:
           disable-animations: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           # 장면 하나가 멈춰도 잡이 통째로 취소되지 않게: 시간 제한 뒤 찍은 것 + 로그를 그대로 올려요
-          script: adb install -r android/app/build/outputs/apk/debug/app-debug.apk && (ONLY="$ONLY" WARM="${ONLY:+5}" timeout 36m bash scripts/android_shots.sh shots || echo "capture stopped early" > shots/STOPPED.txt); mkdir -p shots; adb logcat -d | tail -n 4000 > shots/logcat_tail.txt; true
+          script: adb install -r android/app/build/outputs/apk/debug/app-debug.apk && (ONLY="$ONLY" WARM="${ONLY:+5}" timeout 36m bash scripts/android_shots.sh shots || echo "capture stopped early" > shots/STOPPED.txt); mkdir -p shots; [ -f android/app/build/outputs/apk/release/app-release.apk ] && timeout 8m bash scripts/release_smoke.sh shots; adb logcat -d | tail -n 4000 > shots/logcat_tail.txt; true
       - name: Push to screenshots-android branch
         if: always()
         run: |

@@ -205,6 +205,12 @@ class AppState(val store: Store) {
     /** 기도문마다 알림 시각 (아이디 → 하루 중 분) · 종을 누른 기도문 (시각 고르는 창). */
     var prayerTimes by mutableStateOf(store.prayerTimes)
     var prayerBell by mutableStateOf<String?>(null)
+    /** 정확한 알람 허락 (폰 설정에서 바뀌면 돌아올 때 다시 봐요). */
+    var exactAlarm by mutableStateOf(io.github.graviton94.todaybible.data.ExactAlarm.allowed(store.context))
+    fun checkExactAlarm() {
+        val now = io.github.graviton94.todaybible.data.ExactAlarm.allowed(store.context)
+        if (now != exactAlarm) { exactAlarm = now; io.github.graviton94.todaybible.data.Reminder.schedule(store.context, reminderHour); Thread { io.github.graviton94.todaybible.data.PrayerReminder.schedule(store.context) }.start() }
+    }
     fun setPrayerTime(id: String, minutes: Int?) {
         prayerTimes = if (minutes == null) prayerTimes - id else prayerTimes + (id to minutes)
         store.prayerTimes = prayerTimes

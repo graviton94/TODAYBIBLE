@@ -77,6 +77,9 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         state?.checkNight()
+        state?.checkExactAlarm()
+        // 해지 · 환불 · 보류 끝난 결제를 돌아올 때마다 반영
+        state?.lifetime?.refresh()
     }
 
     override fun onStop() {

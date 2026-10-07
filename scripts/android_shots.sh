@@ -142,7 +142,7 @@ open --ez tb.lock true --es tb.prayerWrite lords;                  shot h19_pray
 open --es tb.prayer morning --es tb.prayerPlay morning;             sleep 4; adb shell input keyevent 4; shot h20_leave_listening 2
 open --es tb.prayerPlay morning --ei tb.page 0;                    shot h21_now_playing_bar 4
 open --ez tb.prayers true --es tb.prayerTimes "morning=420,night=1290";  shot h22_prayer_bells 4
-open --es tb.prayer morning --es tb.prayerBell morning;            shot h23_prayer_bell_sheet 4
+open --es tb.prayerTimes morning=420 --es tb.prayer morning --es tb.prayerBell morning; shot h23_prayer_bell_sheet 4
 open --ei tb.page 0;                                               shot h24_today_prayer_link 4
 open --es tb.listen "43:3" --ez tb.parallel true --ef tb.scale 1.0; shot h15_parallel 4
 open --es tb.listen "43:3" --ez tb.parallel false;                 sleep 1
@@ -215,6 +215,18 @@ open --ei tb.page 0;                                               shot x03_smal
 open --ez tb.reset true --ei tb.welcomeStep 2;                     shot x04_small_welcome 4
 adb shell wm size reset; adb shell wm density reset
 
+# @scene fs
+# 폰 글자 크기를 키웠을 때 (시스템 글꼴 130% · 200%): 잘리거나 겹치는 곳 · 기도 알림 늦음 안내
+for fs in 1.3 2.0; do
+  n=${fs/./}; adb shell settings put system font_scale $fs; sleep 2
+  open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 0; shot fs${n}_today 5
+  open --ei tb.page 2 --ei tb.copyTab 1;                              shot fs${n}_type 4
+  open --ez tb.lock true --es tb.price ₩9,900 --es tb.monthPrice ₩2,900 --es tb.memberPrice ₩6,900 --ez tb.purchase true; shot fs${n}_purchase 4
+  open --es tb.prayerTimes morning=420 --es tb.prayer morning --es tb.prayerBell morning; shot fs${n}_bell 4
+  open --ez tb.settings true --es tb.section set_alerts;             shot fs${n}_alerts 4
+done
+adb shell settings put system font_scale 1.0
+# @end
 # @scene st
 # 스토어 그림 (Play): 상태 표시줄을 깔끔하게 (9:00 · 배터리 가득 · 알림 없음), 알림판은 접고 찍어요
 adb shell settings put global sysui_demo_allowed 1
