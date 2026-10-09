@@ -769,7 +769,8 @@ private fun AloudTab(s: AppState, verse: Int) {
                 style = Theme.label().copy(color = if (running) c.rubric else c.ink))
             if (on && !recognize) BookButton(stringResource(R.string.voice_done_reading), Modifier.fillMaxWidth()) { complete() }
             if (running && useGuide && spoken < 0) BookButton(stringResource(R.string.guide_again), Modifier.fillMaxWidth(), quiet = true) { replay++ }
-            Text(stringResource(if (record) R.string.voice_keep_hint else R.string.aloud_hint), style = Theme.small().copy(textAlign = TextAlign.Center))
+            // 교독: 인도 목소리가 먼저 읽는다는 것부터 (녹음만 하는 줄 알지 않게)
+            Text(stringResource(if (mode == 0) (if (record) R.string.resp_hint_rec else R.string.resp_hint) else if (record) R.string.voice_keep_hint else R.string.aloud_hint), style = Theme.small().copy(textAlign = TextAlign.Center))
         }
         VoiceRow(s)
         return

@@ -308,6 +308,8 @@
   "resp_mode": {"en": "Responsive", "ko": "교독"},
   "resp_guide": {"en": "Leader reads", "ko": "인도 · 들어요"},
   "resp_you": {"en": "Your turn", "ko": "회중 · 내 차례예요"},
+  "resp_hint": {"en": "Tap to begin: the leader's voice reads first, then it's your turn.", "ko": "누르면 인도 목소리가 먼저 읽고, 이어서 내 차례예요."},
+  "resp_hint_rec": {"en": "Tap to begin: the leader's voice reads first, then it's your turn. Your voice is recorded on this phone only.", "ko": "누르면 인도 목소리가 먼저 읽고, 이어서 내 차례예요. 내 목소리는 이 폰에만 녹음돼요."},
   "resp_start": {"en": "Begin responsive reading", "ko": "교독 시작"},
   "aloud_big": {"en": "Large", "ko": "큰 글씨"},
   "verse_n": {"en": "Verse %1$d", "ko": "%1$d절"},

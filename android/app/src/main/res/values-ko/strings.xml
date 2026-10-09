@@ -310,6 +310,8 @@
     <string name="resp_mode">교독</string>
     <string name="resp_guide">인도 · 들어요</string>
     <string name="resp_you">회중 · 내 차례예요</string>
+    <string name="resp_hint">누르면 인도 목소리가 먼저 읽고, 이어서 내 차례예요.</string>
+    <string name="resp_hint_rec">누르면 인도 목소리가 먼저 읽고, 이어서 내 차례예요. 내 목소리는 이 폰에만 녹음돼요.</string>
     <string name="resp_start">교독 시작</string>
     <string name="aloud_big">큰 글씨</string>
     <string name="verse_n">%1$d절</string>

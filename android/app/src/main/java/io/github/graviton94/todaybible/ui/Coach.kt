@@ -94,7 +94,8 @@ private data class CoachElement(val id: String) : androidx.compose.ui.node.Modif
 /** 지금 화면의 첫 안내 (아직 안 봤으면). */
 @Composable
 fun CoachOverlay(s: AppState, screen: String) {
-    if (screen in s.coachSeen) return
+    // 한 번 펼친 안내는 끝까지 보지 않고 나가도 (알림으로 나갔다 들어와도) 다시 나오지 않아요. (?) 를 누를 때만 다시.
+    if (screen in s.coachSeen && s.coachShowing != screen) return
     val all = Coach.steps[screen] ?: return
     var ready by remember(screen) { mutableStateOf(false) }
     // 페이지가 넘어가 자리 잡을 때까지 잠깐
@@ -104,12 +105,13 @@ fun CoachOverlay(s: AppState, screen: String) {
     // 화면 안에 보이는 버튼만
     val steps = all.filter { Coach.targets[it.first]?.let { r -> r.width > 0f && r.height > 0f && r.top >= 0f && r.bottom <= winH * 1.05f } == true }
     if (steps.isEmpty()) return
+    LaunchedEffect(screen) { s.coachShowing = screen; s.coachDone(screen) }
     var i by remember(screen) { mutableIntStateOf(0) }
     val (id, text) = steps[i.coerceIn(steps.indices)]
     val r = Coach.targets[id] ?: return
     val c = Theme.c; val k = s.korean
     val dens = LocalDensity.current
-    fun done() { s.coachDone(screen) }
+    fun done() { s.coachDone(screen); s.coachShowing = null }
     BoxWithConstraints(Modifier.fillMaxSize()
         // 뒤 화면은 눌리지 않게
         .clickable(remember { MutableInteractionSource() }, null) { if (i < steps.lastIndex) i++ else done() }) {

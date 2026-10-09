@@ -33,9 +33,10 @@ class MainActivity : ComponentActivity() {
         val s = AppState(store).also { state = it }
         s.lifetime.connect()
         if (BuildConfig.DEV_TOOLS) debugSetup(s, intent)
-        intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; s.opening = false; intent.removeExtra("page") }
+        // 알림 · 위젯으로 열어도 그날 처음이면 여는 순간 (표지) 은 그대로, 그다음에 그 자리로
+        intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; s.opening = s.opening && s.firstOfDay; intent.removeExtra("page") }
         openAloud(s, intent)
-        intent.getStringExtra("prayer")?.let { s.prayerOpen = it; s.opening = false; intent.removeExtra("prayer") }
+        intent.getStringExtra("prayer")?.let { s.prayerOpen = it; s.opening = s.opening && s.firstOfDay; intent.removeExtra("prayer") }
         if (intent.getBooleanExtra("listening", false)) { s.opening = false; s.goToListening(); intent.removeExtra("listening") }
         // 알림 다시 맞추기 (끈 상태면 남은 알림을 지움) · 위젯 새로 그리기 (되살리기 · 업데이트 뒤에도 맞게)
         io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
@@ -112,7 +113,7 @@ class MainActivity : ComponentActivity() {
         i.removeExtra("aloud"); i.removeExtra("at")
         getSystemService(android.app.NotificationManager::class.java)?.cancel(io.github.graviton94.todaybible.data.Reminder.ID)
         val b = i.getIntExtra("at_b", -1); val c = i.getIntExtra("at_c", -1); val v = i.getIntExtra("at_v", -1)
-        s.opening = false
+        s.opening = s.opening && s.firstOfDay
         if (b >= 0 && c > 0) { s.open(b, c); if (v > 0) s.target = v }
         if (aloud) s.store.copyTab = 0
         s.page = io.github.graviton94.todaybible.ui.AppState.COPY; s.aloudNow = aloud

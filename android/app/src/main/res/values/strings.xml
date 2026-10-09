@@ -310,6 +310,8 @@
     <string name="resp_mode">Responsive</string>
     <string name="resp_guide">Leader reads</string>
     <string name="resp_you">Your turn</string>
+    <string name="resp_hint">Tap to begin: the leader\'s voice reads first, then it\'s your turn.</string>
+    <string name="resp_hint_rec">Tap to begin: the leader\'s voice reads first, then it\'s your turn. Your voice is recorded on this phone only.</string>
     <string name="resp_start">Begin responsive reading</string>
     <string name="aloud_big">Large</string>
     <string name="verse_n">Verse %1$d</string>
