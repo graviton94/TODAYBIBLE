@@ -73,7 +73,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -501,7 +500,9 @@ private fun NarrationBanner(s: AppState, loading: Boolean, failed: Boolean) {
             else {
                 val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "narr")
                 val x by t.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(Tokens.Motion.fadeMs * 4)), label = "x")
-                Box(Modifier.fillMaxWidth(0.3f).height(Tokens.Size.bar).then(Modifier.graphicsLayer { translationX = size.width * (x * (1f / 0.3f + 1f) - 1f) }).background(c.rubric))
+                Box(Modifier.fillMaxWidth().height(Tokens.Size.bar).drawBehind {
+                    drawRect(c.rubric, Offset(size.width * (x * 1.3f - 0.3f), 0f), androidx.compose.ui.geometry.Size(size.width * 0.3f, size.height))
+                })
             }
         }
         if (p != null && p.bytes > 0) {
