@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 시스템 시작 화면: 가죽 위 금박 십자 → 앱의 표지 넘김으로 이어짐 -->
+<!-- 시스템 시작 화면: 어둠 위 흰 선 십자 → 앱의 여는 판화로 이어짐 -->
 <resources>
     <style name="Theme.TodayBible.Splash" parent="Theme.TodayBible">
         <item name="android:windowSplashScreenBackground">@color/icon_leather</item>

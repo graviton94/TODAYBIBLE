@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 십자 (cross pattée): 가죽 위 금박 하나 -->
+<!-- 흰 선 라틴 십자 (속은 비움): 테마 아이콘 · 시작 화면. scripts/app_icon.py 가 만들어요 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#C7A35D"
-        android:pathData="M48,34 L60,34 L57,48 L74,45 L74,57 L57,54 L60,74 L48,74 L51,54 L34,57 L34,45 L51,48 Z" />
+    <path android:strokeColor="#FCF8EE" android:strokeWidth="1.33" android:strokeLineJoin="round"
+        android:pathData="M50.40,31.70 L57.60,31.70 L57.60,41.48 L68.40,41.48 L68.40,48.68 L57.60,48.68 L57.60,76.30 L50.40,76.30 L50.40,48.68 L39.60,48.68 L39.60,41.48 L50.40,41.48 Z" />
 </vector>
