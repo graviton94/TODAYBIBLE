@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="update_available">A new version is available</string>
+    <string name="update_get">Update</string>
+    <string name="update_later">Later</string>
+    <string name="update_downloading">Downloading the new version · %1$d%%</string>
+    <string name="update_ready">The new version is ready</string>
+    <string name="update_restart">Restart</string>
+    <string name="news_title">What\'s new</string>
+    <string name="news_ok">Start</string>
+    <string name="news_again">What\'s new in this version</string>
+    <string name="news_body">A calmer, more refined design throughout\n74 more engravings, now on the opening screen and chapter openers\nDownloading narration and saving files show their progress, and you tap to continue\nTwo text sizes: Regular and Large\nBalanced volume for narration, handwriting and typing sounds\nA guide for responsive reading, and Today\'s chapter picks up where you left off</string>
     <string name="gate_going">Going to %1$s…</string>
     <string name="gate_ready">%1$s is ready</string>
     <string name="gate_text">Chapter text</string>

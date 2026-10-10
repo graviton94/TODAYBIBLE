@@ -236,6 +236,7 @@ fun SettingsPage(s: AppState) {
             Group(stringResource(R.string.coach_again_h)) {
                 BookButton(stringResource(R.string.coach_again), Modifier.fillMaxWidth(), quiet = true) { s.coachReset(); s.settingsOpen = false; s.toast = ctx0.getString(R.string.coach_again_done) }
                 BookButton(stringResource(R.string.tour_again), Modifier.fillMaxWidth(), quiet = true) { s.welcomeStep = 0; s.tour = true; s.settingsOpen = false }
+                BookButton(stringResource(R.string.news_again), Modifier.fillMaxWidth(), quiet = true) { s.news = true; s.settingsOpen = false }
                 Text(stringResource(R.string.help_hint), style = Theme.small())
             }
             Group(stringResource(R.string.feedback)) { Feedback(s) }

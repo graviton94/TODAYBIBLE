@@ -67,4 +67,5 @@ dependencies {
     implementation("androidx.core:core-ktx:1.15.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
     implementation("com.android.billingclient:billing-ktx:8.0.0")
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
 }

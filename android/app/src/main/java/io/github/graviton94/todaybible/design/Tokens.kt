@@ -215,6 +215,7 @@ object Tokens {
         const val thumb = 0.89f
         const val openerArt = 0.78f
         const val gateArt = 0.62f
+        const val newsArt = 1.25f
         const val purchaseArt = 1.6f
     }
     object Alpha {

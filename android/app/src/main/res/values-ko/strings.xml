@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="update_available">새 버전이 나왔어요</string>
+    <string name="update_get">업데이트</string>
+    <string name="update_later">나중에</string>
+    <string name="update_downloading">새 버전 받는 중 · %1$d%%</string>
+    <string name="update_ready">새 버전을 다 받았어요</string>
+    <string name="update_restart">다시 시작</string>
+    <string name="news_title">새로 바뀐 것</string>
+    <string name="news_ok">시작하기</string>
+    <string name="news_again">이번 버전에서 바뀐 것</string>
+    <string name="news_body">앱 전체가 더 차분하고 고급스러운 화면으로 바뀌었어요\n판화 74점이 더해졌고, 여는 화면과 장 여는 화면에 걸려요\n낭독 받기 · 파일 저장은 진행을 보여 주고, 다 되면 눌러서 넘어가요\n글씨 크기는 보통 · 크게 두 단계예요\n말씀 · 손글씨 · 타자 소리 크기를 맞췄어요\n교독 안내가 생겼고, 오늘의 장이 쓰던 자리에서 이어져요</string>
     <string name="gate_going">%1$s으로 이동 중…</string>
     <string name="gate_ready">%1$s, 준비됐어요</string>
     <string name="gate_text">말씀 본문</string>

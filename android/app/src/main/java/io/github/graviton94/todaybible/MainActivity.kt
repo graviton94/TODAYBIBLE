@@ -32,6 +32,9 @@ class MainActivity : ComponentActivity() {
         if (BuildConfig.DEV_TOOLS && intent.getBooleanExtra("tb.reset", false)) store.reset()
         val s = AppState(store).also { state = it }
         s.lifetime.connect()
+        s.updates = io.github.graviton94.todaybible.data.Updates(this)
+        // 업데이트 뒤 처음: 새로 바뀐 것 한 번 (처음 설치면 건너뜀 · 캡처는 tb.news 일 때만)
+        if (store.newsSeen != NEWS) { if (store.onboarded && !BuildConfig.DEV_TOOLS) s.news = true else store.newsSeen = NEWS }
         if (BuildConfig.DEV_TOOLS) debugSetup(s, intent)
         // 알림 · 위젯으로 열어도 그날 처음이면 여는 순간 (표지) 은 그대로, 그다음에 그 자리로
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; s.opening = s.opening && s.firstOfDay; intent.removeExtra("page") }
@@ -44,7 +47,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val dark = s.night || when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK, ThemeChoice.CANDLE -> true }
             // 어두운 화면 (장 마침 · 화첩 · 판화 · 장 여는 화면) 위에서는 상태 표시줄 글자도 밝게
-            val darkBars = dark || s.finished != null || s.galleryOpen || s.plateView != null || s.opener != null || s.narrGate != null || s.exportGate != null || s.opening
+            val darkBars = dark || s.finished != null || s.galleryOpen || s.plateView != null || s.opener != null || s.narrGate != null || s.exportGate != null || s.opening || s.news
             LaunchedEffect(darkBars) {
                 val dark = darkBars
                 val bar = if (dark) SystemBarStyle.dark(android.graphics.Color.TRANSPARENT) else SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
@@ -86,6 +89,7 @@ class MainActivity : ComponentActivity() {
         state?.checkExactAlarm()
         // 해지 · 환불 · 보류 끝난 결제를 돌아올 때마다 반영
         state?.lifetime?.refresh()
+        state?.updates?.check()
     }
 
     override fun onStop() {
@@ -106,7 +110,12 @@ class MainActivity : ComponentActivity() {
         openAloud(s, intent); intent.getStringExtra("prayer")?.let { id -> s.prayerOpen = id; intent.removeExtra("prayer") }
     }
 
-    override fun onDestroy() { state?.lifetime?.close(); super.onDestroy() }
+    override fun onDestroy() { state?.lifetime?.close(); state?.updates?.close(); super.onDestroy() }
+
+    companion object {
+        /** 지금 버전의 ‘새로 바뀐 것’ 이름. 새 노트 (news_body) 를 쓸 때 함께 바꿔요. */
+        const val NEWS = "1.1"
+    }
 
     /** 아침 알림의 ‘함께 읽기’: 그 절로 열고 낭독을 곧바로. */
     private fun openAloud(s: AppState, i: Intent) {
@@ -195,6 +204,12 @@ class MainActivity : ComponentActivity() {
         if (i.getBooleanExtra("tb.prayers", false)) s.prayersOpen = true
         if (i.getBooleanExtra("tb.tour", false)) { s.welcomeStep = 0; s.tour = true }
         if (i.getBooleanExtra("tb.gallery", false)) s.galleryOpen = true
+        if (i.getBooleanExtra("tb.news", false)) s.news = true
+        when (i.getStringExtra("tb.update")) {
+            "available" -> s.updates?.debugSet(io.github.graviton94.todaybible.data.Updates.State.AVAILABLE)
+            "downloading" -> s.updates?.debugSet(io.github.graviton94.todaybible.data.Updates.State.DOWNLOADING, 0.42f)
+            "ready" -> s.updates?.debugSet(io.github.graviton94.todaybible.data.Updates.State.READY)
+        }
         when (i.getStringExtra("tb.gate")) {
             "narr" -> { s.narration = s.narration + ("${s.book}:${s.chapter}" to 0); s.narrGate = s.book to s.chapter }
             "narrOk" -> { s.narration = s.narration + ("${s.book}:${s.chapter}" to 1); s.narrGate = s.book to s.chapter }

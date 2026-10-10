@@ -126,6 +126,7 @@ fun Root(s: AppState) {
                 }
             }
             if (!typing) NowPlayingBar(s)
+            if (!typing) UpdateBar(s)
             if (!typing) PageTabs(pager.currentPage) { turnTo(it) }
         }
         if (s.settingsOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { SettingsPage(s) }
@@ -197,7 +198,7 @@ fun Root(s: AppState) {
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
         // 첫 안내: 덮개 (설정 · 장 마침 · 판화 …) 가 없을 때 지금 화면의 것
         val calm = s.onboarded && !s.opening && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null &&
-            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && !s.prayersOpen && !s.galleryOpen && s.opener == null && s.narrGate == null && s.exportGate == null && s.prayerBell == null && s.leaveAsk == null && s.exportJob == null && !s.exporting && s.shareVerse == null && !s.planOpen && !typing && !pager.isScrollInProgress
+            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && !s.prayersOpen && !s.galleryOpen && s.opener == null && s.narrGate == null && s.exportGate == null && !s.news && s.prayerBell == null && s.leaveAsk == null && s.exportJob == null && !s.exporting && s.shareVerse == null && !s.planOpen && !typing && !pager.isScrollInProgress
         if (calm) CoachOverlay(s, coachScreen(s, pager.currentPage))
         // 넘어가는 화면: 낭독 받기 · 파일 만들기 (확인 → 눌러서 넘어가기)
         if (s.opener == null) s.narrGate?.let { (b, ch) -> NarrationGate(s, b, ch) }
@@ -205,6 +206,7 @@ fun Root(s: AppState) {
         // 여는 순간이 먼저, 처음 설치했으면 그다음에 첫 안내
         if (s.opening) PlateIntro(s, s.firstOfDay) { s.opening = false }
         else if (!s.onboarded || s.tour) Welcome(s)
+        else if (s.news) NewsScreen(s)
         // 낭독 음원을 못 받아 폰 목소리로 읽을 때: 한 번 알려요
         val fell by io.github.graviton94.todaybible.data.Narration.fellBack.collectAsState()
         LaunchedEffect(fell) { if (fell) { s.toast = ctx.getString(R.string.narration_fallback); io.github.graviton94.todaybible.data.Narration.fellBack.value = false } }

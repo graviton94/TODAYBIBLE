@@ -234,6 +234,9 @@ open --es tb.gate narrOk;                                          shot gt5_gate
 open --es tb.gate export;                                          shot gt6_gate_export 4
 open --es tb.gate exportOk;                                        shot gt7_gate_export_ok 4
 open --ei tb.page 0;                                               shot gt8_home_prayer 4
+open --ez tb.news true;                                            shot gt9_news 4
+open --es tb.update available --ei tb.page 0;                      shot gu1_update_bar 4
+open --es tb.update ready;                                         shot gu2_update_ready 3
 # @end
 # @scene hp
 # 도움말: (?) · 기도 · 듣기 첫 안내 · 설정 도움 · 소개 다시 보기 · 교독 안내

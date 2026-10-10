@@ -157,6 +157,12 @@ class AppState(val store: Store) {
     var galleryOpen by mutableStateOf(false)
     /** 장 여는 화면 (판화가 있는 장을 처음 펼칠 때 한 번). */
     var opener by mutableStateOf<Pair<Int, Int>?>(null)
+    /** 새 버전 알아보기 (화면이 만들어질 때 붙여요). */
+    var updates: io.github.graviton94.todaybible.data.Updates? = null
+    /** 이번에 켠 동안은 새 버전 줄을 닫아 둠. */
+    var updateLater by mutableStateOf(false)
+    /** ‘새로 바뀐 것’ 화면 (업데이트 뒤 처음 한 번 · 설정에서 다시). */
+    var news by mutableStateOf(false)
     /** 낭독 받기 관문: 낭독 탭으로 장을 펼칠 때 음원이 없으면 받는 동안 보여 줘요 (권, 장). */
     var narrGate by mutableStateOf<Pair<Int, Int>?>(null)
     /** 필사 탭을 바꿔 달라는 요청 (관문의 ‘교독 없이 필사만’). 필사 화면이 받아서 지워요. */
