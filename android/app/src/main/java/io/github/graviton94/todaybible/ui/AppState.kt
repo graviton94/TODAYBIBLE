@@ -155,6 +155,9 @@ class AppState(val store: Store) {
     var tour by mutableStateOf(false)
     /** 화첩 (어두운 갤러리 화면). */
     var galleryOpen by mutableStateOf(false)
+    /** 장 여는 화면 (판화가 있는 장을 처음 펼칠 때 한 번). */
+    var opener by mutableStateOf<Pair<Int, Int>?>(null)
+    fun openerDone() { opener?.let { (b, c) -> store.openerSeen = store.openerSeen + "$b:$c" }; opener = null }
     /** 지금 펼친 첫 안내 (보여 주는 순간 본 것으로 적어 두고, 다 볼 때까지 이 이름으로 이어서). */
     var coachShowing by mutableStateOf<String?>(null)
     fun isBookmarked(b: Int, ch: Int) = bookmarks.any { it.translation == translation && it.key.book == b && it.key.chapter == ch }
@@ -301,6 +304,8 @@ class AppState(val store: Store) {
         if (locked(b)) { peekBook = b; purchaseOpen = true; return }
         prayerWrite = null
         book = b; chapter = ch; target = null; store.setBookmark(translation, b, ch); page = COPY; widgets()
+        // 판화가 있는 장을 처음 펼치면: 그림으로 여는 화면 한 번 (다 쓴 장은 건너뜀)
+        if (store.plateFor(b, ch) != null && "$b:$ch" !in store.openerSeen && progress.chapterFraction(translation, store.book(translation, b), ch) < 1f) opener = b to ch
     }
     /** 기도문 따라 쓰기 (기도문 아이디, 몇 번째 말씀): 기도문 범위는 어느 책이든 무료. */
     var prayerWrite by mutableStateOf<Pair<String, Int>?>(null)

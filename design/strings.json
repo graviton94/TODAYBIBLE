@@ -795,5 +795,9 @@
   "gal_ot": {"en": "Old T.", "ko": "구약"},
   "gal_gospels": {"en": "Gospels", "ko": "복음서"},
   "gal_apostles": {"en": "Apostles", "ko": "사도"},
-  "gal_rev": {"en": "Revelation", "ko": "계시"}
+  "gal_rev": {"en": "Revelation", "ko": "계시"},
+  "opener_line": {"en": "%1$s · %2$d verses · the scene is in verse %3$d", "ko": "%1$s · %2$d절 · %3$d절에 이 장면이 나와요"},
+  "opener_note": {"en": "Finish this chapter and this engraving is hung in your gallery. You have written %1$d verses so far.", "ko": "이 장을 다 쓰면 이 판화가 화첩에 걸려요. 지금까지 %1$d절을 썼어요."},
+  "write_from": {"en": "Write from verse %1$d", "ko": "%1$d절부터 쓰기"},
+  "listen_first": {"en": "Listen first", "ko": "먼저 들어 보기"}
 }

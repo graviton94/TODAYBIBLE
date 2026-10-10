@@ -137,6 +137,10 @@ class Store(val context: Context) {
     var mailTo: String
         get() = prefs.getString("mail_to", "").orEmpty()
         set(v) = prefs.edit().putString("mail_to", v).apply()
+    /** 장 여는 화면을 이미 본 장 ("권:장"). */
+    var openerSeen: Set<String>
+        get() = prefs.getString("opener_seen", "").orEmpty().split(',').filter { it.isNotBlank() }.toSet()
+        set(v) = prefs.edit().putString("opener_seen", v.joinToString(",")).apply()
     var coachSeen: Set<String>
         get() = prefs.getString("coach_seen", "").orEmpty().split(',').filter { it.isNotBlank() }.toSet()
         set(v) = prefs.edit().putString("coach_seen", v.joinToString(",")).apply()

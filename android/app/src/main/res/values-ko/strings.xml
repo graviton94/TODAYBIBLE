@@ -798,4 +798,8 @@
     <string name="gal_gospels">복음서</string>
     <string name="gal_apostles">사도</string>
     <string name="gal_rev">계시</string>
+    <string name="opener_line">%1$s · %2$d절 · %3$d절에 이 장면이 나와요</string>
+    <string name="opener_note">이 장을 다 쓰면 이 판화가 화첩에 걸려요. 지금까지 %1$d절을 썼어요.</string>
+    <string name="write_from">%1$d절부터 쓰기</string>
+    <string name="listen_first">먼저 들어 보기</string>
 </resources>

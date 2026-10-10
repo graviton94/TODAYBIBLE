@@ -140,6 +140,7 @@ fun Root(s: AppState) {
         s.prayerOpen?.let { id -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PrayerPage(s, id) } }
         s.prayerBell?.let { PrayerBellSheet(s, it) }
         s.exportJob?.let { ExportSheet(s, it) }
+        s.opener?.let { (b, ch) -> ChapterOpener(s, b, ch) }
         if (s.galleryOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { GalleryPage(s) }
         s.plateView?.let { pl -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PlatePage(s, pl) } }
         // 평생권은 어느 창에서 열어도 맨 위에
@@ -193,7 +194,7 @@ fun Root(s: AppState) {
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
         // 첫 안내: 덮개 (설정 · 장 마침 · 판화 …) 가 없을 때 지금 화면의 것
         val calm = s.onboarded && !s.opening && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null &&
-            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && !s.prayersOpen && !s.galleryOpen && s.prayerBell == null && s.leaveAsk == null && s.exportJob == null && !s.exporting && s.shareVerse == null && !s.planOpen && !typing && !pager.isScrollInProgress
+            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && !s.prayersOpen && !s.galleryOpen && s.opener == null && s.prayerBell == null && s.leaveAsk == null && s.exportJob == null && !s.exporting && s.shareVerse == null && !s.planOpen && !typing && !pager.isScrollInProgress
         if (calm) CoachOverlay(s, coachScreen(s, pager.currentPage))
         // 여는 순간이 먼저, 처음 설치했으면 그다음에 첫 안내
         if (s.opening) { if (s.firstOfDay) IntroCover(s) { s.opening = false } else IntroDaily(s) { s.opening = false } }

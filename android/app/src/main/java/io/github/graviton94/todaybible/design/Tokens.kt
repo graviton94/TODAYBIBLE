@@ -209,6 +209,7 @@ object Tokens {
         const val spineMin = 0.62f
         const val wideVerse = 1.15f
         const val thumb = 0.89f
+        const val openerArt = 0.78f
     }
     object Alpha {
         const val aloudAhead = 0.62f

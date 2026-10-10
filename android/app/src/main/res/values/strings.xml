@@ -798,4 +798,8 @@
     <string name="gal_gospels">Gospels</string>
     <string name="gal_apostles">Apostles</string>
     <string name="gal_rev">Revelation</string>
+    <string name="opener_line">%1$s · %2$d verses · the scene is in verse %3$d</string>
+    <string name="opener_note">Finish this chapter and this engraving is hung in your gallery. You have written %1$d verses so far.</string>
+    <string name="write_from">Write from verse %1$d</string>
+    <string name="listen_first">Listen first</string>
 </resources>

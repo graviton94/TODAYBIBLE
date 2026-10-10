@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -185,3 +187,40 @@ fun GalleryPage(s: AppState) {
         }
     }
 }
+
+
+/** 장 여는 화면 (하루의 편지 C4 이달의 전시): 판화가 위를 가득 채우고 어둠으로 녹아들어요. 장면 설명 · 마디 띠 · 버튼 하나. */
+@Composable
+fun ChapterOpener(s: AppState, b: Int, ch: Int) {
+    val p = s.store.plateFor(b, ch) ?: run { s.openerDone(); return }
+    androidx.compose.runtime.CompositionLocalProvider(io.github.graviton94.todaybible.design.LocalPalette provides Tokens.dark) {
+        val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
+        BackHandler { s.openerDone() }
+        val t = s.store.book(s.translation, b); val fill = t.fillable(ch)
+        val done = fill.count { s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(b, ch, it)) }
+        val next = s.progress.nextVerse(s.translation, t, ch)
+        val img = rememberPlate(p.id)
+        Box(Modifier.fillMaxSize().background(c.leaf)) {
+            if (img != null) Image(img, s.plateName(p), Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.openerArt).drawWithContent {
+                drawContent()
+                drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0.4f to c.leaf.copy(alpha = 0f), 0.75f to c.leaf.copy(alpha = 0.7f), 1f to c.leaf))
+            }, contentScale = ContentScale.Crop)
+            Column(Modifier.fillMaxSize().statusBarsPaddingCompat().padding(horizontal = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                Box(Modifier.weight(1f))
+                Text(io.github.graviton94.todaybible.core.Latin.head(b, ch), style = Theme.caps(), maxLines = 1)
+                Text(s.plateName(p), style = Theme.title(k, Tokens.Text.display), maxLines = 2)
+                Text(stringResource(R.string.opener_line, s.chapterRef(b, ch), fill.size, p.verse), style = Theme.small(), maxLines = 2)
+                Text(stringResource(R.string.opener_note, done), style = Theme.body().copy(color = c.inkSoft), maxLines = 3)
+                Segments(fill.size, done)
+                Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3, bottom = Tokens.Space.s4)) {
+                    BookButton(if (next != null) stringResource(R.string.write_from, next) else stringResource(R.string.continue_now), Modifier.fillMaxWidth()) { s.openerDone() }
+                    BookButton(stringResource(R.string.listen_first), Modifier.fillMaxWidth(), quiet = true) { s.openerDone(); s.read(b, ch) }
+                    Text(s.plateBy(p), style = Theme.small().copy(color = c.unwritten), maxLines = 1, modifier = Modifier.padding(top = Tokens.Space.s2))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun Modifier.statusBarsPaddingCompat(): Modifier = this.then(Modifier.padding(androidx.compose.foundation.layout.WindowInsets.systemBars.asPaddingValues()))
