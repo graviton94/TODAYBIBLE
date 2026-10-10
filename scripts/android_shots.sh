@@ -221,7 +221,7 @@ open --es tb.finished 1:7;                                                      
 swipe_up;                                                                             shot v03_finished_more 2
 open --es tb.finished 2:3;                                                            shot v04_finished_noplate 5
 open --es tb.plate noah;                                                              shot v05_plate 4
-open --ez tb.reset true --es tb.theme LIGHT; sleep 3; open --ez tb.seed true --es tb.tr KRV --es tb.open 1:7; shot v06_opener 5
+open --ez tb.reset true --es tb.theme LIGHT; sleep 3; open --ez tb.seed true --es tb.tr KRV --es tb.open 2:14; shot v06_opener 5
 
 # @scene hp
 # 도움말: (?) · 기도 · 듣기 첫 안내 · 설정 도움 · 소개 다시 보기 · 교독 안내

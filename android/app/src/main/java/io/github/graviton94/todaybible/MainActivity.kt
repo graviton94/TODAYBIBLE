@@ -43,7 +43,10 @@ class MainActivity : ComponentActivity() {
         s.widgets(); s.warmPlan()
         setContent {
             val dark = s.night || when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK, ThemeChoice.CANDLE -> true }
-            LaunchedEffect(dark) {
+            // 어두운 화면 (장 마침 · 화첩 · 판화 · 장 여는 화면) 위에서는 상태 표시줄 글자도 밝게
+            val darkBars = dark || s.finished != null || s.galleryOpen || s.plateView != null || s.opener != null
+            LaunchedEffect(darkBars) {
+                val dark = darkBars
                 val bar = if (dark) SystemBarStyle.dark(android.graphics.Color.TRANSPARENT) else SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
                 enableEdgeToEdge(bar, bar)
             }

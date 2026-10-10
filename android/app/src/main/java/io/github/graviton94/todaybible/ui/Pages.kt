@@ -141,8 +141,8 @@ fun Root(s: AppState) {
         s.prayerBell?.let { PrayerBellSheet(s, it) }
         s.exportJob?.let { ExportSheet(s, it) }
         s.opener?.let { (b, ch) -> ChapterOpener(s, b, ch) }
-        if (s.galleryOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { GalleryPage(s) }
-        s.plateView?.let { pl -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PlatePage(s, pl) } }
+        if (s.galleryOpen) Box(Modifier.fillMaxSize().background(Tokens.dark.leaf).statusBarsPadding().navigationBarsPadding()) { GalleryPage(s) }
+        s.plateView?.let { pl -> Box(Modifier.fillMaxSize().background(Tokens.dark.leaf).statusBarsPadding().navigationBarsPadding()) { PlatePage(s, pl) } }
         // 평생권은 어느 창에서 열어도 맨 위에
         if (s.purchaseOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PurchasePage(s) }
         // 결제 · 되찾기 결과 한 줄
