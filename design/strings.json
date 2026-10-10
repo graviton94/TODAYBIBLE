@@ -324,6 +324,8 @@
   "reminder_aloud": {"en": "Read aloud", "ko": "소리 내어 읽기"},
   "hand_phrase": {"en": "One phrase", "ko": "구절만"},
   "hand_whole": {"en": "Whole verse", "ko": "절 전체"},
+  "narr_left": {"en": "about %1$ds left", "ko": "약 %1$d초 남음"},
+  "narr_connecting": {"en": "Connecting…", "ko": "연결하는 중…"},
   "narr_loading": {"en": "Downloading narration for this chapter…", "ko": "이 장 낭독 목소리를 받는 중이에요"},
   "narr_failed": {"en": "Couldn't download the narration, so your phone's voice will read instead.", "ko": "낭독 목소리를 받지 못해 폰 목소리로 대신 읽어요."},
   "narr_male": {"en": "Steady male voice (recorded narration)", "ko": "진중한 남성 목소리 (미리 만든 낭독)"},

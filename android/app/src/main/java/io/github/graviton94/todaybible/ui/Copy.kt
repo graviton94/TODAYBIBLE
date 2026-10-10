@@ -73,6 +73,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -480,13 +481,41 @@ fun PlayMark(color: androidx.compose.ui.graphics.Color, playing: Boolean, modifi
     }
 }
 
-/** 이 장 낭독 목소리를 받는 중이거나 못 받았을 때 한 줄. */
+/** 이 장 낭독 목소리를 받는 중이거나 못 받았을 때: 받는 중이면 막대 · % · 받은 양 · 속도 · 남은 시간. */
 @Composable
 private fun NarrationBanner(s: AppState, loading: Boolean, failed: Boolean) {
     if (!loading && !failed) return
     val c = Theme.c
-    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-        Text(stringResource(if (loading) R.string.narr_loading else R.string.narr_failed), style = Theme.small().copy(color = if (failed) c.rubric else c.inkSoft), modifier = Modifier.weight(1f))
+    val N = io.github.graviton94.todaybible.data.Narration
+    val all by N.progress.collectAsState()
+    val p = all[N.key(s.narrator, s.book, s.chapter)]
+    if (loading) Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        val frac = p?.takeIf { it.total > 0 }?.let { (it.bytes.toFloat() / it.total).coerceIn(0f, 1f) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(stringResource(R.string.narr_loading), style = Theme.small().copy(color = c.ink), modifier = Modifier.weight(1f), maxLines = 1)
+            if (frac != null) Text("${(frac * 100).toInt()}%", style = Theme.label().copy(color = c.rubric), maxLines = 1)
+        }
+        // 막대: 전체 크기를 알면 그만큼, 모르면 오가는 띠
+        Box(Modifier.fillMaxWidth().height(Tokens.Size.bar).clip(RoundedCornerShape(Tokens.Size.bar)).background(c.hair)) {
+            if (frac != null) Box(Modifier.fillMaxWidth(frac).height(Tokens.Size.bar).background(c.rubric))
+            else {
+                val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "narr")
+                val x by t.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(Tokens.Motion.fadeMs * 4)), label = "x")
+                Box(Modifier.fillMaxWidth(0.3f).height(Tokens.Size.bar).then(Modifier.graphicsLayer { translationX = size.width * (x * (1f / 0.3f + 1f) - 1f) }).background(c.rubric))
+            }
+        }
+        if (p != null && p.bytes > 0) {
+            val sec = ((System.currentTimeMillis() - p.startMs) / 1000f).coerceAtLeast(0.1f)
+            val bps = p.bytes / sec
+            fun mb(b: Long) = "%.1f".format(b / 1_000_000f)
+            val size = if (p.total > 0) "${mb(p.bytes)} / ${mb(p.total)}MB" else "${mb(p.bytes)}MB"
+            val speed = if (bps >= 1_000_000) "%.1fMB/s".format(bps / 1_000_000f) else "${(bps / 1000).toInt()}KB/s"
+            val left = if (p.total > 0 && bps > 0) ((p.total - p.bytes) / bps).toInt().coerceAtLeast(0) else null
+            Text(listOfNotNull(size, speed, left?.let { stringResource(R.string.narr_left, it) }).joinToString(" · "), style = Theme.small(), maxLines = 1)
+        } else Text(stringResource(R.string.narr_connecting), style = Theme.small(), maxLines = 1)
+    }
+    if (failed) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        Text(stringResource(R.string.narr_failed), style = Theme.small().copy(color = c.rubric), modifier = Modifier.weight(1f))
         if (failed) Text(stringResource(R.string.narr_retry), style = Theme.small().copy(color = c.rubric),
             modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.narration = s.narration - "${s.book}:${s.chapter}"; s.fetchNarration(s.book, s.chapter) })
     }

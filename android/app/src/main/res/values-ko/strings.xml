@@ -326,6 +326,8 @@
     <string name="reminder_aloud">소리 내어 읽기</string>
     <string name="hand_phrase">구절만</string>
     <string name="hand_whole">절 전체</string>
+    <string name="narr_left">약 %1$d초 남음</string>
+    <string name="narr_connecting">연결하는 중…</string>
     <string name="narr_loading">이 장 낭독 목소리를 받는 중이에요</string>
     <string name="narr_failed">낭독 목소리를 받지 못해 폰 목소리로 대신 읽어요.</string>
     <string name="narr_male">진중한 남성 목소리 (미리 만든 낭독)</string>

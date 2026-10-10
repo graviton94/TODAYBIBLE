@@ -284,6 +284,17 @@ class AppState(val store: Store) {
         Thread { runCatching { store.lastGoal = effectiveGoal() }; io.github.graviton94.todaybible.widget.WidgetTick.refreshAll(ctx); io.github.graviton94.todaybible.widget.WidgetTick.schedule(ctx) }.start()
     }
 
+    /**
+     * 오늘의 장 (길잡이가 없을 때): 마지막으로 쓰던 자리. 기도문 따라 쓰기로 잠깐 옮긴 장이 아니라 저장된 자리를 써요.
+     * 그 장을 다 채웠으면 다음 장으로.
+     */
+    fun resumePlace(): Pair<Int, Int> {
+        val (b, c) = store.bookmark(translation)
+        val fill = store.book(translation, b).fillable(c)
+        val done = fill.isNotEmpty() && fill.all { progress.isFilled(translation, io.github.graviton94.todaybible.core.VerseKey(b, c, it)) }
+        return if (done) nextChapter(b, c) else b to c
+    }
+
     fun open(b: Int, ch: Int) {
         if (locked(b)) { peekBook = b; purchaseOpen = true; return }
         prayerWrite = null

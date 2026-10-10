@@ -326,6 +326,8 @@
     <string name="reminder_aloud">Read aloud</string>
     <string name="hand_phrase">One phrase</string>
     <string name="hand_whole">Whole verse</string>
+    <string name="narr_left">about %1$ds left</string>
+    <string name="narr_connecting">Connecting…</string>
     <string name="narr_loading">Downloading narration for this chapter…</string>
     <string name="narr_failed">Couldn\'t download the narration, so your phone\'s voice will read instead.</string>
     <string name="narr_male">Steady male voice (recorded narration)</string>

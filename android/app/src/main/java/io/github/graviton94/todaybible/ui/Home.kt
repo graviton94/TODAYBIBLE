@@ -71,7 +71,7 @@ fun HomePage(s: AppState) {
         }
         // 오늘의 장: 길잡이가 있으면 길잡이의 다음 장, 없으면 쓰던 장
         val pn = s.planNext()
-        val (cb, cc) = if (pn != null) pn.first to pn.second else s.book to s.chapter
+        val (cb, cc) = if (pn != null) pn.first to pn.second else s.resumePlace()
         val ct = s.store.book(s.translation, cb)
         val goal = s.effectiveGoal()
         val fill = ct.fillable(cc); val inCh = fill.count { s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(cb, cc, it)) }

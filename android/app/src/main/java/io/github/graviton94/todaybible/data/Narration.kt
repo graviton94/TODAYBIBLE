@@ -65,6 +65,10 @@ object Narration {
                 .also { if (!it) CrashLog.note(ctx, "narration $voice ${book + 1}:$chapter failed · $lastError") }
         }
     @Volatile private var lastError = ""
+    /** 받는 중인 장의 진행 (받은 바이트 · 전체 (모르면 -1) · 시작 시각). 화면이 % · 속도 · 남은 시간으로 보여 줘요. */
+    data class Progress(val bytes: Long, val total: Long, val startMs: Long)
+    val progress = kotlinx.coroutines.flow.MutableStateFlow<Map<String, Progress>>(emptyMap())
+    fun key(voice: String, book: Int, chapter: Int) = "$voice/$book/$chapter"
     /** 낭독 음원을 못 받아 폰 목소리로 대신 읽은 적이 있는지 (화면에 한 번 알려요). */
     val fellBack = kotlinx.coroutines.flow.MutableStateFlow(false)
 
@@ -79,14 +83,23 @@ object Narration {
             }.getOrNull()
         } ?: run { lastError = "no source ($name) · $lastError"; android.util.Log.w("Narration", "no source for $name (${bases.joinToString()})"); return false }
         var n = 0
-        ZipInputStream(conn.inputStream.buffered()).use { z ->
+        // 받은 만큼 세어 두기 (0.15초마다 한 번만 알려요)
+        val k = key(voice, book, chapter); val total = conn.contentLengthLong; val t0 = System.currentTimeMillis()
+        var got = 0L; var told = 0L
+        fun tell(force: Boolean = false) { val now = System.currentTimeMillis(); if (force || now - told > 150) { told = now; progress.value = progress.value + (k to Progress(got, total, t0)) } }
+        tell(true)
+        val counting = object : java.io.FilterInputStream(conn.inputStream) {
+            override fun read(): Int = super.read().also { if (it >= 0) { got++; tell() } }
+            override fun read(b: ByteArray, off: Int, len: Int): Int = super.read(b, off, len).also { if (it > 0) { got += it; tell() } }
+        }
+        try { ZipInputStream(counting.buffered()).use { z ->
             while (true) {
                 val e = z.nextEntry ?: break
                 n++
                 if (e.isDirectory || e.name.contains("..") || e.name.contains('/')) continue
                 val tmp = File(d, e.name + ".part"); tmp.outputStream().use { z.copyTo(it) }; tmp.renameTo(File(d, e.name))
             }
-        }
+        } } finally { progress.value = progress.value - k }
         conn.disconnect()
         if (n == 0) { android.util.Log.w("Narration", "empty zip $name"); return false }
         mark(ctx, voice, book, chapter).writeText("ok")
