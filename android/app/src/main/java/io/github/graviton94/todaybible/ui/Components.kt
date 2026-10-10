@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
@@ -335,5 +336,42 @@ fun ChapterInitial(chapter: Int, done: Boolean, modifier: Modifier = Modifier, b
     Box(modifier.size(box).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.leather).drawBehind { giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = false) },
         contentAlignment = Alignment.Center) {
         Text("$chapter", style = Theme.number().copy(fontSize = Tokens.Text.initialBox * (box / Tokens.Size.initialBox), color = c.gilt), maxLines = 1)
+    }
+}
+
+
+/** 가는 선 한 줄 (상자 대신 나누는 것). */
+@Composable
+fun Hair(modifier: Modifier = Modifier) { val c = Theme.c; Box(modifier.fillMaxWidth().height(Tokens.Stroke.hair).background(c.hair)) }
+
+/** 줄 목록 한 칸: 왼쪽 이름 · 오른쪽 작은 값 · 아래 가는 선. 상자 없이. */
+@Composable
+fun ListRow(title: String, value: String, leading: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
+    val c = Theme.c
+    Column(Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick)) {
+        Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).padding(vertical = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            leading?.invoke()
+            Text(title, style = Theme.body(), maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            if (value.isNotEmpty()) Text(value, style = Theme.small(), maxLines = 1)
+            Text("›", style = Theme.small().copy(color = c.unwritten), maxLines = 1)
+        }
+        Hair()
+    }
+}
+
+/** 마디 띠: 장을 다섯 절씩 (최대 여덟 마디) 나눠 채운 만큼 금빛. */
+@Composable
+fun Segments(total: Int, done: Int, modifier: Modifier = Modifier) {
+    val c = Theme.c
+    if (total <= 0) return
+    val n = ((total + 4) / 5).coerceIn(1, 8)
+    val per = total.toFloat() / n
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+        for (i in 0 until n) {
+            val f = ((done - i * per) / per).coerceIn(0f, 1f)
+            Box(Modifier.weight(1f).height(Tokens.Size.segment).background(c.hair)) {
+                if (f > 0f) Box(Modifier.fillMaxWidth(f).height(Tokens.Size.segment).background(c.gilt))
+            }
+        }
     }
 }

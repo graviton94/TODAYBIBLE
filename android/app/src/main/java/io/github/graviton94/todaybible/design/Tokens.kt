@@ -62,6 +62,8 @@ object Tokens {
         val sheetMaxGrid = 420.dp
         val bar = 4.dp
         val tabMark = 18.dp
+        val dotDay = 11.dp
+        val segment = 3.dp
         val bigAction = 76.dp
         val widgetPad = 16.dp
         val widgetWeekMinH = 100.dp

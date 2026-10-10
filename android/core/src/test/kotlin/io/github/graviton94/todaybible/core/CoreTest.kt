@@ -256,4 +256,10 @@ class CoreTest {
         // 모르는 목소리는 고르게
         assertEquals(ko.length / 2, NarrationSync.lit(ko, false, "x", dur / 2, dur))
     }
+
+    @Test fun latinHeads() {
+        assertEquals(66, (0 until 66).count { Latin.book(it).isNotBlank() })
+        assertEquals("IV", Latin.roman(4)); assertEquals("CL", Latin.roman(150)); assertEquals("XC", Latin.roman(90))
+        assertEquals("MARCUS · III", Latin.head(40, 3))
+    }
 }

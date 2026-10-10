@@ -771,5 +771,15 @@
   "coach_prayer_bell": {"en": "Set a reminder time for this prayer.", "ko": "이 기도를 알려 줄 시각을 정해요."},
   "coach_prayer_listen": {"en": "Pray along while the verses are read aloud.", "ko": "말씀을 들으며 함께 기도해요."},
   "coach_prayer_write": {"en": "Copy this prayer by typing or by hand.", "ko": "이 기도문을 타자나 손글씨로 옮겨 써요."},
-  "coach_prayer_amen": {"en": "When you have prayed, tap Amen. It is marked in gold for today.", "ko": "기도를 마치면 아멘을 눌러요. 오늘 드린 기도로 금빛 표시가 돼요."}
+  "coach_prayer_amen": {"en": "When you have prayed, tap Amen. It is marked in gold for today.", "ko": "기도를 마치면 아멘을 눌러요. 오늘 드린 기도로 금빛 표시가 돼요."},
+  "streak_pre": {"en": "Writing streak", "ko": "이어 쓰기"},
+  "streak_post": {"en": " days", "ko": "일"},
+  "today_written": {"en": "%1$d today", "ko": "오늘 %1$d절"},
+  "continue_at_verse": {"en": "Continue from verse %1$d", "ko": "이어 쓰기 · %1$d절부터"},
+  "next_plate_short": {"en": "Next engraving · %1$s", "ko": "다음 판화 · %1$s"},
+  "sermon_edit_short": {"en": "Open", "ko": "열기"},
+  "sermon_write_short": {"en": "Write", "ko": "적기"},
+  "prayer_go_short": {"en": "Pray", "ko": "드리기"},
+  "lifetime_row": {"en": "Open the whole Bible", "ko": "성경 전체를 펼쳐요"},
+  "lifetime_row_more": {"en": "Plans", "ko": "구독 · 평생권"}
 }

@@ -774,4 +774,14 @@
     <string name="coach_prayer_listen">말씀을 들으며 함께 기도해요.</string>
     <string name="coach_prayer_write">이 기도문을 타자나 손글씨로 옮겨 써요.</string>
     <string name="coach_prayer_amen">기도를 마치면 아멘을 눌러요. 오늘 드린 기도로 금빛 표시가 돼요.</string>
+    <string name="streak_pre">이어 쓰기</string>
+    <string name="streak_post">일</string>
+    <string name="today_written">오늘 %1$d절</string>
+    <string name="continue_at_verse">이어 쓰기 · %1$d절부터</string>
+    <string name="next_plate_short">다음 판화 · %1$s</string>
+    <string name="sermon_edit_short">열기</string>
+    <string name="sermon_write_short">적기</string>
+    <string name="prayer_go_short">드리기</string>
+    <string name="lifetime_row">성경 전체를 펼쳐요</string>
+    <string name="lifetime_row_more">구독 · 평생권</string>
 </resources>

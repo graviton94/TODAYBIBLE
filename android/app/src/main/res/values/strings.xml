@@ -774,4 +774,14 @@
     <string name="coach_prayer_listen">Pray along while the verses are read aloud.</string>
     <string name="coach_prayer_write">Copy this prayer by typing or by hand.</string>
     <string name="coach_prayer_amen">When you have prayed, tap Amen. It is marked in gold for today.</string>
+    <string name="streak_pre">Writing streak</string>
+    <string name="streak_post"> days</string>
+    <string name="today_written">%1$d today</string>
+    <string name="continue_at_verse">Continue from verse %1$d</string>
+    <string name="next_plate_short">Next engraving · %1$s</string>
+    <string name="sermon_edit_short">Open</string>
+    <string name="sermon_write_short">Write</string>
+    <string name="prayer_go_short">Pray</string>
+    <string name="lifetime_row">Open the whole Bible</string>
+    <string name="lifetime_row_more">Plans</string>
 </resources>
