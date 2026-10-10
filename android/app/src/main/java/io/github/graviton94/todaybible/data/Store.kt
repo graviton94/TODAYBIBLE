@@ -112,6 +112,10 @@ class Store(val context: Context) {
     var finishedCount: Int
         get() = prefs.getInt("finished_count", 0)
         set(v) = prefs.edit().putInt("finished_count", v).apply()
+    /** 낭독 미리 받기는 와이파이에서만 (기본 켬). */
+    var keepWifiOnly: Boolean
+        get() = prefs.getBoolean("keep_wifi_only", true)
+        set(v) = prefs.edit().putBoolean("keep_wifi_only", v).apply()
     /** 이어 듣기: 마지막으로 듣던 자리 "번역:권:장:절:날" (성경 듣기만, 기도문은 빼요). 없으면 "". */
     var lastListen: String
         get() = prefs.getString("last_listen", "") ?: ""

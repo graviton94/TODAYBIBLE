@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="keep_title">Download narration</string>
+    <string name="keep_lede">Download on Wi-Fi and listen without internet. Downloaded books aren\'t cleaned up automatically. On this phone now: %1$s MB</string>
+    <string name="keep_device">You\'re using the phone\'s voice, so there\'s nothing to download. Choose a narrator in Settings › Listening.</string>
+    <string name="keep_wifi_only">Download on Wi-Fi only</string>
+    <string name="keep_all_free">Download all free books · about %1$d MB</string>
+    <string name="keep_count">%1$d chapters · %2$d downloaded</string>
+    <string name="keep_chip_get">Download · %1$.1fMB</string>
+    <string name="keep_chip_running">Downloading %1$d/%2$d</string>
+    <string name="keep_chip_queued">Waiting</string>
+    <string name="keep_chip_kept">Downloaded</string>
+    <string name="keep_row_more">For offline</string>
+    <string name="keep_open">Choose books to download</string>
     <string name="resume_listen">Resume listening · %1$s</string>
     <string name="resume_listen_from">from v. %1$d</string>
     <string name="listen_verse">Verse %1$d</string>

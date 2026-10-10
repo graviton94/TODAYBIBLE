@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="keep_title">낭독 미리 받기</string>
+    <string name="keep_lede">와이파이에서 받아 두면 인터넷 없이 들어요. 받아 둔 권은 저절로 지워지지 않아요. 지금 이 폰에 %1$sMB</string>
+    <string name="keep_device">지금은 폰 목소리로 읽어서 받을 것이 없어요. 설정 › 듣기에서 낭독 목소리를 고르면 받을 수 있어요.</string>
+    <string name="keep_wifi_only">와이파이에서만 받기</string>
+    <string name="keep_all_free">무료 권 모두 받기 · 약 %1$dMB</string>
+    <string name="keep_count">%1$d장 · %2$d장 받음</string>
+    <string name="keep_chip_get">미리 받기 · %1$.1fMB</string>
+    <string name="keep_chip_running">받는 중 %1$d/%2$d</string>
+    <string name="keep_chip_queued">기다리는 중</string>
+    <string name="keep_chip_kept">받아 둠</string>
+    <string name="keep_row_more">인터넷 없이</string>
+    <string name="keep_open">받아 둘 권 고르기</string>
     <string name="resume_listen">이어 듣기 · %1$s</string>
     <string name="resume_listen_from">%1$d절부터</string>
     <string name="listen_verse">%1$d절</string>

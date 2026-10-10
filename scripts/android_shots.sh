@@ -135,6 +135,10 @@ adb shell cmd statusbar expand-notifications; sleep 3; snap mn4_paused_notificat
 adb shell cmd statusbar collapse
 open --ei tb.page 0;                                               shot mn5_resume_row 4
 # @end
+# @scene kp
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ez tb.keep true;  shot kp1_keep 5
+swipe_up;                                                                    shot kp2_keep_more 2
+# @end
 # @scene cards
 open --ez tb.cardShots true
 C=/sdcard/Android/data/$P/files/cards

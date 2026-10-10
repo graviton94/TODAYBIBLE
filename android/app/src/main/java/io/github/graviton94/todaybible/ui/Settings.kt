@@ -114,6 +114,7 @@ fun SettingsPage(s: AppState) {
             Section(stringResource(R.string.set_listen), stringResource(when { s.narrator == io.github.graviton94.todaybible.data.Narration.DEVICE -> R.string.narr_device; io.github.graviton94.todaybible.data.Narration.isMale(s.narrator) -> R.string.narr_male; else -> R.string.narr_female }), openSec == "set_listen") { openSec = if (openSec == "set_listen") null else "set_listen" }
             if (openSec == "set_listen") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
             Group(stringResource(R.string.guide_settings)) { GuideVoiceSettings(s) }
+            Group(stringResource(R.string.keep_title)) { BookButton(stringResource(R.string.keep_open), Modifier.fillMaxWidth(), quiet = true) { s.settingsOpen = false; s.keepOpen = true } }
             }
             Section(stringResource(R.string.set_write), stringResource(R.string.set_write_sum), openSec == "set_write") { openSec = if (openSec == "set_write") null else "set_write" }
             if (openSec == "set_write") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {

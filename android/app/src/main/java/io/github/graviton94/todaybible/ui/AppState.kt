@@ -245,16 +245,35 @@ class AppState(val store: Store) {
     fun flipParallel() { parallel = !parallel; store.parallel = parallel }
     /** 낭독 받아 두기 (I3): 받는 중인 권과 받은 장 수 / 전체. */
     var keeping by mutableStateOf<Triple<Int, Int, Int>?>(null)
+    /** 낭독 미리 받기 화면 · 받을 차례를 기다리는 권들 · 와이파이에서만. */
+    var keepOpen by mutableStateOf(false)
+    var keepQueue by mutableStateOf<List<Int>>(emptyList())
+    var keepWifiOnly by mutableStateOf(store.keepWifiOnly)
+    fun flipKeepWifiOnly() { keepWifiOnly = !keepWifiOnly; store.keepWifiOnly = keepWifiOnly }
+    /** 받아 둘 권을 줄에 세워요 (잠긴 권은 평생권 화면으로). 받는 중이 아니면 바로 시작. */
     fun keepNarration(b: Int) {
-        if (keeping != null) return
+        if (locked(b)) { peekBook = b; purchaseOpen = true; return }
+        if (keeping?.first == b || b in keepQueue) return
         val ctx = store.context
         val cm = ctx.getSystemService(android.net.ConnectivityManager::class.java)
-        if (cm?.isActiveNetworkMetered != false) { toast = ctx.getString(io.github.graviton94.todaybible.R.string.keep_wifi); return }
+        if (keepWifiOnly && cm?.isActiveNetworkMetered != false) { toast = ctx.getString(io.github.graviton94.todaybible.R.string.keep_wifi); return }
+        keepQueue = keepQueue + b
+        if (keeping == null) keepNext()
+    }
+    fun cancelKeep(b: Int) { keepQueue = keepQueue - b }
+    private fun keepNext() {
+        val b = keepQueue.firstOrNull() ?: return
+        keepQueue = keepQueue.drop(1)
+        val ctx = store.context; val ui = android.os.Handler(android.os.Looper.getMainLooper())
         val voice = narrator; val n = store.book(translation, b).chapterCount
         keeping = Triple(b, 0, n)
         Thread {
-            val ok = io.github.graviton94.todaybible.data.Narration.keepBook(ctx, voice, b, n) { done, all -> android.os.Handler(android.os.Looper.getMainLooper()).post { keeping = Triple(b, done, all) } }
-            android.os.Handler(android.os.Looper.getMainLooper()).post { keeping = null; toast = ctx.getString(if (ok) io.github.graviton94.todaybible.R.string.keep_done else io.github.graviton94.todaybible.R.string.keep_partial, bookName(b)) }
+            val ok = io.github.graviton94.todaybible.data.Narration.keepBook(ctx, voice, b, n) { done, all -> ui.post { keeping = Triple(b, done, all) } }
+            ui.post {
+                keeping = null
+                // 줄이 남았으면 다음 권, 다 받았으면 한 줄로 알려요
+                if (keepQueue.isNotEmpty()) keepNext() else toast = ctx.getString(if (ok) io.github.graviton94.todaybible.R.string.keep_done else io.github.graviton94.todaybible.R.string.keep_partial, bookName(b))
+            }
         }.start()
     }
 
@@ -392,6 +411,7 @@ class AppState(val store: Store) {
     var typeDraft: Pair<String, String>? = null
     /** 덮인 창들 모두 닫기 (알림 · 위젯으로 들어올 때). */
     fun closeOverlays() {
+        keepOpen = false
         settingsOpen = false; purchaseOpen = false; plateView = null; finished = null; picker = null; marksOpen = false; found = null
         memoryOpen = null; sermonOpen = null; prayersOpen = false; galleryOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; handBook = null; planOpen = false; award = null; opening = false; leaveAsk = null
     }

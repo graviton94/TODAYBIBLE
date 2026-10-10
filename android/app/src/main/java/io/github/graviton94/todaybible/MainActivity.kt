@@ -241,6 +241,7 @@ class MainActivity : ComponentActivity() {
         if (i.getBooleanExtra("tb.gallery", false)) s.galleryOpen = true
         if (i.getBooleanExtra("tb.film", false)) Thread { filmShots(s) }.start()
         if (i.getBooleanExtra("tb.news", false)) s.news = true
+        if (i.getBooleanExtra("tb.keep", false)) s.keepOpen = true
         when (i.getStringExtra("tb.update")) {
             "available" -> s.updates?.debugSet(io.github.graviton94.todaybible.data.Updates.State.AVAILABLE)
             "downloading" -> s.updates?.debugSet(io.github.graviton94.todaybible.data.Updates.State.DOWNLOADING, 0.42f)

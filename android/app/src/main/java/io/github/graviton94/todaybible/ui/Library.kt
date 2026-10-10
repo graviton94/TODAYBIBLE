@@ -113,6 +113,7 @@ fun LibraryPage(s: AppState) {
             Hair()
             ListRow(stringResource(R.string.prayer_title), stringResource(R.string.prayer_row_short)) { s.prayersOpen = true }
             Box(Modifier.coach("lib_marks")) { ListRow(stringResource(R.string.lib_marks_title), "$nb · $nm") { s.marksOpen = true } }
+            if (s.narrator != io.github.graviton94.todaybible.data.Narration.DEVICE) ListRow(stringResource(R.string.keep_title), stringResource(R.string.keep_row_more)) { s.keepOpen = true }
             ListRow(stringResource(R.string.plan), s.plan?.let { planName(ctx, it.id) } ?: stringResource(R.string.plan_none_short)) { s.planOpen = true }
         }
         // 구약 · 신약
