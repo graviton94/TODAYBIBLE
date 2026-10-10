@@ -38,7 +38,11 @@ jobs:
           GITHUB_RUN_NUMBER: ${{ github.run_number }}
         run: |
           export GITHUB_RUN_NUMBER=$((1000 + GITHUB_RUN_NUMBER))
-          ./gradlew :core:test :app:bundleRelease
+          # 실패하면 마지막 줄들을 실행 화면 (annotation) 에 남겨요: 기록 파일은 밖에서 못 읽어서
+          set -o pipefail
+          ./gradlew :core:test :app:bundleRelease 2>&1 | tee "$RUNNER_TEMP/build.log" || {
+            grep -E "^e: |error:|ERROR|What went wrong|Missing class|> " "$RUNNER_TEMP/build.log" | tail -n 40 | sed ':a;N;$!ba;s/%/%25/g;s/\n/%0A/g' | sed 's/^/::error title=build::/'
+            exit 1; }
           # 올리기 키로 서명됐는지 (시험 키가 아닌지) 확인
           keytool -printcert -jarfile app/build/outputs/bundle/release/app-release.aab | grep -q "CN=sideload" && { echo "::error::signed with the sideload key"; exit 1; } || true
       - name: Forget the unlocked key
