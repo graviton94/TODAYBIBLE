@@ -784,4 +784,10 @@
     <string name="prayer_go_short">Pray</string>
     <string name="lifetime_row">Open the whole Bible</string>
     <string name="lifetime_row_more">Plans</string>
+    <string name="prayer_row_short">Lord\'s Prayer · morning · evening</string>
+    <string name="lib_marks_title">Bookmarks · highlights</string>
+    <string name="plan_none_short">Choose</string>
+    <string name="verse_unit">verses</string>
+    <string name="of_total_pct">%2$s%% of %1$s</string>
+    <string name="index_counts">done %1$d · writing %2$d</string>
 </resources>

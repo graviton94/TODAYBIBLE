@@ -784,4 +784,10 @@
     <string name="prayer_go_short">드리기</string>
     <string name="lifetime_row">성경 전체를 펼쳐요</string>
     <string name="lifetime_row_more">구독 · 평생권</string>
+    <string name="prayer_row_short">주기도문 · 아침 · 저녁</string>
+    <string name="lib_marks_title">책갈피 · 형광펜</string>
+    <string name="plan_none_short">고르기</string>
+    <string name="verse_unit">절</string>
+    <string name="of_total_pct">%1$s절 중 %2$s%%</string>
+    <string name="index_counts">다 씀 %1$d · 쓰는 중 %2$d</string>
 </resources>

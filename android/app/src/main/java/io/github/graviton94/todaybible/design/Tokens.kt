@@ -64,6 +64,7 @@ object Tokens {
         val tabMark = 18.dp
         val dotDay = 11.dp
         val segment = 3.dp
+        val romanCol = 30.dp
         val bigAction = 76.dp
         val widgetPad = 16.dp
         val widgetWeekMinH = 100.dp

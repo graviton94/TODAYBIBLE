@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -62,9 +63,9 @@ import java.time.format.DateTimeFormatter
 fun RecordPage(s: AppState) {
     val k = s.korean; val c = Theme.c
     val days = s.progress.days()
-    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
-        RunningHead(stringResource(R.string.page_record), stringResource(R.string.presence_n, Presence.total(days)), k)
-        BookShelf(s)
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s3, bottom = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+        MyBibleHead(s)
+        BookIndex(s)
         yearShown(s)?.let { YearCard(s, it) }
         CalendarPanel(s, days)
         Stats(s)
@@ -95,9 +96,64 @@ fun RecordPage(s: AppState) {
 
 @Composable
 private fun Section(title: String, right: String, korean: Boolean) {
-    Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s2), verticalAlignment = Alignment.Bottom) {
-        Text(title, style = Theme.title(korean, Tokens.Text.title), maxLines = 1, modifier = Modifier.weight(1f))
-        Text(right, style = Theme.small(), maxLines = 1)
+    Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(title, style = Theme.title(korean, Tokens.Text.label), maxLines = 1, modifier = Modifier.weight(1f))
+            Text(right, style = Theme.small(), maxLines = 1)
+        }
+        Hair()
+    }
+}
+
+/** 나의 성경 머리: 라틴 머리글 · 제목 · 큰 숫자 (쓴 절) · 가는 진행선. */
+@Composable
+private fun MyBibleHead(s: AppState) {
+    val c = Theme.c; val k = s.korean
+    val filled = s.progress.filled(s.translation).size; val total = s.translation.total
+    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Text("BIBLIA MEA", style = Theme.caps(), maxLines = 1)
+        Text(if (s.ownerName.isNotBlank()) stringResource(R.string.mybook_named, s.ownerName) else stringResource(R.string.mybook), style = Theme.title(k, Tokens.Text.display), maxLines = 1)
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text("%,d".format(filled), style = Theme.big(), maxLines = 1)
+            Text(" " + stringResource(R.string.verse_unit), style = Theme.body(), maxLines = 1, modifier = Modifier.weight(1f).padding(bottom = Tokens.Space.s2))
+            Text(stringResource(R.string.of_total_pct, "%,d".format(total), "%.1f".format(filled * 100f / total)), style = Theme.small(), maxLines = 1, modifier = Modifier.padding(bottom = Tokens.Space.s2))
+        }
+        Box(Modifier.fillMaxWidth().height(Tokens.Stroke.rule).background(c.hair)) { Box(Modifier.fillMaxWidth((filled.toFloat() / total).coerceIn(0.004f, 1f)).height(Tokens.Stroke.rule).background(c.gilt)) }
+    }
+}
+
+/**
+ * 66권 목차: 책장 그림 대신 활자로. 다 쓴 책은 금빛 밑줄, 쓰는 중은 진하게, 아직은 옅게. 누르면 그 책 장 고르기.
+ */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun BookIndex(s: AppState) {
+    val c = Theme.c; val k = s.korean
+    val filled = s.progress.filled(s.translation)
+    val state by androidx.compose.runtime.produceState(emptyMap<Int, Boolean>(), filled.size, s.translation) {
+        val tr = s.translation
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            filled.groupingBy { io.github.graviton94.todaybible.core.VerseKey(it).book }.eachCount().mapValues { (b, n) -> n >= s.store.book(tr, b).fillableTotal }
+        }
+    }
+    Column(Modifier.coach("rec_plates"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+        listOf(false to "VETUS TESTAMENTUM", true to "NOVUM TESTAMENTUM").forEach { (nt, head) ->
+            val range = if (nt) 39 until 66 else 0 until 39
+            Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                Row(verticalAlignment = Alignment.Bottom) {
+                    Text("$head · ${range.count()}", style = Theme.caps().copy(color = c.inkSoft), maxLines = 1, modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.index_counts, range.count { state[it] == true }, range.count { it in state && state[it] != true }), style = Theme.small(), maxLines = 1)
+                }
+                androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                    range.forEach { b ->
+                        val done = state[b] == true; val going = b in state && !done
+                        Text(s.bookName(b), style = Theme.body().copy(color = when { done || going -> c.ink; else -> c.unwritten }, fontWeight = if (going) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Medium),
+                            maxLines = 1, modifier = Modifier.clickable(role = Role.Button) { if (s.locked(b)) { s.peekBook = b; s.purchaseOpen = true } else { s.pickToRead = false; s.picker = b } }
+                                .drawBehind { if (done) drawLine(c.gilt, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.gilt.toPx()) })
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -244,16 +300,20 @@ private fun DayCell(s: AppState, d: LocalDate, present: Boolean, today: Boolean,
     val c = Theme.c
     Box(
         Modifier.fillMaxSize().drawBehind {
-            if (today) drawRoundRect(c.ink, style = Stroke(Tokens.Stroke.hair.toPx()), cornerRadius = CornerRadius(Tokens.Radius.chip.toPx()))
+            if (today) drawLine(c.gilt, Offset(size.width * 0.3f, size.height - 1f), Offset(size.width * 0.7f, size.height - 1f), Tokens.Stroke.rule.toPx())
         },
         contentAlignment = Alignment.Center,
     ) {
-        if (present) StampMark(s.stamp, c.rubric, Modifier.fillMaxSize(Tokens.Ratio.stampInCell))
-        else Text("${d.dayOfMonth}", style = Theme.small().copy(color = when {
-            future -> c.hair.copy(alpha = Tokens.Alpha.future)
-            Presence.isRest(d) -> c.rubric.copy(alpha = Tokens.Alpha.rest)
-            else -> c.unwritten
-        }), maxLines = 1)
+        // 쓴 날: 숫자 아래 금빛 점 (십자 도장 대신)
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+            Text("${d.dayOfMonth}", style = Theme.small().copy(color = when {
+                present || today -> c.ink
+                future -> c.hair.copy(alpha = Tokens.Alpha.future)
+                Presence.isRest(d) -> c.rubric.copy(alpha = Tokens.Alpha.rest)
+                else -> c.unwritten
+            }, fontWeight = if (today) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Medium), maxLines = 1)
+            Box(Modifier.size(Tokens.Size.plateDot).drawBehind { if (present) drawCircle(c.gilt) })
+        }
     }
 }
 
@@ -330,7 +390,7 @@ private fun MilestoneList(s: AppState, list: List<Milestone>) {
                     .padding(vertical = Tokens.Space.s2),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3),
             ) {
-                Canvas(Modifier.size(Tokens.Size.medal)) { medal(m, day != null, c.leather, c.gilt, c.unwritten.copy(alpha = Tokens.Alpha.medalFaint)) }
+                Text(io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1), style = Theme.caps().copy(color = if (day != null) c.giltText else c.unwritten), maxLines = 1, modifier = Modifier.width(Tokens.Size.romanCol))
                 Column(Modifier.weight(1f)) {
                     Text(milestoneName(ctx, m), style = Theme.label().copy(color = if (day != null) c.ink else c.inkSoft), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(milestoneRule(ctx, m), style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis)

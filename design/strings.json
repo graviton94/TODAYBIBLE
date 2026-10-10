@@ -781,5 +781,11 @@
   "sermon_write_short": {"en": "Write", "ko": "적기"},
   "prayer_go_short": {"en": "Pray", "ko": "드리기"},
   "lifetime_row": {"en": "Open the whole Bible", "ko": "성경 전체를 펼쳐요"},
-  "lifetime_row_more": {"en": "Plans", "ko": "구독 · 평생권"}
+  "lifetime_row_more": {"en": "Plans", "ko": "구독 · 평생권"},
+  "prayer_row_short": {"en": "Lord's Prayer · morning · evening", "ko": "주기도문 · 아침 · 저녁"},
+  "lib_marks_title": {"en": "Bookmarks · highlights", "ko": "책갈피 · 형광펜"},
+  "plan_none_short": {"en": "Choose", "ko": "고르기"},
+  "verse_unit": {"en": "verses", "ko": "절"},
+  "of_total_pct": {"en": "%2$s%% of %1$s", "ko": "%1$s절 중 %2$s%%"},
+  "index_counts": {"en": "done %1$d · writing %2$d", "ko": "다 씀 %1$d · 쓰는 중 %2$d"}
 }
