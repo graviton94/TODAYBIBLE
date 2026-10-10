@@ -105,7 +105,7 @@ fun Root(s: AppState) {
     // 옮겨 쓰는 동안 (키보드가 떠 있으면) 아래 이름표는 숨김
     val typing = WindowInsets.isImeVisible && pager.currentPage == AppState.COPY
 
-    Box(Modifier.fillMaxSize().background(c.paper)) {
+    Box(Modifier.fillMaxSize().background(c.leaf)) {
         Column(Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
             TopBar(s, coachScreen(s, pager.currentPage))
             HorizontalPager(
@@ -225,8 +225,9 @@ private fun coachScreen(s: AppState, page: Int): String {
 @Composable
 private fun TopBar(s: AppState, screen: String) {
     val c = Theme.c
-    Row(Modifier.fillMaxWidth().padding(start = Tokens.Space.s5, end = Tokens.Space.s1), verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(R.string.app_name), style = Theme.brand(s.korean), maxLines = 1, modifier = Modifier.weight(1f))
+    Row(Modifier.fillMaxWidth().background(Theme.c.leaf).padding(start = Tokens.Space.s5, end = Tokens.Space.s1), verticalAlignment = Alignment.CenterVertically) {
+        // 머리글: 오늘 날짜를 작은 대문자 줄로 (하루의 편지의 VENDREDI 9 OCTOBRE 자리)
+        Text(fmtDate(R.string.fmt_date_day, s.today()).uppercase(), style = Theme.caps(), maxLines = 1, modifier = Modifier.weight(1f))
         HelpButton(s, screen)
         val label = stringResource(R.string.settings)
         // 톱니만으로는 알기 어려워서 ‘설정’ 글자도 함께
@@ -278,20 +279,21 @@ private fun NowPlayingBar(s: AppState) {
 private fun PageTabs(current: Int, onSelect: (Int) -> Unit) {
     val c = Theme.c
     val names = listOf(stringResource(R.string.page_today), stringResource(R.string.page_library), stringResource(R.string.page_copy), stringResource(R.string.page_record))
-    Row(Modifier.fillMaxWidth().background(c.paper).navigationBarsPadding().coach("tabs").drawBehind {
+    Row(Modifier.fillMaxWidth().background(c.leaf).navigationBarsPadding().coach("tabs").drawBehind {
         drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx())
     }) {
         names.forEachIndexed { i, n ->
             val on = i == current
             Box(
                 Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Tab) { onSelect(i) }.drawBehind {
-                    if (on) { val w = size.width * 0.32f; drawRect(c.rubric, Offset((size.width - w) / 2, 0f), Size(w, Tokens.Stroke.rule.toPx())) }
+                    // 지금 칸: 글자 아래 짧은 금빛 선 (하루의 편지)
+                    if (on) { val w = Tokens.Size.tabMark.toPx(); drawRect(c.gilt, Offset((size.width - w) / 2, size.height * 0.74f), Size(w, Tokens.Stroke.rule.toPx())) }
                 },
                 contentAlignment = Alignment.Center,
             ) {
                 // 아래 이름표는 네 칸이라 아주 큰 글씨에서도 한 줄로: 크기를 Tokens.Text.tabMax 까지만
                 val st = Theme.label(); val size = if (st.fontSize.value > Tokens.Text.tabMax.value) Tokens.Text.tabMax else st.fontSize
-                Text(n, style = st.copy(color = if (on) c.ink else c.inkSoft, fontSize = size), maxLines = 1, softWrap = false)
+                Text(n, style = Theme.small().copy(color = if (on) c.ink else c.unwritten, fontWeight = if (on) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Medium, fontSize = if (st.fontSize.value > Tokens.Text.tabMax.value) Tokens.Text.tabMax else Theme.small().fontSize), maxLines = 1, softWrap = false)
             }
         }
     }

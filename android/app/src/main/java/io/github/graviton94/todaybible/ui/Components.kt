@@ -64,8 +64,8 @@ fun RunningHead(left: String, right: String, korean: Boolean, modifier: Modifier
 }
 
 /**
- * 버튼: 무광 가죽 + 안쪽 금박 테 (위아래 변은 책등 띠처럼 두 줄). 누르면 가죽이 한 톤 깊어짐.
- * quiet = 바탕 없이 머리카락 테 한 줄. 비활성 = 옅은 바탕 · 흐린 테.
+ * 버튼 (하루의 편지 틀): 채운 버튼은 잉크(어두운 화면은 크림) 한 덩어리, 테 없음. 누르면 한 톤 깊어짐.
+ * quiet = 바탕 없이 밑줄 글자. 비활성 = 옅은 바탕.
  */
 @Composable
 fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = false, enabled: Boolean = true, locked: Boolean = false, onClick: () -> Unit) {
@@ -73,10 +73,8 @@ fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = fal
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
     val fill = when { quiet -> Color.Transparent; !enabled -> c.hair; pressed -> c.leatherDeep; else -> c.leather }
-    val line = when { quiet || !enabled -> c.hair; else -> c.gilt.copy(alpha = Tokens.Alpha.frame) }
     Box(
         modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(fill)
-            .drawBehind { giltFrame(line, bands = !quiet && enabled) }
             .clickable(source, null, enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s3),
         contentAlignment = Alignment.Center,
@@ -85,20 +83,15 @@ fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = fal
         // 평생권 기능: "· 평생권" 글자 대신 작은 금빛 자물쇠 (좁은 버튼에서도 말이 잘리지 않게)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1, Alignment.CenterHorizontally)) {
             if (locked) LockMark(if (quiet) c.giltText else c.gilt, Modifier.size(Tokens.Size.lock))
-            Text(text, style = Theme.label().copy(color = ink, textAlign = TextAlign.Center), maxLines = 2)
+            Text(text, style = (if (quiet) Theme.body().copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline) else Theme.body()).copy(color = ink, textAlign = TextAlign.Center), maxLines = 2)
         }
     }
 }
 
-/** 안쪽 금박 테 (버튼 · 토스트 공통). bands = 위아래 변에 한 줄 더 (책등 띠). */
-fun DrawScope.giltFrame(color: Color, bands: Boolean) {
-    val i = Tokens.Size.frameInset.toPx(); val w = Tokens.Stroke.giltFine.toPx()
-    drawRoundRect(color, Offset(i, i), Size(size.width - 2 * i, size.height - 2 * i), CornerRadius(Tokens.Radius.frame.toPx()), style = Stroke(w))
-    if (bands) {
-        val g = i + Tokens.Size.bandGap.toPx(); val x0 = i + Tokens.Radius.frame.toPx(); val x1 = size.width - x0
-        drawLine(color, Offset(x0, g), Offset(x1, g), w)
-        drawLine(color, Offset(x0, size.height - g), Offset(x1, size.height - g), w)
-    }
+/** 테 (1.1: 장식 띠 없이 가는 선 하나만). 가죽 칸 · 토스트에 남은 자리를 위해 이름은 그대로. */
+fun DrawScope.giltFrame(color: Color, @Suppress("UNUSED_PARAMETER") bands: Boolean) {
+    val w = Tokens.Stroke.hair.toPx()
+    drawRect(color.copy(alpha = color.alpha * 0.6f), Offset(w / 2, w / 2), Size(size.width - w, size.height - w), style = Stroke(w))
 }
 
 /** 하던 일이 있으면 뒤로 가기를 한 번 붙잡아 물어요 (멈추고 나가기 · 들으며 나가기 · 머물기). 화면의 다른 BackHandler 보다 뒤에 두세요. */

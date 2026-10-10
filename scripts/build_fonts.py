@@ -7,6 +7,7 @@
 - Song Myung: 표제 한글 (앱 문자열 + 권 이름)
 - EB Garamond 500 · 600 · 이탤릭 500: KJV 본문 (라틴 전체)
 - Nanum Pen Script: 필사 노트의 내 글씨
+- Noto Serif KR 600: 제목 · Cinzel: 라틴 머리글 · Cormorant Garamond: 큰 숫자 (하루의 편지와 같은 체계)
 - IM Fell English SC: 머리줄 · 장절 표기, UnifrakturMaguntia: 블랙레터 표제 · 장 번호 (라틴만)
 """
 import glob, json, os, sys, urllib.request
@@ -21,6 +22,7 @@ SRC = {
     "EBGaramond[wght].ttf": "ebgaramond/EBGaramond%5Bwght%5D.ttf", "EBGaramond-Italic[wght].ttf": "ebgaramond/EBGaramond-Italic%5Bwght%5D.ttf",
     "IMFeENsc28P.ttf": "imfellenglishsc/IMFeENsc28P.ttf", "UnifrakturMaguntia-Book.ttf": "unifrakturmaguntia/UnifrakturMaguntia-Book.ttf",
     "NanumPenScript-Regular.ttf": "nanumpenscript/NanumPenScript-Regular.ttf",
+    "Cinzel[wght].ttf": "cinzel/Cinzel%5Bwght%5D.ttf", "CormorantGaramond[wght].ttf": "cormorantgaramond/CormorantGaramond%5Bwght%5D.ttf",
 }
 LATIN = "".join(chr(c) for c in range(0x20, 0x7F)) + "‘’“”–—…·¶✠❦✝ΑΩÆæ₩€£¥"
 
@@ -64,6 +66,11 @@ def main():
         "serif_kr_medium.ttf": make("NotoSerifKR[wght].ttf", "serif_kr_medium.ttf", ko, 500),
         "serif_kr_bold.ttf": make("NotoSerifKR[wght].ttf", "serif_kr_bold.ttf", ko, 700),
         "title_kr.ttf": make("SongMyung-Regular.ttf", "title_kr.ttf", titles),
+        # 제목 (하루의 편지와 같은 Noto Serif KR 600)
+        "serif_kr_semibold.ttf": make("NotoSerifKR[wght].ttf", "serif_kr_semibold.ttf", titles, 600),
+        # 머리글 (라틴 대문자) · 큰 숫자
+        "caps.ttf": make("Cinzel[wght].ttf", "caps.ttf", allLatin, 600),
+        "display.ttf": make("CormorantGaramond[wght].ttf", "display.ttf", allLatin, 600),
         "garamond_medium.ttf": make("EBGaramond[wght].ttf", "garamond_medium.ttf", allLatin, 500),
         "garamond_semibold.ttf": make("EBGaramond[wght].ttf", "garamond_semibold.ttf", allLatin, 600),
         "garamond_italic.ttf": make("EBGaramond-Italic[wght].ttf", "garamond_italic.ttf", allLatin, 500),
