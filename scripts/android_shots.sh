@@ -67,9 +67,9 @@ swipe_up;                                                          shot s02_sett
 open --ez tb.planSheet true;                                       shot p01_plan_sheet 4
 open --es tb.plan mark30;                                          shot p02_today_plan 5
 # @scene p03
-open --es tb.cover navy --es tb.owner 김은혜 --es tb.intro C; sleep 7; snap p03_cover_navy_name
+open --es tb.coverPlate noah --es tb.owner 김은혜 --es tb.intro C; sleep 7; snap p03_cover_navy_name
 # @end
-open --es tb.plan none --es tb.cover burgundy --es tb.owner ""
+open --es tb.plan none --es tb.owner ""
 open --ei tb.page 2 --ei tb.copyTab 0;                             shot p04_aloud_mic 3
 open --ei tb.page 2 --ei tb.copyTab 0 --ez tb.voice true; swipe_up; swipe_up; shot p05_aloud_voice 3
 open --ez tb.settings true --es tb.section set_listen;              shot p06_settings_voice 3
