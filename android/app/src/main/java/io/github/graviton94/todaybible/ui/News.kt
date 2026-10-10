@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
@@ -34,7 +35,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextDecoration
-import io.github.graviton94.todaybible.BuildConfig
 import io.github.graviton94.todaybible.MainActivity
 import io.github.graviton94.todaybible.R
 import io.github.graviton94.todaybible.data.Updates
@@ -62,7 +62,7 @@ fun NewsScreen(s: AppState) {
                 }, contentScale = ContentScale.Crop)
                 else Box(Modifier.fillMaxWidth().systemBarsPadding().height(Tokens.Space.s6))
                 Column(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                    Text("NOVA · ${BuildConfig.VERSION_NAME.substringBefore('-')}", style = Theme.caps(), maxLines = 1)
+                    Text("NOVA · ${MainActivity.NEWS}", style = Theme.caps(), maxLines = 1)
                     Text(stringResource(R.string.news_title), style = Theme.title(k, Tokens.Text.display), maxLines = 2)
                     Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3)) {
                         lines.forEachIndexed { i, line ->
@@ -74,10 +74,15 @@ fun NewsScreen(s: AppState) {
                         }
                         Hair()
                     }
-                    Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s4, bottom = Tokens.Space.s5).systemBarsPadding()) {
-                        BookButton(stringResource(R.string.news_ok), Modifier.fillMaxWidth()) { done() }
-                    }
+                    // 아래에 붙은 버튼에 가리지 않게
+                    Box(Modifier.fillMaxWidth().navigationBarsPadding().height(Tokens.Size.touch * 2 + Tokens.Space.s5))
                 }
+            }
+            // 버튼은 늘 아래에 (글이 길어도 바로 누를 수 있게)
+            Column(Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                .background(Brush.verticalGradient(0f to c.leaf.copy(alpha = 0f), 0.3f to c.leaf))
+                .navigationBarsPadding().padding(start = Tokens.Space.s5, end = Tokens.Space.s5, top = Tokens.Space.s5, bottom = Tokens.Space.s4)) {
+                BookButton(stringResource(R.string.news_ok), Modifier.fillMaxWidth()) { done() }
             }
         }
     }
