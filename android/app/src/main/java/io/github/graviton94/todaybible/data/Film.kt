@@ -239,7 +239,7 @@ object Film {
     private fun supports(w: Int, h: Int): Boolean = runCatching {
         MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos.any { ci ->
             ci.isEncoder && ci.supportedTypes.any { it.equals(MediaFormat.MIMETYPE_VIDEO_AVC, true) } &&
-                ci.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).videoCapabilities.isSizeSupported(w, h)
+                ci.getCapabilitiesForType(MediaFormat.MIMETYPE_VIDEO_AVC).videoCapabilities?.isSizeSupported(w, h) == true
         }
     }.getOrDefault(false)
 

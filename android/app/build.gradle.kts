@@ -69,4 +69,6 @@ dependencies {
     implementation("com.android.billingclient:billing-ktx:8.0.0")
     implementation("com.google.android.play:app-update-ktx:2.1.0")
     implementation("com.google.android.play:review-ktx:2.0.2")
+    // Play 라이브러리가 끌어오는 옛 fragment 대신 (registerForActivityResult 에 1.3 이상 필요)
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
 }
