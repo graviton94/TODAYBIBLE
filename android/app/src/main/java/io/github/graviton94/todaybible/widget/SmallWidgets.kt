@@ -89,19 +89,21 @@ class GoalWidget : SmallWidget() {
         val pad = Tokens.Size.widgetPad.toPx()
         val cap = m.measure("CONTINUA", TextStyle(fontFamily = Fonts.caps, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.caps, letterSpacing = Tokens.Tracking.caps.em, color = c.giltText), maxLines = 1)
         drawText(cap, topLeft = Offset(pad, pad))
-        val side = minOf(size.width, size.height) * 0.26f; val tl = Offset(size.width - pad - side, pad + cap.size.height + Tokens.Space.s2.toPx())
+        // 위에서부터 차례로: 머리글 → 큰 숫자 (오른쪽에 고리) → ‘일째 이어 쓰기’ … 맨 아래 ‘오늘 몇 절’
+        val w = (size.width - 2 * pad).toInt()
+        val numSp = minOf(Tokens.Text.numBig.value, (size.height * 0.28f / density / fontScale))
+        val big = m.measure("$run", TextStyle(fontFamily = Fonts.display, fontWeight = FontWeight.SemiBold, fontSize = numSp.sp, color = c.giltText), maxLines = 1)
+        val unit = m.measure(ctx.getString(R.string.widget_streak_unit), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.caps, color = c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w))
+        val today = m.measure(if (goal < 0) ctx.getString(R.string.today_written, n) else ctx.getString(R.string.widget_today, n, goal), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.caps, color = c.inkSoft), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w))
+        val numTop = pad + cap.size.height + Tokens.Space.s1.toPx()
+        drawText(big, topLeft = Offset(pad, numTop))
+        val numH = big.size.height.toFloat()
+        // 고리: 숫자 줄 오른쪽, 숫자 높이에 맞춰
+        val side = numH * 0.7f; val tl = Offset(size.width - pad - side, numTop + (numH - side) / 2f)
         val frac = (n.toFloat() / (if (goal < 0) Goal.LONG * Goal.chapters(goal) else goal)).coerceIn(0f, 1f)
         drawArc(c.hair, 0f, 360f, false, tl, Size(side, side), style = Stroke(Tokens.Stroke.hair.toPx() * 1.4f))
         drawArc(c.gilt, -90f, 360f * frac, false, tl, Size(side, side), style = Stroke(Tokens.Stroke.rule.toPx() * 1.6f, cap = StrokeCap.Round))
-        // 큰 숫자는 위젯 높이에 맞춰 (작은 2×2 에서도 머리글과 겹치지 않게)
-        val numSp = minOf(Tokens.Text.numBig.value, (size.height * 0.3f / density / fontScale))
-        val big = m.measure("$run", TextStyle(fontFamily = Fonts.display, fontWeight = FontWeight.SemiBold, fontSize = numSp.sp, color = c.giltText), maxLines = 1)
-        val w = (size.width - 2 * pad).toInt()
-        val unit = m.measure(ctx.getString(R.string.widget_streak_unit), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.caps, color = c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w))
-        val today = m.measure(if (goal < 0) ctx.getString(R.string.today_written, n) else ctx.getString(R.string.widget_today, n, goal), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.caps, color = c.inkSoft), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w))
+        drawText(unit, topLeft = Offset(pad, numTop + numH * 0.92f))
         drawText(today, topLeft = Offset(pad, size.height - pad - today.size.height))
-        val unitY = size.height - pad - today.size.height - Tokens.Space.s1.toPx() - unit.size.height
-        drawText(unit, topLeft = Offset(pad, unitY))
-        drawText(big, topLeft = Offset(pad, maxOf(pad + cap.size.height, unitY - big.size.height + Tokens.Space.s1.toPx())))
     }
 }
