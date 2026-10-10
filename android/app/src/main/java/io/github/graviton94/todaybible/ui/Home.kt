@@ -102,8 +102,8 @@ fun HomePage(s: AppState) {
         val paused = remember(s.fills.size, cb, cc) { s.pausedChapters(2, cb to cc) }
         if (paused.isNotEmpty()) Column(Modifier.fillMaxWidth()) {
             Text("PAUSA · " + stringResource(R.string.paused_title), style = Theme.caps().copy(color = c.inkSoft), maxLines = 1, modifier = Modifier.padding(bottom = Tokens.Space.s1))
+            Hair()
             paused.forEach { p ->
-                Hair()
                 ListRow(stringResource(R.string.paused_row, s.chapterRef(p.book, p.chapter), p.next), "${p.done} / ${p.total}") { s.open(p.book, p.chapter) }
             }
         }
