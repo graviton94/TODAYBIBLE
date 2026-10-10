@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="keep_notif">%1$s · %2$d / %3$d chapters</string>
+    <string name="keep_notif_left">%1$d more waiting</string>
+    <string name="paused_title">Where you left off</string>
+    <string name="paused_row">%1$s · from v. %2$d</string>
     <string name="keep_title">Download narration</string>
     <string name="keep_lede">Download on Wi-Fi and listen without internet. Downloaded books aren\'t cleaned up automatically. On this phone now: %1$s MB</string>
     <string name="keep_device">You\'re using the phone\'s voice, so there\'s nothing to download. Choose a narrator in Settings › Listening.</string>
@@ -477,7 +481,7 @@
     <string name="marks_title">Highlights</string>
     <string name="marks_none_bm">No bookmarks yet. Tap Bookmark at the top while reading.</string>
     <string name="marks_none_hl">No highlights yet. Tap a verse while reading.</string>
-    <string name="grid_legend">Gold line = finished · short line = started · dot = has an engraving</string>
+    <string name="grid_legend">Gold circle = finished · gold arc = how much is written · dot = has an engraving</string>
     <string name="about_01">Creation and the patriarchs</string>
     <string name="about_02">Out of Egypt and the covenant at Sinai</string>
     <string name="about_03">Offerings and the way of holiness</string>

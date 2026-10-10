@@ -5,6 +5,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.LaunchedEffect
@@ -44,6 +46,10 @@ class MainActivity : ComponentActivity() {
         // 알림 다시 맞추기 (끈 상태면 남은 알림을 지움) · 위젯 새로 그리기 (되살리기 · 업데이트 뒤에도 맞게)
         io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
         s.widgets(); s.warmPlan()
+        // 낭독 미리 받기 (서비스) 상태를 화면 상태로: 받는 중 · 줄 · 끝난 권 한 줄
+        lifecycleScope.launch { io.github.graviton94.todaybible.data.KeepService.running.collect { s.keeping = it } }
+        lifecycleScope.launch { io.github.graviton94.todaybible.data.KeepService.queue.collect { s.keepQueue = it } }
+        lifecycleScope.launch { io.github.graviton94.todaybible.data.KeepService.finished.collect { f -> f?.let { (b, ok) -> s.toast = getString(if (ok) R.string.keep_done else R.string.keep_partial, s.bookName(b)); io.github.graviton94.todaybible.data.KeepService.finished.value = null } } }
         setContent {
             val dark = s.night || when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK, ThemeChoice.CANDLE -> true }
             // 어두운 화면 (장 마침 · 화첩 · 판화 · 장 여는 화면) 위에서는 상태 표시줄 글자도 밝게

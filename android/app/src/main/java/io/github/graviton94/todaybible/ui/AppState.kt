@@ -250,32 +250,16 @@ class AppState(val store: Store) {
     var keepQueue by mutableStateOf<List<Int>>(emptyList())
     var keepWifiOnly by mutableStateOf(store.keepWifiOnly)
     fun flipKeepWifiOnly() { keepWifiOnly = !keepWifiOnly; store.keepWifiOnly = keepWifiOnly }
-    /** 받아 둘 권을 줄에 세워요 (잠긴 권은 평생권 화면으로). 받는 중이 아니면 바로 시작. */
+    /** 받아 둘 권을 줄에 세워요 (잠긴 권은 평생권 화면으로). 받기는 KeepService 가 맡아 앱을 닫아도 이어가요. */
     fun keepNarration(b: Int) {
         if (locked(b)) { peekBook = b; purchaseOpen = true; return }
         if (keeping?.first == b || b in keepQueue) return
         val ctx = store.context
         val cm = ctx.getSystemService(android.net.ConnectivityManager::class.java)
         if (keepWifiOnly && cm?.isActiveNetworkMetered != false) { toast = ctx.getString(io.github.graviton94.todaybible.R.string.keep_wifi); return }
-        keepQueue = keepQueue + b
-        if (keeping == null) keepNext()
+        io.github.graviton94.todaybible.data.KeepService.add(ctx, narrator, b)
     }
-    fun cancelKeep(b: Int) { keepQueue = keepQueue - b }
-    private fun keepNext() {
-        val b = keepQueue.firstOrNull() ?: return
-        keepQueue = keepQueue.drop(1)
-        val ctx = store.context; val ui = android.os.Handler(android.os.Looper.getMainLooper())
-        val voice = narrator; val n = store.book(translation, b).chapterCount
-        keeping = Triple(b, 0, n)
-        Thread {
-            val ok = io.github.graviton94.todaybible.data.Narration.keepBook(ctx, voice, b, n) { done, all -> ui.post { keeping = Triple(b, done, all) } }
-            ui.post {
-                keeping = null
-                // 줄이 남았으면 다음 권, 다 받았으면 한 줄로 알려요
-                if (keepQueue.isNotEmpty()) keepNext() else toast = ctx.getString(if (ok) io.github.graviton94.todaybible.R.string.keep_done else io.github.graviton94.todaybible.R.string.keep_partial, bookName(b))
-            }
-        }.start()
-    }
+    fun cancelKeep(b: Int) { io.github.graviton94.todaybible.data.KeepService.cancel(b) }
 
     /** 기도문: 펼친 기도 · 목록 시트 · 오늘 드린 것. */
     var prayerOpen by mutableStateOf<String?>(null)
@@ -361,10 +345,25 @@ class AppState(val store: Store) {
      * 그 장을 다 채웠으면 다음 장으로.
      */
     fun resumePlace(): Pair<Int, Int> {
-        val (b, c) = store.bookmark(translation)
+        // 펼쳐 보기만 한 장 (판화를 보러 7장으로 …) 이 아니라 실제로 마지막에 쓴 절의 장
+        val (b, c) = lastWritten()?.let { it.book to it.chapter } ?: store.bookmark(translation)
         val fill = store.book(translation, b).fillable(c)
         val done = fill.isNotEmpty() && fill.all { progress.isFilled(translation, io.github.graviton94.todaybible.core.VerseKey(b, c, it)) }
         return if (done) nextChapter(b, c) else b to c
+    }
+
+    /** 이 번역에서 마지막으로 쓴 절 (쓴 시각 순). 없으면 null. */
+    fun lastWritten(): io.github.graviton94.todaybible.core.VerseKey? = fills.filter { it.translation == translation }.maxByOrNull { it.atMillis }?.key
+    /** 쓰다 멈춘 장들: 가장 최근에 쓴 순서로, 다 쓰지 않은 장만 (권, 장, 다음 절, 쓴 절 수, 전체 절 수). */
+    data class Paused(val book: Int, val chapter: Int, val next: Int, val done: Int, val total: Int)
+    fun pausedChapters(limit: Int = 3, except: Pair<Int, Int>? = null): List<Paused> {
+        val seen = LinkedHashSet<Pair<Int, Int>>()
+        fills.filter { it.translation == translation }.sortedByDescending { it.atMillis }.forEach { seen.add(it.key.book to it.key.chapter) }
+        return seen.asSequence().filter { it != except }.mapNotNull { (b, c) ->
+            val t = store.book(translation, b); val fill = t.fillable(c)
+            val done = fill.count { progress.isFilled(translation, io.github.graviton94.todaybible.core.VerseKey(b, c, it)) }
+            if (done >= fill.size) null else Paused(b, c, progress.nextVerse(translation, t, c) ?: fill.first(), done, fill.size)
+        }.take(limit).toList()
     }
 
     fun open(b: Int, ch: Int) {

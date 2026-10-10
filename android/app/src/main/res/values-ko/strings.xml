@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="keep_notif">%1$s · %2$d / %3$d장</string>
+    <string name="keep_notif_left">다음 %1$d권 기다림</string>
+    <string name="paused_title">쓰다 멈춘 곳</string>
+    <string name="paused_row">%1$s · %2$d절부터</string>
     <string name="keep_title">낭독 미리 받기</string>
     <string name="keep_lede">와이파이에서 받아 두면 인터넷 없이 들어요. 받아 둔 권은 저절로 지워지지 않아요. 지금 이 폰에 %1$sMB</string>
     <string name="keep_device">지금은 폰 목소리로 읽어서 받을 것이 없어요. 설정 › 듣기에서 낭독 목소리를 고르면 받을 수 있어요.</string>
@@ -477,7 +481,7 @@
     <string name="marks_title">형광펜</string>
     <string name="marks_none_bm">아직 책갈피가 없어요. 읽다가 위의 ‘책갈피’를 누르세요.</string>
     <string name="marks_none_hl">아직 형광펜이 없어요. 읽다가 절을 누르세요.</string>
-    <string name="grid_legend">금빛 밑줄 = 다 쓴 장 · 짧은 선 = 쓰는 중 · 위의 점 = 판화가 있는 장</string>
+    <string name="grid_legend">금빛 원 = 다 쓴 장 · 금빛 호 = 쓴 만큼 · 위의 점 = 판화가 있는 장</string>
     <string name="about_01">천지 창조와 족장들의 이야기</string>
     <string name="about_02">이집트 탈출과 시내산 언약</string>
     <string name="about_03">제사와 거룩한 삶의 규례</string>

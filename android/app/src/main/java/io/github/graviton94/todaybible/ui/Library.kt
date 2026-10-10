@@ -138,13 +138,16 @@ fun LibraryPage(s: AppState) {
                             Text(if (k) b.ko else b.en, style = Theme.title(k, Tokens.Text.label).copy(color = if (st == null) c.inkSoft else c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                             if (s.premium(b.index) && st?.done != true) PremiumTag()
                             when {
-                                st?.done == true -> Text(stringResource(R.string.lib_done), style = Theme.small().copy(color = c.giltText), maxLines = 1)
-                                st != null -> Text(stringResource(R.string.lib_ch_of, st.doneChapters, b.chapters), style = Theme.small(), maxLines = 1)
+                                st?.done == true -> Text("✓ " + stringResource(R.string.lib_done), style = Theme.small().copy(color = c.giltText, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), maxLines = 1)
+                                st != null -> Text(stringResource(R.string.lib_ch_of, st.doneChapters, b.chapters) + " · ${(st.fraction * 100).toInt().coerceAtLeast(1)}%", style = Theme.small().copy(color = c.ink), maxLines = 1)
                                 else -> Text(stringResource(R.string.lib_chapters, b.chapters), style = Theme.small().copy(color = c.unwritten), maxLines = 1)
                             }
                         }
                         if (aboutId != 0) Text(stringResource(aboutId), style = Theme.small(), maxLines = 2)
-                        if (st != null && !st.done) Box(Modifier.padding(top = Tokens.Space.s1)) { Progress(st.fraction) }
+                        if (st != null && !st.done) {
+                            st.partial?.let { Text(stringResource(R.string.lib_partial, it), style = Theme.small().copy(color = c.giltText), maxLines = 1) }
+                            Box(Modifier.padding(top = Tokens.Space.s1)) { Progress(st.fraction) }
+                        } else if (st?.done == true) Box(Modifier.padding(top = Tokens.Space.s1)) { Progress(1f) }
                     }
                     Hair()
                 }
@@ -225,7 +228,7 @@ fun FoundSheet(s: AppState) {
     }
 }
 
-/** 장 고르기: 다 쓴 장 = 먹, 쓰는 중 = 붉은 테, 판화가 있는 장 = 금빛 점. */
+/** 장 고르기: 다 쓴 장 = 금빛 원, 쓰는 중 = 쓴 만큼 금빛 호, 판화가 있는 장 = 금빛 점. */
 @Composable
 fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
     val c = Theme.c; val t = s.text(b); val p = s.progress
@@ -265,18 +268,22 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
                     row.forEach { ch ->
                         val f = p.chapterFraction(s.translation, t, ch)
                         val plate = s.store.plateFor(b, ch) != null
-                        // 숫자만 (상자 없음): 다 쓴 장은 금빛 밑줄, 쓰는 중은 굵게 + 짧은 선, 판화가 있으면 위에 작은 금빛 점
+                        // 다 쓴 장 = 금빛 원 + 종이색 숫자, 쓰는 중 = 가는 원 + 금빛 호(쓴 만큼), 판화 = 위에 작은 금빛 점
                         Box(
                             Modifier.weight(1f).aspectRatio(1f)
                                 .drawBehind {
-                                    val u = Tokens.Stroke.rule.toPx(); val w = size.width * 0.42f; val y = size.height * 0.78f
-                                    if (f >= 1f) drawLine(c.gilt, Offset((size.width - w) / 2, y), Offset((size.width + w) / 2, y), u)
-                                    else if (f > 0f) drawLine(c.gilt, Offset((size.width - w) / 2, y), Offset((size.width - w) / 2 + w * f, y), u)
-                                    if (plate) { val d = Tokens.Size.plateDot.toPx(); drawCircle(c.gilt, d / 2, Offset(size.width / 2, size.height * 0.16f)) }
+                                    val r = size.minDimension * 0.40f; val ctr = Offset(size.width / 2, size.height / 2)
+                                    val u = Tokens.Stroke.rule.toPx(); val h = Tokens.Stroke.hair.toPx()
+                                    if (f >= 1f) drawCircle(c.gilt, r, ctr)
+                                    else if (f > 0f) {
+                                        drawCircle(c.hair, r, ctr, style = Stroke(h))
+                                        drawArc(c.gilt, -90f, 360f * f, false, Offset(ctr.x - r, ctr.y - r), Size(r * 2, r * 2), style = Stroke(u))
+                                    }
+                                    if (plate) { val d = Tokens.Size.plateDot.toPx(); drawCircle(if (f >= 1f) c.ink else c.gilt, d / 2, Offset(size.width / 2, size.height * 0.04f + d / 2)) }
                                 }
                                 .clickable(role = Role.Button) { onPick(ch) },
                             contentAlignment = Alignment.Center,
-                        ) { Text("$ch", style = Theme.big(Tokens.Text.gridNum).copy(color = when { f >= 1f -> c.giltText; f > 0f -> c.ink; else -> c.inkSoft }), maxLines = 1) }
+                        ) { Text("$ch", style = Theme.big(Tokens.Text.gridNum).copy(color = when { f >= 1f -> c.paper; f > 0f -> c.ink; else -> c.inkSoft }), maxLines = 1) }
                     }
                     repeat(6 - row.size) { Box(Modifier.weight(1f)) }
                 }

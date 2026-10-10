@@ -150,9 +150,14 @@ private fun BookIndex(s: AppState) {
                 androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                     range.forEach { b ->
                         val done = state[b] == true; val going = b in state && !done
-                        Text(s.bookName(b), style = Theme.body().copy(color = when { done || going -> c.ink; else -> c.unwritten }, fontWeight = if (going) androidx.compose.ui.text.font.FontWeight.Bold else androidx.compose.ui.text.font.FontWeight.Medium),
+                        // 다 쓴 권 = 금빛 바탕 + ✓, 쓰는 중 = 금빛 테
+                        Text((if (done) "✓ " else "") + s.bookName(b), style = Theme.body().copy(color = when { done -> c.paper; going -> c.ink; else -> c.unwritten }, fontWeight = if (done || going) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Medium),
                             maxLines = 1, modifier = Modifier.clickable(role = Role.Button) { if (s.locked(b)) { s.peekBook = b; s.purchaseOpen = true } else { s.pickToRead = false; s.picker = b } }
-                                .drawBehind { if (done) drawLine(c.gilt, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.gilt.toPx()) })
+                                .drawBehind {
+                                    val r = CornerRadius(size.height / 2)
+                                    if (done) drawRoundRect(c.gilt, cornerRadius = r)
+                                    else if (going) drawRoundRect(c.gilt, cornerRadius = r, style = androidx.compose.ui.graphics.drawscope.Stroke(Tokens.Stroke.hair.toPx()))
+                                }.padding(horizontal = Tokens.Space.s2, vertical = Tokens.Space.s1))
                     }
                 }
             }

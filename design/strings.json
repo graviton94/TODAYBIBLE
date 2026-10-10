@@ -1,4 +1,8 @@
 {
+  "keep_notif": {"en": "%1$s · %2$d / %3$d chapters", "ko": "%1$s · %2$d / %3$d장"},
+  "keep_notif_left": {"en": "%1$d more waiting", "ko": "다음 %1$d권 기다림"},
+  "paused_title": {"en": "Where you left off", "ko": "쓰다 멈춘 곳"},
+  "paused_row": {"en": "%1$s · from v. %2$d", "ko": "%1$s · %2$d절부터"},
   "keep_title": {"en": "Download narration", "ko": "낭독 미리 받기"},
   "keep_lede": {"en": "Download on Wi-Fi and listen without internet. Downloaded books aren't cleaned up automatically. On this phone now: %1$s MB", "ko": "와이파이에서 받아 두면 인터넷 없이 들어요. 받아 둔 권은 저절로 지워지지 않아요. 지금 이 폰에 %1$sMB"},
   "keep_device": {"en": "You're using the phone's voice, so there's nothing to download. Choose a narrator in Settings › Listening.", "ko": "지금은 폰 목소리로 읽어서 받을 것이 없어요. 설정 › 듣기에서 낭독 목소리를 고르면 받을 수 있어요."},
@@ -475,7 +479,7 @@
   "marks_title": {"en": "Highlights", "ko": "형광펜"},
   "marks_none_bm": {"en": "No bookmarks yet. Tap Bookmark at the top while reading.", "ko": "아직 책갈피가 없어요. 읽다가 위의 ‘책갈피’를 누르세요."},
   "marks_none_hl": {"en": "No highlights yet. Tap a verse while reading.", "ko": "아직 형광펜이 없어요. 읽다가 절을 누르세요."},
-  "grid_legend": {"en": "Gold line = finished · short line = started · dot = has an engraving", "ko": "금빛 밑줄 = 다 쓴 장 · 짧은 선 = 쓰는 중 · 위의 점 = 판화가 있는 장"},
+  "grid_legend": {"en": "Gold circle = finished · gold arc = how much is written · dot = has an engraving", "ko": "금빛 원 = 다 쓴 장 · 금빛 호 = 쓴 만큼 · 위의 점 = 판화가 있는 장"},
   "about_01": {"en": "Creation and the patriarchs", "ko": "천지 창조와 족장들의 이야기"},
   "about_02": {"en": "Out of Egypt and the covenant at Sinai", "ko": "이집트 탈출과 시내산 언약"},
   "about_03": {"en": "Offerings and the way of holiness", "ko": "제사와 거룩한 삶의 규례"},

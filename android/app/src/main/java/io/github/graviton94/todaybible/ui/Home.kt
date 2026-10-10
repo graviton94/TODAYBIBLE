@@ -98,6 +98,15 @@ fun HomePage(s: AppState) {
             BookButton(if (v != null) stringResource(R.string.continue_at_verse, v) else stringResource(R.string.continue_now), Modifier.fillMaxWidth().coach("today_go")) { s.open(cb, cc) }
             BookButton(stringResource(R.string.read_short), Modifier.fillMaxWidth().coach("today_read"), quiet = true) { s.read(cb, cc) }
         }
+        // 쓰다 멈춘 곳: 다른 장 · 다른 권에서 쓰다 만 자리 (최근 순, 둘까지)
+        val paused = remember(s.fills.size, cb, cc) { s.pausedChapters(2, cb to cc) }
+        if (paused.isNotEmpty()) Column(Modifier.fillMaxWidth()) {
+            Text("PAUSA · " + stringResource(R.string.paused_title), style = Theme.caps().copy(color = c.inkSoft), maxLines = 1, modifier = Modifier.padding(bottom = Tokens.Space.s1))
+            paused.forEach { p ->
+                Hair()
+                ListRow(stringResource(R.string.paused_row, s.chapterRef(p.book, p.chapter), p.next), "${p.done} / ${p.total}") { s.open(p.book, p.chapter) }
+            }
+        }
         // 아래: 오늘 할 수 있는 일들을 같은 줄 모양으로
         Column(Modifier.fillMaxWidth()) {
             Hair()
