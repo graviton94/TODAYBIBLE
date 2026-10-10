@@ -137,6 +137,7 @@ object Tokens {
         val caps = 10.5.sp
         val numBig = 44.sp
         val streak = 30.sp
+        val gridNum = 22.sp
     }
     /** 표지 가죽 (나의 성경 꾸미기). */
     object Covers {
@@ -210,6 +211,7 @@ object Tokens {
         const val wideVerse = 1.15f
         const val thumb = 0.89f
         const val openerArt = 0.78f
+        const val purchaseArt = 1.6f
     }
     object Alpha {
         const val aloudAhead = 0.62f

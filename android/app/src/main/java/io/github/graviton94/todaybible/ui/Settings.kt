@@ -64,11 +64,13 @@ fun SettingsPage(s: AppState) {
             Box(Modifier.size(Tokens.Size.touch).semantics { contentDescription = backLabel }.clickable(role = Role.Button) { s.settingsOpen = false }, contentAlignment = Alignment.Center) {
                 BackArrow(Modifier.size(Tokens.Size.icon))
             }
-            Text(stringResource(R.string.settings), style = Theme.title(k), maxLines = 1)
         }
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+        Column(Modifier.padding(horizontal = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+            Text("OPTIONES", style = Theme.caps(), maxLines = 1)
+            Text(stringResource(R.string.settings), style = Theme.title(k, Tokens.Text.display), maxLines = 1)
+        }
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             var openSec by remember { mutableStateOf<String?>((s.debugSection ?: "set_display").also { if (!BuildConfig.DEV_TOOLS) s.debugSection = null }) }
-            LifetimeCard(s)
             Section(stringResource(R.string.set_display), listOf(stringResource(when (s.language) { "ko" -> R.string.lang_ko_short; "en" -> R.string.lang_en_short; else -> R.string.lang_system }), stringResource(listOf(R.string.theme_system, R.string.theme_light, R.string.theme_dark, R.string.theme_candle)[s.theme.ordinal])).joinToString(" · "), openSec == "set_display") { openSec = if (openSec == "set_display") null else "set_display" }
             if (openSec == "set_display") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
             // 언어: 화면 글 · 성경 번역 · 낭독 목소리를 한 번에 (한국어 = 개역한글 · 한국어 낭독, English = KJV · 영어 낭독)
@@ -237,6 +239,8 @@ fun SettingsPage(s: AppState) {
             }
             Group(stringResource(R.string.feedback)) { Feedback(s) }
             }
+            // 평생권은 맨 아래 한 칸 (설정을 열 때마다 먼저 보이지 않게)
+            LifetimeCard(s)
             // 맨 아래: 여느 앱처럼 앱 소개 · 개인정보 처리방침 · 출처와 라이선스 · 문의, 판 번호
             Footer(s)
         }
@@ -263,13 +267,14 @@ private val REMINDER_HOURS = listOf(5, 6, 7, 8, 9, 12, 18, 20, 21, 22)
 @Composable
 private fun Section(title: String, summary: String, open: Boolean, onClick: () -> Unit) {
     val c = Theme.c
-    Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.rowTall).clip(RoundedCornerShape(Tokens.Radius.card)).background(if (open) c.paper else c.leaf)
-        .clickable(role = Role.Button, onClick = onClick).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically) {
+    // 상자 없이 줄 하나: 이름 · 요약 · 아래 가는 선 (열린 칸은 금빛 선)
+    Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.rowTall).drawBehind { drawLine(if (open) c.gilt else c.hair, Offset(0f, size.height), Offset(size.width, size.height), (if (open) Tokens.Stroke.rule else Tokens.Stroke.hair).toPx()) }
+        .clickable(role = Role.Button, onClick = onClick).padding(vertical = Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text(title, style = Theme.label().copy(color = if (open) c.rubric else c.ink), maxLines = 1)
+            Text(title, style = Theme.title(true, Tokens.Text.label), maxLines = 1)
             Text(summary, style = Theme.small(), maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
-        Text(if (open) "⌃" else "›", style = Theme.title(false).copy(color = c.inkSoft))
+        Text(if (open) "−" else "+", style = Theme.body().copy(color = c.inkSoft))
     }
 }
 

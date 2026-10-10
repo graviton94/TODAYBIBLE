@@ -229,7 +229,8 @@ fun FoundSheet(s: AppState) {
 fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
     val c = Theme.c; val t = s.text(b); val p = s.progress
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-        Text(s.bookName(b), style = Theme.title(s.korean))
+        Text(io.github.graviton94.todaybible.core.Latin.book(b), style = Theme.caps(), maxLines = 1)
+        Text(s.bookName(b), style = Theme.title(s.korean, Tokens.Text.display))
         Text(stringResource(R.string.choose_chapter), style = Theme.small())
         Text(stringResource(R.string.grid_legend), style = Theme.small().copy(color = c.inkSoft))
         if (p.bookDone(s.translation, t)) BookButton(stringResource(R.string.my_bible_pdf), Modifier.fillMaxWidth(), locked = s.premiumOn, quiet = true) { s.requestPdf(b) }
@@ -263,16 +264,18 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
                     row.forEach { ch ->
                         val f = p.chapterFraction(s.translation, t, ch)
                         val plate = s.store.plateFor(b, ch) != null
+                        // 숫자만 (상자 없음): 다 쓴 장은 금빛 밑줄, 쓰는 중은 굵게 + 짧은 선, 판화가 있으면 위에 작은 금빛 점
                         Box(
-                            Modifier.weight(1f).aspectRatio(1f).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (f >= 1f) c.leather else c.paper)
+                            Modifier.weight(1f).aspectRatio(1f)
                                 .drawBehind {
-                                    if (f >= 1f) giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = false)
-                                    if (f in 0.0001f..0.9999f) drawRoundRect(c.rubric, style = Stroke(Tokens.Stroke.rule.toPx()), cornerRadius = CornerRadius(Tokens.Radius.chip.toPx()))
-                                    if (plate) { val d = Tokens.Size.plateDot.toPx(); drawCircle(c.gilt, d / 2, Offset(size.width - d - Tokens.Space.s1.toPx(), d + Tokens.Space.s1.toPx())) }
+                                    val u = Tokens.Stroke.rule.toPx(); val w = size.width * 0.42f; val y = size.height * 0.78f
+                                    if (f >= 1f) drawLine(c.gilt, Offset((size.width - w) / 2, y), Offset((size.width + w) / 2, y), u)
+                                    else if (f > 0f) drawLine(c.gilt, Offset((size.width - w) / 2, y), Offset((size.width - w) / 2 + w * f, y), u)
+                                    if (plate) { val d = Tokens.Size.plateDot.toPx(); drawCircle(c.gilt, d / 2, Offset(size.width / 2, size.height * 0.16f)) }
                                 }
                                 .clickable(role = Role.Button) { onPick(ch) },
                             contentAlignment = Alignment.Center,
-                        ) { Text("$ch", style = if (f >= 1f) Theme.number().copy(fontSize = Tokens.Text.gridInitial, color = c.gilt) else Theme.label()) }
+                        ) { Text("$ch", style = Theme.big(Tokens.Text.gridNum).copy(color = when { f >= 1f -> c.giltText; f > 0f -> c.ink; else -> c.inkSoft }), maxLines = 1) }
                     }
                     repeat(6 - row.size) { Box(Modifier.weight(1f)) }
                 }

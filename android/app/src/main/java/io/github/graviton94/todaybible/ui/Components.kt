@@ -172,7 +172,7 @@ fun UnderlineTabs(items: List<String>, selected: Int, modifier: Modifier = Modif
             Box(
                 Modifier.weight(1f).heightIn(min = Tokens.Size.tab).clickable(role = Role.Tab) { onSelect(i) }.drawBehind {
                     val h = if (on) Tokens.Stroke.rule.toPx() else Tokens.Stroke.hair.toPx()
-                    drawRect(if (on) c.rubric else c.hair, Offset(0f, size.height - h), androidx.compose.ui.geometry.Size(size.width, h))
+                    drawRect(if (on) c.gilt else c.hair, Offset(0f, size.height - h), androidx.compose.ui.geometry.Size(size.width, h))
                 },
                 contentAlignment = Alignment.Center,
             ) { Text(s, style = Theme.label().copy(color = if (on) c.ink else c.inkSoft, textAlign = TextAlign.Center), maxLines = 2, modifier = Modifier.padding(horizontal = Tokens.Space.s1)) }
@@ -264,20 +264,18 @@ fun LifetimeCard(s: AppState, modifier: Modifier = Modifier) {
     if (s.lifetime.owned) return
     val life = s.lifetime
     val c = Theme.c
-    Column(modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leather).drawBehind { giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = true) }
-        .clickable(role = Role.Button) { s.purchaseOpen = true }.padding(Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            LockMark(c.gilt, Modifier.size(Tokens.Size.lock))
-            Text(stringResource(R.string.lifetime), style = Theme.title(s.korean).copy(color = c.gilt), maxLines = 1)
-        }
-        Text(stringResource(R.string.lifetime_card_line), style = Theme.small().copy(color = c.leatherInk))
+    // 상자 없이: 라틴 머리글 · 제목 · 한 줄 · 밑줄 글자 (하루의 편지 틀)
+    Column(modifier.fillMaxWidth().clickable(role = Role.Button) { s.purchaseOpen = true }.padding(vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Text("BIBLIA TOTA", style = Theme.caps(), maxLines = 1)
+        Text(stringResource(R.string.lifetime), style = Theme.title(s.korean), maxLines = 1)
+        Text(stringResource(R.string.lifetime_card_line), style = Theme.small())
         // 구독 중이면 할인된 평생권, 아니면 월 구독 가격부터 (부담이 적은 쪽을 먼저)
         val go = when {
             life.subscribed && life.lifetimePrice != null -> stringResource(R.string.lifetime_card_sub, life.lifetimePrice!!)
             life.monthlyPrice != null -> stringResource(R.string.lifetime_card_from, life.monthlyPrice!!)
             else -> stringResource(R.string.lifetime_card_go, life.price ?: stringResource(R.string.lifetime_price_hint))
         }
-        Text(go, style = Theme.label().copy(color = c.leatherInk), maxLines = 2)
+        Text(go, style = Theme.body().copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline), maxLines = 2)
     }
 }
 

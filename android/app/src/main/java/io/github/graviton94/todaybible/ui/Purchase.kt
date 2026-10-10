@@ -66,8 +66,11 @@ fun PurchasePage(s: AppState) {
         ) {
             val peek = s.peekBook
             if (peek != null) Peek(s, peek) else {
-                Cover(Modifier.width(Tokens.Size.coverW))
-                Text(stringResource(R.string.lifetime_head), style = Theme.title(k).copy(textAlign = TextAlign.Center))
+                // 판화 한 점 (빛이 있으라) 위에 제목 (하루의 편지 C4)
+                val img = rememberPlate("creation")
+                if (img != null) androidx.compose.foundation.Image(img, null, Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.purchaseArt), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+                Text("BIBLIA TOTA", style = Theme.caps(), maxLines = 1)
+                Text(stringResource(R.string.lifetime_head), style = Theme.title(k, Tokens.Text.display).copy(textAlign = TextAlign.Center))
             }
             when {
                 life.owned -> Text(stringResource(R.string.owned), style = Theme.label().copy(color = c.giltText))
@@ -111,16 +114,16 @@ fun PurchasePage(s: AppState) {
 @Composable
 private fun PlanCard(modifier: Modifier, name: String, price: String, was: String?, note: String, primary: Boolean, enabled: Boolean = true, onClick: () -> Unit) {
     val c = Theme.c
-    val bg = if (primary) c.leather else c.paper
+    val bg = if (primary) c.leather else androidx.compose.ui.graphics.Color.Transparent
     val fg = if (primary) c.leatherInk else c.ink
-    Column(modifier.fillMaxHeight().clip(RoundedCornerShape(Tokens.Radius.card)).background(bg)
-        .drawBehind { giltFrame(if (primary) c.gilt.copy(alpha = Tokens.Alpha.frame) else c.hair, bands = primary) }
+    Column(modifier.fillMaxHeight().background(bg)
+        .drawBehind { if (!primary) drawRect(c.hair, style = androidx.compose.ui.graphics.drawscope.Stroke(Tokens.Stroke.hair.toPx())) }
         .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(Tokens.Space.s4),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-        Text(name, style = Theme.small().copy(color = if (primary) c.gilt else c.rubric, textAlign = TextAlign.Center), maxLines = 1)
+        Text(name, style = Theme.small().copy(color = if (primary) c.leatherInk.copy(alpha = 0.7f) else c.inkSoft, textAlign = TextAlign.Center), maxLines = 1)
         was?.let { Text(it, style = Theme.small().copy(color = fg.copy(alpha = Tokens.Alpha.faint), textDecoration = androidx.compose.ui.text.style.TextDecoration.LineThrough, textAlign = TextAlign.Center), maxLines = 1) }
         // ‘월 ₩2,900’ 이 두 줄로 갈라지지 않게: 한 줄로 두고 넘치면 글씨를 조금씩 줄여요
-        val base = Theme.title(true).copy(color = fg, textAlign = TextAlign.Center)
+        val base = Theme.big(Tokens.Text.title).copy(color = fg, textAlign = TextAlign.Center)
         val size = androidx.compose.runtime.remember(price) { androidx.compose.runtime.mutableFloatStateOf(1f) }
         Text(price.replace(' ', '\u00A0'), style = base.copy(fontSize = base.fontSize * size.floatValue), maxLines = 1, softWrap = false,
             onTextLayout = { if (it.didOverflowWidth && size.floatValue > 0.6f) size.floatValue *= 0.9f })
