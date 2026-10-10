@@ -481,7 +481,7 @@
     <string name="marks_title">Highlights</string>
     <string name="marks_none_bm">No bookmarks yet. Tap Bookmark at the top while reading.</string>
     <string name="marks_none_hl">No highlights yet. Tap a verse while reading.</string>
-    <string name="grid_legend">Gold ring = finished · gold arc = how much is written · mark below = has an engraving</string>
+    <string name="grid_legend">Gold ring = finished · gold arc = how much is written</string>
     <string name="about_01">Creation and the patriarchs</string>
     <string name="about_02">Out of Egypt and the covenant at Sinai</string>
     <string name="about_03">Offerings and the way of holiness</string>

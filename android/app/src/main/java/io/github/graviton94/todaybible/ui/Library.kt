@@ -228,7 +228,7 @@ fun FoundSheet(s: AppState) {
     }
 }
 
-/** 장 고르기: 다 쓴 장 = 금빛 원, 쓰는 중 = 쓴 만큼 금빛 호, 판화가 있는 장 = 금빛 점. */
+/** 장 고르기: 다 쓴 장 = 금빛 테, 쓰는 중 = 쓴 만큼 금빛 호. */
 @Composable
 fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
     val c = Theme.c; val t = s.text(b); val p = s.progress
@@ -267,27 +267,22 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                     row.forEach { ch ->
                         val f = p.chapterFraction(s.translation, t, ch)
-                        val plate = s.store.plateFor(b, ch) != null
-                        // 다 쓴 장 = 옅은 금빛 바탕 + 금빛 테, 쓰는 중 = 가는 테 위에 쓴 만큼 금빛 호, 판화 = 숫자 아래 작은 금빛 마름모
+                        // 다 쓴 장 = 옅은 금빛 바탕 + 금빛 테, 쓰는 중 = 가는 테 위에 쓴 만큼 금빛 호
                         Box(
                             Modifier.weight(1f).aspectRatio(1f)
                                 .drawBehind {
-                                    val r = size.minDimension * 0.33f; val ctr = Offset(size.width / 2, size.height * 0.44f)
+                                    val r = size.minDimension * 0.33f; val ctr = Offset(size.width / 2, size.height / 2)
                                     val g = Tokens.Stroke.gilt.toPx(); val h = Tokens.Stroke.hair.toPx()
                                     if (f >= 1f) { drawCircle(c.gilt.copy(alpha = 0.14f), r, ctr); drawCircle(c.gilt, r, ctr, style = Stroke(g)) }
                                     else if (f > 0f) {
                                         drawCircle(c.hair, r, ctr, style = Stroke(h))
                                         drawArc(c.gilt, -90f, 360f * f, false, Offset(ctr.x - r, ctr.y - r), Size(r * 2, r * 2), style = Stroke(g, cap = androidx.compose.ui.graphics.StrokeCap.Round))
                                     }
-                                    if (plate) {
-                                        val d = Tokens.Size.plateDot.toPx() * 0.6f; val y = ctr.y + r + (size.height - ctr.y - r) / 2
-                                        drawPath(androidx.compose.ui.graphics.Path().apply { moveTo(ctr.x, y - d); lineTo(ctr.x + d, y); lineTo(ctr.x, y + d); lineTo(ctr.x - d, y); close() }, c.gilt)
-                                    }
                                 }
                                 .clickable(role = Role.Button) { onPick(ch) },
                             contentAlignment = Alignment.TopCenter,
                         ) {
-                            Box(Modifier.fillMaxWidth().fillMaxHeight(0.88f), contentAlignment = Alignment.Center) {
+                            Box(Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {
                                 Text("$ch", style = Theme.big(Tokens.Text.gridNum).copy(color = when { f >= 1f -> c.giltText; f > 0f -> c.ink; else -> c.inkSoft }), maxLines = 1)
                             }
                         }
