@@ -112,10 +112,13 @@ class Store(val context: Context) {
     var finishedCount: Int
         get() = prefs.getInt("finished_count", 0)
         set(v) = prefs.edit().putInt("finished_count", v).apply()
-    /** 별점을 부탁한 적이 있는지 (한 번만). */
-    var reviewAsked: Boolean
-        get() = prefs.getBoolean("review_asked", false)
-        set(v) = prefs.edit().putBoolean("review_asked", v).apply()
+    /** 별점 창을 띄운 횟수 · 마지막 날 (가끔만: 30일 간격, 모두 세 번까지). */
+    var reviewCount: Int
+        get() = prefs.getInt("review_count", 0)
+        set(v) = prefs.edit().putInt("review_count", v).apply()
+    var reviewDay: Long
+        get() = prefs.getLong("review_day", -1)
+        set(v) = prefs.edit().putLong("review_day", v).apply()
     var cover: String
         get() = prefs.getString("cover", "burgundy")!!
         set(v) = prefs.edit().putString("cover", v).apply()

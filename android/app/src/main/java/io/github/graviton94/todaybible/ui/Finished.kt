@@ -71,12 +71,14 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
     val plate = s.store.plateFor(book, chapter)
     val shown = remember(book, chapter) { Animatable(0f) }
     LaunchedEffect(book, chapter) { shown.animateTo(1f, tween(Tokens.Motion.veilMs, easing = FastOutSlowInEasing)) }
-    // 세 번째 장을 마친 순간 한 번만: Play 의 별점 창 (보일지 · 몇 번까지는 Play 가 정해요)
+    // 장을 마친 좋은 순간에 가끔: Play 공식 별점 창만 바로 (앞에 ‘마음에 드세요?’ 같은 물음 없이 — Play 정책).
+    // 세 장을 마친 뒤부터, 30일에 한 번, 모두 세 번까지. 실제로 보일지는 Play 가 정해요
     val act = androidx.compose.ui.platform.LocalContext.current as? android.app.Activity
     LaunchedEffect(book, chapter) {
-        if (act == null || s.store.reviewAsked || s.store.finishedCount < 3 || io.github.graviton94.todaybible.BuildConfig.DEV_TOOLS) return@LaunchedEffect
+        val st = s.store; val today = s.today().toEpochDay()
+        if (act == null || st.finishedCount < 3 || st.reviewCount >= 3 || (st.reviewDay >= 0 && today - st.reviewDay < 30) || io.github.graviton94.todaybible.BuildConfig.DEV_TOOLS) return@LaunchedEffect
         kotlinx.coroutines.delay(Tokens.Motion.veilMs.toLong() + 1200)
-        s.store.reviewAsked = true
+        st.reviewCount = st.reviewCount + 1; st.reviewDay = today
         runCatching {
             val rm = com.google.android.play.core.review.ReviewManagerFactory.create(act)
             rm.requestReviewFlow().addOnSuccessListener { info -> rm.launchReviewFlow(act, info) }

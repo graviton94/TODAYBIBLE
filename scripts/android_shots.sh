@@ -125,6 +125,15 @@ F=/sdcard/Android/data/$P/files/film
 for i in $(seq 1 90); do adb shell ls $F/done >/dev/null 2>&1 && break; sleep 2; done
 mkdir -p "$OUT/film"; adb pull $F/. "$OUT/film/" >/dev/null 2>&1; rm -f "$OUT/film/done"; ls "$OUT/film"
 # @end
+# @scene mn
+# 듣기 미디어 알림: 알림창 (펼친 모습) · 앱 안 듣는 중 띠 · 멈춤 뒤
+open --ez tb.seed true --es tb.tr KRV --es tb.prayerPlay morning --ei tb.page 0; sleep 6
+adb shell cmd statusbar expand-notifications; sleep 3; snap mn1_media_notification
+adb shell cmd statusbar collapse; sleep 1; snap mn2_now_playing
+adb shell input keyevent 127; sleep 2; snap mn3_paused_bar
+adb shell cmd statusbar expand-notifications; sleep 3; snap mn4_paused_notification
+adb shell cmd statusbar collapse
+# @end
 # @scene cards
 open --ez tb.cardShots true
 C=/sdcard/Android/data/$P/files/cards

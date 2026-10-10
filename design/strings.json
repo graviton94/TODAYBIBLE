@@ -1,4 +1,9 @@
 {
+  "listen_verse": {"en": "Verse %1$d", "ko": "%1$d절"},
+  "listen_prev_verse": {"en": "Previous verse", "ko": "이전 절"},
+  "listen_next_verse": {"en": "Next verse", "ko": "다음 절"},
+  "listen_pause": {"en": "Pause", "ko": "멈춤"},
+  "listen_resume": {"en": "Resume", "ko": "이어 듣기"},
   "film_title": {"en": "%1$s %2$d in my voice (video)", "ko": "%1$s %2$d장 내 목소리 영상"},
   "voice_audio_title": {"en": "%1$s %2$d in my voice", "ko": "%1$s %2$d장 내 목소리"},
   "film_gather": {"en": "Gathering %1$d recorded verses", "ko": "녹음한 절 %1$d개 모으기"},

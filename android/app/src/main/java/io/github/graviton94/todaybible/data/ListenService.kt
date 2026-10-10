@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
  * 듣기 (다1): 낭독 목소리로 한 장을 이어 들어요. 화면이 꺼져도 계속 (알림에서 멈춤).
  * 장이 끝나면 같은 권의 다음 장으로. 듣기만 한 절은 채우지 않아요 (필사는 내가 읽어야).
  * 낭독 음원(M5 · F5)을 장마다 받아 쓰고, 받을 수 없으면 폰 목소리로 대신.
+ * 1.2: 미디어 세션 · 미디어 알림 — 알림창 · 잠금 화면 · 이어폰 버튼에서 이전 절 · 멈춤/이어 듣기 · 다음 절. 그 장의 판화가 앨범 그림으로.
  */
 class ListenService : Service() {
     data class Now(val book: Int, val chapter: Int, val verse: Int, val playing: Boolean)
@@ -50,6 +51,8 @@ class ListenService : Service() {
             if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i) else ctx.startService(i)
         }
         fun stop(ctx: Context) { ctx.startService(Intent(ctx, ListenService::class.java).setAction("stop")) }
+        /** 알림 · 화면의 멈춤 / 이어 듣기 / 이전 절 / 다음 절. */
+        fun control(ctx: Context, action: String) { if (_now.value != null) ctx.startService(Intent(ctx, ListenService::class.java).setAction(action)) }
 
         /** 잠들기 타이머: 0 끔 · TIMER_CHAPTER 이 장 끝까지 · 그 밖은 분. */
         const val TIMER_CHAPTER = -1
@@ -77,6 +80,13 @@ class ListenService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (intent?.action == "stop") { finish(); return START_NOT_STICKY }
+        when (intent?.action) {
+            "pause" -> { pause(); return START_NOT_STICKY }
+            "play" -> { resume(); return START_NOT_STICKY }
+            "toggle" -> { if (paused) resume() else pause(); return START_NOT_STICKY }
+            "next" -> { skip(+1); return START_NOT_STICKY }
+            "prev" -> { skip(-1); return START_NOT_STICKY }
+        }
         if (intent?.action == "timer") {
             val m = intent.getIntExtra("m", 0); _timer.value = m
             stopAt = if (m > 0) System.currentTimeMillis() + m * 60_000L else 0L
@@ -94,6 +104,7 @@ class ListenService : Service() {
             q.toList().chunked(4).forEach { queue.addLast(it.toIntArray()) }
             queue.removeFirstOrNull()?.let { book = it[0]; chapter = it[1]; verse = it[2]; to = it[3] }
         }
+        paused = false
         foreground()
         if (wake == null) wake = getSystemService(android.os.PowerManager::class.java)?.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "harubible:listen")?.apply { setReferenceCounted(false); acquire(3 * 60 * 60 * 1000L) }
         if (wifi == null) wifi = runCatching { applicationContext.getSystemService(android.net.wifi.WifiManager::class.java)?.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "harubible:listen")?.apply { setReferenceCounted(false); acquire() } }.getOrNull()
@@ -104,16 +115,119 @@ class ListenService : Service() {
 
     private val store by lazy { Store(this) }
     override fun attachBaseContext(base: Context) { super.attachBaseContext(io.github.graviton94.todaybible.ui.Lang.wrap(base)) }
+    // ── 미디어 세션 · 알림 ──
+    private var session: android.media.session.MediaSession? = null
+    private var paused = false
+    /** 멈춘 자리에서 이어 갈 일: 낭독 음원이 멈춘 채면 그대로 다시 틀고, 아니면 그 절을 처음부터. */
+    private var resumeStep: (() -> Unit)? = null
+    private var art: android.graphics.Bitmap? = null; private var artKey = ""
+    private var started = false
+
+    private fun chapterName(): String = Canon.books[book].let { if (store.translation == io.github.graviton94.todaybible.core.Translation.KRV) it.ko else it.en }
+
+    /** 그 장의 판화 (없으면 표지 판화 · 빛이 있으라) 를 먹빛 정사각으로: 알림 · 잠금 화면 앨범 그림. */
+    private fun artwork(): android.graphics.Bitmap? {
+        val id = store.plateFor(book, chapter)?.id ?: store.coverPlate.takeIf { it.isNotEmpty() } ?: "creation"
+        if (id == artKey) return art
+        artKey = id
+        art = runCatching {
+            val src = assets.open("plates/$id.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) }!!
+            val side = minOf(src.width, src.height); val out = android.graphics.Bitmap.createBitmap(512, 512, android.graphics.Bitmap.Config.ARGB_8888)
+            val sepia = android.graphics.ColorMatrix(floatArrayOf(0.30f, 0.59f, 0.11f, 0f, 0f, 0.28f, 0.55f, 0.10f, 0f, 0f, 0.24f, 0.47f, 0.09f, 0f, 0f, 0f, 0f, 0f, 1f, 0f))
+            android.graphics.Canvas(out).drawBitmap(src, android.graphics.Rect((src.width - side) / 2, ((src.height - side) * 0.3f).toInt(), (src.width + side) / 2, ((src.height - side) * 0.3f).toInt() + side),
+                android.graphics.Rect(0, 0, 512, 512), android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG).apply { colorFilter = android.graphics.ColorMatrixColorFilter(sepia) })
+            out
+        }.getOrNull()
+        return art
+    }
+
+    private fun ensureSession(): android.media.session.MediaSession = session ?: android.media.session.MediaSession(this, "harubible.listen").apply {
+        setCallback(object : android.media.session.MediaSession.Callback() {
+            override fun onPlay() { resume() }
+            override fun onPause() { pause() }
+            override fun onSkipToNext() { skip(+1) }
+            override fun onSkipToPrevious() { skip(-1) }
+            override fun onStop() { finish() }
+        })
+        setSessionActivity(PendingIntent.getActivity(this@ListenService, 5, Intent(this@ListenService, MainActivity::class.java).putExtra("listening", true).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
+        isActive = true
+        session = this
+    }
+
+    private fun action(icon: Int, label: Int, act: String, code: Int) = Notification.Action.Builder(android.graphics.drawable.Icon.createWithResource(this, icon), getString(label),
+        PendingIntent.getService(this, code, Intent(this, ListenService::class.java).setAction(act), PendingIntent.FLAG_IMMUTABLE)).build()
+
+    /** 알림 · 잠금 화면 · 세션을 지금 장 · 절 · 멈춤 상태로. */
     private fun foreground() {
         val nm = getSystemService(NotificationManager::class.java)
-        if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, getString(R.string.listen_channel), NotificationManager.IMPORTANCE_LOW))
+        if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, getString(R.string.listen_channel), NotificationManager.IMPORTANCE_LOW).apply { lockscreenVisibility = Notification.VISIBILITY_PUBLIC })
+        val ses = ensureSession()
+        val title = getString(R.string.ref_chapter, chapterName(), chapter)
+        val line = runCatching { Markup.plain(store.book(store.translation, book).verse(chapter, verse)) }.getOrDefault("")
+        val sub = getString(R.string.listen_verse, verse) + if (line.isNotEmpty()) " · $line" else ""
+        val pic = artwork()
+        ses.setMetadata(android.media.MediaMetadata.Builder()
+            .putString(android.media.MediaMetadata.METADATA_KEY_TITLE, title)
+            .putString(android.media.MediaMetadata.METADATA_KEY_ARTIST, sub)
+            .putString(android.media.MediaMetadata.METADATA_KEY_ALBUM, getString(R.string.app_name))
+            .apply { pic?.let { putBitmap(android.media.MediaMetadata.METADATA_KEY_ALBUM_ART, it); putBitmap(android.media.MediaMetadata.METADATA_KEY_ART, it) } }
+            .build())
+        ses.setPlaybackState(android.media.session.PlaybackState.Builder()
+            .setActions(android.media.session.PlaybackState.ACTION_PLAY or android.media.session.PlaybackState.ACTION_PAUSE or android.media.session.PlaybackState.ACTION_PLAY_PAUSE or
+                android.media.session.PlaybackState.ACTION_SKIP_TO_NEXT or android.media.session.PlaybackState.ACTION_SKIP_TO_PREVIOUS or android.media.session.PlaybackState.ACTION_STOP)
+            .setState(if (paused) android.media.session.PlaybackState.STATE_PAUSED else android.media.session.PlaybackState.STATE_PLAYING, android.media.session.PlaybackState.PLAYBACK_POSITION_UNKNOWN, if (paused) 0f else rate)
+            .build())
         val open = PendingIntent.getActivity(this, 5, Intent(this, MainActivity::class.java).putExtra("listening", true).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
-        val stop = PendingIntent.getService(this, 6, Intent(this, ListenService::class.java).setAction("stop"), PendingIntent.FLAG_IMMUTABLE)
-        val name = Canon.books[book].let { if (store.translation == io.github.graviton94.todaybible.core.Translation.KRV) it.ko else it.en }
-        val n = Notification.Builder(this, CHANNEL).setSmallIcon(R.drawable.ic_stat_cross).setContentTitle(getString(R.string.listen_title, name, chapter))
-            .setContentIntent(open).setOngoing(true)
-            .addAction(Notification.Action.Builder(android.graphics.drawable.Icon.createWithResource(this, R.drawable.ic_stat_cross), getString(R.string.listen_stop), stop).build()).build()
-        if (Build.VERSION.SDK_INT >= 29) startForeground(ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK) else startForeground(ID, n)
+        val n = Notification.Builder(this, CHANNEL).setSmallIcon(R.drawable.ic_stat_cross)
+            .setContentTitle(title).setContentText(sub).setSubText(getString(R.string.app_name)).setLargeIcon(pic)
+            .setContentIntent(open).setOngoing(!paused).setShowWhen(false)
+            .setVisibility(Notification.VISIBILITY_PUBLIC).setCategory(Notification.CATEGORY_TRANSPORT)
+            .setDeleteIntent(PendingIntent.getService(this, 6, Intent(this, ListenService::class.java).setAction("stop"), PendingIntent.FLAG_IMMUTABLE))
+            .addAction(action(R.drawable.ic_m_prev, R.string.listen_prev_verse, "prev", 7))
+            .addAction(if (paused) action(R.drawable.ic_m_play, R.string.listen_resume, "play", 8) else action(R.drawable.ic_m_pause, R.string.listen_pause, "pause", 8))
+            .addAction(action(R.drawable.ic_m_next, R.string.listen_next_verse, "next", 9))
+            .addAction(action(R.drawable.ic_m_stop, R.string.listen_stop, "stop", 6))
+            .setStyle(Notification.MediaStyle().setMediaSession(ses.sessionToken).setShowActionsInCompactView(0, 1, 2))
+            .build()
+        if (!started) {
+            started = true
+            if (Build.VERSION.SDK_INT >= 29) startForeground(ID, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK) else startForeground(ID, n)
+        } else nm.notify(ID, n)
+    }
+
+    /** 멈춤: 낭독 음원은 그 자리에서, 폰 목소리는 그 절을 처음부터 다시. */
+    private fun pause() {
+        if (paused || _now.value == null) return
+        paused = true
+        val p = player
+        if (p != null && runCatching { p.isPlaying }.getOrDefault(false)) { runCatching { p.pause() }; val keep = p; resumeStep = { runCatching { keep.start() } } }
+        else guide?.stop()
+        _now.value = _now.value?.copy(playing = false)
+        foreground()
+    }
+
+    private fun resume() {
+        if (!paused) return
+        paused = false
+        _now.value = _now.value?.copy(playing = true)
+        foreground()
+        val r = resumeStep; resumeStep = null
+        if (r != null) r() else { token++; play(token) }
+    }
+
+    /** 이전 · 다음 절 (장 끝에서 다음이면 다음 장으로). */
+    private fun skip(dir: Int) {
+        if (_now.value == null) return
+        val list = store.book(store.translation, book).fillable(chapter).filter { to == 0 || it <= to }
+        val i = list.indexOf(verse).let { if (it < 0) 0 else it }
+        token++; val t = token
+        runCatching { player?.release() }; player = null; guide?.stop(); resumeStep = null; paused = false
+        val j = i + dir
+        when {
+            j in list.indices -> { verse = list[j]; foreground(); play(t) }
+            dir > 0 -> next(t)
+            else -> { verse = list.firstOrNull() ?: 1; foreground(); play(t) }
+        }
     }
 
     /** 지금 절부터 차례로. 장 음원이 없으면 받아 보고, 끝내 없으면 폰 목소리. */
@@ -133,8 +247,10 @@ class ListenService : Service() {
                     if (t != token) return
                     if (i >= verses.size) { next(t); return }
                     if (stopAt > 0 && System.currentTimeMillis() >= stopAt) { finish(); return }
+                    if (paused) { resumeStep = { step(i) }; return }
                     val v = verses[i]; verse = v
                     _now.value = Now(book, chapter, v, true)
+                    foreground()
                     // 절 사이는 짧게 (책 읽어 주듯 이어서)
                     val after = { ui.postDelayed({ step(i + 1) }, (Narration.GAP_MS / rate).toLong()) }
                     val f = if (narrated) Narration.file(this, voice, book, chapter, v).takeIf { it.exists() } else null
@@ -176,6 +292,8 @@ class ListenService : Service() {
         runCatching { player?.release() }; player = null
         guide?.release(); guide = null
         _now.value = null; _timer.value = 0; stopAt = 0L
+        paused = false; resumeStep = null
+        runCatching { session?.isActive = false; session?.release() }; session = null; started = false
         runCatching { wake?.release() }; wake = null; runCatching { wifi?.release() }; wifi = null
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE) else @Suppress("DEPRECATION") stopForeground(true)
         stopSelf()

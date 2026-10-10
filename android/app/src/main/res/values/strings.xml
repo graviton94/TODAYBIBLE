@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="listen_verse">Verse %1$d</string>
+    <string name="listen_prev_verse">Previous verse</string>
+    <string name="listen_next_verse">Next verse</string>
+    <string name="listen_pause">Pause</string>
+    <string name="listen_resume">Resume</string>
     <string name="film_title">%1$s %2$d in my voice (video)</string>
     <string name="voice_audio_title">%1$s %2$d in my voice</string>
     <string name="film_gather">Gathering %1$d recorded verses</string>

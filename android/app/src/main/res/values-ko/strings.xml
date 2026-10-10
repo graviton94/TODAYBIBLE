@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="listen_verse">%1$d절</string>
+    <string name="listen_prev_verse">이전 절</string>
+    <string name="listen_next_verse">다음 절</string>
+    <string name="listen_pause">멈춤</string>
+    <string name="listen_resume">이어 듣기</string>
     <string name="film_title">%1$s %2$d장 내 목소리 영상</string>
     <string name="voice_audio_title">%1$s %2$d장 내 목소리</string>
     <string name="film_gather">녹음한 절 %1$d개 모으기</string>

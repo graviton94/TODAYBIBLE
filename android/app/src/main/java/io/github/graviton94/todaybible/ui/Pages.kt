@@ -279,6 +279,9 @@ private fun NowPlayingBar(s: AppState) {
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         PlayMark(c.rubric, true, Modifier.size(Tokens.Size.iconSm))
         Text(stringResource(R.string.now_playing, what), style = Theme.label().copy(color = c.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        // 멈춤 · 이어 듣기 (알림 · 잠금 화면과 같은 상태)
+        Text(stringResource(if (now.playing) R.string.listen_pause else R.string.listen_resume), style = Theme.label().copy(color = c.ink), maxLines = 1,
+            modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { io.github.graviton94.todaybible.data.ListenService.control(ctx, "toggle") })
         Text(stringResource(R.string.listen_stop), style = Theme.label().copy(color = c.rubric), maxLines = 1,
             modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { io.github.graviton94.todaybible.data.ListenService.stop(ctx) })
     }
