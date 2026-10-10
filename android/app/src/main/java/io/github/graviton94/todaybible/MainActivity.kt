@@ -114,7 +114,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         /** 지금 버전의 ‘새로 바뀐 것’ 이름. 새 노트 (news_body) 를 쓸 때 함께 바꿔요. */
-        const val NEWS = "1.1"
+        const val NEWS = "1.2"
     }
 
     /** 아침 알림의 ‘함께 읽기’: 그 절로 열고 낭독을 곧바로. */

@@ -10,7 +10,7 @@
     <string name="news_title">What\'s new</string>
     <string name="news_ok">Start</string>
     <string name="news_again">What\'s new in this version</string>
-    <string name="news_body">A calmer, more refined design throughout\n74 more engravings, now on the opening screen and chapter openers\nDownloading narration and saving files show their progress, and you tap to continue\nTwo text sizes: Regular and Large\nBalanced volume for narration, handwriting and typing sounds\nA guide for responsive reading, and Today\'s chapter picks up where you left off</string>
+    <string name="news_body">The app now checks for new versions and updates in the background while you keep writing\nAfter each update, a short note shows what changed (Settings › Help to see it again)</string>
     <string name="gate_going">Going to %1$s…</string>
     <string name="gate_ready">%1$s is ready</string>
     <string name="gate_text">Chapter text</string>
