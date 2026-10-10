@@ -191,6 +191,7 @@ class MainActivity : ComponentActivity() {
         s.debugSection = i.getStringExtra("tb.section"); s.debugAskLang = i.getStringExtra("tb.askLang")
         if (i.getBooleanExtra("tb.prayers", false)) s.prayersOpen = true
         if (i.getBooleanExtra("tb.tour", false)) { s.welcomeStep = 0; s.tour = true }
+        if (i.getBooleanExtra("tb.gallery", false)) s.galleryOpen = true
         if (i.hasExtra("tb.parallel") && s.parallel != i.getBooleanExtra("tb.parallel", false)) s.flipParallel()
         if (i.getBooleanExtra("tb.sermonOpen", false)) s.sermonOpen = s.today().toEpochDay()
         i.getStringExtra("tb.reflect")?.let { t -> s.finished?.let { (b, c) -> s.setReflection(b, c, t) } }

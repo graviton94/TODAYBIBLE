@@ -790,4 +790,12 @@
     <string name="verse_unit">verses</string>
     <string name="of_total_pct">%2$s%% of %1$s</string>
     <string name="index_counts">done %1$d · writing %2$d</string>
+    <string name="done_verses">Verses in this chapter</string>
+    <string name="done_streak">Day %1$d of your streak</string>
+    <string name="gallery_open">Open the gallery</string>
+    <string name="plate_when">Finish</string>
+    <string name="gal_ot">Old T.</string>
+    <string name="gal_gospels">Gospels</string>
+    <string name="gal_apostles">Apostles</string>
+    <string name="gal_rev">Revelation</string>
 </resources>

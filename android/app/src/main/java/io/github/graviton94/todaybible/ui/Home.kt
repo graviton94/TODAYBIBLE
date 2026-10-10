@@ -73,7 +73,7 @@ fun HomePage(s: AppState) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Text(androidx.compose.ui.text.buildAnnotatedString {
                 append(stringResource(R.string.streak_pre)); append(" ")
-                withStyle(Theme.big(Tokens.Text.title).toSpanStyle()) { append("$run") }
+                withStyle(Theme.big(Tokens.Text.streak).toSpanStyle()) { append("$run") }
                 append(stringResource(R.string.streak_post))
             }, style = Theme.body(), maxLines = 1, modifier = Modifier.weight(1f))
             if (s.ownerName.isNotBlank()) Text(s.ownerName, style = Theme.small(), maxLines = 1)

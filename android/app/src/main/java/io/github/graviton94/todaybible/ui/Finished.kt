@@ -34,6 +34,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithContent
@@ -58,47 +61,63 @@ import kotlinx.coroutines.launch
 /** 장을 마친 화면: 붉은 장 번호 · 한 줄 · (판화가 있는 장이면) 가죽 덮개 아래 판화 · 다음 장. */
 @Composable
 fun FinishedPage(s: AppState, book: Int, chapter: Int, lifted: Boolean = false) {
+    // 모으는 순간은 어두운 화면 (하루의 편지 R2 · U6): 앱 테마와 상관없이
+    androidx.compose.runtime.CompositionLocalProvider(io.github.graviton94.todaybible.design.LocalPalette provides io.github.graviton94.todaybible.design.Tokens.dark) { FinishedDark(s, book, chapter) }
+}
+
+@Composable
+private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
     val c = Theme.c; val k = s.korean
     val plate = s.store.plateFor(book, chapter)
-    val veil = remember(book, chapter) { Animatable(if (lifted) 1f else 0f) }
-    val scope = rememberCoroutineScope()
+    val shown = remember(book, chapter) { Animatable(0f) }
+    LaunchedEffect(book, chapter) { shown.animateTo(1f, tween(Tokens.Motion.veilMs, easing = FastOutSlowInEasing)) }
     // 마음에 남은 한 줄: 닫거나 다음 장으로 갈 때 남겨요
     var line by remember(book, chapter) { mutableStateOf(s.reflection(book, chapter)?.text ?: "") }
     fun close() { s.setReflection(book, chapter, line); s.finished = null }
     BackHandler { close() }
+    val ctx = LocalContext.current
+    val verses = remember(book, chapter) { s.store.book(s.translation, book).fillable(chapter).size }
+    val run = io.github.graviton94.todaybible.core.Presence.streak(s.progress.days(), s.today())
+    val hung = s.store.plates.count { s.plateFraction(it) >= 1f }
     Column(
         Modifier.fillMaxSize().background(c.leaf).systemBarsPadding().imePadding().verticalScroll(rememberScrollState())
             .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5),
-        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3),
     ) {
-        // 마친 장의 금박 머리글자
-        ChapterInitial(chapter, done = true, box = Tokens.Size.emblem * Tokens.Ratio.initialFinish)
+        Text(io.github.graviton94.todaybible.core.Latin.head(book, chapter), style = Theme.caps(), maxLines = 1)
         Text(stringResource(R.string.chapter_done, s.bookName(book), chapter), style = Theme.title(k).copy(textAlign = TextAlign.Center))
+        Text(fmtDate(R.string.fmt_date_day, s.today()), style = Theme.small(), maxLines = 1)
         if (plate != null) {
-            PlateUnderVeil(s, plate, veil.value, Modifier.fillMaxWidth(Tokens.Ratio.plateWidth))
-            if (veil.value < 1f) Text(stringResource(R.string.veil_hint), style = Theme.small().copy(textAlign = TextAlign.Center), maxLines = 1)
-            else Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                // 판화 설명: 제목 · 그 장면의 말씀 · 출처
-                val t = s.store.book(s.translation, plate.book)
-                Text(s.plateName(plate), style = Theme.title(k).copy(textAlign = TextAlign.Center))
-                Text(Markup.plain(t.verse(plate.chapter, plate.verse)), style = Theme.body().copy(textAlign = TextAlign.Center))
-                Text(stringResource(R.string.ref_verse, s.bookName(plate.book), plate.chapter, plate.verse), style = Theme.small().copy(color = c.rubric))
-                Text(s.plateBy(plate), style = Theme.small().copy(textAlign = TextAlign.Center))
+            // 판화 한 점: 가는 금빛 테 안에 그대로 (천천히 밝아져요)
+            val img = rememberPlate(plate.id)
+            Box(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3).drawBehind { drawRect(c.gilt.copy(alpha = Tokens.Alpha.frame), style = Stroke(Tokens.Stroke.hair.toPx())) }.padding(Tokens.Space.s2)) {
+                if (img != null) Image(img, s.plateName(plate), Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).graphicsLayer { alpha = shown.value }, contentScale = ContentScale.Crop)
             }
+            Text("〈" + s.plateName(plate) + "〉 " + s.plateBy(plate) + " · " + stringResource(R.string.ref_verse, s.bookName(plate.book), plate.chapter, plate.verse),
+                style = Theme.small().copy(textAlign = TextAlign.Center, color = c.unwritten), maxLines = 2)
         } else {
-            Box(Modifier.padding(vertical = Tokens.Space.s5).size(Tokens.Size.emblem)) { StampMark(STAMP_CROSS, c.gilt, Modifier.fillMaxSize()) }
+            // 판화 없는 장: 큰 로마 숫자 하나
+            Text(io.github.graviton94.todaybible.core.Latin.roman(chapter), style = Theme.big(Tokens.Text.initialLg).copy(color = c.gilt), maxLines = 1, modifier = Modifier.padding(vertical = Tokens.Space.s4).graphicsLayer { alpha = shown.value })
         }
-        if (plate == null || veil.value >= 1f) ReflectionField(s, book, chapter, line) { line = it }
-        val (nb, nc) = remember(book, chapter) { s.nextChapter(book, chapter) }
-        if (plate != null && veil.value < 1f) {
-            BookButton(stringResource(R.string.lift_veil), Modifier.fillMaxWidth(), enabled = !veil.isRunning) {
-                scope.launch { veil.animateTo(1f, tween(Tokens.Motion.veilMs, easing = FastOutSlowInEasing)) }
+        // 쓴 것 목록 (하루의 편지 R2)
+        Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s2)) {
+            @Composable fun row(a: String, b: String) {
+                Row(Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s3), verticalAlignment = Alignment.Bottom) {
+                    Text(a, style = Theme.body(), modifier = Modifier.weight(1f), maxLines = 1); Text(b, style = Theme.body().copy(color = c.inkSoft), maxLines = 1)
+                }
+                Hair()
             }
-        } else if (nb != book || nc != chapter) {
-            BookButton(stringResource(R.string.next_chapter, s.bookName(nb), nc), Modifier.fillMaxWidth()) { close(); s.open(nb, nc) }
+            row(stringResource(R.string.done_verses), "+$verses")
+            row(stringResource(R.string.done_streak, run), "")
+            Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), verticalAlignment = Alignment.Bottom) {
+                Text(stringResource(R.string.plates), style = Theme.body(), modifier = Modifier.weight(1f).padding(bottom = Tokens.Space.s2), maxLines = 1)
+                Text("$hung / ${s.store.plates.size}", style = Theme.big(Tokens.Text.display).copy(color = c.gilt), maxLines = 1)
+            }
         }
-        val ctx = LocalContext.current
-        if (plate != null && veil.value >= 1f) BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
+        ReflectionField(s, book, chapter, line) { line = it }
+        val (nb, nc) = remember(book, chapter) { s.nextChapter(book, chapter) }
+        if (nb != book || nc != chapter) BookButton(stringResource(R.string.next_chapter, s.bookName(nb), nc), Modifier.fillMaxWidth().padding(top = Tokens.Space.s2)) { close(); s.open(nb, nc) }
+        if (plate != null) BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
             Cards.share(s, ctx, Cards.plate(ctx, k, plate.id, s.plateName(plate), s.chapterRef(book, chapter)), "plate")
         }
         BookButton(stringResource(R.string.close), Modifier.fillMaxWidth(), quiet = true) { close() }
@@ -146,8 +165,8 @@ fun AwardCard(s: AppState, m: Milestone) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     val name = milestoneName(ctx, m); val rule = milestoneRule(ctx, m)
     BookSheet({ s.award = null }) {
-        Canvas(Modifier.padding(top = Tokens.Space.s2).size(Tokens.Size.medalLg)) { medal(m, true, c.leather, c.gilt, c.unwritten) }
-        Text(stringResource(R.string.new_milestone), style = Theme.small().copy(color = c.rubric), maxLines = 1)
+        Text(io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1), style = Theme.big(Tokens.Text.display).copy(color = c.giltText), maxLines = 1, modifier = Modifier.padding(top = Tokens.Space.s2))
+        Text(stringResource(R.string.new_milestone).uppercase(), style = Theme.caps(), maxLines = 1)
         Text(name, style = Theme.title(k).copy(textAlign = TextAlign.Center), maxLines = 1)
         Text(rule, style = Theme.small().copy(textAlign = TextAlign.Center), maxLines = 1)
         Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {

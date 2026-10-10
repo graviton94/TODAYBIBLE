@@ -79,8 +79,11 @@ fun RecordPage(s: AppState) {
         var allPlates by remember { mutableStateOf(false) }
         val plates = remember(s.fills.size) { s.store.plates.sortedWith(compareByDescending<Plate> { plateFraction(s, it).let { f -> if (f > 0f && f < 1f) 2 else if (f >= 1f) 1 else 0 } }.thenByDescending { plateFraction(s, it) }) }
         Section(stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size}", k)
-        PlateGallery(s, if (allPlates) plates else plates.take(PLATES_SHOWN))
-        if (plates.size > PLATES_SHOWN) BookButton(stringResource(if (allPlates) R.string.fold else R.string.unfold_all, plates.size), Modifier.fillMaxWidth(), quiet = true) { allPlates = !allPlates }
+        // 화첩 미리보기 세 점 → 어두운 화첩 화면
+        Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.galleryOpen = true }, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            plates.take(3).forEach { pl -> PlateThumb(s, pl, Modifier.weight(1f)) }
+        }
+        ListRow(stringResource(R.string.gallery_open), "") { s.galleryOpen = true }
         // 발자취: 받은 것 최근 넷 (없으면 처음 넷), 펼치면 모두
         var allMiles by remember { mutableStateOf(false) }
         val miles = Milestone.entries.sortedByDescending { s.earned[it] ?: Long.MIN_VALUE }
@@ -267,7 +270,7 @@ private fun MiniMonth(ym: YearMonth, days: Set<Long>, future: Boolean) {
             val i = lead + d - 1
             val on = ym.atDay(d).toEpochDay() in days
             val cx = (i % 7) * w + w / 2; val cy = (i / 7) * h + h / 2
-            drawCircle(if (on) c.rubric else if (future) c.hair.copy(alpha = Tokens.Alpha.future) else c.hair, (if (on) 0.36f else 0.16f) * minOf(w, h), Offset(cx, cy))
+            drawCircle(if (on) c.gilt else if (future) c.hair.copy(alpha = Tokens.Alpha.future) else c.hair, (if (on) 0.36f else 0.16f) * minOf(w, h), Offset(cx, cy))
         }
     }
 }

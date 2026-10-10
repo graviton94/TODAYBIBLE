@@ -11,7 +11,7 @@ data class Palette(val paper: Color, val leaf: Color, val ink: Color, val inkSof
 object Tokens {
     val light = Palette(paper = Color(0xFFEDE5D6), leaf = Color(0xFFF4EFE6), ink = Color(0xFF1F1A15), inkSoft = Color(0xFF6E655A), unwritten = Color(0xFFA39886), hair = Color(0x241F1A15), rubric = Color(0xFF8C2117), gilt = Color(0xFF9A6B1F), giltText = Color(0xFF7A5418), leather = Color(0xFF1F1A15), leatherDeep = Color(0xFF000000), leatherInk = Color(0xFFF4EFE6), shade = Color(0x242A2119), scrim = Color(0x661A120C), penInk = Color(0xFF1F2A44), noteLine = Color(0x291F2A44), mark = Color(0x70F2D25C), graphite = Color(0xFF5E5A55), giltHi = Color(0xFFF2DC9B), giltLo = Color(0xFF6E5020))
     val dark = Palette(paper = Color(0xFF201912), leaf = Color(0xFF17110C), ink = Color(0xFFEADFC8), inkSoft = Color(0xFFA39886), unwritten = Color(0xFF7D7262), hair = Color(0x24EADFC8), rubric = Color(0xFFD46B5C), gilt = Color(0xFFC7A35D), giltText = Color(0xFFD6B672), leather = Color(0xFFEFE6D2), leatherDeep = Color(0xFFD9CDB4), leatherInk = Color(0xFF1F1A15), shade = Color(0x66000000), scrim = Color(0xA0000000), penInk = Color(0xFFC9D3EE), noteLine = Color(0x29C9D3EE), mark = Color(0x55C9A43A), graphite = Color(0xFFA9A39A), giltHi = Color(0xFFF2DC9B), giltLo = Color(0xFF7A5C24))
-    val candle = Palette(paper = Color(0xFF17100A), leaf = Color(0xFF1E150D), ink = Color(0xFFEBD9B4), inkSoft = Color(0xFFB8A07A), unwritten = Color(0xFF8E7A5A), hair = Color(0x2EEBD9B4), rubric = Color(0xFFD9774F), gilt = Color(0xFFE0B467), giltText = Color(0xFFE9C57A), leather = Color(0xFF6A4527), leatherDeep = Color(0xFF55371F), leatherInk = Color(0xFFE9C57A), shade = Color(0x66000000), scrim = Color(0xA0000000), penInk = Color(0xFFE9D6AE), noteLine = Color(0x26E9C57A), mark = Color(0x40E9C57A), graphite = Color(0xFFA89A86), giltHi = Color(0xFFF2DC9B), giltLo = Color(0xFF6E5020))
+    val candle = Palette(paper = Color(0xFF17100A), leaf = Color(0xFF1E150D), ink = Color(0xFFEBD9B4), inkSoft = Color(0xFFB8A07A), unwritten = Color(0xFF8E7A5A), hair = Color(0x2EEBD9B4), rubric = Color(0xFFD9774F), gilt = Color(0xFFD9AE5F), giltText = Color(0xFFE9C57A), leather = Color(0xFFE9D6AE), leatherDeep = Color(0xFFD4BE92), leatherInk = Color(0xFF1E150D), shade = Color(0x66000000), scrim = Color(0xA0000000), penInk = Color(0xFFE9D6AE), noteLine = Color(0x26E9C57A), mark = Color(0x40E9C57A), graphite = Color(0xFFA89A86), giltHi = Color(0xFFF2DC9B), giltLo = Color(0xFF6E5020))
     object Space {
         val s1 = 4.dp
         val s2 = 8.dp
@@ -136,6 +136,7 @@ object Tokens {
         val introCaps = 13.sp
         val caps = 10.5.sp
         val numBig = 44.sp
+        val streak = 30.sp
     }
     /** 표지 가죽 (나의 성경 꾸미기). */
     object Covers {
@@ -207,6 +208,7 @@ object Tokens {
         const val barMax = 0.8f
         const val spineMin = 0.62f
         const val wideVerse = 1.15f
+        const val thumb = 0.89f
     }
     object Alpha {
         const val aloudAhead = 0.62f

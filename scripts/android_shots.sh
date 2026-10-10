@@ -215,6 +215,13 @@ open --ei tb.page 0;                                               shot x03_smal
 open --ez tb.reset true --ei tb.welcomeStep 2;                     shot x04_small_welcome 4
 adb shell wm size reset; adb shell wm density reset
 
+# 1.1 어두운 화면: 화첩 · 장 마침 · 판화
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ez tb.gallery true;      shot v01_gallery 5
+open --es tb.finished 1:7;                                                            shot v02_finished 5
+swipe_up;                                                                             shot v03_finished_more 2
+open --es tb.finished 2:3;                                                            shot v04_finished_noplate 5
+open --es tb.plate noah;                                                              shot v05_plate 4
+
 # @scene hp
 # 도움말: (?) · 기도 · 듣기 첫 안내 · 설정 도움 · 소개 다시 보기 · 교독 안내
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 0; shot hp1_topbar 5

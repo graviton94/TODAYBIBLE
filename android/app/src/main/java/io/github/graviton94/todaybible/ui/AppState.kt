@@ -153,6 +153,8 @@ class AppState(val store: Store) {
     fun coachAgain(screen: String) { coachShowing = null; coachSeen = coachSeen - screen; store.coachSeen = coachSeen }
     /** 처음 소개 다시 보기 (이름 · 분량 · 알림은 묻지 않고 소개 두 장만). */
     var tour by mutableStateOf(false)
+    /** 화첩 (어두운 갤러리 화면). */
+    var galleryOpen by mutableStateOf(false)
     /** 지금 펼친 첫 안내 (보여 주는 순간 본 것으로 적어 두고, 다 볼 때까지 이 이름으로 이어서). */
     var coachShowing by mutableStateOf<String?>(null)
     fun isBookmarked(b: Int, ch: Int) = bookmarks.any { it.translation == translation && it.key.book == b && it.key.chapter == ch }
@@ -335,7 +337,7 @@ class AppState(val store: Store) {
     /** 덮인 창들 모두 닫기 (알림 · 위젯으로 들어올 때). */
     fun closeOverlays() {
         settingsOpen = false; purchaseOpen = false; plateView = null; finished = null; picker = null; marksOpen = false; found = null
-        memoryOpen = null; sermonOpen = null; prayersOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; handBook = null; planOpen = false; award = null; opening = false; leaveAsk = null
+        memoryOpen = null; sermonOpen = null; prayersOpen = false; galleryOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; handBook = null; planOpen = false; award = null; opening = false; leaveAsk = null
     }
     /** 앱을 처음부터 다시 (언어처럼 화면 전체가 바뀌는 설정 뒤에). 여는 순간은 이번만 건너뛰어요. */
     fun restartApp(a: android.app.Activity) {

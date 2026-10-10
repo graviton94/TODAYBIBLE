@@ -787,5 +787,13 @@
   "plan_none_short": {"en": "Choose", "ko": "고르기"},
   "verse_unit": {"en": "verses", "ko": "절"},
   "of_total_pct": {"en": "%2$s%% of %1$s", "ko": "%1$s절 중 %2$s%%"},
-  "index_counts": {"en": "done %1$d · writing %2$d", "ko": "다 씀 %1$d · 쓰는 중 %2$d"}
+  "index_counts": {"en": "done %1$d · writing %2$d", "ko": "다 씀 %1$d · 쓰는 중 %2$d"},
+  "done_verses": {"en": "Verses in this chapter", "ko": "이 장에서 쓴 절"},
+  "done_streak": {"en": "Day %1$d of your streak", "ko": "이어 쓰기 %1$d일째"},
+  "gallery_open": {"en": "Open the gallery", "ko": "화첩 전체 보기"},
+  "plate_when": {"en": "Finish", "ko": "이 장을 다 쓰면"},
+  "gal_ot": {"en": "Old T.", "ko": "구약"},
+  "gal_gospels": {"en": "Gospels", "ko": "복음서"},
+  "gal_apostles": {"en": "Apostles", "ko": "사도"},
+  "gal_rev": {"en": "Revelation", "ko": "계시"}
 }

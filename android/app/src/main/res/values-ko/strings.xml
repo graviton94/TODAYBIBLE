@@ -790,4 +790,12 @@
     <string name="verse_unit">절</string>
     <string name="of_total_pct">%1$s절 중 %2$s%%</string>
     <string name="index_counts">다 씀 %1$d · 쓰는 중 %2$d</string>
+    <string name="done_verses">이 장에서 쓴 절</string>
+    <string name="done_streak">이어 쓰기 %1$d일째</string>
+    <string name="gallery_open">화첩 전체 보기</string>
+    <string name="plate_when">이 장을 다 쓰면</string>
+    <string name="gal_ot">구약</string>
+    <string name="gal_gospels">복음서</string>
+    <string name="gal_apostles">사도</string>
+    <string name="gal_rev">계시</string>
 </resources>
