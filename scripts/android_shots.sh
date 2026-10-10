@@ -270,22 +270,21 @@ adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 
 adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 >/dev/null
 adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false >/dev/null
 stsnap() { sleep "$2"; adb shell cmd statusbar collapse >/dev/null 2>&1; sleep 1; snap "$1"; }
-adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
-open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --es tb.owner 은혜 --ei tb.page 0; stsnap st_ko_1_today 6
-open --ei tb.page 2 --ei tb.copyTab 1;                             stsnap st_ko_2_type 4
-open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0;         stsnap st_ko_3_aloud 6
-open --es tb.listen "41:3" --ez tb.parallel true;                  stsnap st_ko_4_reader 5
-open --es tb.prayer morning;                                       stsnap st_ko_5_prayer 4
-open --es tb.plate noah;                                           stsnap st_ko_6_plate 5
-open --ez tb.parallel false --ei tb.page 3;                        stsnap st_ko_7_record 5
-adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
-open --ez tb.seed true --es tb.tr WEB --es tb.theme LIGHT --es tb.owner "''" --ei tb.page 0; stsnap st_en_1_today 6
-open --ei tb.page 2 --ei tb.copyTab 1; sleep 3; adb shell input tap 540 2150; sleep 2; adb shell input text "He%swent%sup%sinto%sthe%smountain"; stsnap st_en_2_type 2
-open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0;         stsnap st_en_3_aloud 6
-open --es tb.listen "41:3" --ez tb.parallel true;                  stsnap st_en_4_reader 5
-open --es tb.prayer lords;                                         stsnap st_en_5_prayer 4
-open --es tb.plate prodigal;                                       stsnap st_en_6_plate 5
-open --ez tb.parallel false --ei tb.page 3;                        stsnap st_en_7_record 5
+# 1.1 틀: 여는 판화 · 오늘 · 장 여는 화면 · 타자 · 교독 · 화첩 · 기도 · 나의 성경
+for L in ko en; do
+  if [ $L = ko ]; then adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null; TR=KRV; OWN=은혜; PR=morning
+  else adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null; TR=WEB; OWN="''"; PR=lords; fi
+  open --ez tb.reset true --es tb.theme LIGHT; sleep 3
+  open --ez tb.seed true --es tb.tr $TR --es tb.theme LIGHT --es tb.owner "$OWN" --ei tb.page 0; sleep 3
+  open --es tb.intro C;                                              stsnap st_${L}_1_intro 7
+  open --ei tb.page 0;                                               stsnap st_${L}_2_today 5
+  open --es tb.open 2:14;                                            stsnap st_${L}_3_opener 6
+  open --ei tb.page 2 --ei tb.copyTab 1;                             stsnap st_${L}_4_type 4
+  open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0;         stsnap st_${L}_5_aloud 6
+  open --ez tb.gallery true;                                         stsnap st_${L}_6_gallery 6
+  open --es tb.prayer $PR;                                           stsnap st_${L}_7_prayer 4
+  open --ei tb.page 3;                                               stsnap st_${L}_8_record 5
+done
 adb shell am broadcast -a com.android.systemui.demo -e command exit >/dev/null
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # @end
