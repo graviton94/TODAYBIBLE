@@ -105,7 +105,7 @@ private fun goldBrush(lo: Color, mid: Color, hi: Color, p: Float, w: Float): Bru
 }
 
 @Composable
-private fun Breathing(text: String, color: Color, modifier: Modifier = Modifier) {
+internal fun Breathing(text: String, color: Color, modifier: Modifier = Modifier) {
     val pulse by rememberInfiniteTransition(label = "hint").animateFloat(0.85f, 0.35f, infiniteRepeatable(tween(Tokens.Motion.introBreatheMs / 2), RepeatMode.Reverse), label = "hint")
     Text(text, style = Theme.small().copy(color = color.copy(alpha = pulse), letterSpacing = 0.3.em, textAlign = TextAlign.Center), modifier = modifier)
 }

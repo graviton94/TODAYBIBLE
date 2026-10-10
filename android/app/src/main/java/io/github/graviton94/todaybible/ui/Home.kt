@@ -133,7 +133,7 @@ fun HomePage(s: AppState) {
 @Composable
 private fun PrayerRow(s: AppState) {
     val p = io.github.graviton94.todaybible.core.Prayers.forHour(io.github.graviton94.todaybible.core.Prayers.hourAt(java.time.LocalTime.now().hour))
-    ListRow("${prayerName(p)} · ${s.prayerRefs(p)}", stringResource(if (s.prayed(p.id)) R.string.prayer_prayed else R.string.prayer_go_short)) { s.prayerOpen = p.id }
+    ListRow("${prayerName(p)} · ${s.prayerRefShort(p)}", stringResource(if (s.prayed(p.id)) R.string.prayer_prayed else R.string.prayer_go_short)) { s.prayerOpen = p.id }
 }
 
 /** 이번 주 요일 점 (하루의 편지): 쓴 날은 금빛 점, 오늘은 금빛 테, 남은 날은 옅은 테. */

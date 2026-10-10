@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="gate_going">%1$s으로 이동 중…</string>
+    <string name="gate_ready">%1$s, 준비됐어요</string>
+    <string name="gate_text">말씀 본문</string>
+    <string name="gate_voice">교독할 낭독 목소리 받기</string>
+    <string name="gate_enter">눌러서 들어가기</string>
+    <string name="gate_copy_only">교독 없이 필사만 하기</string>
+    <string name="gate_retry">다시 받기</string>
+    <string name="gate_plate">〈%1$s〉 %2$s</string>
+    <string name="gate_gather">쓴 기록 모으기</string>
+    <string name="gate_make">파일 만들기</string>
+    <string name="gate_file_making">%1$s 만드는 중…</string>
+    <string name="gate_file_ready">%1$s, 다 만들었어요</string>
+    <string name="gate_file_failed">%1$s, 만들지 못했어요</string>
+    <string name="gate_save">저장 · 보내기</string>
+    <string name="prayer_ref_more">%1$s 외 %2$d</string>
     <string name="app_name">하루의 성경</string>
     <string name="page_library">성경</string>
     <string name="page_copy">필사</string>

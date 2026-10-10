@@ -133,6 +133,8 @@ object Tokens {
         val aloudFit = 26.sp
         val intro = 38.sp
         val introCover = 34.sp
+        val introPlate = 30.sp
+        val gateNum = 22.sp
         val introCaps = 13.sp
         val caps = 10.5.sp
         val numBig = 44.sp
@@ -188,6 +190,7 @@ object Tokens {
         const val introLetterStep = 90
         const val introGlintMs = 1100
         const val introEnterMs = 900
+        const val introDriftMs = 9000
         const val introBreatheMs = 2600
         const val coverOpenMs = 1500
         const val ribbonMs = 800
@@ -211,6 +214,7 @@ object Tokens {
         const val wideVerse = 1.15f
         const val thumb = 0.89f
         const val openerArt = 0.78f
+        const val gateArt = 0.62f
         const val purchaseArt = 1.6f
     }
     object Alpha {

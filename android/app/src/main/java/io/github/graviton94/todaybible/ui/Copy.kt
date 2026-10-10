@@ -126,6 +126,7 @@ fun CopyPage(s: AppState) {
     // 낭독 · 타자 · 손글씨 (교인 인터뷰: 낭독을 가장 많이 씀). 마지막에 고른 방식으로 열려요.
     var tab by remember { mutableIntStateOf(s.store.copyTab) }
     androidx.compose.runtime.SideEffect { s.copyTabNow = tab }
+    LaunchedEffect(s.forceTab) { s.forceTab?.let { tab = it; s.store.copyTab = it; s.forceTab = null } }
     LaunchedEffect(s.aloudNow) { if (s.aloudNow) { tab = 0; s.store.copyTab = 0; if (next == null) s.aloudNow = false } }
 
     Column(Modifier.fillMaxSize()) {

@@ -160,14 +160,16 @@ fun Root(s: AppState) {
         val ctx = androidx.compose.ui.platform.LocalContext.current
         LaunchedEffect(s.pdfBook) {
             val b = s.pdfBook ?: return@LaunchedEffect
+            val title = ctx.getString(R.string.export_title_pdf, s.bookName(b)); s.exportGate = ExportGate(title)
             val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { MyBible.make(ctx, s.store, s.translation, b) }.getOrNull() }
-            s.pdfBook = null; f?.let { s.exportJob = ExportJob(listOf(it), "application/pdf", ctx.getString(R.string.export_title_pdf, s.bookName(b))) }
+            s.pdfBook = null; s.gateDone(title, f?.let { ExportJob(listOf(it), "application/pdf", title) })
         }
         if (s.planOpen) PlanSheet(s)
         // 내 목소리 한 권: 장마다 절 녹음을 차례로 이어 소리 파일 하나 + 표지 카드
         LaunchedEffect(s.audiobookBook) {
             val b = s.audiobookBook ?: return@LaunchedEffect
-            s.exporting = true; s.toast = ctx.getString(R.string.exporting)
+            val gateTitle = ctx.getString(R.string.audiobook_title, s.bookName(b)); s.exportGate = ExportGate(gateTitle)
+            s.exporting = true
             val job = try { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching {
                 val V = io.github.graviton94.todaybible.data.Voice
                 val files = (1..s.store.book(s.translation, b).chapterCount).flatMap { ch -> V.verses(ctx, s.translation.id, b, ch).map { it.second } }
@@ -183,21 +185,25 @@ fun Root(s: AppState) {
                 ExportJob(listOf(audio, img), "*/*", title)
             }.getOrNull() } } finally { s.exporting = false }
             s.audiobookBook = null
-            if (job != null) s.exportJob = job else s.toast = ctx.getString(R.string.export_failed)
+            s.gateDone(gateTitle, job)
         }
         LaunchedEffect(s.notesBook) {
             val b = s.notesBook ?: return@LaunchedEffect
+            val title = ctx.getString(R.string.export_title_notes); s.exportGate = ExportGate(title)
             val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { MyBible.notes(ctx, s.store, s.translation, b.takeIf { it >= 0 }) }.getOrNull() }
-            s.notesBook = null; f?.let { s.exportJob = ExportJob(listOf(it), "application/pdf", ctx.getString(R.string.export_title_notes)) }
+            s.notesBook = null; s.gateDone(title, f?.let { ExportJob(listOf(it), "application/pdf", title) })
         }
         s.picker?.let { b -> BookSheet({ s.picker = null; s.pickToRead = false }) { ChapterGrid(s, b) { ch -> s.picker = null; if (s.pickToRead) s.read(b, ch) else s.open(b, ch); s.pickToRead = false } } }
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
         // 첫 안내: 덮개 (설정 · 장 마침 · 판화 …) 가 없을 때 지금 화면의 것
         val calm = s.onboarded && !s.opening && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null &&
-            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && !s.prayersOpen && !s.galleryOpen && s.opener == null && s.prayerBell == null && s.leaveAsk == null && s.exportJob == null && !s.exporting && s.shareVerse == null && !s.planOpen && !typing && !pager.isScrollInProgress
+            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && !s.prayersOpen && !s.galleryOpen && s.opener == null && s.narrGate == null && s.exportGate == null && s.prayerBell == null && s.leaveAsk == null && s.exportJob == null && !s.exporting && s.shareVerse == null && !s.planOpen && !typing && !pager.isScrollInProgress
         if (calm) CoachOverlay(s, coachScreen(s, pager.currentPage))
+        // 넘어가는 화면: 낭독 받기 · 파일 만들기 (확인 → 눌러서 넘어가기)
+        if (s.opener == null) s.narrGate?.let { (b, ch) -> NarrationGate(s, b, ch) }
+        s.exportGate?.let { ExportGateScreen(s, it) }
         // 여는 순간이 먼저, 처음 설치했으면 그다음에 첫 안내
-        if (s.opening) { if (s.firstOfDay) IntroCover(s) { s.opening = false } else IntroDaily(s) { s.opening = false } }
+        if (s.opening) PlateIntro(s, s.firstOfDay) { s.opening = false }
         else if (!s.onboarded || s.tour) Welcome(s)
         // 낭독 음원을 못 받아 폰 목소리로 읽을 때: 한 번 알려요
         val fell by io.github.graviton94.todaybible.data.Narration.fellBack.collectAsState()

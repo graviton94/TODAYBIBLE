@@ -48,6 +48,12 @@ fun prayerName(p: Prayer): String {
 }
 
 /** 기도문의 말씀 표기: 범위들을 · 로 이어서. */
+/** 짧게: 첫 말씀 하나 (+ 외 n). */
+fun AppState.prayerRefShort(p: Prayer): String {
+    val f = p.passages.firstOrNull() ?: return ""
+    val one = Lang.passage(store.context, translation, bookName(f.book), f.chapter, f.from, f.to)
+    return if (p.passages.size > 1) store.context.getString(io.github.graviton94.todaybible.R.string.prayer_ref_more, one, p.passages.size - 1) else one
+}
 fun AppState.prayerRefs(p: Prayer): String = p.passages.joinToString(" · ") { Lang.passage(store.context, translation, bookName(it.book), it.chapter, it.from, it.to) }
 
 /** 오늘 화면의 기도 칸: 지금 때의 기도 (아침 · 낮 · 저녁 · 밤). 드렸으면 금빛 한 줄. */
@@ -129,7 +135,7 @@ fun PrayerList(s: AppState, except: String? = null) {
             Column(Modifier.weight(1f).heightIn(min = Tokens.Size.row).clickable(role = Role.Button) { s.prayersOpen = false; s.prayerOpen = p.id }.padding(vertical = Tokens.Space.s1),
                 verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                 Text(prayerName(p) + if (s.prayed(p.id)) " · " + stringResource(R.string.prayer_prayed_short) else "", style = Theme.label().copy(color = if (s.prayed(p.id)) c.giltText else c.ink), maxLines = 2)
-                Text(s.prayerRefs(p), style = Theme.small(), maxLines = 2)
+                Text(s.prayerRefShort(p), style = Theme.small(), maxLines = 1)
             }
             PrayerBell(s, p.id)
         }

@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val dark = s.night || when (s.theme) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK, ThemeChoice.CANDLE -> true }
             // 어두운 화면 (장 마침 · 화첩 · 판화 · 장 여는 화면) 위에서는 상태 표시줄 글자도 밝게
-            val darkBars = dark || s.finished != null || s.galleryOpen || s.plateView != null || s.opener != null
+            val darkBars = dark || s.finished != null || s.galleryOpen || s.plateView != null || s.opener != null || s.narrGate != null || s.exportGate != null || s.opening
             LaunchedEffect(darkBars) {
                 val dark = darkBars
                 val bar = if (dark) SystemBarStyle.dark(android.graphics.Color.TRANSPARENT) else SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
@@ -195,6 +195,12 @@ class MainActivity : ComponentActivity() {
         if (i.getBooleanExtra("tb.prayers", false)) s.prayersOpen = true
         if (i.getBooleanExtra("tb.tour", false)) { s.welcomeStep = 0; s.tour = true }
         if (i.getBooleanExtra("tb.gallery", false)) s.galleryOpen = true
+        when (i.getStringExtra("tb.gate")) {
+            "narr" -> { s.narration = s.narration + ("${s.book}:${s.chapter}" to 0); s.narrGate = s.book to s.chapter }
+            "narrOk" -> { s.narration = s.narration + ("${s.book}:${s.chapter}" to 1); s.narrGate = s.book to s.chapter }
+            "export" -> s.exportGate = io.github.graviton94.todaybible.ui.ExportGate(getString(R.string.export_title_pdf, s.bookName(s.book)))
+            "exportOk" -> s.exportGate = io.github.graviton94.todaybible.ui.ExportGate(getString(R.string.export_title_pdf, s.bookName(s.book)), 1)
+        }
         if (i.hasExtra("tb.parallel") && s.parallel != i.getBooleanExtra("tb.parallel", false)) s.flipParallel()
         if (i.getBooleanExtra("tb.sermonOpen", false)) s.sermonOpen = s.today().toEpochDay()
         i.getStringExtra("tb.reflect")?.let { t -> s.finished?.let { (b, c) -> s.setReflection(b, c, t) } }

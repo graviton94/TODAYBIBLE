@@ -157,6 +157,18 @@ class AppState(val store: Store) {
     var galleryOpen by mutableStateOf(false)
     /** 장 여는 화면 (판화가 있는 장을 처음 펼칠 때 한 번). */
     var opener by mutableStateOf<Pair<Int, Int>?>(null)
+    /** 낭독 받기 관문: 낭독 탭으로 장을 펼칠 때 음원이 없으면 받는 동안 보여 줘요 (권, 장). */
+    var narrGate by mutableStateOf<Pair<Int, Int>?>(null)
+    /** 필사 탭을 바꿔 달라는 요청 (관문의 ‘교독 없이 필사만’). 필사 화면이 받아서 지워요. */
+    var forceTab by mutableStateOf<Int?>(null)
+    /** 파일 만들기 관문 (PDF · 손글씨 · 내 목소리): 만드는 중 → 다 되면 눌러서 저장 · 보내기. */
+    var exportGate by mutableStateOf<ExportGate?>(null)
+    /** 만들기가 끝났을 때: 관문에 ‘다 됨 · 못 만듦’ (관문을 닫았으면 아무것도). */
+    fun gateDone(title: String, job: ExportJob?) {
+        val g = exportGate
+        if (g == null || g.title != title) return   // 관문을 닫았으면 그만둔 것
+        exportGate = g.copy(state = if (job != null) 1 else -1, job = job)
+    }
     fun openerDone() { opener?.let { (b, c) -> store.openerSeen = store.openerSeen + "$b:$c" }; opener = null }
     /** 지금 펼친 첫 안내 (보여 주는 순간 본 것으로 적어 두고, 다 볼 때까지 이 이름으로 이어서). */
     var coachShowing by mutableStateOf<String?>(null)
@@ -306,6 +318,9 @@ class AppState(val store: Store) {
         book = b; chapter = ch; target = null; store.setBookmark(translation, b, ch); page = COPY; widgets()
         // 판화가 있는 장을 처음 펼치면: 그림으로 여는 화면 한 번 (다 쓴 장은 건너뜀)
         if (store.plateFor(b, ch) != null && "$b:$ch" !in store.openerSeen && progress.chapterFraction(translation, store.book(translation, b), ch) < 1f) opener = b to ch
+        // 낭독 · 교독으로 펼치는데 음원이 없으면: 받는 관문을 거쳐 들어가요
+        val N = io.github.graviton94.todaybible.data.Narration
+        if (store.copyTab == 0 && aloudMode != 2 && narrator != N.DEVICE && narrationState(b, ch) != 1 && !N.has(store.context, narrator, b, ch)) { narrGate = b to ch; fetchNarration(b, ch) }
     }
     /** 기도문 따라 쓰기 (기도문 아이디, 몇 번째 말씀): 기도문 범위는 어느 책이든 무료. */
     var prayerWrite by mutableStateOf<Pair<String, Int>?>(null)
