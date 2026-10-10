@@ -52,9 +52,12 @@ def make(src, out, text, wght=None):
 
 def check():
     """CI: 지금 글꼴이 앱에 나오는 한글을 모두 갖고 있는지 (내려받지 않음)."""
-    cm = TTFont(os.path.join(OUT, "serif_kr_medium.ttf")).getBestCmap()
-    missing = sorted(c for c in korean_text() if "\uac00" <= c <= "\ud7a3" and ord(c) not in cm)
-    if missing: print("글꼴에 없는 글자:", "".join(missing), "→ python3 scripts/build_fonts.py"); sys.exit(1)
+    # 본문 글꼴 (보통 · 굵게) 과 세미볼드 (나누기 카드 · 내 목소리 영상의 말씀) 는 성경 본문 글자를 모두 가져야 해요
+    need = [c for c in korean_text() if "\uac00" <= c <= "\ud7a3"]
+    for name in ("serif_kr_medium.ttf", "serif_kr_bold.ttf", "serif_kr_semibold.ttf"):
+        cm = TTFont(os.path.join(OUT, name)).getBestCmap()
+        missing = sorted(c for c in need if ord(c) not in cm)
+        if missing: print(f"{name} 에 없는 글자:", "".join(missing[:40]), "→ python3 scripts/build_fonts.py"); sys.exit(1)
     print("fonts ok")
 
 def main():
@@ -67,7 +70,7 @@ def main():
         "serif_kr_bold.ttf": make("NotoSerifKR[wght].ttf", "serif_kr_bold.ttf", ko, 700),
         "title_kr.ttf": make("SongMyung-Regular.ttf", "title_kr.ttf", titles),
         # 제목 (하루의 편지와 같은 Noto Serif KR 600)
-        "serif_kr_semibold.ttf": make("NotoSerifKR[wght].ttf", "serif_kr_semibold.ttf", titles, 600),
+        "serif_kr_semibold.ttf": make("NotoSerifKR[wght].ttf", "serif_kr_semibold.ttf", ko, 600),
         # 머리글 (라틴 대문자) · 큰 숫자
         "caps.ttf": make("Cinzel[wght].ttf", "caps.ttf", allLatin, 600),
         "display.ttf": make("CormorantGaramond[wght].ttf", "display.ttf", allLatin, 600),
