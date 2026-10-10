@@ -2,6 +2,7 @@ package io.github.graviton94.todaybible.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -101,7 +102,7 @@ fun SettingsPage(s: AppState) {
                 // 또렷하게 (나2): 흐린 글자를 진하게, 가는 줄을 또렷하게
                 ChoiceRow(stringResource(R.string.contrast_setting), s.contrast) { s.flipContrast() }
                 // 지금 고른 번역 · 크기로 창세기 1:1
-                Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).padding(Tokens.Space.s4)) {
+                Box(Modifier.fillMaxWidth().border(Tokens.Stroke.hair, c.hair).padding(Tokens.Space.s4)) {
                     VerseText(s, 1, s.text(0).verse(1, 1))
                 }
             }
@@ -139,8 +140,8 @@ fun SettingsPage(s: AppState) {
                     STAMPS.forEach { m ->
                         val on = m == s.stamp
                         Box(
-                            Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (on) c.paper else c.leaf)
-                                .drawBehind { if (on) drawLine(c.rubric, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.rule.toPx() * 2) }
+                            Modifier.weight(1f).heightIn(min = Tokens.Size.touch)
+                                .drawBehind { if (on) drawLine(c.gilt, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.rule.toPx() * 2) }
                                 .clickable(role = Role.RadioButton) { s.setStampMark(m) },
                             contentAlignment = Alignment.Center,
                         ) { StampMark(m, if (on) c.rubric else c.inkSoft, Modifier.size(Tokens.Size.iconMd)) }
@@ -163,9 +164,9 @@ fun SettingsPage(s: AppState) {
                 if (on) androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                     REMINDER_HOURS.forEach { h ->
                         val sel = h == s.reminderHour
-                        Box(Modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (sel) c.leather else c.paper)
+                        Box(Modifier.heightIn(min = Tokens.Size.touch).border(Tokens.Stroke.hair, if (sel) c.gilt else c.hair)
                             .clickable(role = Role.RadioButton) { turnOn(h) }.padding(horizontal = Tokens.Space.s4), contentAlignment = Alignment.Center) {
-                            Text(fmtDate(R.string.fmt_hour, java.time.LocalTime.of(h, 0)), style = Theme.label().copy(color = if (sel) c.leatherInk else c.ink), maxLines = 1)
+                            Text(fmtDate(R.string.fmt_hour, java.time.LocalTime.of(h, 0)), style = Theme.label().copy(color = if (sel) c.giltText else c.inkSoft), maxLines = 1)
                         }
                     }
                 }
@@ -441,7 +442,7 @@ private fun Feedback(s: AppState) {
     var bad by remember { mutableStateOf("") }; var good by remember { mutableStateOf("") }
     @Composable fun field(v: String, hint: Int, on: (String) -> Unit) = androidx.compose.foundation.text.BasicTextField(
         value = v, onValueChange = on, textStyle = Theme.body(), cursorBrush = androidx.compose.ui.graphics.SolidColor(c.rubric),
-        modifier = Modifier.fillMaxWidth().heightIn(min = Tokens.Size.rowTall).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).padding(Tokens.Space.s3),
+        modifier = Modifier.fillMaxWidth().heightIn(min = Tokens.Size.rowTall).drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }.padding(vertical = Tokens.Space.s3),
         decorationBox = { inner -> Box { if (v.isEmpty()) Text(stringResource(hint), style = Theme.body().copy(color = c.unwritten)); inner() } })
     field(bad, R.string.feedback_bad) { bad = it }
     field(good, R.string.feedback_good) { good = it }

@@ -56,24 +56,13 @@ fun AppState.prayerRefShort(p: Prayer): String {
 }
 fun AppState.prayerRefs(p: Prayer): String = p.passages.joinToString(" · ") { Lang.passage(store.context, translation, bookName(it.book), it.chapter, it.from, it.to) }
 
-/** 오늘 화면의 기도 칸: 지금 때의 기도 (아침 · 낮 · 저녁 · 밤). 드렸으면 금빛 한 줄. */
-@Composable
-fun PrayerCard(s: AppState) {
-    val c = Theme.c
-    val p = Prayers.forHour(Prayers.hourAt(java.time.LocalTime.now().hour))
-    val first = p.passages.first()
-    val prayed = s.prayed(p.id)
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).clickable(role = Role.Button) { s.prayerOpen = p.id }.padding(Tokens.Space.s4),
-        verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-        Text(prayerName(p), style = Theme.small().copy(color = c.rubric), maxLines = 1)
-        Text(Markup.plain(s.store.book(s.translation, first.book).verse(first.chapter, first.from)), style = Theme.verse(s.korean), maxLines = 3, overflow = TextOverflow.Ellipsis)
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(if (prayed) R.string.prayer_prayed else R.string.prayer_go), style = Theme.small().copy(color = if (prayed) c.giltText else c.rubric), maxLines = 1, modifier = Modifier.weight(1f))
-            // 다른 기도문들로 (주기도문 · 아론의 축복 …)
-            Text(stringResource(R.string.prayer_all), style = Theme.small().copy(color = c.rubric), maxLines = 1,
-                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.prayersOpen = true })
-        }
-    }
+/** 기도의 때 머리글 (라틴 성무일과 이름). */
+fun prayerHead(p: Prayer): String = when (p.hour) {
+    io.github.graviton94.todaybible.core.Hour.MORNING -> "LAUDES · MATUTINUM"
+    io.github.graviton94.todaybible.core.Hour.NOON -> "SEXTA · MERIDIES"
+    io.github.graviton94.todaybible.core.Hour.EVENING -> "VESPERAE"
+    io.github.graviton94.todaybible.core.Hour.NIGHT -> "COMPLETORIUM"
+    null -> "ORATIO"
 }
 
 /**
@@ -90,17 +79,22 @@ fun PrayerPage(s: AppState, id: String) {
     LeaveGuard(s, now != null && origin == "prayer:${p.id}", recording = false, onStop = { ListenService.stop(ctx); s.prayerOpen = null }, onKeep = { s.prayerOpen = null })
     Column(Modifier.fillMaxSize().background(c.leaf).verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-        Text(stringResource(R.string.prayer_back), style = Theme.small().copy(color = c.rubric), maxLines = 1,
-            modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.prayerOpen = null })
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(prayerName(p), style = Theme.title(k, Tokens.Text.title), modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.prayer_back), style = Theme.small().copy(color = c.inkSoft), maxLines = 1,
+                modifier = Modifier.weight(1f).heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.prayerOpen = null })
             PrayerBell(s, p.id, Modifier.coach("prayer_bell"))
             HelpButton(s, "prayer")
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            Text(prayerHead(p), style = Theme.caps(), maxLines = 1)
+            Text(prayerName(p), style = Theme.title(k, Tokens.Text.display))
+            Text(s.prayerRefShort(p), style = Theme.small(), maxLines = 1)
         }
         p.passages.forEach { ps ->
             val t = s.store.book(s.translation, ps.book)
             Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                Text(Lang.passage(s.store.context, s.translation, s.bookName(ps.book), ps.chapter, ps.from, ps.to), style = Theme.small().copy(color = c.rubric))
+                Hair()
+                Text(Lang.passage(s.store.context, s.translation, s.bookName(ps.book), ps.chapter, ps.from, ps.to), style = Theme.small().copy(color = c.giltText), modifier = Modifier.padding(top = Tokens.Space.s2))
                 Text(buildAnnotatedString {
                     for (v in ps.from..ps.to) {
                         if (ps.to > ps.from) withStyle(SpanStyle(color = c.rubric, fontSize = Theme.small().fontSize)) { append("$v ") }
@@ -111,8 +105,9 @@ fun PrayerPage(s: AppState, id: String) {
         }
         Text(stringResource(R.string.prayer_note), style = Theme.small())
         val playing = now != null
+        Hair()
         Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            BookButton(stringResource(if (playing) R.string.listen_stop else R.string.prayer_listen), Modifier.weight(1f).coach("prayer_listen")) {
+            BookButton(stringResource(if (playing) R.string.listen_stop else R.string.prayer_listen), Modifier.weight(1f).coach("prayer_listen"), quiet = true) {
                 if (playing) ListenService.stop(ctx) else ListenService.startPassages(ctx, p.passages, s.aloudRate(), "prayer:${p.id}")
             }
             BookButton(stringResource(R.string.prayer_write), Modifier.weight(1f).coach("prayer_write"), quiet = true) { s.writePrayer(p.id) }
@@ -121,8 +116,11 @@ fun PrayerPage(s: AppState, id: String) {
             s.markPrayed(p.id); s.prayerOpen = null
         }
         // 다른 기도문
-        Text(stringResource(R.string.prayer_title), style = Theme.title(k), modifier = Modifier.padding(top = Tokens.Space.s3))
-        PrayerList(s, except = p.id)
+        Column(Modifier.padding(top = Tokens.Space.s4)) {
+            Text("ORATIONES", style = Theme.caps(), maxLines = 1)
+            Text(stringResource(R.string.prayer_title), style = Theme.title(k), modifier = Modifier.padding(top = Tokens.Space.s1, bottom = Tokens.Space.s2))
+            PrayerList(s, except = p.id)
+        }
     }
 }
 
@@ -131,15 +129,17 @@ fun PrayerPage(s: AppState, id: String) {
 fun PrayerList(s: AppState, except: String? = null) {
     val c = Theme.c
     Prayers.all.filter { it.id != except }.forEach { p ->
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Hair()
+        Row(Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s1), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f).heightIn(min = Tokens.Size.row).clickable(role = Role.Button) { s.prayersOpen = false; s.prayerOpen = p.id }.padding(vertical = Tokens.Space.s1),
                 verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                Text(prayerName(p) + if (s.prayed(p.id)) " · " + stringResource(R.string.prayer_prayed_short) else "", style = Theme.label().copy(color = if (s.prayed(p.id)) c.giltText else c.ink), maxLines = 2)
+                Text(prayerName(p) + if (s.prayed(p.id)) " · " + stringResource(R.string.prayer_prayed_short) else "", style = Theme.body().copy(color = if (s.prayed(p.id)) c.giltText else c.ink), maxLines = 2)
                 Text(s.prayerRefShort(p), style = Theme.small(), maxLines = 1)
             }
             PrayerBell(s, p.id)
         }
     }
+    Hair()
 }
 
 /** 서재의 기도문 칸 (누르면 목록 시트). */
@@ -147,7 +147,8 @@ fun PrayerList(s: AppState, except: String? = null) {
 fun PrayersSheet(s: AppState) {
     BookSheet({ s.prayersOpen = false }) {
         Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid * 2).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            Text(stringResource(R.string.prayer_title), style = Theme.title(s.korean))
+            Text("ORATIONES", style = Theme.caps(), maxLines = 1)
+            Text(stringResource(R.string.prayer_title), style = Theme.title(s.korean, Tokens.Text.display))
             Text(stringResource(R.string.prayer_list_hint), style = Theme.small())
             PrayerList(s)
         }

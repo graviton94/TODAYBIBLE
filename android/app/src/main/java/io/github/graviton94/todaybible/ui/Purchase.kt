@@ -136,8 +136,8 @@ private fun PlanCard(modifier: Modifier, name: String, price: String, was: Strin
 private fun Peek(s: AppState, b: Int) {
     val c = Theme.c; val k = s.korean
     val t = s.store.book(s.translation, b)
-    Box(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper)) {
-        Column(Modifier.padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+    Box(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }) {
+        Column(Modifier.padding(vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             RunningHead(s.chapterRef(b, 1), "", k)
             t.fillable(1).take(3).forEach { v -> VerseText(s, v, t.verse(1, v)) }
         }
@@ -168,23 +168,29 @@ private fun Compare(s: AppState) {
     )
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s2)) {
-            Box(Modifier.weight(1.4f)); Text(stringResource(R.string.cmp_free), style = Theme.small().copy(textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
-            Text(stringResource(R.string.cmp_paid), style = Theme.small().copy(color = c.rubric, textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
+            Box(Modifier.weight(1.4f))
+            Text(stringResource(R.string.cmp_free), style = Theme.small().copy(textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.cmp_paid), style = Theme.small().copy(color = c.giltText, textAlign = TextAlign.Center), modifier = Modifier.weight(1f))
         }
         rows.forEach { (name, free, life) ->
             Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).drawBehind { drawLine(c.hair, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) },
                 verticalAlignment = Alignment.CenterVertically) {
                 Text(name, style = Theme.body(), maxLines = 2, modifier = Modifier.weight(1.4f).padding(vertical = Tokens.Space.s1))
-                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    if (free == "✓") StampMark(STAMP_CROSS, c.inkSoft, Modifier.size(Tokens.Size.iconSm))
-                    else Text(free, style = Theme.body().copy(color = c.inkSoft, textAlign = TextAlign.Center), maxLines = 2)
-                }
-                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                    if (life == "✓") StampMark(STAMP_CROSS, c.rubric, Modifier.size(Tokens.Size.iconSm))
-                    else Text(life, style = Theme.label().copy(color = c.rubric, textAlign = TextAlign.Center), maxLines = 2)
-                }
+                CmpCell(free, false, Modifier.weight(1f))
+                CmpCell(life, true, Modifier.weight(1f))
             }
         }
+        Box(Modifier.fillMaxWidth().height(Tokens.Stroke.hair).background(c.hair))
+    }
+}
+
+/** 비교표 한 칸: ✓ 는 가는 체크 글자, – 는 흐리게, 나머지는 글. 평생권 쪽은 금빛. */
+@Composable
+private fun CmpCell(v: String, paid: Boolean, modifier: Modifier) {
+    val c = Theme.c
+    val col = when { v == "–" -> c.unwritten; paid -> c.giltText; else -> c.inkSoft }
+    Box(modifier, contentAlignment = Alignment.Center) {
+        Text(v, style = (if (v == "✓" || v == "–") Theme.body() else Theme.small()).copy(color = col, textAlign = TextAlign.Center), maxLines = 2)
     }
 }
 

@@ -223,17 +223,17 @@ open --es tb.finished 2:3;                                                      
 open --es tb.plate noah;                                                              shot v05_plate 4
 open --ez tb.reset true --es tb.theme LIGHT; sleep 3; open --ez tb.seed true --es tb.tr KRV --es tb.open 2:14; shot v06_opener 5
 
-# @scene g0
+# @scene gt
 # 넘어가는 화면: 여는 순간 (판화) · 낭독 받기 관문 · 파일 만들기 관문
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT; sleep 3
-adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro A >/dev/null; sleep 6; snap g01_intro_daily
-adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro C >/dev/null; sleep 6; snap g02_intro_first
-adb shell input tap 540 1200; sleep 2; snap g03_intro_entered
-open --es tb.gate narr;                                            shot g04_gate_narr 4
-open --es tb.gate narrOk;                                          shot g05_gate_narr_ok 4
-open --es tb.gate export;                                          shot g06_gate_export 4
-open --es tb.gate exportOk;                                        shot g07_gate_export_ok 4
-open --ei tb.page 0;                                               shot g08_home_prayer 4
+adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro A >/dev/null; sleep 6; snap gt1_intro_daily
+adb shell am force-stop $P; adb shell am start -n $P/.MainActivity --es tb.today $DAY --es tb.intro C >/dev/null; sleep 6; snap gt2_intro_first
+adb shell input tap 540 1200; sleep 2; snap gt3_intro_entered
+open --es tb.gate narr;                                            shot gt4_gate_narr 4
+open --es tb.gate narrOk;                                          shot gt5_gate_narr_ok 4
+open --es tb.gate export;                                          shot gt6_gate_export 4
+open --es tb.gate exportOk;                                        shot gt7_gate_export_ok 4
+open --ei tb.page 0;                                               shot gt8_home_prayer 4
 # @end
 # @scene hp
 # 도움말: (?) · 기도 · 듣기 첫 안내 · 설정 도움 · 소개 다시 보기 · 교독 안내

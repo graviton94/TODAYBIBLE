@@ -92,7 +92,7 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
     Column(Modifier.fillMaxSize().background(c.leaf)) {
         // 머리: ‹ 목록 · 권 장 (‹ ›) · 책갈피
         Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.read_back), style = Theme.small().copy(color = c.rubric), maxLines = 1,
+            Text(stringResource(R.string.read_back), style = Theme.small().copy(color = c.inkSoft), maxLines = 1,
                 modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.listenAt = null }.padding(horizontal = Tokens.Space.s2))
             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                 Arrow(left = true, enabled = ch > 1) { s.listenAt = book to ch - 1 }
@@ -144,7 +144,7 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
         // 듣는 중: 빠르기 · 잠들기 타이머 (누를 때마다 다음 값)
         if (now != null) {
             val timer by ListenService.timer.collectAsState()
-            Row(Modifier.fillMaxWidth().background(c.paper).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s1), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            Row(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, androidx.compose.ui.geometry.Offset.Zero, androidx.compose.ui.geometry.Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s1), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 val speedName = stringResource(when (s.aloudSpeed) { 0 -> R.string.aloud_slow; 2 -> R.string.aloud_fast; else -> R.string.aloud_normal })
                 val timerName = when (timer) { 0 -> stringResource(R.string.reminder_off); ListenService.TIMER_CHAPTER -> stringResource(R.string.timer_chapter); else -> stringResource(R.string.timer_min, timer) }
                 ListenChip(stringResource(R.string.listen_speed, speedName), Modifier.weight(1f).coach("listen_speed")) { s.chooseAloudSpeed((s.aloudSpeed + 1) % 3); ListenService.setRate(ctx, s.aloudRate()) }
@@ -154,7 +154,7 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
             }
         }
         // 아래 띠: 듣기 · 이 장 필사하기
-        Row(Modifier.fillMaxWidth().background(c.paper).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        Row(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, androidx.compose.ui.geometry.Offset.Zero, androidx.compose.ui.geometry.Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             BookButton(stringResource(if (playing) R.string.listen_stop else R.string.listen_start), Modifier.weight(1f).coach("read_listen")) {
                 if (playing) ListenService.stop(ctx) else ListenService.start(ctx, book, ch, s.text(book).fillable(ch).firstOrNull() ?: 1, s.aloudRate())
             }
@@ -166,9 +166,9 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
 @Composable
 private fun ListenChip(label: String, modifier: Modifier, on: Boolean = false, onClick: () -> Unit) {
     val c = Theme.c
-    Box(modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(if (on) c.leather else c.leaf).clickable(role = Role.Button, onClick = onClick),
+    Box(modifier.heightIn(min = Tokens.Size.touch).clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center) {
-        Text(label, style = Theme.small().copy(color = if (on) c.leatherInk else c.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        Text(label, style = Theme.small().copy(color = if (on) c.giltText else c.ink, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
 }
 

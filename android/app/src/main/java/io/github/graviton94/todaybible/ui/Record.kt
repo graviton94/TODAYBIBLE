@@ -203,12 +203,12 @@ private fun CalendarPanel(s: AppState, days: Set<Long>) {
                     row.forEach { m ->
                         val ym = YearMonth.of(month.year, m)
                         val future = ym > YearMonth.from(today)
-                        Column(Modifier.weight(1f).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).clickable(enabled = !future, role = Role.Button) { month = ym; yearView = false; picked = null }
+                        Column(Modifier.weight(1f).drawBehind { drawLine(c.hair, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.clickable(enabled = !future, role = Role.Button) { month = ym; yearView = false; picked = null }
                             .padding(Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                             val n = (1..ym.lengthOfMonth()).count { ym.atDay(it).toEpochDay() in days }
                             Row(verticalAlignment = Alignment.Bottom) {
                                 Text(stringResource(R.string.cal_month_n, m), style = Theme.small().copy(color = if (future) c.hair else c.ink), modifier = Modifier.weight(1f), maxLines = 1)
-                                if (n > 0) Text("$n", style = Theme.small().copy(color = c.rubric), maxLines = 1)
+                                if (n > 0) Text("$n", style = Theme.small().copy(color = c.giltText), maxLines = 1)
                             }
                             MiniMonth(ym, days, future)
                         }
@@ -281,8 +281,8 @@ private fun DayVerses(s: AppState, d: LocalDate) {
     val c = Theme.c
     val e = d.toEpochDay()
     val byCh = s.fills.filter { it.translation == s.translation && it.epochDay == e }.groupBy { it.key.book to it.key.chapter }
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        Text(fmtDate(R.string.fmt_md, d), style = Theme.label())
+    Column(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Text(fmtDate(R.string.fmt_md, d), style = Theme.label().copy(color = c.giltText))
         byCh.forEach { (bc, f) ->
             val vs = f.map { it.key.verse }.sorted()
             Text(stringResource(R.string.day_line, s.bookName(bc.first), bc.second, if (vs.size > 1) "${vs.first()}–${vs.last()}" else "${vs.first()}", vs.size),
@@ -442,7 +442,7 @@ private fun Stats(s: AppState) {
         cells.take(4).chunked(2).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                 row.forEach { (big, small) ->
-                    Column(Modifier.weight(1f).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s3)) {
+                    Column(Modifier.weight(1f).drawBehind { drawLine(c.hair, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(vertical = Tokens.Space.s3)) {
                         Text(big, style = Theme.title(k), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(small, style = Theme.small(), maxLines = 1)
                     }
@@ -518,15 +518,15 @@ private fun YearCard(s: AppState, year: Int) {
         }.takeIf { it > 0 }?.let { n -> stringResource(R.string.year_scroll, "%.1f".format(n * Tokens.Px.scrollCellCm / 100f)) },
         s.notes.count { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.SERMON && it.epochDay in from..to }.takeIf { it > 0 }?.let { stringResource(R.string.year_sermons, it) },
     )
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leather).drawBehind { giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = false) }
-        .padding(Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        Text(title, style = Theme.title(k).copy(color = c.gilt), maxLines = 1)
-        Text(big, style = Theme.title(k, Tokens.Text.display).copy(color = c.leatherInk), maxLines = 1)
-        lines.forEach { Text(it, style = Theme.small().copy(color = c.leatherInk), maxLines = 1) }
-        // 가죽 위의 금박 테 버튼
-        Box(Modifier.fillMaxWidth().padding(top = Tokens.Space.s2).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button))
-            .drawBehind { giltFrame(c.gilt, bands = false) }.clickable(role = androidx.compose.ui.semantics.Role.Button) { Cards.share(s, ctx, Cards.year(ctx, k, title, big, lines), "year_$year") },
-            contentAlignment = Alignment.Center) { Text(stringResource(R.string.year_share), style = Theme.label().copy(color = c.leatherInk)) }
+    // 한 해 (하루의 편지 틀): 상자 없이 위아래 가는 선, 금빛 머리글 · 큰 숫자 · 밑줄 글 하나
+    Column(Modifier.fillMaxWidth().drawBehind {
+        drawLine(c.hair, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx()); drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx())
+    }.padding(vertical = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Text("ANNUS · ${io.github.graviton94.todaybible.core.Latin.roman(year)}", style = Theme.caps(), maxLines = 1)
+        Text(title, style = Theme.title(k), maxLines = 1)
+        Text(big, style = Theme.title(k, Tokens.Text.display).copy(color = c.giltText), maxLines = 1)
+        lines.forEach { Text(it, style = Theme.small(), maxLines = 1) }
+        BookButton(stringResource(R.string.year_share), Modifier.fillMaxWidth(), quiet = true) { Cards.share(s, ctx, Cards.year(ctx, k, title, big, lines), "year_$year") }
     }
 }
 

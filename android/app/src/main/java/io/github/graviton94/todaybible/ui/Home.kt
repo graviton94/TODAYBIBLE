@@ -3,6 +3,7 @@ package io.github.graviton94.todaybible.ui
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -169,9 +170,9 @@ fun WeekStamps(s: AppState) {
         for (i in 0 until 7) {
             val d = sunday.plusDays(i.toLong())
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                Text(names[i].toString(), style = Theme.small().copy(color = if (i == 0) c.rubric else c.inkSoft, textAlign = TextAlign.Center), maxLines = 1)
+                Text(names[i].toString(), style = Theme.small().copy(color = if (i == 0) c.giltText else c.inkSoft, textAlign = TextAlign.Center), maxLines = 1)
                 Box(Modifier.size(Tokens.Size.touch * Tokens.Ratio.stampInCell).then(if (d == today) Modifier.drawWithContent {
-                    drawContent(); drawRoundRect(c.ink, style = Stroke(Tokens.Stroke.hair.toPx()), cornerRadius = androidx.compose.ui.geometry.CornerRadius(Tokens.Radius.chip.toPx()))
+                    drawContent(); drawLine(c.gilt, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.rule.toPx())
                 } else Modifier), contentAlignment = Alignment.Center) {
                     if (d.toEpochDay() in days) StampMark(s.stamp, c.rubric, Modifier.fillMaxSize(Tokens.Ratio.stampInCell))
                     else Text("${d.dayOfMonth}", style = Theme.small().copy(color = if (d.isAfter(today)) c.hair else c.unwritten), maxLines = 1)
@@ -207,19 +208,21 @@ fun planName(ctx: android.content.Context, id: String): String = ctx.getString(c
 fun PlanSheet(s: AppState) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     BookSheet({ s.planOpen = false }) {
-        Text(stringResource(R.string.plan), style = Theme.title(k), modifier = Modifier.fillMaxWidth())
+        Text("ORDO LECTIONIS", style = Theme.caps(), maxLines = 1)
+        Text(stringResource(R.string.plan), style = Theme.title(k, Tokens.Text.display), modifier = Modifier.fillMaxWidth())
         io.github.graviton94.todaybible.core.Plans.all.forEach { pl ->
             val verses = remember(pl.id, s.translation) { pl.chapters.sumOf { (b, ch) -> s.store.book(s.translation, b).fillable(ch).size } }
             val on = s.planId == pl.id
-            Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(if (on) c.paper else c.leaf)
-                .clickable(role = Role.RadioButton) { s.choosePlan(pl.id) }.padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s2),
+            Hair()
+            Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch)
+                .clickable(role = Role.RadioButton) { s.choosePlan(pl.id) }.padding(vertical = Tokens.Space.s2),
                 verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(planName(ctx, pl.id), style = Theme.body(), maxLines = 1)
+                    Text(planName(ctx, pl.id), style = Theme.body().copy(color = if (on) c.giltText else c.ink), maxLines = 1)
                     Text(stringResource(R.string.plan_rate, (verses + pl.days - 1) / pl.days, pl.days), style = Theme.small(), maxLines = 1)
                 }
                 if (pl.books.any { s.premium(it) }) PremiumTag()
-                else if (on) Box(Modifier.size(Tokens.Size.dot).clip(androidx.compose.foundation.shape.CircleShape).background(c.rubric))
+                else if (on) Text("✓", style = Theme.body().copy(color = c.gilt))
             }
         }
         BookButton(stringResource(R.string.plan_none), Modifier.fillMaxWidth(), quiet = true) { s.choosePlan(null) }
@@ -264,19 +267,20 @@ private fun SimpleHome(s: AppState) {
     val t = s.store.book(s.translation, b)
     val fill = t.fillable(ch); val done = fill.count { s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(b, ch, it)) }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
-        Text(stringResource(R.string.today_chapter), style = Theme.label().copy(color = c.rubric))
+        Text(io.github.graviton94.todaybible.core.Latin.head(b, ch), style = Theme.caps(), maxLines = 1)
         Text(stringResource(R.string.listen_head, s.bookName(b), ch), style = Theme.title(k, Tokens.Text.display))
         Text(stringResource(R.string.ch_progress, done, fill.size) + if (s.goalMet()) " · " + stringResource(R.string.goal_done) else "", style = Theme.body().copy(color = c.inkSoft))
         BigAction(stringResource(R.string.simple_aloud)) { s.store.copyTab = 0; s.open(b, ch) }
-        BigAction(stringResource(R.string.simple_listen)) { s.read(b, ch); if (s.locked(b)) return@BigAction; io.github.graviton94.todaybible.data.ListenService.start(ctx, b, ch, s.progress.nextVerse(s.translation, t, ch) ?: 1, s.aloudRate()) }
-        BigAction(stringResource(R.string.simple_write)) { s.store.copyTab = 2; s.open(b, ch) }
+        BigAction(stringResource(R.string.simple_listen), primary = false) { s.read(b, ch); if (s.locked(b)) return@BigAction; io.github.graviton94.todaybible.data.ListenService.start(ctx, b, ch, s.progress.nextVerse(s.translation, t, ch) ?: 1, s.aloudRate()) }
+        BigAction(stringResource(R.string.simple_write), primary = false) { s.store.copyTab = 2; s.open(b, ch) }
         WeekStamps(s)
     }
 }
 
 @Composable
-private fun BigAction(text: String, onClick: () -> Unit) {
+private fun BigAction(text: String, primary: Boolean = true, onClick: () -> Unit) {
     val c = Theme.c
-    Box(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.bigAction).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leather).clickable(role = Role.Button, onClick = onClick),
-        contentAlignment = Alignment.Center) { Text(text, style = Theme.title(true).copy(color = c.leatherInk)) }
+    // 하나만 채우고 나머지는 가는 테 (크기는 그대로 커서 누르기 쉬움)
+    Box(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.bigAction).then(if (primary) Modifier.background(c.leather) else Modifier.border(Tokens.Stroke.hair, c.ink)).clickable(role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center) { Text(text, style = Theme.title(true).copy(color = if (primary) c.leatherInk else c.ink)) }
 }

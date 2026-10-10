@@ -15,6 +15,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -97,8 +98,13 @@ fun Welcome(s: AppState) {
             Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
                 when (i) {
                     0 -> {
-                        Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.welcomeArt).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper), contentAlignment = Alignment.Center) { WelcomeArt(s, 1) }
-                        Text(stringResource(R.string.ob1_h), style = Theme.title(k, Tokens.Text.title))
+                        // 첫 장면: 판화 ‘빛이 있으라’ 한 점 (하루의 편지 틀: 그림은 크게, 글은 아래)
+                        val img = rememberPlate("creation")
+                        Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.welcomeArt).background(c.paper)) {
+                            if (img != null) androidx.compose.foundation.Image(img, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                        }
+                        Text("BIBLIA · MANU SCRIPTA", style = Theme.caps(), maxLines = 1)
+                        Text(stringResource(R.string.ob1_h), style = Theme.title(k, Tokens.Text.display))
                         Text(stringResource(R.string.ob1_p, "%,d".format(s.translation.total)), style = Theme.body().copy(color = c.inkSoft))
                         Text(stringResource(R.string.ob2_p), style = Theme.body().copy(color = c.inkSoft))
                     }
@@ -107,7 +113,7 @@ fun Welcome(s: AppState) {
                         Text(stringResource(R.string.ob_name), style = Theme.title(k, Tokens.Text.title))
                         Text(stringResource(R.string.ob_name_p), style = Theme.body().copy(color = c.inkSoft))
                         NameField(s) { }
-                        Text(stringResource(R.string.ob_restore), style = Theme.small().copy(color = c.rubric),
+                        Text(stringResource(R.string.ob_restore), style = Theme.small().copy(color = c.inkSoft, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline),
                             modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { restore.launch(arrayOf("application/zip", "application/octet-stream")) })
                         // 하루 분량 (처음엔 하루 한 장)
                         GoalChooser(s, title = true)
@@ -117,7 +123,7 @@ fun Welcome(s: AppState) {
         }
         // 점 셋
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2, Alignment.CenterHorizontally)) {
-            for (i in 0..(if (s.tour) 1 else 2)) Box(Modifier.size(Tokens.Size.dot).clip(CircleShape).background(if (i == s.welcomeStep) c.rubric else c.hair))
+            for (i in 0..(if (s.tour) 1 else 2)) Box(Modifier.size(Tokens.Size.dot).clip(CircleShape).background(if (i == s.welcomeStep) c.gilt else c.hair))
         }
         when (s.welcomeStep) {
             0 -> BookButton(stringResource(R.string.next), Modifier.fillMaxWidth()) { s.welcomeStep++ }
@@ -215,11 +221,11 @@ fun GoalChooser(s: AppState, title: Boolean) {
         Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             Goal.choices.forEach { g ->
                 val on = g == s.dailyGoal
-                Column(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(if (on) c.leather else c.paper)
+                Column(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).border(Tokens.Stroke.hair, if (on) c.gilt else c.hair).drawBehind { if (on) drawRect(c.gilt, Offset(0f, size.height - Tokens.Stroke.rule.toPx() * 2), Size(size.width, Tokens.Stroke.rule.toPx() * 2)) }
                     .clickable(role = Role.RadioButton) { s.setGoal(g) }.padding(vertical = Tokens.Space.s2),
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-                    Text(if (g < 0) "${-g}" else "$g", style = Theme.title(k).copy(color = if (on) c.leatherInk else c.ink), maxLines = 1)
-                    Text(stringResource(if (g < 0) R.string.unit_chapter else R.string.unit_verses), style = Theme.small().copy(color = if (on) c.leatherInk else c.inkSoft), maxLines = 1)
+                    Text(if (g < 0) "${-g}" else "$g", style = Theme.big(Tokens.Text.gridNum).copy(color = if (on) c.giltText else c.ink), maxLines = 1)
+                    Text(stringResource(if (g < 0) R.string.unit_chapter else R.string.unit_verses), style = Theme.small().copy(color = if (on) c.giltText else c.inkSoft), maxLines = 1)
                 }
             }
         }
@@ -240,10 +246,10 @@ private fun duration(s: AppState, days: Int): String = when {
 @Composable
 private fun ChoiceCard(title: String, note: String, on: Boolean, onClick: () -> Unit) {
     val c = Theme.c
-    Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(if (on) c.paper else c.leaf)
+    Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch)
         .drawBehind {
-            drawRoundRect(if (on) c.rubric else c.hair, style = Stroke(Tokens.Stroke.hair.toPx()), cornerRadius = CornerRadius(Tokens.Radius.button.toPx()))
-            if (on) drawRect(c.rubric, Offset.Zero, Size(Tokens.Stroke.rule.toPx() * 2, size.height))
+            drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx())
+            if (on) drawRect(c.gilt, Offset.Zero, Size(Tokens.Stroke.rule.toPx() * 2, size.height))
         }.clickable(role = Role.RadioButton, onClick = onClick).padding(horizontal = Tokens.Space.s4),
         verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = Theme.body(), maxLines = 1, modifier = Modifier.weight(1f))

@@ -297,7 +297,7 @@ private fun Manuscript(s: AppState, verse: Int, source: String, typed: String, m
                                 val w = Tokens.Stroke.hair.toPx(); val line = c.rubric.copy(alpha = Tokens.Alpha.faint)
                                 drawLine(line, Offset(size.width, 0f), Offset(size.width, size.height), w)
                                 drawLine(line, Offset(0f, size.height), Offset(size.width, size.height), w)
-                                if (m == TypeJudge.Mark.WRONG) drawRect(c.rubric.copy(alpha = Tokens.Alpha.wrongCell))
+                                if (m == TypeJudge.Mark.WRONG) drawRect(c.wrong.copy(alpha = Tokens.Alpha.wrongCell))
                                 if (i != null && i == cursor && gold <= 0f) drawRect(c.rubric, Offset(Tokens.Stroke.rule.toPx() / 2, Tokens.Stroke.rule.toPx() / 2),
                                     androidx.compose.ui.geometry.Size(size.width - Tokens.Stroke.rule.toPx(), size.height - Tokens.Stroke.rule.toPx()), style = androidx.compose.ui.graphics.drawscope.Stroke(Tokens.Stroke.rule.toPx()))
                             }, contentAlignment = Alignment.Center) {
@@ -307,7 +307,7 @@ private fun Manuscript(s: AppState, verse: Int, source: String, typed: String, m
                                     val color = when {
                                         gold > 0f -> c.giltText
                                         done -> c.ink
-                                        m == TypeJudge.Mark.WRONG -> c.rubric
+                                        m == TypeJudge.Mark.WRONG -> c.wrong
                                         m == TypeJudge.Mark.COMPOSING -> c.inkSoft
                                         else -> c.ink.copy(alpha = Tokens.Alpha.hintChar)   // 밑글씨
                                     }
@@ -382,9 +382,10 @@ private fun ResponsivePair(s: AppState, verse: Int, source: String, at: Int, gui
     val other = if (guideTurn) all.getOrNull(i + 1) else all.getOrNull(i - 1)
     val leader = stringResource(R.string.resp_leader); val people = stringResource(R.string.resp_people)
     @Composable fun part(label: String, now: Boolean, content: @Composable () -> Unit) {
-        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(if (now) c.paper else androidx.compose.ui.graphics.Color.Transparent).padding(Tokens.Space.s3),
+        // 지금 읽는 쪽: 왼쪽 금선 한 줄 (상자 없이)
+        Column(Modifier.fillMaxWidth().drawBehind { if (now) drawRect(c.gilt, Offset.Zero, androidx.compose.ui.geometry.Size(Tokens.Stroke.rule.toPx() * 2, size.height)) }.padding(start = Tokens.Space.s4, top = Tokens.Space.s2, bottom = Tokens.Space.s2),
             verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-            Text(label, style = Theme.small().copy(color = if (now) c.rubric else c.inkSoft), maxLines = 1)
+            Text(label, style = Theme.small().copy(color = if (now) c.giltText else c.unwritten, letterSpacing = androidx.compose.ui.unit.TextUnit(0.12f, androidx.compose.ui.unit.TextUnitType.Em)), maxLines = 1)
             content()
         }
     }
@@ -434,7 +435,7 @@ fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null, marks: L
                 sp.text.forEachIndexed { j, ch ->
                     val st = when (marks.getOrNull(i + j)) {
                         TypeJudge.Mark.OK -> style.copy(color = c.ink)
-                        TypeJudge.Mark.WRONG -> style.copy(color = c.rubric, textDecoration = TextDecoration.Underline)
+                        TypeJudge.Mark.WRONG -> style.copy(color = c.wrong, textDecoration = TextDecoration.Underline)
                         // 한글을 조합하는 중인 글자: 틀림이 아니라 쓰는 중
                         TypeJudge.Mark.COMPOSING -> style.copy(color = c.inkSoft, background = c.rubric.copy(alpha = Tokens.Alpha.nib))
                         else -> if (i + j == nibAt) style.copy(color = c.unwritten, textDecoration = TextDecoration.Underline, background = c.rubric.copy(alpha = Tokens.Alpha.nib)) else style.copy(color = c.unwritten)
@@ -445,7 +446,7 @@ fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null, marks: L
                 // 놓친 낱말은 붉은 밑줄
                 sp.text.forEachIndexed { j, ch ->
                     val miss = missed.any { (i + j) in it }
-                    withStyle(style.copy(color = if (miss) c.rubric else c.ink, textDecoration = if (miss) TextDecoration.Underline else null)) { append(ch) }
+                    withStyle(style.copy(color = if (miss) c.wrong else c.ink, textDecoration = if (miss) TextDecoration.Underline else null)) { append(ch) }
                 }
             } else {
                 val cut = if (lit == null) sp.text.length else (lit - i).coerceIn(0, sp.text.length)
@@ -490,15 +491,15 @@ private fun NarrationBanner(s: AppState, loading: Boolean, failed: Boolean) {
     val N = io.github.graviton94.todaybible.data.Narration
     val all by N.progress.collectAsState()
     val p = all[N.key(s.narrator, s.book, s.chapter)]
-    if (loading) Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+    if (loading) Column(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
         val frac = p?.takeIf { it.total > 0 }?.let { (it.bytes.toFloat() / it.total).coerceIn(0f, 1f) }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.narr_loading), style = Theme.small().copy(color = c.ink), modifier = Modifier.weight(1f), maxLines = 1)
             if (frac != null) Text("${(frac * 100).toInt()}%", style = Theme.label().copy(color = c.rubric), maxLines = 1)
         }
         // 막대: 전체 크기를 알면 그만큼, 모르면 오가는 띠
-        Box(Modifier.fillMaxWidth().height(Tokens.Size.bar).clip(RoundedCornerShape(Tokens.Size.bar)).background(c.hair)) {
-            if (frac != null) Box(Modifier.fillMaxWidth(frac).height(Tokens.Size.bar).background(c.rubric))
+        Box(Modifier.fillMaxWidth().height(Tokens.Size.bar).background(c.hair)) {
+            if (frac != null) Box(Modifier.fillMaxWidth(frac).height(Tokens.Size.bar).background(c.gilt))
             else {
                 val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "narr")
                 val x by t.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(Tokens.Motion.fadeMs * 4)), label = "x")
@@ -518,7 +519,7 @@ private fun NarrationBanner(s: AppState, loading: Boolean, failed: Boolean) {
         } else Text(stringResource(R.string.narr_connecting), style = Theme.small(), maxLines = 1)
     }
     if (failed) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-        Text(stringResource(R.string.narr_failed), style = Theme.small().copy(color = c.rubric), modifier = Modifier.weight(1f))
+        Text(stringResource(R.string.narr_failed), style = Theme.small().copy(color = c.wrong), modifier = Modifier.weight(1f))
         if (failed) Text(stringResource(R.string.narr_retry), style = Theme.small().copy(color = c.rubric),
             modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.narration = s.narration - "${s.book}:${s.chapter}"; s.fetchNarration(s.book, s.chapter) })
     }
@@ -570,7 +571,7 @@ private fun AloudLines(s: AppState, verse: Int, plain: String, at: Int, missed: 
                 if (ri != null) Text(buildAnnotatedString {
                     for (j in ri) {
                         val miss = missed.any { j in it }
-                        val color = when { miss -> c.rubric; j < at -> c.rubric; else -> c.unwritten.copy(alpha = Tokens.Alpha.aloudAhead) }
+                        val color = when { miss -> c.wrong; j < at -> c.rubric; else -> c.unwritten.copy(alpha = Tokens.Alpha.aloudAhead) }
                         withStyle(SpanStyle(color = color, background = if (j < at && !miss) c.rubric.copy(alpha = Tokens.Alpha.aloudLitBg) else androidx.compose.ui.graphics.Color.Unspecified,
                             textDecoration = if (miss) TextDecoration.Underline else null)) { append(plain[j]) }
                     }
@@ -867,7 +868,7 @@ private fun RecordedBar(s: AppState, v: Int, onKeep: () -> Unit, onAgain: () -> 
     var touched by remember(v) { mutableStateOf(false) }
     DisposableEffect(v) { onDispose { player?.release() } }
     LaunchedEffect(v, touched) { if (!touched) { delay(Tokens.Motion.keepMs.toLong()); onKeep() } }
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+    Column(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()); drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }.padding(vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         Text(stringResource(R.string.rec_just, v), style = Theme.label())
         Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             BookButton(stringResource(R.string.rec_listen), Modifier.weight(1f), quiet = true) {
@@ -917,7 +918,7 @@ private fun VoiceRow(s: AppState) {
             if (ok) s.exportJob = ExportJob(listOf(out), if (video) "video/mp4" else "audio/mp4", ctx.getString(R.string.export_title_voice, s.bookName(), s.chapter))
         }
     }
-    Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s4).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).padding(Tokens.Space.s4),
+    Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s4).drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(vertical = Tokens.Space.s4),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
         val sec = (total / 1000).toInt()
         Text(stringResource(R.string.voice_chapter, parts.size, stringResource(R.string.duration_ms, sec / 60, sec % 60)), style = Theme.label(), maxLines = 1)

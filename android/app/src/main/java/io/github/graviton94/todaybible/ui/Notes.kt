@@ -162,7 +162,7 @@ fun SermonSheet(s: AppState) {
 fun SermonCard(s: AppState, day: Long) {
     val c = Theme.c
     val n = s.sermonOn(day)
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper).clickable(role = Role.Button) { s.sermonOpen = day }.padding(Tokens.Space.s4),
+    Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.sermonOpen = day }.padding(vertical = Tokens.Space.s3),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
         Text(stringResource(R.string.sermon_title), style = Theme.small().copy(color = c.rubric), maxLines = 1)
         if (n == null) Text(stringResource(R.string.sermon_invite), style = Theme.body())
