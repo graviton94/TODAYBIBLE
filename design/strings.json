@@ -479,7 +479,7 @@
   "marks_title": {"en": "Highlights", "ko": "형광펜"},
   "marks_none_bm": {"en": "No bookmarks yet. Tap Bookmark at the top while reading.", "ko": "아직 책갈피가 없어요. 읽다가 위의 ‘책갈피’를 누르세요."},
   "marks_none_hl": {"en": "No highlights yet. Tap a verse while reading.", "ko": "아직 형광펜이 없어요. 읽다가 절을 누르세요."},
-  "grid_legend": {"en": "Gold ring = finished · gold arc = how much is written · mark below = has an engraving", "ko": "금빛 테 = 다 쓴 장 · 금빛 호 = 쓴 만큼 · 아래 금빛 표 = 판화가 있는 장"},
+  "grid_legend": {"en": "Gold ring = finished · gold arc = how much is written · mark below = has an engraving", "ko": "금빛 테 = 다 쓴 장 · 호 = 쓴 만큼 · 아래 표 = 판화"},
   "about_01": {"en": "Creation and the patriarchs", "ko": "천지 창조와 족장들의 이야기"},
   "about_02": {"en": "Out of Egypt and the covenant at Sinai", "ko": "이집트 탈출과 시내산 언약"},
   "about_03": {"en": "Offerings and the way of holiness", "ko": "제사와 거룩한 삶의 규례"},

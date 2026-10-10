@@ -481,7 +481,7 @@
     <string name="marks_title">형광펜</string>
     <string name="marks_none_bm">아직 책갈피가 없어요. 읽다가 위의 ‘책갈피’를 누르세요.</string>
     <string name="marks_none_hl">아직 형광펜이 없어요. 읽다가 절을 누르세요.</string>
-    <string name="grid_legend">금빛 테 = 다 쓴 장 · 금빛 호 = 쓴 만큼 · 아래 금빛 표 = 판화가 있는 장</string>
+    <string name="grid_legend">금빛 테 = 다 쓴 장 · 호 = 쓴 만큼 · 아래 표 = 판화</string>
     <string name="about_01">천지 창조와 족장들의 이야기</string>
     <string name="about_02">이집트 탈출과 시내산 언약</string>
     <string name="about_03">제사와 거룩한 삶의 규례</string>
