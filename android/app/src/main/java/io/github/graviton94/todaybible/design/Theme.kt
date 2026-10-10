@@ -66,13 +66,17 @@ object Theme {
 }
 
 @Composable
-fun TodayTheme(choice: ThemeChoice, scale: Float, night: Boolean = false, contrast: Boolean = false, content: @Composable () -> Unit) {
+fun TodayTheme(choice: ThemeChoice, scale: Float, night: Boolean = false, contrast: Boolean = false, ink: String = "ink", content: @Composable () -> Unit) {
     val dark = when (choice) { ThemeChoice.SYSTEM -> isSystemInDarkTheme(); ThemeChoice.LIGHT -> false; ThemeChoice.DARK, ThemeChoice.CANDLE -> true }
     // 폰 글자 크기는 ‘크게’ 까지만 따라가요 (130% · 200% 에서는 버튼 · 머리줄이 무너져 앱을 쓸 수 없어서)
     val d = androidx.compose.ui.platform.LocalDensity.current
     val capped = androidx.compose.ui.unit.Density(d.density, d.fontScale.coerceAtMost(Tokens.Ratio.systemFontMax))
-    CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides capped, LocalPalette provides (if (night || choice == ThemeChoice.CANDLE) Tokens.candle else if (dark) Tokens.dark else Tokens.light).let { p -> if (contrast) sharper(p) else p }, LocalScale provides scale, content = content)
+    CompositionLocalProvider(androidx.compose.ui.platform.LocalDensity provides capped, LocalPalette provides (if (night || choice == ThemeChoice.CANDLE) Tokens.candle else if (dark) Tokens.dark else Tokens.light).let { p -> if (contrast) sharper(p) else p }.let { p -> p.copy(penInk = inkColor(ink, night || dark || choice == ThemeChoice.CANDLE)) }, LocalScale provides scale, content = content)
 }
 
 /** 또렷하게: 흐린 글자는 한 단계씩 진하게, 가는 줄은 더 보이게 (같은 재료 색에서 끌어옴). */
 fun sharper(p: Palette): Palette = p.copy(inkSoft = p.ink, unwritten = p.inkSoft, hair = p.hair.copy(alpha = Tokens.Alpha.contrastHair), noteLine = p.noteLine.copy(alpha = Tokens.Alpha.contrastHair))
+
+/** 꾸미기 › 잉크: 손글씨 · 타자로 쓴 글자의 색 (어두운 바탕이면 밝은 짝). */
+fun inkColor(id: String, dark: Boolean): androidx.compose.ui.graphics.Color = if (dark) when (id) { "navy" -> Tokens.InksDark.navy; "sepia" -> Tokens.InksDark.sepia; "gilt" -> Tokens.InksDark.gilt; else -> Tokens.InksDark.ink }
+    else when (id) { "navy" -> Tokens.Inks.navy; "sepia" -> Tokens.Inks.sepia; "gilt" -> Tokens.Inks.gilt; else -> Tokens.Inks.ink }

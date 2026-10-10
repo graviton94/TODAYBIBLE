@@ -94,7 +94,7 @@ private fun PlateDark(s: AppState, p: Plate) {
             Text(s.plateBy(p), style = Theme.small())
             if (n < Pieces.COUNT) BookButton(stringResource(R.string.continue_at, s.bookName(p.book), p.chapter), Modifier.fillMaxWidth()) { s.plateView = null; s.open(p.book, p.chapter) }
             else BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
-                Cards.share(s, ctx, Cards.plate(ctx, k, p.id, s.plateName(p), s.chapterRef(p.book, p.chapter)), "plate")
+                Cards.share(s, ctx, Cards.verse(ctx, k, s.head(p.book, p.chapter), ctx.getString(R.string.ref_verse, s.bookName(p.book), p.chapter, p.verse), s.text(p.book).verse(p.chapter, p.verse), p.id), "verse")
             }
         }
     }
@@ -207,7 +207,7 @@ fun ChapterOpener(s: AppState, b: Int, ch: Int) {
             }, contentScale = ContentScale.Crop)
             Column(Modifier.fillMaxSize().statusBarsPaddingCompat().padding(horizontal = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 Box(Modifier.weight(1f))
-                Text(io.github.graviton94.todaybible.core.Latin.head(b, ch), style = Theme.caps(), maxLines = 1)
+                HeadText(s, b, ch)
                 Text(s.plateName(p), style = Theme.title(k, Tokens.Text.display), maxLines = 2)
                 Text(stringResource(R.string.opener_line, s.chapterRef(b, ch), fill.size, p.verse), style = Theme.small(), maxLines = 2)
                 Text(stringResource(R.string.opener_note, done), style = Theme.body().copy(color = c.inkSoft), maxLines = 3)

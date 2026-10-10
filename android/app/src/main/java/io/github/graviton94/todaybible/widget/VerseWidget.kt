@@ -89,48 +89,42 @@ class VerseWidget : AppWidgetProvider() {
             val name = Canon.books[b].let { if (korean) it.ko else it.en }
             val phrase = LineBreak.Paragraph.copy(wordBreak = LineBreak.WordBreak.Phrase)
             return Cards.render(ctx, (wDp * d).toInt(), (hDp * d).toInt(), density) { m ->
+                // 1.2 틀: 종이 (어두우면 밤빛) · 금빛 라틴 머리글 · 다음 한 절 · 장절 · 마디 띠 (5절마다 한 칸)
                 val pad = Tokens.Size.widgetPad.toPx(); val w = size.width - 2 * pad
                 drawRoundRect(c.leaf, cornerRadius = CornerRadius(Tokens.Radius.page.toPx()))
-                // 머리줄
-                val head = m.measure(Lang.chapterRef(ctx, tr, name, ch).uppercase(Lang.locale(tr)), TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.fell, fontWeight = FontWeight.Bold,
-                    fontSize = Tokens.Text.small, letterSpacing = Tokens.Tracking.head.em, color = c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = (w * 0.7f).toInt()))
+                val headText = (if (store.latinHeads) "HODIE · " + io.github.graviton94.todaybible.core.Latin.head(b, ch) else "${ctx.getString(R.string.today_chapter)} · $name $ch")
+                val head = m.measure(headText, TextStyle(fontFamily = if (store.latinHeads) Fonts.caps else Fonts.serifKr, fontWeight = FontWeight.SemiBold,
+                    fontSize = Tokens.Text.caps, letterSpacing = Tokens.Tracking.caps.em, color = c.giltText), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = (w * 0.78f).toInt()))
                 drawText(head, topLeft = Offset(pad, pad))
-                val count = m.measure("$done / ${fillable.size}", TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = c.inkSoft))
-                drawText(count, topLeft = Offset(size.width - pad - count.size.width, pad))
-                val ruleY = pad + head.size.height + Tokens.Space.s1.toPx()
-                drawLine(c.hair, Offset(pad, ruleY), Offset(size.width - pad, ruleY), Tokens.Stroke.hair.toPx())
-                // 아래: 이번 주 도장 (주일부터) · 오늘 쓴 절. 좁으면 도장 칸을 줄이고, 낮으면 (2×1) 도장 줄은 빼고 말씀만
-                val gap = Tokens.Space.s1.toPx()
-                val showWeek = hDp >= Tokens.Size.widgetWeekMinH.value
-                val cell = minOf(Tokens.Size.icon.toPx(), (w - 6 * gap) / 7f)
-                val bottomY = if (showWeek) size.height - pad - cell else size.height - pad
-                val sunday = today.minusDays((today.dayOfWeek.value % 7).toLong())
-                val letters = ctx.getString(R.string.weekdays)
-                if (showWeek) for (i in 0 until 7) {
-                    val day = sunday.plusDays(i.toLong()); val cx = pad + cell / 2 + i * (cell + gap)
-                    if (day.toEpochDay() in days) stamp(store.stamp, c.rubric, Offset(cx, bottomY + cell / 2), cell)
-                    else {
-                        val l = m.measure(letters[i].toString(), TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = if (day == today) c.ink else c.unwritten, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(cell.toInt()))
-                        drawText(l, topLeft = Offset(cx - cell / 2, bottomY + (cell - l.size.height) / 2))
+                val count = m.measure("$done / ${fillable.size}", TextStyle(fontFamily = Fonts.display, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.small, color = c.inkSoft))
+                drawText(count, topLeft = Offset(size.width - pad - count.size.width, pad + (head.size.height - count.size.height) / 2f))
+                // 아래: 마디 띠 (낮은 2×1 이면 띠는 빼고 말씀만)
+                val showBar = hDp >= Tokens.Size.widgetWeekMinH.value
+                val segH = Tokens.Size.segment.toPx(); val segGap = Tokens.Space.s1.toPx() * 0.6f
+                val bottomY = if (showBar) size.height - pad - segH else size.height - pad
+                if (showBar) {
+                    val n = ((fillable.size + 4) / 5).coerceIn(1, 8); val sw = (w - segGap * (n - 1)) / n
+                    for (i in 0 until n) {
+                        val on = done >= (i + 1) * 5 || (i == n - 1 && done >= fillable.size && fillable.isNotEmpty())
+                        val part = if (!on && done > i * 5) (done - i * 5) / 5f else 0f
+                        val x = pad + i * (sw + segGap)
+                        drawRect(c.hair, Offset(x, bottomY), Size(sw, segH))
+                        if (on) drawRect(c.gilt, Offset(x, bottomY), Size(sw, segH)) else if (part > 0f) drawRect(c.gilt, Offset(x, bottomY), Size(sw * part, segH))
                     }
                 }
-                // 오늘 쓴 절: 도장 줄 옆에 자리가 있을 때만
-                if (todayN > 0 && showWeek) {
-                    val t = m.measure(ctx.getString(R.string.verses_n, todayN), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.small, color = c.rubric))
-                    if (pad + 7 * cell + 6 * gap + gap + t.size.width <= size.width - pad) drawText(t, topLeft = Offset(size.width - pad - t.size.width, bottomY + (cell - t.size.height) / 2))
-                }
+                // 장절 한 줄 · 오늘 쓴 절
+                val refText = if (v == null) "" else Lang.chapterRef(ctx, tr, name, ch).let { if (korean) "$name $ch:$v" else "$name $ch:$v" } + (if (todayN > 0) " · " + ctx.getString(R.string.verses_n, todayN) else "")
+                val ref = m.measure(refText, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.small, color = c.giltText), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w.toInt()))
+                val refY = bottomY - (if (showBar) Tokens.Space.s2.toPx() else 0f) - ref.size.height
+                if (refText.isNotEmpty()) drawText(ref, topLeft = Offset(pad, refY))
                 // 가운데: 다음 한 절 (자리에 맞게 줄 수 · 넘치면 말줄임)
-                val top = ruleY + Tokens.Space.s2.toPx(); val avail = bottomY - Tokens.Space.s2.toPx() - top
+                val top = pad + head.size.height + Tokens.Space.s2.toPx(); val avail = refY - Tokens.Space.s1.toPx() - top
                 val verseText = if (v == null) ctx.getString(R.string.chapter_done, name, ch) else Markup.plain(text.verse(ch, v))
-                val body = buildAnnotatedString {
-                    if (v != null) withStyle(SpanStyle(fontFamily = Fonts.black, color = c.rubric)) { append("$v ") }
-                    append(verseText)
-                }
                 val style = TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.garamond, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.body,
                     lineHeight = Tokens.Leading.body.em, color = c.ink, lineBreak = phrase)
                 val one = m.measure("가", style).size.height.coerceAtLeast(1)
                 val lines = (avail / one).toInt().coerceAtLeast(1)
-                val lay = m.measure(body, style, maxLines = lines, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w.toInt()))
+                val lay = m.measure(verseText, style, maxLines = lines, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w.toInt()))
                 drawText(lay, topLeft = Offset(pad, top))
             }
         }

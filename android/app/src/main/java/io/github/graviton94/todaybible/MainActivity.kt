@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
                 val bar = if (dark) SystemBarStyle.dark(android.graphics.Color.TRANSPARENT) else SystemBarStyle.light(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
                 enableEdgeToEdge(bar, bar)
             }
-            TodayTheme(s.theme, s.scale, s.night, s.contrast) { Root(s) }
+            TodayTheme(s.theme, s.scale, s.night, s.contrast, s.ink) { Root(s) }
             androidx.compose.runtime.LaunchedEffect(s.opening) { if (!s.opening) s.store.openedDay = s.today().toEpochDay() }
         }
     }
@@ -70,12 +70,11 @@ class MainActivity : ComponentActivity() {
             save("widget_goal_dark", io.github.graviton94.todaybible.widget.GoalWidget().draw(this, 110, 110, true))
             save("widget_hand", io.github.graviton94.todaybible.widget.HandWidget.bitmap(this, 360, 170, false, day))
             val k = s.korean; val now = day.atTime(7, 12)
-            val ref = "${s.bookName(0)} 1:1"
-            save("card_verse", io.github.graviton94.todaybible.ui.Cards.verse(this, k, ref, s.store.book(s.translation, 0).verse(1, 1), "noah", now))
-            val long = s.store.book(s.translation, 18).verse(23, 4)
-            save("card_verse_long", io.github.graviton94.todaybible.ui.Cards.verse(this, k, "${s.bookName(18)} 23:4", long, "sermon", now))
-            save("card_plate", io.github.graviton94.todaybible.ui.Cards.plate(this, k, "noah", s.plateName(s.store.plates.first { it.id == "noah" }), s.chapterRef(0, 7), now))
-            save("card_milestone", io.github.graviton94.todaybible.ui.Cards.milestone(this, k, Milestone.OLIVE, io.github.graviton94.todaybible.ui.milestoneName(this, Milestone.OLIVE), io.github.graviton94.todaybible.ui.milestoneRule(this, Milestone.OLIVE), now))
+            val ref = "${s.bookName(0)} 1:3"
+            save("card_verse", io.github.graviton94.todaybible.ui.Cards.verse(this, k, s.head(0, 1), ref, s.store.book(s.translation, 0).verse(1, 3), "creation", now))
+            val long = s.store.book(s.translation, 1).verse(14, 21)
+            save("card_verse_long", io.github.graviton94.todaybible.ui.Cards.verse(this, k, s.head(1, 14), "${s.bookName(1)} 14:21", long, "moses_sea", now))
+            save("card_milestone", io.github.graviton94.todaybible.ui.Cards.year(this, k, io.github.graviton94.todaybible.ui.milestoneName(this, Milestone.OLIVE), "III", listOf(io.github.graviton94.todaybible.ui.milestoneRule(this, Milestone.OLIVE)), "noah", "VESTIGIUM", now))
             // 나의 성경 PDF (창세기, 쓴 절만 날짜)
             io.github.graviton94.todaybible.ui.MyBible.make(this, s.store, s.translation, 0).copyTo(java.io.File(dir, "my_bible.pdf"), overwrite = true)
         }.onFailure { java.io.File(dir, "error.txt").writeText(it.stackTraceToString()) }

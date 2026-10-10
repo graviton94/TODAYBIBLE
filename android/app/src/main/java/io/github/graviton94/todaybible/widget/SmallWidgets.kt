@@ -18,6 +18,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import io.github.graviton94.todaybible.MainActivity
@@ -82,23 +84,20 @@ class GoalWidget : SmallWidget() {
     override fun draw(ctx: Context, wDp: Int, hDp: Int, dark: Boolean): Bitmap { val (n, goal, run) = today(ctx); return paint(ctx, wDp, hDp, dark, n, goal, run) }
     /** 값을 받아 그리기 (위젯 고르는 화면의 미리보기는 보기 좋은 예시 값으로). */
     fun paint(ctx: Context, wDp: Int, hDp: Int, dark: Boolean, n: Int, goal: Int, run: Int): Bitmap = frame(ctx, wDp, hDp, dark) { m, c ->
-        val met = if (goal < 0) n >= Goal.LONG * Goal.chapters(goal) else n >= goal
-        val side = minOf(size.width, size.height) * 0.56f; val w = Tokens.Stroke.rule.toPx() * 2.5f
-        val tl = Offset((size.width - side) / 2, size.height * 0.1f)
-        drawArc(c.hair, 0f, 360f, false, tl, Size(side, side), style = Stroke(w))
-        // 장 목표면 한 장 몫 (LONG 절) 에 견줘 고리를 채워요
+        // 1.2 틀: 금빛 머리글 · 큰 숫자 (며칠째) · 가는 금선 고리 (오늘 분량) · 아래 한 줄
+        val pad = Tokens.Size.widgetPad.toPx()
+        val cap = m.measure("CONTINUA", TextStyle(fontFamily = Fonts.caps, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.caps, letterSpacing = Tokens.Tracking.caps.em, color = c.giltText), maxLines = 1)
+        drawText(cap, topLeft = Offset(pad, pad))
+        val side = minOf(size.width, size.height) * 0.34f; val tl = Offset(size.width - pad - side, pad)
         val frac = (n.toFloat() / (if (goal < 0) Goal.LONG * Goal.chapters(goal) else goal)).coerceIn(0f, 1f)
-        drawArc(if (met) c.gilt else c.rubric, -90f, 360f * frac, false, tl, Size(side, side), style = Stroke(w, cap = StrokeCap.Round))
-        val center = Offset(size.width / 2, tl.y + side / 2)
-        if (met) stamp(io.github.graviton94.todaybible.ui.STAMP_CROSS, c.rubric, center, side * 0.4f)
-        else {
-            val t = m.measure(if (goal < 0) ctx.getString(R.string.verses_n, n) else "$n/$goal", TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.label, color = c.ink, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(side.toInt()))
-            drawText(t, topLeft = Offset(tl.x, center.y - t.size.height / 2))
-        }
-        val l = m.measure(ctx.getString(R.string.widget_goal), TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = c.inkSoft, textAlign = TextAlign.Center), maxLines = 1, constraints = Constraints.fixedWidth(size.width.toInt()))
-        drawText(l, topLeft = Offset(0f, tl.y + side + Tokens.Space.s1.toPx()))
-        // 며칠째 이어 쓰는지 (이어 쓴 날이 있으면 붉은 글씨)
-        val r = m.measure(ctx.getString(R.string.widget_streak, run), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.small, color = if (run > 0) c.rubric else c.inkSoft, textAlign = TextAlign.Center), maxLines = 1, constraints = Constraints.fixedWidth(size.width.toInt()))
-        drawText(r, topLeft = Offset(0f, size.height * 0.93f - r.size.height))
+        drawArc(c.hair, 0f, 360f, false, tl, Size(side, side), style = Stroke(Tokens.Stroke.hair.toPx() * 1.4f))
+        drawArc(c.gilt, -90f, 360f * frac, false, tl, Size(side, side), style = Stroke(Tokens.Stroke.rule.toPx() * 1.6f, cap = StrokeCap.Round))
+        val big = m.measure("$run", TextStyle(fontFamily = Fonts.display, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.numBig, color = c.giltText), maxLines = 1)
+        val unit = m.measure(ctx.getString(R.string.widget_streak_unit), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.small, color = c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = (size.width - 2 * pad).toInt()))
+        val today = m.measure(if (goal < 0) ctx.getString(R.string.today_written, n) else ctx.getString(R.string.widget_today, n, goal), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.small, color = c.inkSoft), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = (size.width - 2 * pad).toInt()))
+        drawText(today, topLeft = Offset(pad, size.height - pad - today.size.height))
+        val unitY = size.height - pad - today.size.height - Tokens.Space.s2.toPx() - unit.size.height
+        drawText(unit, topLeft = Offset(pad, unitY))
+        drawText(big, topLeft = Offset(pad, unitY - big.size.height + Tokens.Space.s1.toPx()))
     }
 }

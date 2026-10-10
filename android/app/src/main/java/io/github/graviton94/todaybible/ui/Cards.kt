@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import io.github.graviton94.todaybible.R
 import io.github.graviton94.todaybible.core.Markup
-import io.github.graviton94.todaybible.core.Milestone
 import io.github.graviton94.todaybible.design.Fonts
 import io.github.graviton94.todaybible.design.Palette
 import io.github.graviton94.todaybible.design.Tokens
@@ -45,7 +44,7 @@ import java.time.LocalDateTime
 
 /**
  * 앱 밖으로 나가는 그림 (나누기 카드 · 위젯): 앱과 같은 토큰 · 글꼴로 비트맵에 그림.
- * 나누기 카드는 늘 종이(라이트) 위에: 말씀 · 흐린 판화 · 나눈 날짜와 시각 · 금선 테.
+ * 나누기 카드는 한 가지 틀 (1.2): 판화가 위를 덮고 어둠으로 녹아든 자리에 말씀.
  */
 object Cards {
     /** DrawScope 로 비트맵 하나 그리기. 글자는 TextMeasurer 로 (앱과 같은 글꼴 · 어절 줄바꿈). */
@@ -62,121 +61,97 @@ object Cards {
     private fun stamp(ctx: Context, korean: Boolean, now: LocalDateTime): String =
         Lang.date(Lang.content(ctx, korean), io.github.graviton94.todaybible.R.string.fmt_card_time, now)
 
-    /** 종이 + 바깥 금선 두 줄 테 (덮개와 같은 문법). */
-    private fun DrawScope.paperFrame(c: Palette) {
-        drawRect(c.leaf)
-        val e = Tokens.Size.cardEdge.toPx(); val g = Tokens.Size.cardBandGap.toPx(); val w = Tokens.Stroke.giltFine.toPx()
-        drawRect(c.gilt, Offset(e, e), Size(size.width - 2 * e, size.height - 2 * e), style = Stroke(w))
-        drawRect(c.gilt, Offset(e + g, e + g), Size(size.width - 2 * (e + g), size.height - 2 * (e + g)), style = Stroke(w))
-    }
-
-    private fun DrawScope.faintPlate(ctx: Context, plateId: String?, alpha: Float) {
+    /** 판화를 카드 위쪽에 꽉 채워 (세피아 먹빛), 아래로 어둠에 녹아들게. */
+    private fun DrawScope.art(ctx: Context, plateId: String?, h: Float, leaf: androidx.compose.ui.graphics.Color) {
         val id = plateId ?: return
         val bmp = runCatching { ctx.assets.open("plates/$id.jpg").use { BitmapFactory.decodeStream(it) } }.getOrNull() ?: return
         val img = bmp.asImageBitmap()
-        // 화면을 덮도록 (가운데 기준 잘라내기)
-        val scale = maxOf(size.width / img.width, size.height / img.height)
+        val scale = maxOf(size.width / img.width, h / img.height)
         val dw = (img.width * scale).toInt(); val dh = (img.height * scale).toInt()
-        drawImage(img, dstOffset = androidx.compose.ui.unit.IntOffset(((size.width - dw) / 2).toInt(), ((size.height - dh) / 2).toInt()),
-            dstSize = androidx.compose.ui.unit.IntSize(dw, dh), alpha = alpha, colorFilter = ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) }))
+        // 판화는 흑백 → 따뜻한 먹빛 (빨강 1 · 초록 0.93 · 파랑 0.8) 으로
+        val sepia = ColorMatrix(floatArrayOf(
+            0.30f, 0.59f, 0.11f, 0f, 0f,
+            0.28f, 0.55f, 0.10f, 0f, 0f,
+            0.24f, 0.47f, 0.09f, 0f, 0f,
+            0f, 0f, 0f, 1f, 0f))
+        drawImage(img, dstOffset = androidx.compose.ui.unit.IntOffset(((size.width - dw) / 2).toInt(), ((h - dh) * 0.3f).toInt()),
+            dstSize = androidx.compose.ui.unit.IntSize(dw, dh), colorFilter = ColorFilter.colorMatrix(sepia))
+        drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0f to leaf.copy(alpha = 0.35f), 0.18f to leaf.copy(alpha = 0f), 0.45f to leaf.copy(alpha = 0f), 0.82f to leaf.copy(alpha = 0.85f), 1f to leaf, startY = 0f, endY = h), size = Size(size.width, h))
     }
 
-    /** 말씀 한 절 카드: 본문 · 장절 · 나눈 날짜와 시각 · 흐린 판화. */
-    fun verse(ctx: Context, korean: Boolean, reference: String, text: String, plateId: String?, now: LocalDateTime = LocalDateTime.now()): Bitmap {
-        val c = Tokens.light
+    /**
+     * 나누기 카드 (하나의 틀): 판화가 위를 덮고 어둠으로 녹아든 아래에 머리글 · 본문 · 금선 · 장절과 그림 이름 · 바닥글.
+     * 본문은 말씀이거나 (big 이 있으면) 큰 숫자 + 몇 줄.
+     */
+    private fun card(ctx: Context, korean: Boolean, plateId: String?, eyebrow: String, body: androidx.compose.ui.text.AnnotatedString?, ref: String?, credit: String?,
+                     now: LocalDateTime, big: String? = null, lines: List<String> = emptyList()): Bitmap {
+        val c = Tokens.dark
         return render(ctx, Tokens.Px.shareW.toInt(), Tokens.Px.shareH.toInt(), shareDensity()) { m ->
-            paperFrame(c)
-            faintPlate(ctx, plateId, Tokens.Px.plateFaint)
-            val pad = Tokens.Size.cardPad.toPx(); val width = (size.width - 2 * pad).toInt()
-            val body = buildAnnotatedString {
-                Markup.spans(text).forEach { sp -> withStyle(SpanStyle(fontStyle = if (sp.italic) FontStyle.Italic else FontStyle.Normal, fontFeatureSettings = if (sp.smallCaps) "smcp" else null)) { append(sp.text) } }
+            drawRect(c.leaf)
+            val pad = Tokens.Size.cardPad.toPx(); val width = (size.width - 2 * pad).toInt(); val gap = Tokens.Size.cardGap.toPx()
+            // 아래부터 쌓을 것들을 먼저 재요
+            val foot = m.measure(buildAnnotatedString { append(stamp(ctx, korean, now)) }, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardFoot, color = c.inkSoft), maxLines = 1)
+            val app = m.measure(Lang.content(ctx, korean).getString(R.string.app_name), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardFoot, color = c.inkSoft), maxLines = 1)
+            val refL = ref?.let { m.measure(it, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardRef, color = c.gilt), maxLines = 1) }
+            val credL = credit?.let { m.measure(it, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardFoot, color = c.inkSoft), constraints = Constraints(maxWidth = (width - (refL?.size?.width ?: 0) - gap).toInt().coerceAtLeast(1)), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            val cap = m.measure(eyebrow, TextStyle(fontFamily = Fonts.caps, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.cardCaps, letterSpacing = Tokens.Tracking.caps.em, color = c.gilt), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = width))
+            val bigL = big?.let { m.measure(it, TextStyle(fontFamily = Fonts.display, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.cardBig, color = c.giltText), maxLines = 1) }
+            val lineLs = lines.map { m.measure(it, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardRef, color = c.inkSoft), constraints = Constraints(maxWidth = width), maxLines = 1, overflow = TextOverflow.Ellipsis) }
+            // 본문: 길면 글자를 줄여 카드의 cardTextMax 안에
+            var bodyL = body?.let {
+                var fs = (if (korean) Tokens.Text.cardVerse else Tokens.Text.cardVerseEn).value
+                var lay = m.measure(it, TextStyle(fontFamily = if (korean) Fonts.titleSerif else Fonts.garamond, fontWeight = if (korean) FontWeight.SemiBold else FontWeight.Medium, fontSize = fs.sp, lineHeight = Tokens.Leading.verse.em, color = c.ink, lineBreak = phrase), constraints = Constraints(maxWidth = width))
+                while (lay.size.height > size.height * Tokens.Px.cardTextMax && fs > Tokens.Text.cardVerseMin.value) {
+                    fs -= 1f; lay = m.measure(it, lay.layoutInput.style.copy(fontSize = fs.sp), constraints = Constraints(maxWidth = width))
+                }
+                lay
             }
-            // 긴 절은 글자를 줄여 테 안에 들게
-            var fs = (if (korean) Tokens.Text.cardVerse else Tokens.Text.cardVerseEn).value
-            var lay = m.measure(body, TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.garamond, fontWeight = FontWeight.Medium, fontSize = fs.sp, lineHeight = Tokens.Leading.verse.em, color = c.ink, textAlign = TextAlign.Center, lineBreak = phrase), constraints = Constraints(maxWidth = width))
-            while (lay.size.height > size.height * Tokens.Px.cardFill && fs > Tokens.Text.cardVerseMin.value) {
-                fs -= 1f
-                lay = m.measure(body, lay.layoutInput.style.copy(fontSize = fs.sp), constraints = Constraints(maxWidth = width))
-            }
-            val top = (size.height - lay.size.height) / 2 - Tokens.Size.cardGap.toPx()
-            stamp(STAMP_CROSS, c.rubric, Offset(size.width / 2, top - Tokens.Size.cardGap.toPx() - Tokens.Size.cardMark.toPx() / 2), Tokens.Size.cardMark.toPx())
-            drawText(lay, topLeft = Offset(pad, top))
-            val ref = m.measure(reference, TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.fell, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.cardRef, letterSpacing = Tokens.Tracking.head.em, color = c.rubric, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width))
-            drawText(ref, topLeft = Offset(pad, top + lay.size.height + Tokens.Size.cardGap.toPx()))
-            footer(ctx, m, c, korean, now)
+            val ruleW = Tokens.Size.cardRule.toPx(); val hair = Tokens.Stroke.hair.toPx()
+            var y = size.height - pad - foot.size.height
+            val footTop = y - gap
+            y = footTop - gap - (refL?.size?.height ?: 0)
+            val refTop = y
+            y -= gap; val ruleY = y
+            val textH = (bodyL?.size?.height ?: 0) + (bigL?.size?.height ?: 0) + lineLs.sumOf { it.size.height }
+            y -= gap + textH
+            val textTop = y
+            y -= Tokens.Space.s2.toPx() + cap.size.height
+            val capTop = y
+            // 판화: 글이 시작하는 자리 조금 아래까지 (짧은 글은 크게, 긴 글은 작게)
+            val artH = (capTop + gap * 3).coerceIn(size.height * Tokens.Px.cardArtMin, size.height * Tokens.Px.cardArtMax)
+            art(ctx, plateId, artH, c.leaf)
+            drawText(cap, topLeft = Offset(pad, capTop))
+            var ty = textTop
+            bigL?.let { drawText(it, topLeft = Offset(pad, ty)); ty += it.size.height }
+            bodyL?.let { drawText(it, topLeft = Offset(pad, ty)); ty += it.size.height }
+            lineLs.forEach { drawText(it, topLeft = Offset(pad, ty)); ty += it.size.height }
+            drawLine(c.gilt, Offset(pad, ruleY), Offset(pad + ruleW, ruleY), hair * 1.5f)
+            refL?.let { drawText(it, topLeft = Offset(pad, refTop)) }
+            credL?.let { drawText(it, topLeft = Offset(size.width - pad - it.size.width, refTop + ((refL?.size?.height ?: it.size.height) - it.size.height) / 2f)) }
+            drawLine(c.hair, Offset(pad, footTop), Offset(size.width - pad, footTop), hair)
+            drawText(foot, topLeft = Offset(pad, size.height - pad - foot.size.height))
+            drawText(app, topLeft = Offset(size.width - pad - app.size.width, size.height - pad - app.size.height))
         }
     }
 
-    /** 맨 아래: 나눈 날짜와 시각 · 앱 이름. */
-    private fun DrawScope.footer(ctx: Context, m: TextMeasurer, c: Palette, korean: Boolean, now: LocalDateTime) {
-        val pad = Tokens.Size.cardPad.toPx(); val width = (size.width - 2 * pad).toInt()
-        val t = m.measure(buildAnnotatedString {
-            withStyle(SpanStyle(color = c.inkSoft)) { append(stamp(ctx, korean, now)) }
-            withStyle(SpanStyle(color = c.giltText)) { append("  ·  " + Lang.content(ctx, korean).getString(io.github.graviton94.todaybible.R.string.app_name)) }
-        }, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardFoot, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        drawText(t, topLeft = Offset(pad, size.height - Tokens.Size.cardPad.toPx() - t.size.height))
+    /** 판화 이름 줄: 〈이름〉 화가 (화가 이름은 판화 표기의 ‘·’ 앞까지). */
+    fun credit(ctx: Context, korean: Boolean, plateId: String?): String? {
+        val p = io.github.graviton94.todaybible.data.Store(ctx).plates.firstOrNull { it.id == plateId } ?: return null
+        val by = (if (korean) p.byKo else p.byEn).substringBefore('·').trim()
+        return Lang.content(ctx, korean).getString(R.string.card_credit, if (korean) p.ko else p.en, by)
     }
 
-    /** 장을 마치고 걷은 판화 카드: 판화 · 제목 · 장 · 날짜. */
-    fun plate(ctx: Context, korean: Boolean, plateId: String, title: String, reference: String, now: LocalDateTime = LocalDateTime.now()): Bitmap {
-        val c = Tokens.light
-        return render(ctx, Tokens.Px.shareW.toInt(), Tokens.Px.shareH.toInt(), shareDensity()) { m ->
-            paperFrame(c)
-            val bmp = runCatching { ctx.assets.open("plates/$plateId.jpg").use { BitmapFactory.decodeStream(it) } }.getOrNull()?.asImageBitmap()
-            val pad = Tokens.Size.cardPad.toPx(); val width = size.width - 2 * pad
-            if (bmp != null) {
-                // 제목 · 장 · 바닥글 자리를 먼저 재고 남는 높이에 판화를 맞춤 (겹치지 않게)
-                val gap = Tokens.Size.cardGap.toPx()
-                val t = m.measure(title, TextStyle(fontFamily = if (korean) Fonts.titleKr else Fonts.garamond, fontSize = Tokens.Text.title, color = c.ink, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width.toInt()), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                val r = m.measure(reference, TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.fell, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.cardRef, color = c.rubric, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width.toInt()))
-                val foot = Tokens.Size.cardPad.toPx() + Tokens.Text.cardFoot.toPx() * 2
-                val avail = size.height - pad - foot - gap * 2 - t.size.height - r.size.height - Tokens.Space.s2.toPx()
-                val dh = minOf(width / Tokens.Ratio.plateAspect, avail); val dw = dh * Tokens.Ratio.plateAspect
-                drawImage(bmp, dstOffset = androidx.compose.ui.unit.IntOffset(((size.width - dw) / 2).toInt(), pad.toInt()), dstSize = androidx.compose.ui.unit.IntSize(dw.toInt(), dh.toInt()))
-                val y = pad + dh + gap
-                drawText(t, topLeft = Offset(pad, y))
-                drawText(r, topLeft = Offset(pad, y + t.size.height + Tokens.Space.s2.toPx()))
-            }
-            footer(ctx, m, c, korean, now)
+    /** 말씀 한 절 카드: 머리글 (라틴 장) · 말씀 · 장절 · 그림 이름 · 나눈 날짜와 시각. */
+    fun verse(ctx: Context, korean: Boolean, eyebrow: String, reference: String, text: String, plateId: String?, now: LocalDateTime = LocalDateTime.now()): Bitmap {
+        val body = buildAnnotatedString {
+            Markup.spans(text).forEach { sp -> withStyle(SpanStyle(fontStyle = if (sp.italic) FontStyle.Italic else FontStyle.Normal, fontFeatureSettings = if (sp.smallCaps) "smcp" else null)) { append(sp.text) } }
         }
+        return card(ctx, korean, plateId, eyebrow, body, reference, credit(ctx, korean, plateId), now)
     }
 
-    /** 발자취 카드: 메달 · 이름 · 조건 · 날짜. */
-    fun milestone(ctx: Context, korean: Boolean, m: Milestone, name: String, rule: String, now: LocalDateTime = LocalDateTime.now()): Bitmap {
-        val c = Tokens.light
-        return render(ctx, Tokens.Px.shareW.toInt(), (Tokens.Px.shareW).toInt(), shareDensity()) { tm ->
-            paperFrame(c)
-            val d = Tokens.Size.cardMedal.toPx(); val cx = size.width / 2; val top = size.height * Tokens.Px.medalTop
-            drawContext.canvas.save(); drawContext.canvas.translate(cx - d / 2, top)
-            val old = drawContext.size; drawContext.size = Size(d, d); medal(m, true, c.leather, c.gilt, c.unwritten); drawContext.size = old
-            drawContext.canvas.restore()
-            val pad = Tokens.Size.cardPad.toPx(); val width = (size.width - 2 * pad).toInt()
-            val n = tm.measure(name, TextStyle(fontFamily = if (korean) Fonts.titleKr else Fonts.garamond, fontSize = Tokens.Text.cardName, color = c.ink, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            drawText(n, topLeft = Offset(pad, top + d + Tokens.Size.cardGap.toPx()))
-            val r = tm.measure(rule, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardRef, color = c.inkSoft, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            drawText(r, topLeft = Offset(pad, top + d + Tokens.Size.cardGap.toPx() + n.size.height + Tokens.Space.s2.toPx()))
-            footer(ctx, tm, c, korean, now)
-        }
-    }
-
-    /** 올해의 필사 (R1): 이름 · 큰 숫자 · 몇 줄. */
-    fun year(ctx: Context, korean: Boolean, title: String, big: String, lines: List<String>, now: LocalDateTime = LocalDateTime.now()): Bitmap {
-        val c = Tokens.light
-        return render(ctx, Tokens.Px.shareW.toInt(), (Tokens.Px.shareW).toInt(), shareDensity()) { tm ->
-            paperFrame(c)
-            val pad = Tokens.Size.cardPad.toPx(); val width = (size.width - 2 * pad).toInt()
-            var y = size.height * Tokens.Px.medalTop
-            val t = tm.measure(title, TextStyle(fontFamily = if (korean) Fonts.titleKr else Fonts.garamond, fontSize = Tokens.Text.cardName, color = c.giltText, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            drawText(t, topLeft = Offset(pad, y)); y += t.size.height + Tokens.Size.cardGap.toPx()
-            val b = tm.measure(big, TextStyle(fontFamily = if (korean) Fonts.titleKr else Fonts.garamond, fontSize = Tokens.Text.display * 2, color = c.rubric, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1)
-            drawText(b, topLeft = Offset(pad, y)); y += b.size.height + Tokens.Size.cardGap.toPx()
-            for (l in lines) {
-                val r = tm.measure(l, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardRef, color = c.inkSoft, textAlign = TextAlign.Center), constraints = Constraints.fixedWidth(width), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                drawText(r, topLeft = Offset(pad, y)); y += r.size.height + Tokens.Space.s2.toPx()
-            }
-            footer(ctx, tm, c, korean, now)
-        }
-    }
+    /** 같은 틀의 숫자 카드 (발자취 · 한 해 · 내 목소리): 큰 숫자 · 이름 · 몇 줄. */
+    fun year(ctx: Context, korean: Boolean, title: String, big: String, lines: List<String>, plateId: String? = null, eyebrow: String = "BIBLIA MANU SCRIPTA", now: LocalDateTime = LocalDateTime.now()): Bitmap =
+        card(ctx, korean, plateId, eyebrow, buildAnnotatedString { append(title) }, null, credit(ctx, korean, plateId), now, big = big, lines = lines)
 
     /** 그림을 저장해 나누기 창 열기 (FileProvider, 캐시 폴더). */
     fun share(s: AppState, ctx: Context, bmp: Bitmap, name: String) {

@@ -526,7 +526,7 @@ private fun YearCard(s: AppState, year: Int) {
         Text(title, style = Theme.title(k), maxLines = 1)
         Text(big, style = Theme.title(k, Tokens.Text.display).copy(color = c.giltText), maxLines = 1)
         lines.forEach { Text(it, style = Theme.small(), maxLines = 1) }
-        BookButton(stringResource(R.string.year_share), Modifier.fillMaxWidth(), quiet = true) { Cards.share(s, ctx, Cards.year(ctx, k, title, big, lines), "year_$year") }
+        BookButton(stringResource(R.string.year_share), Modifier.fillMaxWidth(), quiet = true) { Cards.share(s, ctx, Cards.year(ctx, k, title, big, lines, s.coverPlateId(), "ANNUS · ${io.github.graviton94.todaybible.core.Latin.roman(year)}"), "year_$year") }
     }
 }
 

@@ -145,7 +145,7 @@ fun NarrationGate(s: AppState, b: Int, ch: Int) {
             left?.let { stringResource(R.string.narr_left, it) }).joinToString(" · ")
     } else if (st == 0) stringResource(R.string.narr_connecting) else null
     val ref = s.chapterRef(b, ch)
-    GateFrame(s, s.dayPlate(b, ch), io.github.graviton94.todaybible.core.Latin.head(b, ch),
+    GateFrame(s, s.dayPlate(b, ch), s.head(b, ch),
         stringResource(if (st == 1) R.string.gate_ready else R.string.gate_going, ref),
         listOf(
             GateCheck(stringResource(R.string.gate_text), 1),

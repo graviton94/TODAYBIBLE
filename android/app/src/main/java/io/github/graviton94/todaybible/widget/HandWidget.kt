@@ -18,6 +18,8 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.em
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import io.github.graviton94.todaybible.MainActivity
@@ -105,19 +107,22 @@ class HandWidget : AppWidgetProvider() {
                 }
                 val (tr, at, _) = pick; val (b, ch, v) = at
                 val name = if (tr == Translation.KRV) Canon.books[b].ko else Canon.books[b].en
-                val ref = m.measure("$name $ch:$v", TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Bold, fontSize = Tokens.Text.small, color = c.rubric))
+                val ref = m.measure("$name $ch:$v", TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.small, color = c.giltText))
                 val bottom = size.height - pad - ref.size.height
                 drawText(ref, topLeft = Offset(pad, bottom))
+                val cap = m.measure("MANU MEA", TextStyle(fontFamily = Fonts.caps, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.caps, letterSpacing = Tokens.Tracking.caps.em, color = c.giltText), maxLines = 1)
+                drawText(cap, topLeft = Offset(pad, pad))
+                val topY = pad + cap.size.height + Tokens.Space.s1.toPx()
                 // 손글씨: 첫 장을 너비에 맞추고, 높이가 넘치면 줄여서 다 보이게
                 val sheet = page.sheets[0]
                 val inkH = (page.height(0) + page.line * 0.25f) * w
-                val room = bottom - pad - Tokens.Space.s1.toPx()
+                val room = bottom - topY - Tokens.Space.s1.toPx()
                 val k = if (inkH > room) room / inkH else 1f
-                val ink = if (page.pen == Ink.PENCIL) c.graphite else c.penInk
-                clipRect(pad, pad, size.width - pad, pad + room) {
-                    val lh = page.line * w * k; var y = pad + lh
-                    while (y < pad + room) { drawLine(c.noteLine, Offset(pad, y), Offset(size.width - pad, y), Tokens.Stroke.hair.toPx()); y += lh }
-                    translate(pad, pad) { scale(k, k, Offset.Zero) { sheet.forEach { drawStroke(it, w, ink, page.pen) } } }
+                val ink = if (page.pen == Ink.PENCIL) c.graphite else io.github.graviton94.todaybible.design.inkColor(store.ink, dark)
+                clipRect(pad, topY, size.width - pad, topY + room) {
+                    val lh = page.line * w * k; var y = topY + lh
+                    while (y < topY + room) { drawLine(c.noteLine, Offset(pad, y), Offset(size.width - pad, y), Tokens.Stroke.hair.toPx()); y += lh }
+                    translate(pad, topY) { scale(k, k, Offset.Zero) { sheet.forEach { drawStroke(it, w, ink, page.pen) } } }
                 }
                 if (store.ownerName.isNotBlank()) {
                     val n = m.measure(store.ownerName, TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = c.inkSoft))

@@ -65,6 +65,9 @@ object Tokens {
         val dotDay = 11.dp
         val segment = 3.dp
         val romanCol = 30.dp
+        val decoThumb = 64.dp
+        val decoInk = 30.dp
+        val decoIcon = 56.dp
         val bigAction = 76.dp
         val widgetPad = 16.dp
         val widgetWeekMinH = 100.dp
@@ -72,10 +75,11 @@ object Tokens {
         val coverW = 132.dp
         val cardEdge = 22.dp
         val cardBandGap = 5.dp
-        val cardPad = 64.dp
+        val cardPad = 32.dp
         val cardMark = 22.dp
         val cardMedal = 120.dp
-        val cardGap = 24.dp
+        val cardGap = 14.dp
+        val cardRule = 32.dp
         val noteMargin = 44.dp
         val handLine = 72.dp
         val handModel = 168.dp
@@ -115,11 +119,13 @@ object Tokens {
         val initialLg = 64.sp
         val typed = 18.sp
         val typedEn = 19.sp
-        val cardVerse = 26.sp
-        val cardVerseEn = 27.sp
-        val cardVerseMin = 15.sp
-        val cardRef = 15.sp
-        val cardFoot = 12.sp
+        val cardVerse = 21.sp
+        val cardVerseEn = 23.sp
+        val cardVerseMin = 13.sp
+        val cardRef = 11.5.sp
+        val cardFoot = 9.5.sp
+        val cardCaps = 9.5.sp
+        val cardBig = 72.sp
         val cardName = 28.sp
         val pen = 23.sp
         val penLine = 34.sp
@@ -141,12 +147,18 @@ object Tokens {
         val streak = 30.sp
         val gridNum = 22.sp
     }
-    /** 표지 가죽 (나의 성경 꾸미기). */
-    object Covers {
-        val burgundy = Color(0xFF4A1913)
-        val navy = Color(0xFF1E2A44)
-        val olive = Color(0xFF3A4022)
-        val ebony = Color(0xFF1E1915)
+    /** 잉크 (꾸미기 1.2): 쓴 글자 · 손글씨 색. Light 는 종이 위, Dark 는 밤빛 위. */
+    object Inks {
+        val ink = Color(0xFF1F1A15)
+        val navy = Color(0xFF1F2A44)
+        val sepia = Color(0xFF5A3A1C)
+        val gilt = Color(0xFF8A5E18)
+    }
+    object InksDark {
+        val ink = Color(0xFFEADFC8)
+        val navy = Color(0xFFB4C3E6)
+        val sepia = Color(0xFFD9B48A)
+        val gilt = Color(0xFFD6B672)
     }
     object Motion {
         const val sideSlop = 2.5f
@@ -259,6 +271,9 @@ object Tokens {
         const val plateFaint = 0.12f
         const val cardFill = 0.55f
         const val cardPlate = 0.62f
+        const val cardArtMin = 0.48f
+        const val cardArtMax = 0.74f
+        const val cardTextMax = 0.4f
         const val medalTop = 0.24f
         const val scrollCellCm = 1.0f
     }

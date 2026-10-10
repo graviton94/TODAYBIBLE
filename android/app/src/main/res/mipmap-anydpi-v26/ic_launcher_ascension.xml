@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 판화 위 흰 선 십자 (scripts/app_icon.py 가 만들어요) -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
-    <background android:drawable="@mipmap/ic_launcher_art" />
+    <background android:drawable="@mipmap/ic_launcher_art_ascension" />
     <foreground android:drawable="@mipmap/ic_launcher_line" />
     <monochrome android:drawable="@drawable/ic_launcher_cross" />
 </adaptive-icon>

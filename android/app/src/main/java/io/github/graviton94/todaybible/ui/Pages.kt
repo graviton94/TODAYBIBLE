@@ -181,7 +181,7 @@ fun Root(s: AppState) {
                 val secs = (files.sumOf { V.durationMs(it) } / 1000).toInt()
                 val title = if (s.ownerName.isNotBlank()) ctx.getString(R.string.audiobook_title_named, s.ownerName, name) else ctx.getString(R.string.audiobook_title, name)
                 val dur = ctx.getString(R.string.duration_hm, secs / 3600, secs / 60 % 60)
-                val card = Cards.year(ctx, s.korean, title, dur, listOf(ctx.getString(R.string.audiobook_verses, files.size)))
+                val card = Cards.year(ctx, s.korean, title, dur, listOf(ctx.getString(R.string.audiobook_verses, files.size)), s.cardPlate(b, 1), "VOX · " + io.github.graviton94.todaybible.core.Latin.book(b))
                 val img = java.io.File(ctx.cacheDir, "share/${name.replace(' ', '_')}_cover.png").also { f -> f.outputStream().use { card.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) } }
                 ExportJob(listOf(audio, img), "*/*", title)
             }.getOrNull() } } finally { s.exporting = false }

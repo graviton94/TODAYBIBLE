@@ -84,7 +84,7 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
             .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3),
     ) {
-        Text(io.github.graviton94.todaybible.core.Latin.head(book, chapter), style = Theme.caps(), maxLines = 1)
+        HeadText(s, book, chapter)
         Text(stringResource(R.string.chapter_done, s.bookName(book), chapter), style = Theme.title(k).copy(textAlign = TextAlign.Center))
         Text(fmtDate(R.string.fmt_date_day, s.today()), style = Theme.small(), maxLines = 1)
         if (plate != null) {
@@ -118,7 +118,8 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
         val (nb, nc) = remember(book, chapter) { s.nextChapter(book, chapter) }
         if (nb != book || nc != chapter) BookButton(stringResource(R.string.next_chapter, s.bookName(nb), nc), Modifier.fillMaxWidth().padding(top = Tokens.Space.s2)) { close(); s.open(nb, nc) }
         if (plate != null) BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
-            Cards.share(s, ctx, Cards.plate(ctx, k, plate.id, s.plateName(plate), s.chapterRef(book, chapter)), "plate")
+            // 판화 장면의 절 + 그 판화 (하나의 카드 틀)
+            Cards.share(s, ctx, Cards.verse(ctx, k, s.head(book, chapter), ctx.getString(R.string.ref_verse, s.bookName(book), chapter, plate.verse), s.text(book).verse(chapter, plate.verse), plate.id), "verse")
         }
         BookButton(stringResource(R.string.close), Modifier.fillMaxWidth(), quiet = true) { close() }
     }
@@ -172,7 +173,7 @@ fun AwardCard(s: AppState, m: Milestone) {
         Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             BookButton(stringResource(R.string.close), Modifier.weight(1f), quiet = true) { s.award = null }
             BookButton(stringResource(R.string.share), Modifier.weight(1f)) {
-                Cards.share(s, ctx, Cards.milestone(ctx, k, m, name, rule), "milestone")
+                Cards.share(s, ctx, Cards.year(ctx, k, name, io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1), listOf(rule), s.coverPlateId(), "VESTIGIUM"), "milestone")
             }
         }
     }

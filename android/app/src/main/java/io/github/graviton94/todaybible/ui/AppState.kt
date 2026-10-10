@@ -50,7 +50,35 @@ class AppState(val store: Store) {
     var welcomeStep by mutableStateOf(0)
     var planId by mutableStateOf(store.planId)
     var planOpen by mutableStateOf(false)
-    var cover by mutableStateOf(store.cover)
+    // 꾸미기 (1.2)
+    var coverPlate by mutableStateOf(store.coverPlate)
+    fun chooseCoverPlate(id: String) { coverPlate = id; store.coverPlate = id; widgets() }
+    var dedication by mutableStateOf(store.dedication)
+    fun setDedicationLine(t: String) { dedication = t; store.dedication = t }
+    var ink by mutableStateOf(store.ink)
+    fun chooseInk(i: String) { ink = i; store.ink = i }
+    var latinHeads by mutableStateOf(store.latinHeads)
+    fun chooseLatinHeads(on: Boolean) { latinHeads = on; store.latinHeads = on; widgets() }
+    var appIcon by mutableStateOf(store.appIcon)
+    /** 앱 아이콘 바꾸기: 고른 별칭을 먼저 켜고 나머지를 꺼요 (홈 화면 아이콘이 잠깐 사라졌다 다시 생길 수 있어요). */
+    fun chooseAppIcon(id: String) {
+        val ctx = store.context; val pm = ctx.packageManager; val pkg = io.github.graviton94.todaybible.MainActivity::class.java.`package`!!.name
+        val names = mapOf("light" to "IconLight", "tablets" to "IconTablets", "golgotha" to "IconGolgotha", "ascension" to "IconAscension")
+        val on = names[id] ?: return
+        runCatching {
+            pm.setComponentEnabledSetting(android.content.ComponentName(ctx, "$pkg.$on"), android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED, android.content.pm.PackageManager.DONT_KILL_APP)
+            names.values.filter { it != on }.forEach { pm.setComponentEnabledSetting(android.content.ComponentName(ctx, "$pkg.$it"), android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED, android.content.pm.PackageManager.DONT_KILL_APP) }
+            appIcon = id; store.appIcon = id
+        }
+    }
+    /** 화첩에 건 판화 (그 장을 다 쓴 것). */
+    fun hungPlates(): List<io.github.graviton94.todaybible.data.Plate> { val st = startedBooks(); return store.plates.filter { plateFraction(it, st) >= 1f } }
+    /** 표지 판화: 고른 것 → 마지막에 건 것 → 날마다 바뀌는 한 점. */
+    fun coverPlateId(): String? = coverPlate.takeIf { id -> id.isNotEmpty() && store.plates.any { it.id == id } } ?: dayPlate()?.id
+    /** 나누기 카드의 판화: 그 장의 그림, 없으면 표지 판화. */
+    fun cardPlate(b: Int, ch: Int): String? = store.plateFor(b, ch)?.id ?: coverPlateId()
+    /** 머리글: 라틴 (MARCUS · III) 또는 한글 · 영어 (마가복음 · 3). */
+    fun head(b: Int, ch: Int): String = if (latinHeads) io.github.graviton94.todaybible.core.Latin.head(b, ch) else "${bookName(b)} · $ch"
     var voiceOn by mutableStateOf(store.voiceOn)
     /** 내보내는 중 (소리 · 영상 · PDF). */
     var exporting by mutableStateOf(false)
@@ -459,9 +487,7 @@ class AppState(val store: Store) {
     val premiumOn: Boolean get() = !lifetime.unlocked
     fun gated() = !lifetime.unlocked && (lifetime.ready || lifetime.forceReady || forceLock)
     fun toggleVoice() { if (gated()) { purchaseOpen = true; return }; voiceOn = !voiceOn; store.voiceOn = voiceOn }
-    fun chooseCover(c: String) { cover = c; store.cover = c }
     fun setOwner(n: String) { ownerName = n; store.ownerName = n; widgets() }
-    fun coverColor() = when (cover) { "navy" -> io.github.graviton94.todaybible.design.Tokens.Covers.navy; "olive" -> io.github.graviton94.todaybible.design.Tokens.Covers.olive; "ebony" -> io.github.graviton94.todaybible.design.Tokens.Covers.ebony; else -> io.github.graviton94.todaybible.design.Tokens.Covers.burgundy }
 
     /** 다음 판화: 지금 권에서 이 장 뒤로 가장 가까운 것, 없으면 가장 많이 쓴 (아직 다 안 찬) 것. 남은 절 수와 함께. */
     fun nextPlate(): Pair<io.github.graviton94.todaybible.data.Plate, Int>? {

@@ -92,6 +92,26 @@ class Store(val context: Context) {
         get() = prefs.getLong("plan_start", 0)
         set(v) = prefs.edit().putLong("plan_start", v).apply()
     /** 표지 가죽 (burgundy · navy · olive · ebony) · 금박 이름. */
+    /** 꾸미기 (1.2): 표지 판화 (화첩에서 고른 것, 없으면 ""), 표지 헌사 한 줄, 잉크 색, 머리글 (라틴 · 한글), 앱 아이콘. */
+    var coverPlate: String
+        get() = prefs.getString("cover_plate", "") ?: ""
+        set(v) = prefs.edit().putString("cover_plate", v).apply()
+    var dedication: String
+        get() = prefs.getString("dedication", "") ?: ""
+        set(v) = prefs.edit().putString("dedication", v).apply()
+    var ink: String
+        get() = prefs.getString("ink_color", "ink") ?: "ink"
+        set(v) = prefs.edit().putString("ink_color", v).apply()
+    var latinHeads: Boolean
+        get() = prefs.getBoolean("latin_heads", true)
+        set(v) = prefs.edit().putBoolean("latin_heads", v).apply()
+    var appIcon: String
+        get() = prefs.getString("app_icon", "light") ?: "light"
+        set(v) = prefs.edit().putString("app_icon", v).apply()
+    /** 별점을 부탁한 적이 있는지 (한 번만). */
+    var reviewAsked: Boolean
+        get() = prefs.getBoolean("review_asked", false)
+        set(v) = prefs.edit().putBoolean("review_asked", v).apply()
     var cover: String
         get() = prefs.getString("cover", "burgundy")!!
         set(v) = prefs.edit().putString("cover", v).apply()

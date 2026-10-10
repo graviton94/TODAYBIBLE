@@ -113,6 +113,11 @@ W=/sdcard/Android/data/$P/files/previews
 for i in $(seq 1 30); do adb shell ls $W/done >/dev/null 2>&1 && break; sleep 2; done
 mkdir -p "$OUT/previews"; adb pull $W/. "$OUT/previews/" >/dev/null 2>&1; rm -f "$OUT/previews/done"; ls "$OUT/previews"
 # @end
+# @scene dc
+# 꾸미기: 표지 판화 · 헌사 · 잉크 · 머리글 · 도장 · 앱 아이콘
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ez tb.settings true --es tb.section set_deco; shot dc1_deco 5
+swipe_up;                                                          shot dc2_deco_more 2
+# @end
 # @scene cards
 open --ez tb.cardShots true
 C=/sdcard/Android/data/$P/files/cards

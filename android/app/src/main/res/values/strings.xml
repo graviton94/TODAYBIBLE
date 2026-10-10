@@ -1,6 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="set_deco">Personalize</string>
+    <string name="set_deco_sum">Cover · ink · headings · app icon</string>
+    <string name="deco_cover">Cover engraving</string>
+    <string name="deco_cover_note">Used on your Bible\'s cover, the opening screen and shared cards.</string>
+    <string name="deco_cover_none">Finish a chapter to hang its engraving, then you can pick it here.</string>
+    <string name="deco_text">Cover dedication</string>
+    <string name="deco_dedication_hint">One line, e.g. For my mother</string>
+    <string name="deco_ink">Ink</string>
+    <string name="deco_ink_note">The color of your handwriting and typed letters.</string>
+    <string name="ink_ink">Black</string>
+    <string name="ink_navy">Navy</string>
+    <string name="ink_sepia">Sepia</string>
+    <string name="ink_gilt">Gold</string>
+    <string name="deco_head">Chapter headings</string>
+    <string name="head_latin">Latin</string>
+    <string name="head_native">English</string>
+    <string name="deco_icon">App icon</string>
+    <string name="deco_icon_note">The home-screen icon may disappear for a moment, then come back in its new look.</string>
+    <string name="icon_light">Light</string>
+    <string name="icon_tablets">Tablets</string>
+    <string name="icon_golgotha">Golgotha</string>
+    <string name="icon_ascension">Ascension</string>
+    <string name="widget_streak_unit">days in a row</string>
+    <string name="widget_today">%1$d / %2$d verses today</string>
+    <string name="card_credit">%1$s · %2$s</string>
     <string name="update_available">A new version is available</string>
     <string name="update_get">Update</string>
     <string name="update_later">Later</string>
@@ -725,7 +750,7 @@
     <string name="type_fix_hint">Red letter: delete it and type it again</string>
     <string name="lang_ko_short">한국어</string>
     <string name="lang_en_short">English</string>
-    <string name="set_write_sum">Daily amount · name · pen · stamp · cover</string>
+    <string name="set_write_sum">Daily amount · name · pen</string>
     <string name="set_keep_sum">Recordings · Google Drive backup</string>
     <string name="set_help_sum">Lifetime pass · feedback · guide again</string>
     <string name="prayer_written">You\'ve written out this prayer.</string>

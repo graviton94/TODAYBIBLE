@@ -373,3 +373,11 @@ fun Segments(total: Int, done: Int, modifier: Modifier = Modifier) {
         }
     }
 }
+
+/** 장 머리글: 라틴 (Cinzel 대문자) 또는 한글 (금빛 작은 글, 자간 조금). 꾸미기 › 머리글을 따라요. */
+@Composable
+fun HeadText(s: AppState, b: Int, ch: Int, modifier: Modifier = Modifier) {
+    val c = Theme.c
+    if (s.latinHeads) Text(io.github.graviton94.todaybible.core.Latin.head(b, ch), style = Theme.caps(), maxLines = 1, modifier = modifier)
+    else Text(s.head(b, ch), style = Theme.small().copy(color = c.giltText, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, letterSpacing = androidx.compose.ui.unit.TextUnit(0.12f, androidx.compose.ui.unit.TextUnitType.Em)), maxLines = 1, modifier = modifier)
+}

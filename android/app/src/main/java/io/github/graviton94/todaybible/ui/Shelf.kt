@@ -40,70 +40,6 @@ import io.github.graviton94.todaybible.design.Tokens
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/**
- * 나의 서가 (C1): 구약 39권 · 신약 27권 책등이 두 칸에. 쓴 만큼 책등 아래부터 금박이 차오르고,
- * 다 쓴 권은 가죽 표지에 금띠. 책등 높이는 장 수를 따라 조금씩 달라요. 누르면 그 권의 장 고르기.
- */
-@Composable
-fun BookShelf(s: AppState) {
-    val c = Theme.c; val tr = s.translation
-    val keys = s.fills.filter { it.translation == tr }.map { it.key.raw }.toSet()
-    // 권마다 쓴 비율 (본문을 읽어야 해서 화면 줄 밖에서)
-    val frac by produceState(FloatArray(66), keys.size, tr) {
-        value = withContext(Dispatchers.IO) {
-            val per = keys.groupingBy { io.github.graviton94.todaybible.core.VerseKey(it).book }.eachCount()
-            FloatArray(66) { b -> per[b]?.let { n -> n / s.store.book(tr, b).fillableTotal.coerceAtLeast(1).toFloat() } ?: 0f }
-        }
-    }
-    val done = frac.count { it >= 1f }; val going = frac.count { it > 0f && it < 1f }
-    val summary = stringResource(R.string.shelf_line, done, going)
-    Column(Modifier.fillMaxWidth().semantics { contentDescription = summary }, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        Text(stringResource(R.string.shelf_title), style = Theme.title(s.korean, Tokens.Text.title), maxLines = 1)
-        Text(summary, style = Theme.small(), maxLines = 2)
-        Shelf(s, 0 until 39, frac, c)
-        Shelf(s, 39 until 66, frac, c)
-    }
-}
-
-@Composable
-private fun Shelf(s: AppState, books: IntRange, frac: FloatArray, c: Palette) {
-    val n = books.count()
-    val maxCh = Canon.books.maxOf { it.chapters }
-    Canvas(Modifier.fillMaxWidth().height(Tokens.Size.shelfRow).pointerInput(books) {
-        detectTapGestures { p -> val i = (p.x / (size.width / OT_SLOTS.toFloat())).toInt(); if (i in 0 until n) { s.pickToRead = true; s.picker = books.first + i } }
-    }) {
-        // 칸 너비는 두 칸이 같게 (구약 39칸 기준), 신약은 왼쪽부터
-        val slot = size.width / OT_SLOTS; val gap = Tokens.Size.spineGap.toPx(); val board = Tokens.Size.shelfBase.toPx()
-        val floor = size.height - board
-        drawRect(c.leather, Offset(0f, floor), Size(size.width, board))
-        for ((i, b) in books.withIndex()) {
-            val h = floor * (Tokens.Ratio.spineMin + (1f - Tokens.Ratio.spineMin) * kotlin.math.sqrt(Canon.books[b].chapters / maxCh.toFloat()))
-            spine(Offset(i * slot + gap / 2, floor - h), Size(slot - gap, h), frac[b], c)
-        }
-    }
-}
-
-private const val OT_SLOTS = 39
-
-private fun DrawScope.spine(at: Offset, size: Size, f: Float, c: Palette) {
-    val r = CornerRadius(Tokens.Size.spineGap.toPx())
-    if (f >= 1f) {
-        // 다 쓴 권: 가죽 + 위아래 금띠
-        drawRoundRect(c.leather, at, size, r)
-        val band = Tokens.Size.spineBand.toPx(); val inset = size.height * 0.12f
-        drawRect(c.gilt, Offset(at.x, at.y + inset), Size(size.width, band))
-        drawRect(c.gilt, Offset(at.x, at.y + size.height - inset - band), Size(size.width, band))
-    } else {
-        drawRoundRect(c.paper, at, size, r)
-        if (f > 0f) { val fh = size.height * f.coerceAtLeast(0.1f); drawRect(c.gilt, Offset(at.x, at.y + size.height - fh), Size(size.width, fh)) }
-        drawRoundRect(c.hair, at, size, r, style = Stroke(Tokens.Stroke.hair.toPx()))
-    }
-}
-
-/**
- * 옮겨 쓴 두루마리 (C2): 쓴 글자를 원고지 칸(1cm)으로 이어 붙인 길이. 처음 보일 때 두루마리가 펼쳐져요.
- * 카드로 보낼 수 있어요.
- */
 @Composable
 fun ScrollLength(s: AppState, letters: Int) {
     if (letters <= 0) return
@@ -134,7 +70,7 @@ fun ScrollLength(s: AppState, letters: Int) {
             Text(stringResource(R.string.year_share), style = Theme.small().copy(color = c.rubric), maxLines = 1,
                 modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
                     val lines = listOfNotNull(ctx.getString(R.string.scroll_letters, "%,d".format(letters)), like?.let { ctx.getString(it) })
-                    Cards.share(s, ctx, Cards.year(ctx, k, ctx.getString(R.string.scroll_title), big, lines), "scroll")
+                    Cards.share(s, ctx, Cards.year(ctx, k, ctx.getString(R.string.scroll_title), big, lines, s.coverPlateId()), "scroll")
                 })
         }
         Text(stringResource(R.string.scroll_letters, "%,d".format(letters)) + (like?.let { " · " + stringResource(it) } ?: ""), style = Theme.small(), maxLines = 2)

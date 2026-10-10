@@ -134,7 +134,14 @@ fun SettingsPage(s: AppState) {
                 ChoiceRow(stringResource(R.string.pen_sound), s.penSound) { s.flipPenSound() }
                 ChoiceRow(stringResource(R.string.paper_haptic), s.paperHaptic) { s.flipPaperHaptic() }
             }
-            // 꾸미기: 도장 · 표지
+            }
+            // 꾸미기 (1.2): 표지 판화 · 헌사 · 잉크 · 머리글 · 도장 · 앱 아이콘
+            Section(stringResource(R.string.set_deco), stringResource(R.string.set_deco_sum), openSec == "set_deco") { openSec = if (openSec == "set_deco") null else "set_deco" }
+            if (openSec == "set_deco") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+            Group(stringResource(R.string.deco_cover)) { CoverPlatePicker(s) }
+            Group(stringResource(R.string.deco_text)) { DedicationField(s) }
+            Group(stringResource(R.string.deco_ink)) { InkPicker(s); Text(stringResource(R.string.deco_ink_note), style = Theme.small()) }
+            Group(stringResource(R.string.deco_head)) { HeadPicker(s) }
             Group(stringResource(R.string.stamp)) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                     STAMPS.forEach { m ->
@@ -148,7 +155,7 @@ fun SettingsPage(s: AppState) {
                     }
                 }
             }
-            Group(stringResource(R.string.my_cover)) { CoverPicker(s) }
+            Group(stringResource(R.string.deco_icon)) { IconPicker(s) }
             }
             Section(stringResource(R.string.set_alerts), if (s.reminderHour >= 0) fmtDate(R.string.fmt_hour, java.time.LocalTime.of(s.reminderHour, 0)) else stringResource(R.string.reminder_off), openSec == "set_alerts") { openSec = if (openSec == "set_alerts") null else "set_alerts" }
             if (openSec == "set_alerts") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
@@ -320,31 +327,6 @@ fun BackArrow(modifier: Modifier = Modifier) {
 }
 
 
-/** 나의 성경 꾸미기 (H1): 표지 가죽 네 가지. 평생권이 필요하면 평생권 화면으로. */
-@Composable
-private fun CoverPicker(s: AppState) {
-    val c = Theme.c
-    val gated = !s.lifetime.unlocked && (s.lifetime.ready || s.lifetime.forceReady || s.forceLock)
-    val covers = listOf("burgundy" to R.string.cover_burgundy, "navy" to R.string.cover_navy, "olive" to R.string.cover_olive, "ebony" to R.string.cover_ebony)
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-        covers.forEach { (id, name) ->
-            val on = s.cover == id
-            val col = when (id) { "navy" -> Tokens.Covers.navy; "olive" -> Tokens.Covers.olive; "ebony" -> Tokens.Covers.ebony; else -> Tokens.Covers.burgundy }
-            Column(Modifier.weight(1f).clickable(role = Role.RadioButton) { if (gated && id != "burgundy") s.purchaseOpen = true else s.chooseCover(id) },
-                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.chip)).background(col)
-                    .drawBehind {
-                        giltFrame(c.gilt.copy(alpha = Tokens.Alpha.frame), bands = true)
-                        if (on) drawRect(c.rubric, Offset(0f, size.height - Tokens.Stroke.rule.toPx() * 2), androidx.compose.ui.geometry.Size(size.width, Tokens.Stroke.rule.toPx() * 2))
-                    }, contentAlignment = Alignment.Center) {
-                    StampMark(STAMP_CROSS, c.gilt, Modifier.size(Tokens.Size.iconSm))
-                    if (gated && id != "burgundy") Box(Modifier.align(Alignment.TopEnd).padding(Tokens.Space.s2)) { LockMark(c.leatherInk, Modifier.size(Tokens.Size.lock)) }
-                }
-                Text(stringResource(name), style = Theme.small().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1)
-            }
-        }
-    }
-}
 
 /** 부를 이름 (처음 소개 · 설정 공통). 인사와 표지 금박에 들어가요. */
 @Composable

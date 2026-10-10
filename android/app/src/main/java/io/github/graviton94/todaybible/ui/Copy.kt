@@ -434,7 +434,7 @@ fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null, marks: L
             if (marks != null) {
                 sp.text.forEachIndexed { j, ch ->
                     val st = when (marks.getOrNull(i + j)) {
-                        TypeJudge.Mark.OK -> style.copy(color = c.ink)
+                        TypeJudge.Mark.OK -> style.copy(color = c.penInk)
                         TypeJudge.Mark.WRONG -> style.copy(color = c.wrong, textDecoration = TextDecoration.Underline)
                         // 한글을 조합하는 중인 글자: 틀림이 아니라 쓰는 중
                         TypeJudge.Mark.COMPOSING -> style.copy(color = c.inkSoft, background = c.rubric.copy(alpha = Tokens.Alpha.nib))
@@ -846,9 +846,9 @@ fun ShareVerseSheet(s: AppState, at: VerseKey) {
     val ctx = LocalContext.current; val k = s.korean
     val b = at.book; val ch = at.chapter; val v = at.verse
     val ref = "${s.bookName(b)} $ch:$v"
-    val plate = s.store.plateFor(b, ch)?.id ?: s.store.plates.getOrNull((b + ch) % s.store.plates.size.coerceAtLeast(1))?.id
+    val plate = s.cardPlate(b, ch)
     val text = s.text(b).verse(ch, v)
-    val bmp = remember(b, ch, v) { Cards.verse(ctx, k, ref, text, plate) }
+    val bmp = remember(b, ch, v) { Cards.verse(ctx, k, s.head(b, ch), ref, text, plate) }
     BookSheet({ s.shareVerse = null }) {
         Image(bmp.asImageBitmap(), ref, Modifier.fillMaxWidth(Tokens.Ratio.plateWidth).aspectRatio(Tokens.Px.shareW / Tokens.Px.shareH).clip(RoundedCornerShape(Tokens.Radius.chip)))
         Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
@@ -911,7 +911,7 @@ private fun VoiceRow(s: AppState) {
                 if (!video) Voice.exportAudio(parts.map { it.second }, out)
                 else {
                     val t = s.text(); val plate = s.store.plateFor(s.book, s.chapter)?.id
-                    val frames = parts.map { (v, f) -> Cards.verse(ctx, k, "${s.bookName()} ${s.chapter}:$v", t.verse(s.chapter, v), plate) to Voice.durationMs(f) * 1000 }
+                    val frames = parts.map { (v, f) -> Cards.verse(ctx, k, s.head(s.book, s.chapter), "${s.bookName()} ${s.chapter}:$v", t.verse(s.chapter, v), plate) to Voice.durationMs(f) * 1000 }
                     Voice.exportVideo(frames, parts.map { it.second }, out).also { frames.forEach { it.first.recycle() } }
                 }
             } } finally { s.exporting = false }
