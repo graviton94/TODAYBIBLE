@@ -11,7 +11,7 @@
     <string name="set_deco">Personalize</string>
     <string name="set_deco_sum">Cover · ink · headings · app icon</string>
     <string name="deco_cover">Cover engraving</string>
-    <string name="deco_cover_note">Used on your Bible\'s cover, the opening screen and shared cards.</string>
+    <string name="deco_cover_note">Used on your Bible\'s cover and as the default for shared cards.</string>
     <string name="deco_cover_none">Finish a chapter to hang its engraving, then you can pick it here.</string>
     <string name="deco_text">Cover dedication</string>
     <string name="deco_dedication_hint">One line, e.g. For my mother</string>

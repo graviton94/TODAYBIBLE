@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextMeasurer
@@ -74,9 +75,12 @@ object Cards {
             0.28f, 0.55f, 0.10f, 0f, 0f,
             0.24f, 0.47f, 0.09f, 0f, 0f,
             0f, 0f, 0f, 1f, 0f))
-        drawImage(img, dstOffset = androidx.compose.ui.unit.IntOffset(((size.width - dw) / 2).toInt(), ((h - dh) * 0.3f).toInt()),
-            dstSize = androidx.compose.ui.unit.IntSize(dw, dh), colorFilter = ColorFilter.colorMatrix(sepia))
-        drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0f to leaf.copy(alpha = 0.35f), 0.18f to leaf.copy(alpha = 0f), 0.45f to leaf.copy(alpha = 0f), 0.82f to leaf.copy(alpha = 0.85f), 1f to leaf, startY = 0f, endY = h), size = Size(size.width, h))
+        // 판화는 h 안에서만 (아래로 삐져나오면 어둠과의 경계가 줄로 보여요)
+        clipRect(0f, 0f, size.width, h) {
+            drawImage(img, dstOffset = androidx.compose.ui.unit.IntOffset(((size.width - dw) / 2).toInt(), ((h - dh) * 0.3f).toInt()),
+                dstSize = androidx.compose.ui.unit.IntSize(dw, dh), colorFilter = ColorFilter.colorMatrix(sepia))
+        }
+        drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0f to leaf.copy(alpha = 0.35f), 0.16f to leaf.copy(alpha = 0f), 0.5f to leaf.copy(alpha = 0f), 0.8f to leaf.copy(alpha = 0.8f), 1f to leaf, startY = 0f, endY = h), size = Size(size.width, h))
     }
 
     /**
@@ -118,7 +122,8 @@ object Cards {
             y -= Tokens.Space.s2.toPx() + cap.size.height
             val capTop = y
             // 판화: 글이 시작하는 자리 조금 아래까지 (짧은 글은 크게, 긴 글은 작게)
-            val artH = (capTop + gap * 3).coerceIn(size.height * Tokens.Px.cardArtMin, size.height * Tokens.Px.cardArtMax)
+            // 판화는 글이 시작하는 자리에서 어둠으로 다 녹아요 (글 뒤로 밝은 판화가 비치지 않게)
+            val artH = (capTop + gap).coerceIn(size.height * Tokens.Px.cardArtMin, size.height * Tokens.Px.cardArtMax)
             art(ctx, plateId, artH, c.leaf)
             drawText(cap, topLeft = Offset(pad, capTop))
             var ty = textTop

@@ -11,7 +11,7 @@
     <string name="set_deco">꾸미기</string>
     <string name="set_deco_sum">표지 · 잉크 · 머리글 · 앱 아이콘</string>
     <string name="deco_cover">표지 판화</string>
-    <string name="deco_cover_note">나의 성경 표지 · 여는 화면 · 나누기 카드에 쓰여요.</string>
+    <string name="deco_cover_note">나의 성경 표지와 나누기 카드에 쓰여요.</string>
     <string name="deco_cover_none">장을 다 써서 판화를 걸면 여기서 고를 수 있어요.</string>
     <string name="deco_text">표지 헌사</string>
     <string name="deco_dedication_hint">한 줄 (예: 어머니의 기도를 이어 쓰며)</string>

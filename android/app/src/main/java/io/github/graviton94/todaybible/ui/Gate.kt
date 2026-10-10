@@ -78,7 +78,8 @@ fun GateFrame(
             }, contentScale = ContentScale.Crop)
             Column(Modifier.fillMaxSize().systemBarsPadding().padding(horizontal = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 Box(Modifier.weight(1f))
-                Text(eyebrow, style = Theme.caps(), maxLines = 1)
+                // 라틴 머리글은 Cinzel, 한글 머리글 (꾸미기 › 머리글 한글) 은 금빛 작은 글
+                Text(eyebrow, style = if (eyebrow.any { it in '\uAC00'..'\uD7A3' }) Theme.small().copy(color = Theme.c.giltText, letterSpacing = androidx.compose.ui.unit.TextUnit(0.12f, androidx.compose.ui.unit.TextUnitType.Em)) else Theme.caps(), maxLines = 1)
                 Text(title, style = Theme.title(k, Tokens.Text.display), maxLines = 2)
                 if (plate != null) Text(stringResource(R.string.gate_plate, s.plateName(plate), s.plateBy(plate)), style = Theme.small().copy(color = c.unwritten), maxLines = 1)
                 Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s2)) {
@@ -181,7 +182,10 @@ fun PlateIntro(s: AppState, first: Boolean, onEnter: () -> Unit) {
         val c = Theme.c; val k = s.korean
         val scope = androidx.compose.runtime.rememberCoroutineScope()
         val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
-        val plate = remember { s.dayPlate() }
+        // 화첩에 건 판화가 있으면 그 가운데서 날마다 한 점 (몇 번째인지 금빛 한 줄), 없으면 날마다의 한 점
+        val hung = remember { s.hungPlates() }
+        val hungAt = remember { if (hung.isEmpty()) -1 else Math.floorMod(s.today().toEpochDay(), hung.size.toLong()).toInt() }
+        val plate = remember { hung.getOrNull(hungAt) ?: s.dayPlate() }
         val img = plate?.let { rememberPlate(it.id) }
         val show = remember { Animatable(0f) }; val drift = remember { Animatable(0f) }; val enter = remember { Animatable(0f) }; val words = remember { Animatable(0f) }
         LaunchedEffect(img) {
@@ -219,6 +223,10 @@ fun PlateIntro(s: AppState, first: Boolean, onEnter: () -> Unit) {
                     Text(stringResource(R.string.ref_verse, s.bookName(), s.chapter, v), style = Theme.small().copy(color = c.gilt))
                 }
                 if (plate != null) Text(stringResource(R.string.gate_plate, s.plateName(plate), s.plateBy(plate)), style = Theme.small().copy(color = c.unwritten, textAlign = TextAlign.Center), maxLines = 2)
+                if (hungAt >= 0 && plate != null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                    Text("COLLECTIO · ${io.github.graviton94.todaybible.core.Latin.roman(hungAt + 1)} / ${io.github.graviton94.todaybible.core.Latin.roman(hung.size)}", style = Theme.caps(), maxLines = 1)
+                    Text(s.chapterRef(plate.book, plate.chapter), style = Theme.small().copy(color = c.gilt), maxLines = 1)
+                }
                 Breathing(stringResource(R.string.intro_tap_enter), c.ink, Modifier.fillMaxWidth().padding(top = Tokens.Space.s4, bottom = Tokens.Space.s5))
             }
         }

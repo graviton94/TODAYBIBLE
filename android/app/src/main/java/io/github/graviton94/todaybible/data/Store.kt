@@ -108,6 +108,10 @@ class Store(val context: Context) {
     var appIcon: String
         get() = prefs.getString("app_icon", "light") ?: "light"
         set(v) = prefs.edit().putString("app_icon", v).apply()
+    /** 마친 장 수 (장 마침 화면이 열린 횟수, 별점 부탁 때를 정하는 데만 써요). */
+    var finishedCount: Int
+        get() = prefs.getInt("finished_count", 0)
+        set(v) = prefs.edit().putInt("finished_count", v).apply()
     /** 별점을 부탁한 적이 있는지 (한 번만). */
     var reviewAsked: Boolean
         get() = prefs.getBoolean("review_asked", false)

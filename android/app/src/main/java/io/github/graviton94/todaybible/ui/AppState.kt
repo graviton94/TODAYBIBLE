@@ -519,7 +519,7 @@ class AppState(val store: Store) {
         store.append(new); fills.addAll(new); widgets()
         val t = text()
         val wasMet = io.github.graviton94.todaybible.core.Goal.met(effectiveGoal(), todayVerses() - new.size, 0)
-        if (progress.chapterDone(tr, t, chapter)) finished = book to chapter
+        if (progress.chapterDone(tr, t, chapter)) { finished = book to chapter; store.finishedCount = store.finishedCount + 1 }
         else if (!wasMet && goalMet()) toast = store.context.getString(io.github.graviton94.todaybible.R.string.goal_done)
         else if (mode != Mode.TYPE) toast = store.context.getString(io.github.graviton94.todaybible.R.string.filled_n, new.size)
         checkMilestones()

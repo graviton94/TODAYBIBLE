@@ -9,7 +9,7 @@
   "set_deco": {"en": "Personalize", "ko": "꾸미기"},
   "set_deco_sum": {"en": "Cover · ink · headings · app icon", "ko": "표지 · 잉크 · 머리글 · 앱 아이콘"},
   "deco_cover": {"en": "Cover engraving", "ko": "표지 판화"},
-  "deco_cover_note": {"en": "Used on your Bible's cover, the opening screen and shared cards.", "ko": "나의 성경 표지 · 여는 화면 · 나누기 카드에 쓰여요."},
+  "deco_cover_note": {"en": "Used on your Bible's cover and as the default for shared cards.", "ko": "나의 성경 표지와 나누기 카드에 쓰여요."},
   "deco_cover_none": {"en": "Finish a chapter to hang its engraving, then you can pick it here.", "ko": "장을 다 써서 판화를 걸면 여기서 고를 수 있어요."},
   "deco_text": {"en": "Cover dedication", "ko": "표지 헌사"},
   "deco_dedication_hint": {"en": "One line, e.g. For my mother", "ko": "한 줄 (예: 어머니의 기도를 이어 쓰며)"},

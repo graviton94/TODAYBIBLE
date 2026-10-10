@@ -71,6 +71,17 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
     val plate = s.store.plateFor(book, chapter)
     val shown = remember(book, chapter) { Animatable(0f) }
     LaunchedEffect(book, chapter) { shown.animateTo(1f, tween(Tokens.Motion.veilMs, easing = FastOutSlowInEasing)) }
+    // 세 번째 장을 마친 순간 한 번만: Play 의 별점 창 (보일지 · 몇 번까지는 Play 가 정해요)
+    val act = androidx.compose.ui.platform.LocalContext.current as? android.app.Activity
+    LaunchedEffect(book, chapter) {
+        if (act == null || s.store.reviewAsked || s.store.finishedCount < 3 || io.github.graviton94.todaybible.BuildConfig.DEV_TOOLS) return@LaunchedEffect
+        kotlinx.coroutines.delay(Tokens.Motion.veilMs.toLong() + 1200)
+        s.store.reviewAsked = true
+        runCatching {
+            val rm = com.google.android.play.core.review.ReviewManagerFactory.create(act)
+            rm.requestReviewFlow().addOnSuccessListener { info -> rm.launchReviewFlow(act, info) }
+        }
+    }
     // 마음에 남은 한 줄: 닫거나 다음 장으로 갈 때 남겨요
     var line by remember(book, chapter) { mutableStateOf(s.reflection(book, chapter)?.text ?: "") }
     fun close() { s.setReflection(book, chapter, line); s.finished = null }
