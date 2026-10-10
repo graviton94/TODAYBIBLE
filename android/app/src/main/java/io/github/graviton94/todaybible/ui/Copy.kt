@@ -902,20 +902,28 @@ private fun VoiceRow(s: AppState) {
     DisposableEffect(Unit) { onDispose { player?.release() } }
     fun export(video: Boolean) {
         if (s.gated()) { s.purchaseOpen = true; return }
-        if (s.exporting) return
-        s.exporting = true
+        if (s.exportGate != null) return
+        // 넘어가는 화면: 절 녹음 모으기 ✓ · 만들기 % → 저장 · 보내기
+        val title = ctx.getString(if (video) R.string.film_title else R.string.voice_audio_title, s.bookName(), s.chapter)
+        val plate = s.cardPlate(s.book, s.chapter)
+        s.exportGate = ExportGate(title, eyebrow = "VOX · " + s.head(s.book, s.chapter), plate = plate, gather = ctx.getString(R.string.film_gather, parts.size))
+        val b = s.book; val chN = s.chapter
         scope.launch {
-            val name = "${s.bookName().replace(' ', '_')}_${s.chapter}"
+            val name = "${s.bookName(b).replace(' ', '_')}_$chN"
             val out = java.io.File(ctx.cacheDir, "share/$name.${if (video) "mp4" else "m4a"}")
-            val ok = try { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
                 if (!video) Voice.exportAudio(parts.map { it.second }, out)
                 else {
-                    val t = s.text(); val plate = s.store.plateFor(s.book, s.chapter)?.id
-                    val frames = parts.map { (v, f) -> Cards.verse(ctx, k, s.head(s.book, s.chapter), "${s.bookName()} ${s.chapter}:$v", t.verse(s.chapter, v), plate) to Voice.durationMs(f) * 1000 }
-                    Voice.exportVideo(frames, parts.map { it.second }, out).also { frames.forEach { it.first.recycle() } }
+                    val t = s.text(b)
+                    val who = if (s.ownerName.isNotBlank()) ctx.getString(R.string.film_by, s.ownerName) else ctx.getString(R.string.film_by_me)
+                    val end = Lang.date(ctx, R.string.fmt_ymd, s.today()) + " · " + ctx.getString(R.string.film_end)
+                    io.github.graviton94.todaybible.data.Film.export(ctx, k, plate, s.head(b, chN), s.chapterRef(b, chN), who, end,
+                        parts.map { (v, f) -> io.github.graviton94.todaybible.data.Film.Scene(v, io.github.graviton94.todaybible.core.Markup.plain(t.verse(chN, v)), f) }, out) { p ->
+                        android.os.Handler(android.os.Looper.getMainLooper()).post { s.gateProgress(title, p) }
+                    }
                 }
-            } } finally { s.exporting = false }
-            if (ok) s.exportJob = ExportJob(listOf(out), if (video) "video/mp4" else "audio/mp4", ctx.getString(R.string.export_title_voice, s.bookName(), s.chapter))
+            }
+            s.gateDone(title, if (ok) ExportJob(listOf(out), if (video) "video/mp4" else "audio/mp4", ctx.getString(R.string.export_title_voice, s.bookName(b), chN)) else null)
         }
     }
     Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s4).drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(vertical = Tokens.Space.s4),
@@ -934,8 +942,8 @@ private fun VoiceRow(s: AppState) {
                 }
                 next()
             }
-            BookButton(stringResource(R.string.voice_export_audio), Modifier.weight(1f), locked = s.premiumOn, enabled = !s.exporting) { export(false) }
-            BookButton(stringResource(R.string.voice_export_video), Modifier.weight(1f), locked = s.premiumOn, enabled = !s.exporting) { export(true) }
+            BookButton(stringResource(R.string.voice_export_audio), Modifier.weight(1f), locked = s.premiumOn) { export(false) }
+            BookButton(stringResource(R.string.voice_export_video), Modifier.weight(1f), locked = s.premiumOn) { export(true) }
         }
         // 가족에게 보내기 (U1): 표지 카드 한 장 + 이 장 낭독을 함께
         BookButton(stringResource(R.string.gift_send), Modifier.fillMaxWidth(), locked = s.premiumOn, enabled = !s.exporting) {

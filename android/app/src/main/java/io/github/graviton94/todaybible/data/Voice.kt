@@ -36,6 +36,15 @@ object Voice {
         dir(ctx, trId, book, chapter).listFiles { f -> f.extension == "m4a" && f.length() > 0 }.orEmpty()
             .mapNotNull { f -> f.nameWithoutExtension.toIntOrNull()?.let { it to f } }.sortedBy { it.first }
 
+    /** 이어 붙일 때 한 녹음이 차지하는 길이 (µs): 마지막 소리 조각 시각 + AAC 한 조각. appendAudio 와 같은 셈. */
+    fun spanUs(f: File): Long = runCatching {
+        val ex = MediaExtractor(); ex.setDataSource(f.path)
+        val t = (0 until ex.trackCount).first { ex.getTrackFormat(it).getString(MediaFormat.KEY_MIME)!!.startsWith("audio/") }
+        ex.selectTrack(t); var last = 0L
+        while (ex.sampleTime >= 0) { last = ex.sampleTime; if (!ex.advance()) break }
+        ex.release(); last + 1024L * 1_000_000L / RATE
+    }.getOrDefault(0L)
+
     fun durationMs(f: File): Long = runCatching {
         MediaMetadataRetriever().run { setDataSource(f.path); val d = extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0L; release(); d }
     }.getOrDefault(0L)
@@ -230,7 +239,7 @@ object Voice {
     }.getOrElse { runCatching { src.copyTo(out, overwrite = true); true }.getOrDefault(false) }
 
     /** 32kHz 모노 16비트 PCM → 내 녹음과 같은 결의 AAC (m4a). */
-    private fun encodePcm(bytes: ByteArray, out: File): Boolean = runCatching {
+    internal fun encodePcm(bytes: ByteArray, out: File): Boolean = runCatching {
         out.parentFile?.mkdirs()
         val fmt = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, RATE, 1).apply {
             setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
@@ -276,8 +285,8 @@ object Voice {
     }.getOrElse { out.delete(); false }
 
     /** 절 녹음들을 한 트랙으로 이어 씀. 돌려주는 값: 전체 길이(µs). */
-    private fun appendAudio(mux: MediaMuxer, parts: List<File>, startMux: Boolean): Long {
-        var track = -1; var base = 0L
+    internal fun appendAudio(mux: MediaMuxer, parts: List<File>, startMux: Boolean, offsetUs: Long = 0L): Long {
+        var track = -1; var base = offsetUs
         val buf = ByteBuffer.allocate(256 * 1024); val info = MediaCodec.BufferInfo()
         for (f in parts) {
             val ex = MediaExtractor(); ex.setDataSource(f.path)
@@ -295,84 +304,5 @@ object Voice {
         return base
     }
 
-    /**
-     * 영상으로: 절마다 그 절 카드 한 장이 소리 길이만큼 (초당 2장), 소리는 녹음 그대로.
-     * H.264 720×896 · 정지 화면이라 작게 나옴. frames = (그림, 길이 µs).
-     */
-    fun exportVideo(frames: List<Pair<Bitmap, Long>>, parts: List<File>, out: File): Boolean = runCatching {
-        val w = 720; val h = 896; val fps = 2
-        val fmt = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, w, h).apply {
-            setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible)
-            setInteger(MediaFormat.KEY_BIT_RATE, 600_000); setInteger(MediaFormat.KEY_FRAME_RATE, fps); setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 2)
-        }
-        val enc = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_VIDEO_AVC)
-        enc.configure(fmt, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE); enc.start()
-        out.parentFile?.mkdirs()
-        // 영상 먼저 임시 파일로, 그다음 소리와 합침
-        val tmp = File(out.path + ".v.mp4")
-        val vm = MediaMuxer(tmp.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-        var vt = -1; var started = false; val info = MediaCodec.BufferInfo()
-        fun drain(end: Boolean) {
-            while (true) {
-                val i = enc.dequeueOutputBuffer(info, 10_000)
-                if (i == MediaCodec.INFO_TRY_AGAIN_LATER) { if (!end) return else continue }
-                if (i == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) { vt = vm.addTrack(enc.outputFormat); vm.start(); started = true; continue }
-                if (i < 0) continue
-                val b = enc.getOutputBuffer(i)!!
-                if (info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG != 0) info.size = 0
-                if (info.size > 0 && started) { b.position(info.offset); b.limit(info.offset + info.size); vm.writeSampleData(vt, b, info) }
-                enc.releaseOutputBuffer(i, false)
-                if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) return
-            }
-        }
-        var pts = 0L
-        val frameUs = 1_000_000L / fps
-        for ((bmp, dur) in frames) {
-            val scaled = Bitmap.createScaledBitmap(bmp, w, h, true)
-            val argb = IntArray(w * h); scaled.getPixels(argb, 0, w, 0, 0, w, h)
-            val n = maxOf(1, (dur / frameUs).toInt())
-            repeat(n) {
-                var ii: Int
-                do { ii = enc.dequeueInputBuffer(10_000); if (ii < 0) drain(false) } while (ii < 0)
-                val img = enc.getInputImage(ii)!!
-                fillYuv(img, argb, w, h)
-                enc.queueInputBuffer(ii, 0, w * h * 3 / 2, pts, 0); pts += frameUs
-                drain(false)
-            }
-            if (scaled != bmp) scaled.recycle()
-        }
-        var ii: Int
-        do { ii = enc.dequeueInputBuffer(10_000); if (ii < 0) drain(false) } while (ii < 0)
-        enc.queueInputBuffer(ii, 0, 0, pts, MediaCodec.BUFFER_FLAG_END_OF_STREAM); drain(true)
-        enc.stop(); enc.release(); vm.stop(); vm.release()
-
-        // 영상 + 소리 합치기
-        val mux = MediaMuxer(out.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
-        val vex = MediaExtractor(); vex.setDataSource(tmp.path); vex.selectTrack(0)
-        val vTrack = mux.addTrack(vex.getTrackFormat(0))
-        appendAudio(mux, parts, startMux = true)
-        val buf = ByteBuffer.allocate(1024 * 1024)
-        while (true) {
-            val n = vex.readSampleData(buf, 0); if (n < 0) break
-            info.set(0, n, vex.sampleTime, if (vex.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) MediaCodec.BUFFER_FLAG_KEY_FRAME else 0)
-            mux.writeSampleData(vTrack, buf, info); vex.advance()
-        }
-        vex.release(); mux.stop(); mux.release(); tmp.delete(); true
-    }.getOrElse { out.delete(); false }
-
-    /** ARGB → YUV420 (부호기가 준 평면 · 간격 그대로). */
-    private fun fillYuv(img: android.media.Image, argb: IntArray, w: Int, h: Int) {
-        val y = img.planes[0]; val u = img.planes[1]; val v = img.planes[2]
-        val yb = y.buffer; val ub = u.buffer; val vb = v.buffer
-        for (r in 0 until h) for (c in 0 until w) {
-            val p = argb[r * w + c]; val R = Color.red(p); val G = Color.green(p); val B = Color.blue(p)
-            yb.put(r * y.rowStride + c * y.pixelStride, (((66 * R + 129 * G + 25 * B + 128) shr 8) + 16).coerceIn(0, 255).toByte())
-            if (r % 2 == 0 && c % 2 == 0) {
-                val cr = r / 2; val cc = c / 2
-                ub.put(cr * u.rowStride + cc * u.pixelStride, (((-38 * R - 74 * G + 112 * B + 128) shr 8) + 128).coerceIn(0, 255).toByte())
-                vb.put(cr * v.rowStride + cc * v.pixelStride, (((112 * R - 94 * G - 18 * B + 128) shr 8) + 128).coerceIn(0, 255).toByte())
-            }
-        }
-    }
 
 }

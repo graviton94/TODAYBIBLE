@@ -45,7 +45,8 @@ import io.github.graviton94.todaybible.design.Tokens
 import kotlinx.coroutines.launch
 
 /** 파일 만들기 관문의 상태: 0 만드는 중 · 1 다 됨 · -1 못 만듦. */
-data class ExportGate(val title: String, val state: Int = 0, val job: ExportJob? = null)
+/** frac = 만드는 중 진행 (알면), eyebrow · plate · gather = 관문 머리글 · 판화 · 첫 줄 (내 목소리 영상처럼 따로 정할 때). */
+data class ExportGate(val title: String, val state: Int = 0, val job: ExportJob? = null, val frac: Float? = null, val eyebrow: String = "LIBER", val plate: String? = null, val gather: String? = null)
 
 /** 관문의 한 줄: 0 하는 중 · 1 다 됨 · -1 안 됨. frac 은 알면 %, detail 은 크기 · 속도 같은 작은 글. */
 data class GateCheck(val label: String, val state: Int, val frac: Float? = null, val detail: String? = null, val onRetry: (() -> Unit)? = null)
@@ -159,10 +160,11 @@ fun NarrationGate(s: AppState, b: Int, ch: Int) {
 /** 파일 만들기 관문: 기록 모으기 ✓ · 파일 만들기 → 눌러서 저장 · 보내기. */
 @Composable
 fun ExportGateScreen(s: AppState, g: ExportGate) {
-    GateFrame(s, s.dayPlate(), "LIBER", stringResource(when (g.state) { 1 -> R.string.gate_file_ready; -1 -> R.string.gate_file_failed; else -> R.string.gate_file_making }, g.title),
+    val plate = g.plate?.let { id -> s.store.plates.firstOrNull { it.id == id } } ?: s.dayPlate()
+    GateFrame(s, plate, g.eyebrow, stringResource(when (g.state) { 1 -> R.string.gate_file_ready; -1 -> R.string.gate_file_failed; else -> R.string.gate_file_making }, g.title),
         listOf(
-            GateCheck(stringResource(R.string.gate_gather), 1),
-            GateCheck(stringResource(R.string.gate_make), g.state),
+            GateCheck(g.gather ?: stringResource(R.string.gate_gather), 1),
+            GateCheck(stringResource(R.string.gate_make), g.state, g.frac),
         ),
         stringResource(R.string.gate_save), { g.job?.let { s.exportJob = it }; s.exportGate = null },
         stringResource(R.string.close), { s.exportGate = null },

@@ -58,6 +58,32 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    /** 캡처용: 내 목소리 영상 (고요한 소리 세 절) 을 만들어 앞 · 가운데 · 끝 장면을 그림으로. */
+    private fun filmShots(s: AppState) {
+        val dir = java.io.File(getExternalFilesDir(null), "film").apply { mkdirs() }
+        runCatching {
+            val V = io.github.graviton94.todaybible.data.Voice
+            val t = s.store.book(s.translation, 1)
+            val scenes = listOf(21 to 3.2, 22 to 3.6, 23 to 3.0).map { (v, sec) ->
+                val n = (V.RATE * sec).toInt(); val pcm = java.nio.ByteBuffer.allocate(n * 2).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+                for (i in 0 until n) pcm.putShort((kotlin.math.sin(i * 2 * Math.PI * 220 / V.RATE) * 600).toInt().toShort())
+                val f = java.io.File(cacheDir, "film_$v.m4a"); V.encodePcm(pcm.array(), f)
+                io.github.graviton94.todaybible.data.Film.Scene(v, io.github.graviton94.todaybible.core.Markup.plain(t.verse(14, v)), f)
+            }
+            val out = java.io.File(dir, "film.mp4")
+            val k = s.korean
+            val ok = io.github.graviton94.todaybible.data.Film.export(this, k, "moses_sea", s.head(1, 14), s.chapterRef(1, 14), getString(R.string.film_by, "은혜"),
+                io.github.graviton94.todaybible.ui.Lang.date(this, R.string.fmt_ymd, s.today()) + " · " + getString(R.string.film_end), scenes, out) {}
+            if (!ok) error("export failed")
+            val r = android.media.MediaMetadataRetriever(); r.setDataSource(out.path)
+            listOf(1_500_000L, 4_600_000L, 7_600_000L, 11_400_000L, 15_000_000L).forEachIndexed { i, us ->
+                r.getFrameAtTime(us, android.media.MediaMetadataRetriever.OPTION_CLOSEST)?.let { b -> java.io.File(dir, "film_${i + 1}.png").outputStream().use { b.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, it) } }
+            }
+            r.release()
+        }.onFailure { java.io.File(dir, "error.txt").writeText(it.stackTraceToString()) }
+        java.io.File(dir, "done").writeText("ok")
+    }
+
     /** 캡처용: 위젯 (라이트 · 다크) · 나누기 카드 셋을 앱 폴더에 그림 파일로. */
     private fun cardShots(s: AppState) {
         val dir = java.io.File(getExternalFilesDir(null), "cards").apply { mkdirs() }
@@ -76,7 +102,14 @@ class MainActivity : ComponentActivity() {
             save("card_verse_long", io.github.graviton94.todaybible.ui.Cards.verse(this, k, s.head(1, 14), "${s.bookName(1)} 14:21", long, "moses_sea", now))
             save("card_milestone", io.github.graviton94.todaybible.ui.Cards.year(this, k, io.github.graviton94.todaybible.ui.milestoneName(this, Milestone.OLIVE), "III", listOf(io.github.graviton94.todaybible.ui.milestoneRule(this, Milestone.OLIVE)), "noah", "VESTIGIUM", now))
             // 나의 성경 PDF (창세기, 쓴 절만 날짜)
-            io.github.graviton94.todaybible.ui.MyBible.make(this, s.store, s.translation, 0).copyTo(java.io.File(dir, "my_bible.pdf"), overwrite = true)
+            val pdf = io.github.graviton94.todaybible.ui.MyBible.make(this, s.store, s.translation, 0).copyTo(java.io.File(dir, "my_bible.pdf"), overwrite = true)
+            // PDF 첫 쪽 (표지) · 셋째 쪽 (본문) 을 그림으로
+            android.graphics.pdf.PdfRenderer(android.os.ParcelFileDescriptor.open(pdf, android.os.ParcelFileDescriptor.MODE_READ_ONLY)).use { r ->
+                listOf(0, 2).filter { it < r.pageCount }.forEach { i -> r.openPage(i).use { p ->
+                    val b = android.graphics.Bitmap.createBitmap(p.width * 2, p.height * 2, android.graphics.Bitmap.Config.ARGB_8888); b.eraseColor(android.graphics.Color.WHITE)
+                    p.render(b, null, null, android.graphics.pdf.PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY); save("pdf_page${i + 1}", b)
+                } }
+            }
         }.onFailure { java.io.File(dir, "error.txt").writeText(it.stackTraceToString()) }
         java.io.File(dir, "done").writeText("ok")
     }
@@ -206,6 +239,7 @@ class MainActivity : ComponentActivity() {
         if (i.getBooleanExtra("tb.prayers", false)) s.prayersOpen = true
         if (i.getBooleanExtra("tb.tour", false)) { s.welcomeStep = 0; s.tour = true }
         if (i.getBooleanExtra("tb.gallery", false)) s.galleryOpen = true
+        if (i.getBooleanExtra("tb.film", false)) Thread { filmShots(s) }.start()
         if (i.getBooleanExtra("tb.news", false)) s.news = true
         when (i.getStringExtra("tb.update")) {
             "available" -> s.updates?.debugSet(io.github.graviton94.todaybible.data.Updates.State.AVAILABLE)

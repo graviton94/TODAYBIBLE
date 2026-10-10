@@ -1,4 +1,11 @@
 {
+  "film_title": {"en": "%1$s %2$d in my voice (video)", "ko": "%1$s %2$d장 내 목소리 영상"},
+  "voice_audio_title": {"en": "%1$s %2$d in my voice", "ko": "%1$s %2$d장 내 목소리"},
+  "film_gather": {"en": "Gathering %1$d recorded verses", "ko": "녹음한 절 %1$d개 모으기"},
+  "film_by": {"en": "Read by %1$s", "ko": "%1$s의 목소리로"},
+  "film_by_me": {"en": "In my own voice", "ko": "내 목소리로"},
+  "film_end": {"en": "by my hand, in my voice", "ko": "내 손으로, 내 목소리로"},
+  "pdf_cover_book": {"en": "%1$s · %3$d of %2$d chapters", "ko": "%1$s · %2$d장 가운데 %3$d장"},
   "set_deco": {"en": "Personalize", "ko": "꾸미기"},
   "set_deco_sum": {"en": "Cover · ink · headings · app icon", "ko": "표지 · 잉크 · 머리글 · 앱 아이콘"},
   "deco_cover": {"en": "Cover engraving", "ko": "표지 판화"},

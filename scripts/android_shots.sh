@@ -118,6 +118,13 @@ mkdir -p "$OUT/previews"; adb pull $W/. "$OUT/previews/" >/dev/null 2>&1; rm -f 
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ez tb.settings true --es tb.section set_deco; shot dc1_deco 5
 swipe_up;                                                          shot dc2_deco_more 2
 # @end
+# @scene fm
+# 내 목소리 영상: 고요한 소리 세 절로 만들어 장면 그림 다섯 장 + 영상
+open --ez tb.seed true --es tb.tr KRV --ez tb.film true
+F=/sdcard/Android/data/$P/files/film
+for i in $(seq 1 90); do adb shell ls $F/done >/dev/null 2>&1 && break; sleep 2; done
+mkdir -p "$OUT/film"; adb pull $F/. "$OUT/film/" >/dev/null 2>&1; rm -f "$OUT/film/done"; ls "$OUT/film"
+# @end
 # @scene cards
 open --ez tb.cardShots true
 C=/sdcard/Android/data/$P/files/cards

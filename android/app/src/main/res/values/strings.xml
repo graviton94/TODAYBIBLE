@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="film_title">%1$s %2$d in my voice (video)</string>
+    <string name="voice_audio_title">%1$s %2$d in my voice</string>
+    <string name="film_gather">Gathering %1$d recorded verses</string>
+    <string name="film_by">Read by %1$s</string>
+    <string name="film_by_me">In my own voice</string>
+    <string name="film_end">by my hand, in my voice</string>
+    <string name="pdf_cover_book">%1$s · %3$d of %2$d chapters</string>
     <string name="set_deco">Personalize</string>
     <string name="set_deco_sum">Cover · ink · headings · app icon</string>
     <string name="deco_cover">Cover engraving</string>

@@ -198,6 +198,8 @@ class AppState(val store: Store) {
     /** 파일 만들기 관문 (PDF · 손글씨 · 내 목소리): 만드는 중 → 다 되면 눌러서 저장 · 보내기. */
     var exportGate by mutableStateOf<ExportGate?>(null)
     /** 만들기가 끝났을 때: 관문에 ‘다 됨 · 못 만듦’ (관문을 닫았으면 아무것도). */
+    /** 만드는 중 진행 (같은 관문일 때만). */
+    fun gateProgress(title: String, f: Float) { val g = exportGate; if (g != null && g.title == title && g.state == 0) exportGate = g.copy(frac = f) }
     fun gateDone(title: String, job: ExportJob?) {
         val g = exportGate
         if (g == null || g.title != title) return   // 관문을 닫았으면 그만둔 것

@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="film_title">%1$s %2$d장 내 목소리 영상</string>
+    <string name="voice_audio_title">%1$s %2$d장 내 목소리</string>
+    <string name="film_gather">녹음한 절 %1$d개 모으기</string>
+    <string name="film_by">%1$s의 목소리로</string>
+    <string name="film_by_me">내 목소리로</string>
+    <string name="film_end">내 손으로, 내 목소리로</string>
+    <string name="pdf_cover_book">%1$s · %2$d장 가운데 %3$d장</string>
     <string name="set_deco">꾸미기</string>
     <string name="set_deco_sum">표지 · 잉크 · 머리글 · 앱 아이콘</string>
     <string name="deco_cover">표지 판화</string>
