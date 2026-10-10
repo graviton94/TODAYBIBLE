@@ -250,6 +250,8 @@ class ListenService : Service() {
                     if (paused) { resumeStep = { step(i) }; return }
                     val v = verses[i]; verse = v
                     _now.value = Now(book, chapter, v, true)
+                    // 이어 듣기 자리 (성경 듣기만)
+                    if (_origin.value == "read") store.lastListen = "${store.translation.id}:$book:$chapter:$v:${java.time.LocalDate.now().toEpochDay()}"
                     foreground()
                     // 절 사이는 짧게 (책 읽어 주듯 이어서)
                     val after = { ui.postDelayed({ step(i + 1) }, (Narration.GAP_MS / rate).toLong()) }
@@ -282,6 +284,7 @@ class ListenService : Service() {
         }
         if (_timer.value == TIMER_CHAPTER) { finish(); return }
         if (chapter < Canon.books[book].chapters) chapter++
+        else if (book == 65) { if (_origin.value == "read") store.lastListen = ""; finish(); return }
         else if (book < 65 && (book + 1 in Canon.free || getSharedPreferences("today", MODE_PRIVATE).getBoolean("lifetime", false))) { book++; chapter = 1 }
         else { finish(); return }
         verse = 1; foreground(); play(t)

@@ -133,6 +133,7 @@ adb shell cmd statusbar collapse; sleep 1; snap mn2_now_playing
 adb shell input keyevent 127; sleep 2; snap mn3_paused_bar
 adb shell cmd statusbar expand-notifications; sleep 3; snap mn4_paused_notification
 adb shell cmd statusbar collapse
+open --ei tb.page 0;                                               shot mn5_resume_row 4
 # @end
 # @scene cards
 open --ez tb.cardShots true

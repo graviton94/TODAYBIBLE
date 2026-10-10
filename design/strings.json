@@ -1,4 +1,6 @@
 {
+  "resume_listen": {"en": "Resume listening · %1$s", "ko": "이어 듣기 · %1$s"},
+  "resume_listen_from": {"en": "from v. %1$d", "ko": "%1$d절부터"},
   "listen_verse": {"en": "Verse %1$d", "ko": "%1$d절"},
   "listen_prev_verse": {"en": "Previous verse", "ko": "이전 절"},
   "listen_next_verse": {"en": "Next verse", "ko": "다음 절"},
@@ -45,7 +47,7 @@
   "news_title": {"en": "What's new", "ko": "새로 바뀐 것"},
   "news_ok": {"en": "Start", "ko": "시작하기"},
   "news_again": {"en": "What's new in this version", "ko": "이번 버전에서 바뀐 것"},
-  "news_body": {"en": "The app now checks for new versions and updates in the background while you keep writing\nAfter each update, a short note shows what changed (Settings › Help to see it again)", "ko": "새 버전이 나오면 알려 주고, 쓰는 동안 뒤에서 받아 바로 바꿀 수 있어요\n업데이트 뒤에는 바뀐 것을 한 번 보여 드려요 (설정 › 도움에서 다시 보기)"},
+  "news_body": {"ko": "나누기 카드가 말씀과 판화를 함께 담은 한 가지로 새로워졌어요\n내 목소리로 읽은 장을 세로 영상으로 만들 수 있어요 (말씀이 목소리를 따라 밝아져요)\n꾸미기: 표지 판화 · 헌사 · 잉크 색 · 머리글 · 앱 아이콘을 고를 수 있어요\n듣는 중에는 알림창 · 잠금 화면에서 멈추고 앞뒤 절로 넘길 수 있고, 듣던 자리에서 이어 들어요\n여는 화면에 내가 화첩에 건 판화가 나오고, 위젯과 PDF도 새 모습이에요\n새 버전이 나오면 앱 안에서 바로 받을 수 있어요", "en": "Shared cards are now one design: the verse with its engraving\nTurn a chapter you read aloud into a vertical video, with the words lighting up as you speak\nPersonalize: cover engraving, dedication, ink color, headings and app icon\nWhile listening, pause or skip verses from the notification and lock screen, and resume where you left off\nThe opening screen shows engravings you have hung, and widgets and PDFs have a new look\nNew versions can be installed right inside the app"},
   "gate_going": {"en": "Going to %1$s…", "ko": "%1$s으로 이동 중…"},
   "gate_ready": {"en": "%1$s is ready", "ko": "%1$s, 준비됐어요"},
   "gate_text": {"en": "Chapter text", "ko": "말씀 본문"},

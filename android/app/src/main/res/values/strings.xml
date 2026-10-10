@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- 자동 생성: scripts/generate.py (design/strings.json) -->
 <resources>
+    <string name="resume_listen">Resume listening · %1$s</string>
+    <string name="resume_listen_from">from v. %1$d</string>
     <string name="listen_verse">Verse %1$d</string>
     <string name="listen_prev_verse">Previous verse</string>
     <string name="listen_next_verse">Next verse</string>
@@ -47,7 +49,7 @@
     <string name="news_title">What\'s new</string>
     <string name="news_ok">Start</string>
     <string name="news_again">What\'s new in this version</string>
-    <string name="news_body">The app now checks for new versions and updates in the background while you keep writing\nAfter each update, a short note shows what changed (Settings › Help to see it again)</string>
+    <string name="news_body">Shared cards are now one design: the verse with its engraving\nTurn a chapter you read aloud into a vertical video, with the words lighting up as you speak\nPersonalize: cover engraving, dedication, ink color, headings and app icon\nWhile listening, pause or skip verses from the notification and lock screen, and resume where you left off\nThe opening screen shows engravings you have hung, and widgets and PDFs have a new look\nNew versions can be installed right inside the app</string>
     <string name="gate_going">Going to %1$s…</string>
     <string name="gate_ready">%1$s is ready</string>
     <string name="gate_text">Chapter text</string>

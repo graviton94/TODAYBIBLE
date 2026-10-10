@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -101,6 +102,7 @@ fun HomePage(s: AppState) {
         Column(Modifier.fillMaxWidth()) {
             Hair()
             PrayerRow(s)
+            ResumeListenRow(s)
             if (today.dayOfWeek == java.time.DayOfWeek.SUNDAY || s.sermonOn(today.toEpochDay()) != null)
                 ListRow(stringResource(R.string.sermon_title), stringResource(if (s.sermonOn(today.toEpochDay()) != null) R.string.sermon_edit_short else R.string.sermon_write_short)) { s.sermonOpen = today.toEpochDay() }
             s.memory.filter { it.translation == s.translation }.sortedBy { it.key.raw }.takeIf { it.isNotEmpty() }?.let { list ->
@@ -135,6 +137,21 @@ fun HomePage(s: AppState) {
 private fun PrayerRow(s: AppState) {
     val p = io.github.graviton94.todaybible.core.Prayers.forHour(io.github.graviton94.todaybible.core.Prayers.hourAt(java.time.LocalTime.now().hour))
     ListRow("${prayerName(p)} · ${s.prayerRefShort(p)}", stringResource(if (s.prayed(p.id)) R.string.prayer_prayed else R.string.prayer_go_short)) { s.prayerOpen = p.id }
+}
+
+/** 이어 듣기: 듣다 멈춘 자리 (2주 안, 지금 듣는 중이 아니면). 누르면 그 장을 펼치고 그 절부터 다시. */
+@Composable
+private fun ResumeListenRow(s: AppState) {
+    val ctx = LocalContext.current
+    val playing = io.github.graviton94.todaybible.data.ListenService.now.collectAsState().value != null
+    if (playing) return
+    val p = s.store.lastListen.split(':').takeIf { it.size == 5 } ?: return
+    if (p[0] != s.translation.id) return
+    val b = p[1].toIntOrNull() ?: return; val ch = p[2].toIntOrNull() ?: return; val v = p[3].toIntOrNull() ?: return; val day = p[4].toLongOrNull() ?: return
+    if (s.today().toEpochDay() - day > 14 || s.locked(b)) return
+    ListRow(stringResource(R.string.resume_listen, s.chapterRef(b, ch)), stringResource(R.string.resume_listen_from, v)) {
+        s.read(b, ch, v); io.github.graviton94.todaybible.data.ListenService.start(ctx, b, ch, v, s.aloudRate())
+    }
 }
 
 /** 이번 주 요일 점 (하루의 편지): 쓴 날은 금빛 점, 오늘은 금빛 테, 남은 날은 옅은 테. */
