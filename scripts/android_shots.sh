@@ -295,12 +295,14 @@ open --ei tb.picker 0 --es tb.theme DARK --ei tb.page 0 --ez tb.pilgrim true; sh
 open --es tb.theme LIGHT --ef tb.scale 1.15 --ei tb.page 2 --ei tb.copyTab 0; shot qa13_4_huge_aloud 4
 open --ef tb.scale 1.15 --ei tb.page 2 --ei tb.copyTab 2;           shot qa13_5_huge_hand 4
 open --ef tb.scale 1.15 --ei tb.picker 41;                          shot qa13_6_huge_picker 4
-open --ef tb.scale 1.0 --ei tb.picker 0 --es tb.tr WEB --ei tb.page 2 --ei tb.copyTab 0; shot qa13_7_en_aloud 5
+adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
+open --ef tb.scale 1.0 --ei tb.picker 0 --ez tb.seed true --es tb.tr WEB --ei tb.page 2 --ei tb.copyTab 0; shot qa13_7_en_aloud 5
 open --ei tb.page 2 --ei tb.copyTab 1;                              shot qa13_8_en_type 4
 open --ei tb.picker 41;                                             shot qa13_9_en_picker 4
 open --ei tb.picker 0 --ei tb.page 0 --ez tb.pilgrim true --ei tb.pilgrimAsk 2; shot qa13_10_en_remove 4
 open --ez tb.settings true --es tb.section set_alerts;              shot qa13_11_en_alerts 4
 open --ez tb.settings false --ez tb.news true;                      shot qa13_12_en_news 4
+adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 open --ez tb.news false --es tb.tr KRV --ez tb.news true;           shot qa13_13_ko_news 4
 
 # @scene rv
