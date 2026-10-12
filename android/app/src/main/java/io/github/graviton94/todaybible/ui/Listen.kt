@@ -188,6 +188,8 @@ private fun ChapterText(s: AppState, book: Int, ch: Int, voiceAt: Int?, picked: 
     val drop = remember(book, ch) { androidx.compose.animation.core.Animatable(0f) }
     LaunchedEffect(book, ch, pausedAt) { if (pausedAt != null) drop.animateTo(1f, androidx.compose.animation.core.tween(Tokens.Motion.ribbonMs, easing = androidx.compose.animation.core.FastOutSlowInEasing)) }
     val mdFmt = java.time.format.DateTimeFormatter.ofPattern(stringResource(R.string.fmt_md))
+    // 쓰다 만 장을 펼치면 멈춘 절이 보이게 (한 절 위부터)
+    LaunchedEffect(book, ch) { if (jump == null && voiceAt == null) pausedAt?.let { v -> verses.indexOf(v).takeIf { it > 1 }?.let { list.scrollToItem(it) } } }
     // 한영 대조 (I2): 다른 번역의 같은 절을 아래에 작게 (절 번호가 없는 곳은 비워요)
     val otherTr = if (s.translation == io.github.graviton94.todaybible.core.Translation.KRV) s.store.englishBible else io.github.graviton94.todaybible.core.Translation.KRV
     val other = if (s.parallel) remember(book, otherTr) { s.store.book(otherTr, book) } else null
