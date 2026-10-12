@@ -287,6 +287,22 @@ open --ez tb.night true --ei tb.picker 0 --ei tb.page 0 --es tb.update available
 open --ez tb.night false --es tb.update none --ei tb.page 3; swipe_up; swipe_up; swipe_up; swipe_up; swipe_up; swipe_up; swipe_up; shot b3_notae 3
 adb shell pm grant $P android.permission.POST_NOTIFICATIONS 2>/dev/null; open --ei tb.page 0 --ez tb.seasonNotice true; sleep 2; adb shell cmd statusbar expand-notifications; sleep 2; shot b3_season 1; adb shell cmd statusbar collapse
 
+# @scene qa13
+# 1.3 점검: 촛불 · 어두운 · 큰 글씨 · 영어
+open --ez tb.seed true --es tb.tr KRV --es tb.theme CANDLE --ei tb.page 2 --ei tb.copyTab 1 --ez tb.focus false; shot q1_candle_type 5
+open --ei tb.picker 41;                                            shot q2_candle_picker 4
+open --ei tb.picker 0 --es tb.theme DARK --ei tb.page 0 --ez tb.pilgrim true; shot q3_dark_pilgrim 4
+open --es tb.theme LIGHT --ef tb.scale 1.15 --ei tb.page 2 --ei tb.copyTab 0; shot q4_huge_aloud 4
+open --ef tb.scale 1.15 --ei tb.page 2 --ei tb.copyTab 2;           shot q5_huge_hand 4
+open --ef tb.scale 1.15 --ei tb.picker 41;                          shot q6_huge_picker 4
+open --ef tb.scale 1.0 --ei tb.picker 0 --es tb.tr WEB --ei tb.page 2 --ei tb.copyTab 0; shot q7_en_aloud 5
+open --ei tb.page 2 --ei tb.copyTab 1;                              shot q8_en_type 4
+open --ei tb.picker 41;                                             shot q9_en_picker 4
+open --ei tb.picker 0 --ei tb.page 0 --ez tb.pilgrim true --ei tb.pilgrimAsk 2; shot q10_en_remove 4
+open --ez tb.settings true --es tb.section set_alerts;              shot q11_en_alerts 4
+open --ez tb.settings false --ez tb.news true;                      shot q12_en_news 4
+open --ez tb.news false --es tb.tr KRV --ez tb.news true;           shot q13_ko_news 4
+
 # @scene rv
 open --ei tb.page 0;                    shot rv_t1 6
 swipe_up;                               shot rv_t2 2

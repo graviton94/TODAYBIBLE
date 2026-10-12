@@ -249,10 +249,6 @@ class Store(val context: Context) {
         get() = prefs.getBoolean("candle", true)
         set(v) = prefs.edit().putBoolean("candle", v).apply()
 
-    /** 집중 모드 곁소리 ("" 조용히 · rain · candle · stream). */
-    var focusSound: String
-        get() = prefs.getString("focus_sound", "").orEmpty()
-        set(v) = prefs.edit().putString("focus_sound", v).apply()
     /** 필사 방식 탭 (0 낭독 · 1 타자 · 2 손글씨). */
     var copyTab: Int
         get() = prefs.getInt("copy_tab", 0)

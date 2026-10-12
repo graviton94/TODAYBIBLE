@@ -329,6 +329,5 @@ object Tokens {
         const val voiceTargetRms = 0.1f
         const val voiceMaxGain = 8.0f
         const val penLevel = 0.075f
-        const val focusLevel = 0.35f
     }
 }

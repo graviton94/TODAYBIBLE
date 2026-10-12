@@ -84,7 +84,7 @@
     <string name="news_title">What\'s new</string>
     <string name="news_ok">Start</string>
     <string name="news_again">What\'s new in this version</string>
-    <string name="news_body">Shared cards are now one design: the verse with its engraving\nTurn a chapter you read aloud into a vertical video, with the words lighting up as you speak\nPersonalize: cover engraving, dedication, ink color, headings and app icon\nWhile listening, pause or skip verses from the notification and lock screen, and resume where you left off\nThe opening screen shows engravings you have hung, and widgets and PDFs have a new look\nNew versions can be installed right inside the app\nNarration downloads keep going after you close the app, and every book remembers where you paused\nToday now follows the church year: season color, engraving, week and season verse\nMilestones are engraving medals and the gallery is a catalogue per book\nThe reader shows a gold ribbon where you paused and the dates you wrote\nPick reminder times on a wheel, down to the minute\nA yearly plan is now available</string>
+    <string name="news_body">The copy screen now has a one-line header and a bottom band, so the grid and hints have room\nFocus mode hides the header, tabs and tab bar and leaves only the verse you are writing\nResponsive reading starts with the leader\'s voice on the verse you see\nChoosing a chapter now shows old-paper leaves, and finished chapters turn ebony with gold\nMy pilgrimage: continue a paused chapter, start it over, or remove it from the list\nRecord has a reflection notebook, and a year of reflections can become a PDF\nA morning notice on the first day of Advent, Lent, Easter and Pentecost\nSettings open folded, and the section you open moves to the top\nUpdate notices and copy hints use the theme\'s opposite colors so they stand out</string>
     <string name="gate_going">Going to %1$s…</string>
     <string name="gate_ready">%1$s is ready</string>
     <string name="gate_text">Chapter text</string>
@@ -933,10 +933,6 @@
     <string name="more">More</string>
     <string name="focus_line">%1$d min · %2$d verses today</string>
     <string name="focus_end">Leave focus</string>
-    <string name="focus_quiet">Silence</string>
-    <string name="focus_rain">Rain</string>
-    <string name="focus_candle">Candle</string>
-    <string name="focus_stream">Stream</string>
     <string name="kb_hide">Hide keyboard</string>
     <string name="fold_close">Collapse</string>
     <string name="pil_continue">Continue</string>

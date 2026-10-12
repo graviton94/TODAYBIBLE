@@ -173,14 +173,13 @@ class AppState(val store: Store) {
     var bookmarks by mutableStateOf(store.loadBookmarks())
     /** 필사의 지금 탭 (첫 안내가 어느 화면인지 알게). */
     var copyTabNow by mutableIntStateOf(store.copyTab)
-    /** 필사 집중 모드 (머리 · 탭 · 아래 이름표를 걷음) 와 곁소리. */
+    /** 필사 집중 모드 (머리 · 탭 · 아래 이름표를 걷음). */
     var focusMode by mutableStateOf(false)
     /** 나의 순례길에서 누른 장 (이어 쓰기 · 새로 쓰기 · 빼기 시트). */
     var pilgrim by mutableStateOf<Paused?>(null)
     /** 캡처용: 오늘 화면을 열면 순례길 첫 줄 시트를 바로. */
     var debugPilgrim by mutableStateOf(false)
     var debugPilgrimAsk = 0
-    var focusSound by mutableStateOf(store.focusSound)
     /** 간단 모드: 오늘 화면에 오늘의 장과 큰 버튼 셋만. */
     var simple by mutableStateOf(store.simple)
     fun flipSimple() { simple = !simple; store.simple = simple }

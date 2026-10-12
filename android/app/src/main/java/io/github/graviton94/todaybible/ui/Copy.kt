@@ -131,14 +131,9 @@ fun CopyPage(s: AppState) {
     LaunchedEffect(s.forceTab) { s.forceTab?.let { tab = it; s.store.copyTab = it; s.forceTab = null } }
     LaunchedEffect(s.aloudNow) { if (s.aloudNow) { tab = 0; s.store.copyTab = 0; if (next == null) s.aloudNow = false } }
 
-    // 집중: 머리 · 탭 · 아래 이름표를 걷고 지금 쓰는 절만. 소리는 맨 위에서 (아래는 키보드 자리)
+    // 집중: 머리 · 탭 · 아래 이름표를 걷고 지금 쓰는 절만
     androidx.activity.compose.BackHandler(enabled = s.focusMode) { s.focusMode = false }
-    val focusCtx = LocalContext.current
-    DisposableEffect(s.focusMode, s.focusSound) {
-        io.github.graviton94.todaybible.data.FocusSound.play(focusCtx, if (s.focusMode) s.focusSound.takeIf { it.isNotEmpty() } else null)
-        onDispose { if (!s.focusMode) io.github.graviton94.todaybible.data.FocusSound.play(focusCtx, null) }
-    }
-    DisposableEffect(Unit) { onDispose { io.github.graviton94.todaybible.data.FocusSound.play(focusCtx, null); s.focusMode = false } }
+    DisposableEffect(Unit) { onDispose { s.focusMode = false } }
 
     Column(Modifier.fillMaxSize()) {
         if (s.focusMode) FocusBar(s, next)
@@ -887,7 +882,7 @@ fun CopyBand(modifier: Modifier = Modifier, content: @Composable androidx.compos
 @Composable
 fun inversePalette(): io.github.graviton94.todaybible.design.Palette = if (Theme.c.leaf.luminance() < 0.5f) Tokens.light else Tokens.dark
 
-/** 집중 모드 맨 위: 지금 절 · 쓴 시간 · 오늘 절 수 · 닫기, 그 아래 소리 고르기. */
+/** 집중 모드 맨 위: 지금 절 · 쓴 시간 · 오늘 절 수 · 닫기. */
 @Composable
 private fun FocusBar(s: AppState, verse: Int?) {
     val c = Theme.c; val ctx = LocalContext.current
@@ -901,9 +896,6 @@ private fun FocusBar(s: AppState, verse: Int?) {
             Text("✕", style = Theme.label().copy(color = c.inkSoft))
         }
     }
-    val sounds = remember { listOf("") + io.github.graviton94.todaybible.data.FocusSound.available(ctx) }
-    val names = sounds.map { when (it) { "rain" -> stringResource(R.string.focus_rain); "candle" -> stringResource(R.string.focus_candle); "stream" -> stringResource(R.string.focus_stream); else -> stringResource(R.string.focus_quiet) } }
-    if (sounds.size > 1) Chips(names, sounds.indexOf(s.focusSound).coerceAtLeast(0), Modifier.padding(horizontal = Tokens.Space.s5)) { s.focusSound = sounds[it]; s.store.focusSound = sounds[it] }
 }
 
 /** 마이크 (가는 선). */
