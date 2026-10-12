@@ -1,5 +1,9 @@
 package io.github.graviton94.todaybible.ui
 
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -60,6 +64,7 @@ fun SettingsPage(s: AppState) {
     BackHandler { s.settingsOpen = false }
     val backLabel = stringResource(R.string.back)
     var askLang by remember { mutableStateOf(s.debugAskLang) }
+    val scope0 = androidx.compose.runtime.rememberCoroutineScope()
     Column(Modifier.fillMaxSize().background(c.leaf)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(Tokens.Size.touch).semantics { contentDescription = backLabel }.clickable(role = Role.Button) { s.settingsOpen = false }, contentAlignment = Alignment.Center) {
@@ -70,10 +75,31 @@ fun SettingsPage(s: AppState) {
             Text("OPTIONES", style = Theme.caps(), maxLines = 1)
             Text(stringResource(R.string.settings), style = Theme.title(k, Tokens.Text.display), maxLines = 1)
         }
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            var openSec by remember { mutableStateOf<String?>((s.debugSection ?: "set_display").also { if (!BuildConfig.DEV_TOOLS) s.debugSection = null }) }
-            Section(stringResource(R.string.set_display), listOf(stringResource(when (s.language) { "ko" -> R.string.lang_ko_short; "en" -> R.string.lang_en_short; else -> R.string.lang_system }), stringResource(listOf(R.string.theme_system, R.string.theme_light, R.string.theme_dark, R.string.theme_candle)[s.theme.ordinal])).joinToString(" · "), openSec == "set_display") { openSec = if (openSec == "set_display") null else "set_display" }
-            if (openSec == "set_display") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+        // 갈래 (접힘): 처음엔 모두 접혀 있어요. 하나를 열면 그 머리가 맨 위로 오고 (위 갈래가 접히며 밀려도),
+        // 머리부터 끝까지 옅은 금빛 바탕 + 왼쪽 금선. 내려 보는 동안엔 위에 ‘갈래 이름 · 접기’가 붙어요.
+        var openSec by remember { mutableStateOf<String?>(s.debugSection.also { if (!BuildConfig.DEV_TOOLS) s.debugSection = null }) }
+        val spots = remember { androidx.compose.runtime.mutableStateMapOf<String, Pair<Float, Float>>() }
+        val scroll = rememberScrollState()
+        val dens = androidx.compose.ui.platform.LocalDensity.current
+        val padTop = with(dens) { Tokens.Space.s3.toPx() }
+        var settle by remember { mutableIntStateOf(0) }
+        fun toggle(id: String) { openSec = if (openSec == id) null else id; settle++ }
+        LaunchedEffect(settle) {
+            val id = openSec ?: return@LaunchedEffect
+            // 위 갈래가 접혀 자리가 바뀐 다음 (두 장면 뒤) 에 그 머리로
+            androidx.compose.runtime.withFrameNanos { }; androidx.compose.runtime.withFrameNanos { }
+            spots[id]?.let { scroll.animateScrollTo((it.first + padTop).toInt()) }
+        }
+        val stuck by remember { androidx.compose.runtime.derivedStateOf {
+            val id = openSec ?: return@derivedStateOf null
+            val (y, h) = spots[id] ?: return@derivedStateOf null
+            val off = scroll.value - y - padTop
+            id.takeIf { off > with(dens) { Tokens.Size.rowTall.toPx() } && off < h - with(dens) { Tokens.Size.rowTall.toPx() } }
+        } }
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+        val view = maxHeight
+        Column(Modifier.fillMaxWidth().verticalScroll(scroll).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            Fold("set_display", stringResource(R.string.set_display), listOf(stringResource(when (s.language) { "ko" -> R.string.lang_ko_short; "en" -> R.string.lang_en_short; else -> R.string.lang_system }), stringResource(listOf(R.string.theme_system, R.string.theme_light, R.string.theme_dark, R.string.theme_candle)[s.theme.ordinal])).joinToString(" · "), openSec, spots, { toggle(it) }) {
             // 언어: 화면 글 · 성경 번역 · 낭독 목소리를 한 번에 (한국어 = 개역한글 · 한국어 낭독, English = KJV · 영어 낭독)
             Group(stringResource(R.string.language)) {
                 Column {
@@ -111,13 +137,11 @@ fun SettingsPage(s: AppState) {
                 Text(stringResource(R.string.simple_hint), style = Theme.small())
             }
             }
-            Section(stringResource(R.string.set_listen), stringResource(when { s.narrator == io.github.graviton94.todaybible.data.Narration.DEVICE -> R.string.narr_device; io.github.graviton94.todaybible.data.Narration.isMale(s.narrator) -> R.string.narr_male; else -> R.string.narr_female }), openSec == "set_listen") { openSec = if (openSec == "set_listen") null else "set_listen" }
-            if (openSec == "set_listen") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+            Fold("set_listen", stringResource(R.string.set_listen), stringResource(when { s.narrator == io.github.graviton94.todaybible.data.Narration.DEVICE -> R.string.narr_device; io.github.graviton94.todaybible.data.Narration.isMale(s.narrator) -> R.string.narr_male; else -> R.string.narr_female }), openSec, spots, { toggle(it) }) {
             Group(stringResource(R.string.guide_settings)) { GuideVoiceSettings(s) }
             Group(stringResource(R.string.keep_title)) { BookButton(stringResource(R.string.keep_open), Modifier.fillMaxWidth(), quiet = true) { s.settingsOpen = false; s.keepOpen = true } }
             }
-            Section(stringResource(R.string.set_write), stringResource(R.string.set_write_sum), openSec == "set_write") { openSec = if (openSec == "set_write") null else "set_write" }
-            if (openSec == "set_write") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+            Fold("set_write", stringResource(R.string.set_write), stringResource(R.string.set_write_sum), openSec, spots, { toggle(it) }) {
             Group(stringResource(R.string.daily_goal)) {
                 GoalChooser(s, title = false)
                 // 읽기 계획 (오늘 화면에서 옮겨 옴)
@@ -137,8 +161,7 @@ fun SettingsPage(s: AppState) {
             }
             }
             // 꾸미기 (1.2): 표지 판화 · 헌사 · 잉크 · 머리글 · 도장 · 앱 아이콘
-            Section(stringResource(R.string.set_deco), stringResource(R.string.set_deco_sum), openSec == "set_deco") { openSec = if (openSec == "set_deco") null else "set_deco" }
-            if (openSec == "set_deco") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+            Fold("set_deco", stringResource(R.string.set_deco), stringResource(R.string.set_deco_sum), openSec, spots, { toggle(it) }) {
             Group(stringResource(R.string.deco_cover)) { CoverPlatePicker(s) }
             Group(stringResource(R.string.deco_text)) { DedicationField(s) }
             Group(stringResource(R.string.deco_ink)) { InkPicker(s); Text(stringResource(R.string.deco_ink_note), style = Theme.small()) }
@@ -163,8 +186,7 @@ fun SettingsPage(s: AppState) {
                 ChoiceRow(stringResource(R.string.widget_plate), on) { on = !on; s.store.widgetPlate = on; Thread { io.github.graviton94.todaybible.widget.VerseWidget.refresh(ctx) }.start() }
             }
             }
-            Section(stringResource(R.string.set_alerts), if (s.reminderHour >= 0) prayerTime(s.reminderHour * 60 + s.reminderMinute) else stringResource(R.string.reminder_off), openSec == "set_alerts") { openSec = if (openSec == "set_alerts") null else "set_alerts" }
-            if (openSec == "set_alerts") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+            Fold("set_alerts", stringResource(R.string.set_alerts), if (s.reminderHour >= 0) prayerTime(s.reminderHour * 60 + s.reminderMinute) else stringResource(R.string.reminder_off), openSec, spots, { toggle(it) }) {
             Group(stringResource(R.string.reminder)) {
                 // 매일 알림: 끄기 · 켜기, 켜면 정각 아무 시나 (안드로이드 13+ 는 처음 켤 때 알림 허락을 물음)
                 val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -182,10 +204,14 @@ fun SettingsPage(s: AppState) {
                 Text(if (on.isEmpty()) stringResource(R.string.prayer_reminder_none) else on.joinToString(" · "), style = Theme.small())
                 BookButton(stringResource(R.string.prayer_reminder_manage), Modifier.fillMaxWidth(), quiet = true) { s.prayersOpen = true }
             }
+            // 절기 시작 알림 (일 년에 네 번)
+            Group(stringResource(R.string.season_notice)) {
+                var on by remember { mutableStateOf(s.store.seasonNotice) }
+                ChoiceRow(stringResource(R.string.season_notice_row), on) { on = !on; s.store.seasonNotice = on }
+            }
             ExactAlarmNote(s)
             }
-            Section(stringResource(R.string.set_keep), stringResource(R.string.set_keep_sum), openSec == "set_keep") { openSec = if (openSec == "set_keep") null else "set_keep" }
-            if (openSec == "set_keep") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+            Fold("set_keep", stringResource(R.string.set_keep), stringResource(R.string.set_keep_sum), openSec, spots, { toggle(it) }) {
             Group(stringResource(R.string.voice_keep)) {
                 Text(stringResource(R.string.voice_keep_hint), style = Theme.small())
                 val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -236,8 +262,7 @@ fun SettingsPage(s: AppState) {
                 BookButton(stringResource(R.string.backup_import), Modifier.fillMaxWidth(), quiet = true) { pick.launch(arrayOf("application/zip", "application/octet-stream")) }
             }
             }
-            Section(stringResource(R.string.set_help), stringResource(R.string.set_help_sum), openSec == "set_help") { openSec = if (openSec == "set_help") null else "set_help" }
-            if (openSec == "set_help") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+            Fold("set_help", stringResource(R.string.set_help), stringResource(R.string.set_help_sum), openSec, spots, { toggle(it) }) {
             Group(stringResource(R.string.coach_again_h)) {
                 BookButton(stringResource(R.string.coach_again), Modifier.fillMaxWidth(), quiet = true) { s.coachReset(); s.settingsOpen = false; s.toast = ctx0.getString(R.string.coach_again_done) }
                 BookButton(stringResource(R.string.tour_again), Modifier.fillMaxWidth(), quiet = true) { s.welcomeStep = 0; s.tour = true; s.settingsOpen = false }
@@ -250,6 +275,19 @@ fun SettingsPage(s: AppState) {
             LifetimeCard(s)
             // 맨 아래: 여느 앱처럼 앱 소개 · 개인정보 처리방침 · 출처와 라이선스 · 문의, 판 번호
             Footer(s)
+            // 맨 아래 갈래를 열어도 그 머리가 맨 위까지 올라갈 수 있게
+            if (openSec != null) androidx.compose.foundation.layout.Spacer(Modifier.height(view * Tokens.Ratio.foldTail))
+        }
+        // 붙는 머리: 열린 갈래 안을 내려 보는 동안
+        stuck?.let { id ->
+            Row(Modifier.fillMaxWidth().background(c.leaf).background(c.gilt.copy(alpha = Tokens.Alpha.foldWash))
+                .drawBehind { drawLine(c.gilt, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.rule.toPx()) }
+                .clickable(role = Role.Button) { val y = spots[id]?.first ?: 0f; openSec = null; scope0.launch { androidx.compose.runtime.withFrameNanos { }; scroll.scrollTo((y + padTop).toInt()) } }
+                .padding(horizontal = Tokens.Space.s5).heightIn(min = Tokens.Size.touch), verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(FOLD_TITLES.getValue(id)), style = Theme.title(true, Tokens.Text.label), maxLines = 1, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.fold_close) + "  −", style = Theme.small().copy(color = c.inkSoft), maxLines = 1)
+            }
+        }
         }
     }
     // 언어를 바꾸면 앱을 다시 열어요: 먼저 묻고, 바꾸면 처음부터 새로 (남은 글이 옛 언어로 남지 않게)
@@ -268,6 +306,22 @@ fun SettingsPage(s: AppState) {
 }
 
 /** 매일 알림 시각 고르기. */
+
+private val FOLD_TITLES = mapOf("set_display" to R.string.set_display, "set_listen" to R.string.set_listen, "set_write" to R.string.set_write, "set_deco" to R.string.set_deco,
+    "set_alerts" to R.string.set_alerts, "set_keep" to R.string.set_keep, "set_help" to R.string.set_help)
+
+/** 갈래 하나: 머리 + (열렸으면) 내용. 열린 갈래는 옅은 금빛 바탕 + 왼쪽 금선으로 머리부터 끝까지 묶어요. 자리 (위 · 높이) 를 spots 에 남겨요. */
+@Composable
+private fun Fold(id: String, title: String, summary: String, openSec: String?, spots: MutableMap<String, Pair<Float, Float>>, onToggle: (String) -> Unit, content: @Composable () -> Unit) {
+    val c = Theme.c; val open = openSec == id
+    Column(Modifier.fillMaxWidth().onGloballyPositioned { spots[id] = it.positionInParent().y to it.size.height.toFloat() }
+        .then(if (open) Modifier.background(c.gilt.copy(alpha = Tokens.Alpha.foldWash)).drawBehind { drawRect(c.gilt, Offset.Zero, androidx.compose.ui.geometry.Size(Tokens.Stroke.rule.toPx() * 2, size.height)) }
+            .padding(start = Tokens.Space.s4, end = Tokens.Space.s3, bottom = Tokens.Space.s5) else Modifier),
+        verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+        Section(title, summary, open) { onToggle(id) }
+        if (open) content()
+    }
+}
 
 /** 설정의 큰 갈래 (접힘): 제목 · 지금 고른 것 한 줄 · ›. 누르면 그 갈래만 펼쳐요. */
 @Composable

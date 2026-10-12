@@ -6,12 +6,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** 한 테마의 재료 색. */
-data class Palette(val paper: Color, val leaf: Color, val ink: Color, val inkSoft: Color, val unwritten: Color, val hair: Color, val rubric: Color, val wrong: Color, val gilt: Color, val giltText: Color, val leather: Color, val leatherDeep: Color, val leatherInk: Color, val shade: Color, val scrim: Color, val penInk: Color, val noteLine: Color, val mark: Color, val graphite: Color, val giltHi: Color, val giltLo: Color, val advent: Color, val lent: Color, val pentecost: Color, val ordinary: Color)
+data class Palette(val paper: Color, val leaf: Color, val ink: Color, val inkSoft: Color, val unwritten: Color, val hair: Color, val rubric: Color, val wrong: Color, val gilt: Color, val giltText: Color, val leather: Color, val leatherDeep: Color, val leatherInk: Color, val shade: Color, val scrim: Color, val penInk: Color, val noteLine: Color, val mark: Color, val graphite: Color, val giltHi: Color, val giltLo: Color, val advent: Color, val lent: Color, val pentecost: Color, val ordinary: Color, val ebony: Color, val foil: Color, val ebonyInk: Color)
 
 object Tokens {
-    val light = Palette(paper = Color(0xFFEDE5D6), leaf = Color(0xFFF4EFE6), ink = Color(0xFF1F1A15), inkSoft = Color(0xFF6E655A), unwritten = Color(0xFFA39886), hair = Color(0x241F1A15), rubric = Color(0xFF7A5418), wrong = Color(0xFFC8323A), gilt = Color(0xFF9A6B1F), giltText = Color(0xFF7A5418), leather = Color(0xFF1F1A15), leatherDeep = Color(0xFF000000), leatherInk = Color(0xFFF4EFE6), shade = Color(0x242A2119), scrim = Color(0x661A120C), penInk = Color(0xFF1F2A44), noteLine = Color(0x291F2A44), mark = Color(0x70F2D25C), graphite = Color(0xFF5E5A55), giltHi = Color(0xFFF2DC9B), giltLo = Color(0xFF6E5020), advent = Color(0xFF5B3A6B), lent = Color(0xFF6E655A), pentecost = Color(0xFF8C2117), ordinary = Color(0xFF4F6B3A))
-    val dark = Palette(paper = Color(0xFF201912), leaf = Color(0xFF17110C), ink = Color(0xFFEADFC8), inkSoft = Color(0xFFA39886), unwritten = Color(0xFF7D7262), hair = Color(0x24EADFC8), rubric = Color(0xFFD6B672), wrong = Color(0xFFE8707A), gilt = Color(0xFFC7A35D), giltText = Color(0xFFD6B672), leather = Color(0xFFEFE6D2), leatherDeep = Color(0xFFD9CDB4), leatherInk = Color(0xFF1F1A15), shade = Color(0x66000000), scrim = Color(0xA0000000), penInk = Color(0xFFC9D3EE), noteLine = Color(0x29C9D3EE), mark = Color(0x55C9A43A), graphite = Color(0xFFA9A39A), giltHi = Color(0xFFF2DC9B), giltLo = Color(0xFF7A5C24), advent = Color(0xFFB48CC4), lent = Color(0xFFB5AC9F), pentecost = Color(0xFFD46B5C), ordinary = Color(0xFF9DBB7E))
-    val candle = Palette(paper = Color(0xFF17100A), leaf = Color(0xFF1E150D), ink = Color(0xFFEBD9B4), inkSoft = Color(0xFFB8A07A), unwritten = Color(0xFF8E7A5A), hair = Color(0x2EEBD9B4), rubric = Color(0xFFE9C57A), wrong = Color(0xFFE8707A), gilt = Color(0xFFD9AE5F), giltText = Color(0xFFE9C57A), leather = Color(0xFFE9D6AE), leatherDeep = Color(0xFFD4BE92), leatherInk = Color(0xFF1E150D), shade = Color(0x66000000), scrim = Color(0xA0000000), penInk = Color(0xFFE9D6AE), noteLine = Color(0x26E9C57A), mark = Color(0x40E9C57A), graphite = Color(0xFFA89A86), giltHi = Color(0xFFF2DC9B), giltLo = Color(0xFF6E5020), advent = Color(0xFFB48CC4), lent = Color(0xFFB5AC9F), pentecost = Color(0xFFD46B5C), ordinary = Color(0xFF9DBB7E))
+    val light = Palette(paper = Color(0xFFEDE5D6), leaf = Color(0xFFF4EFE6), ink = Color(0xFF1F1A15), inkSoft = Color(0xFF6E655A), unwritten = Color(0xFFA39886), hair = Color(0x241F1A15), rubric = Color(0xFF7A5418), wrong = Color(0xFFC8323A), gilt = Color(0xFF9A6B1F), giltText = Color(0xFF7A5418), leather = Color(0xFF1F1A15), leatherDeep = Color(0xFF000000), leatherInk = Color(0xFFF4EFE6), shade = Color(0x242A2119), scrim = Color(0x661A120C), penInk = Color(0xFF1F2A44), noteLine = Color(0x291F2A44), mark = Color(0x70F2D25C), graphite = Color(0xFF5E5A55), giltHi = Color(0xFFF2DC9B), giltLo = Color(0xFF6E5020), advent = Color(0xFF5B3A6B), lent = Color(0xFF6E655A), pentecost = Color(0xFF8C2117), ordinary = Color(0xFF4F6B3A), ebony = Color(0xFF241B14), foil = Color(0xFFD9B66A), ebonyInk = Color(0xFFCDBB94))
+    val dark = Palette(paper = Color(0xFF201912), leaf = Color(0xFF17110C), ink = Color(0xFFEADFC8), inkSoft = Color(0xFFA39886), unwritten = Color(0xFF7D7262), hair = Color(0x24EADFC8), rubric = Color(0xFFD6B672), wrong = Color(0xFFE8707A), gilt = Color(0xFFC7A35D), giltText = Color(0xFFD6B672), leather = Color(0xFFEFE6D2), leatherDeep = Color(0xFFD9CDB4), leatherInk = Color(0xFF1F1A15), shade = Color(0x66000000), scrim = Color(0xA0000000), penInk = Color(0xFFC9D3EE), noteLine = Color(0x29C9D3EE), mark = Color(0x55C9A43A), graphite = Color(0xFFA9A39A), giltHi = Color(0xFFF2DC9B), giltLo = Color(0xFF7A5C24), advent = Color(0xFFB48CC4), lent = Color(0xFFB5AC9F), pentecost = Color(0xFFD46B5C), ordinary = Color(0xFF9DBB7E), ebony = Color(0xFF2E2219), foil = Color(0xFFD9B66A), ebonyInk = Color(0xFFCDBB94))
+    val candle = Palette(paper = Color(0xFF17100A), leaf = Color(0xFF1E150D), ink = Color(0xFFEBD9B4), inkSoft = Color(0xFFB8A07A), unwritten = Color(0xFF8E7A5A), hair = Color(0x2EEBD9B4), rubric = Color(0xFFE9C57A), wrong = Color(0xFFE8707A), gilt = Color(0xFFD9AE5F), giltText = Color(0xFFE9C57A), leather = Color(0xFFE9D6AE), leatherDeep = Color(0xFFD4BE92), leatherInk = Color(0xFF1E150D), shade = Color(0x66000000), scrim = Color(0xA0000000), penInk = Color(0xFFE9D6AE), noteLine = Color(0x26E9C57A), mark = Color(0x40E9C57A), graphite = Color(0xFFA89A86), giltHi = Color(0xFFF2DC9B), giltLo = Color(0xFF6E5020), advent = Color(0xFFB48CC4), lent = Color(0xFFB5AC9F), pentecost = Color(0xFFD46B5C), ordinary = Color(0xFF9DBB7E), ebony = Color(0xFF2B1F14), foil = Color(0xFFE2BC72), ebonyInk = Color(0xFFD4BF94))
     object Space {
         val s1 = 4.dp
         val s2 = 8.dp
@@ -39,6 +39,10 @@ object Tokens {
     object Size {
         val touch = 56.dp
         val band = 60.dp
+        val folioFrame = 3.dp
+        val folioFoot = 24.dp
+        val folioOrn = 7.dp
+        val legend = 10.dp
         val row = 52.dp
         val tab = 48.dp
         val rowTall = 64.dp
@@ -133,6 +137,7 @@ object Tokens {
         val brand = 20.sp
         val title = 24.sp
         val head = 19.sp
+        val folioNum = 16.sp
         val display = 34.sp
         val initial = 40.sp
         val initialLg = 64.sp
@@ -239,6 +244,8 @@ object Tokens {
     }
     object Ratio {
         const val plateAspect = 0.766f
+        const val foldTail = 0.7f
+        const val folio = 0.75f
         const val systemFontMax = 1.15f
         const val veilInset = 0.06f
         const val veilMark = 0.16f
@@ -289,6 +296,7 @@ object Tokens {
         const val seasonPlate = 0.16f
         const val pathLine = 0.5f
         const val chipOn = 0.06f
+        const val foldWash = 0.07f
     }
     object Leading {
         const val verse = 1.8f

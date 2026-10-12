@@ -169,6 +169,12 @@ fun Root(s: AppState) {
             val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { MyBible.make(ctx, s.store, s.translation, b) }.getOrNull() }
             s.pdfBook = null; s.gateDone(title, f?.let { ExportJob(listOf(it), "application/pdf", title) })
         }
+        LaunchedEffect(s.reflectYear) {
+            val y = s.reflectYear ?: return@LaunchedEffect
+            val title = ctx.getString(R.string.reflect_book, y); s.exportGate = ExportGate(title)
+            val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { MyBible.reflections(ctx, s.store, s.translation, y) }.getOrNull() }
+            s.reflectYear = null; s.gateDone(title, f?.let { ExportJob(listOf(it), "application/pdf", title) })
+        }
         if (s.planOpen) PlanSheet(s)
         // 내 목소리 한 권: 장마다 절 녹음을 차례로 이어 소리 파일 하나 + 표지 카드
         LaunchedEffect(s.audiobookBook) {

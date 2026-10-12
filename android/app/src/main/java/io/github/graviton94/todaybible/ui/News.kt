@@ -1,5 +1,7 @@
 package io.github.graviton94.todaybible.ui
 
+import androidx.compose.foundation.border
+import androidx.compose.ui.graphics.luminance
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -93,17 +95,20 @@ fun NewsScreen(s: AppState) {
 fun UpdateBar(s: AppState) {
     val u = s.updates ?: return
     if (u.state == Updates.State.NONE || (s.updateLater && u.state == Updates.State.AVAILABLE)) return
-    val c = Theme.c
-    Row(Modifier.fillMaxWidth().background(c.leaf).drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }
+    // 테마와 반대 색 띠 (밝은 테마 = 먹 띠 · 어두운 테마 = 종이 띠): 바탕과 같은 색이면 눈에 잘 안 띄어서
+    val c = if (Theme.c.leaf.luminance() < 0.5f) Tokens.light else Tokens.dark
+    Row(Modifier.fillMaxWidth().background(c.leaf)
         .padding(horizontal = Tokens.Space.s5), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         val text = when (u.state) {
             Updates.State.DOWNLOADING -> stringResource(R.string.update_downloading, (u.progress * 100).toInt())
             Updates.State.READY -> stringResource(R.string.update_ready)
             else -> stringResource(R.string.update_available)
         }
-        Text(text, style = Theme.small().copy(color = c.ink), maxLines = 1, modifier = Modifier.weight(1f).padding(vertical = Tokens.Space.s2))
-        @Composable fun act(label: String, gilt: Boolean, go: () -> Unit) = Text(label, style = Theme.small().copy(color = if (gilt) c.giltText else c.inkSoft, textDecoration = TextDecoration.Underline), maxLines = 1,
-            modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button, onClick = go))
+        Text(text, style = Theme.small().copy(color = c.ink, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), maxLines = 1, modifier = Modifier.weight(1f).padding(vertical = Tokens.Space.s2))
+        @Composable fun act(label: String, main: Boolean, go: () -> Unit) = Box(Modifier.heightIn(min = Tokens.Size.touch).clickable(role = Role.Button, onClick = go), contentAlignment = Alignment.Center) {
+            if (main) Text(label, style = Theme.small().copy(color = c.giltText), maxLines = 1, modifier = Modifier.border(Tokens.Stroke.hair, c.gilt).padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s1))
+            else Text(label, style = Theme.small().copy(color = c.inkSoft, textDecoration = TextDecoration.Underline), maxLines = 1)
+        }
         when (u.state) {
             Updates.State.AVAILABLE -> { act(stringResource(R.string.update_later), false) { s.updateLater = true }; act(stringResource(R.string.update_get), true) { u.start() } }
             Updates.State.READY -> act(stringResource(R.string.update_restart), true) { u.install() }

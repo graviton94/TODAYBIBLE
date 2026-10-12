@@ -97,12 +97,46 @@ fun RecordPage(s: AppState) {
         Section("VESTIGIA", stringResource(R.string.milestones), "${s.earned.size} / ${Milestone.entries.size}", 5, k)
         MilestoneList(s, if (allMiles) miles else got.take(3) + next.take(6 - minOf(3, got.size)))
         BookButton(stringResource(if (allMiles) R.string.fold else R.string.unfold_all, miles.size), Modifier.fillMaxWidth(), quiet = true) { allMiles = !allMiles }
+        // 묵상 노트 (1.3): 장을 마치며 남긴 한 줄을 달마다
+        val reflections = s.notes.filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.REFLECTION && it.translation == s.translation }.sortedByDescending { it.epochDay }
+        if (reflections.isNotEmpty()) {
+            Section("NOTAE CORDIS", stringResource(R.string.reflect_title_h), "${reflections.size}", 6, k)
+            ReflectionList(s, reflections)
+        }
         if (s.marks.isNotEmpty()) {
-            Section("NOTAE", stringResource(R.string.marks), "${s.marks.count { it.translation == s.translation }}", 6, k)
+            Section("SIGNA", stringResource(R.string.marks), "${s.marks.count { it.translation == s.translation }}", if (reflections.isNotEmpty()) 7 else 6, k)
             MarkList(s)
         }
     }
 }
+
+/** 묵상 노트: 달 머리 · 날 (금빛 숫자) · 장 · 한 줄. 줄을 누르면 그 장을 읽어요. 처음엔 넷, 펼치면 모두. 맨 아래 한 해 PDF. */
+@Composable
+private fun ReflectionList(s: AppState, notes: List<io.github.graviton94.todaybible.data.Store.Note>) {
+    val c = Theme.c; val ctx = LocalContext.current
+    var all by remember { mutableStateOf(false) }
+    val shown = if (all) notes else notes.take(REFLECT_FOLDED)
+    var lastMonth: YearMonth? = null
+    Column(Modifier.fillMaxWidth()) {
+        shown.forEach { n ->
+            val d = LocalDate.ofEpochDay(n.epochDay); val ym = YearMonth.from(d)
+            if (ym != lastMonth) { lastMonth = ym; Text(Lang.date(ctx, R.string.fmt_month, d.atStartOfDay(java.time.ZoneId.systemDefault())).uppercase(), style = Theme.caps(), maxLines = 1, modifier = Modifier.padding(top = Tokens.Space.s3, bottom = Tokens.Space.s1)) }
+            Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.read(n.book, n.chapter) }
+                .drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }
+                .padding(vertical = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                Text("${d.dayOfMonth}", style = Theme.big(Tokens.Text.sectionNum).copy(color = c.gilt), maxLines = 1, modifier = Modifier.width(Tokens.Size.romanCol))
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                    Text(s.chapterRef(n.book, n.chapter), style = Theme.small(), maxLines = 1)
+                    Text(n.text, style = Theme.body())
+                }
+            }
+        }
+        if (notes.size > REFLECT_FOLDED) BookButton(stringResource(if (all) R.string.fold else R.string.unfold_all, notes.size), Modifier.fillMaxWidth(), quiet = true) { all = !all }
+        BookButton(stringResource(R.string.reflect_pdf, s.today().year), Modifier.fillMaxWidth().padding(top = Tokens.Space.s2), locked = s.premiumOn, quiet = true) { s.requestReflections(s.today().year) }
+    }
+}
+
+private const val REFLECT_FOLDED = 4
 
 /** 구획 머리: 먹색 선 · 라틴 머리글 · 이름 · 셈 · 금빛 로마 숫자. */
 @Composable

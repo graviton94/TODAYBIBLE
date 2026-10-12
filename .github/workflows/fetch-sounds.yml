@@ -33,7 +33,8 @@ jobs:
                   if p["title"] in seen or count.get(key,0)>=6: continue
                   ii=(p.get("imageinfo") or [{}])[0]
                   if not str(ii.get("mime","")).startswith(("audio/","application/ogg","video/webm")): continue
-                  if (ii.get("duration") or 999)<15: continue
+                  if not 15<=(ii.get("duration") or 999)<=900: continue
+                  if re.search(r"(podcast|recording|episode|song|music)",p["title"],re.I): continue
                   md=ii.get("extmetadata",{}); lic=md.get("LicenseShortName",{}).get("value","")
                   if not ok.search(lic): continue
                   seen.add(p["title"]); n=count[key]=count.get(key,0)+1

@@ -50,6 +50,42 @@ object Reminder {
         else { am.setWindow(AlarmManager.RTC_WAKEUP, ms, WINDOW_MS, pi); am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, ms + WINDOW_MS, backup) }
     }
 
+    const val SEASON_ID = 41
+    private val NOTICE = setOf(io.github.graviton94.todaybible.core.Season.ADVENT, io.github.graviton94.todaybible.core.Season.LENT, io.github.graviton94.todaybible.core.Season.EASTER, io.github.graviton94.todaybible.core.Season.PENTECOST)
+
+    /** 절기 시작 알림: 대림 · 사순 · 부활 · 성령강림 첫날에만. 절기 판화 · 절기 말씀 · ‘계획 시작’ · ‘오늘 말씀’. 설정 › 알림에서 끌 수 있어요. */
+    fun seasonNotice(ctx0: Context, store: Store, day: LocalDate, force: Boolean = false) {
+        val S = io.github.graviton94.todaybible.core.Seasons
+        val now = S.at(day).season
+        if (!force && (!store.seasonNotice || now !in NOTICE || S.at(day.minusDays(1)).season == now)) return
+        val ctx = io.github.graviton94.todaybible.ui.Lang.wrap(ctx0)
+        val tr = store.translation
+        val (b, c, v) = S.verse(now)
+        val book = Canon.books[b]
+        val cc = io.github.graviton94.todaybible.ui.Lang.content(ctx, tr)
+        val ref = cc.getString(R.string.ref_verse, if (tr == Translation.KRV) book.ko else book.en, c, v)
+        val name = ctx.getString(when (now) {
+            io.github.graviton94.todaybible.core.Season.ADVENT -> R.string.season_ADVENT; io.github.graviton94.todaybible.core.Season.LENT -> R.string.season_LENT
+            io.github.graviton94.todaybible.core.Season.EASTER -> R.string.season_EASTER; io.github.graviton94.todaybible.core.Season.PENTECOST -> R.string.season_PENTECOST
+            io.github.graviton94.todaybible.core.Season.CHRISTMAS -> R.string.season_CHRISTMAS; io.github.graviton94.todaybible.core.Season.EPIPHANY -> R.string.season_EPIPHANY
+            io.github.graviton94.todaybible.core.Season.ORDINARY -> R.string.season_ORDINARY
+        })
+        val body = Markup.plain(store.book(tr, b).verse(c, v)) + " (" + ref + ")"
+        val nm = ctx.getSystemService(NotificationManager::class.java)
+        if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, ctx.getString(R.string.reminder_channel), NotificationManager.IMPORTANCE_DEFAULT))
+        fun act(code: Int, extra: String) = PendingIntent.getActivity(ctx, code, Intent(ctx, MainActivity::class.java).setAction(extra).putExtra(extra, true)
+            .putExtra("at_b", b).putExtra("at_c", c).putExtra("at_v", v).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val icon = android.graphics.drawable.Icon.createWithResource(ctx, R.drawable.ic_stat_cross)
+        val n = android.app.Notification.Builder(ctx, CHANNEL).setSmallIcon(R.drawable.ic_stat_cross)
+            .setContentTitle(ctx.getString(R.string.season_begins, name)).setContentText(body)
+            .setStyle(plateBitmap(ctx, S.plate(now))?.let { android.app.Notification.BigPictureStyle().bigPicture(it).setSummaryText(body) } ?: android.app.Notification.BigTextStyle().bigText(body))
+            .setContentIntent(act(42, "season_read")).setAutoCancel(true)
+            .addAction(android.app.Notification.Action.Builder(icon, ctx.getString(R.string.season_plan_start), act(43, "season_plan")).build())
+            .addAction(android.app.Notification.Action.Builder(icon, ctx.getString(R.string.season_word), act(44, "season_read")).build())
+            .build()
+        runCatching { nm.notify(SEASON_ID, n) }
+    }
+
     fun post(ctx0: Context) {
         val ctx = io.github.graviton94.todaybible.ui.Lang.wrap(ctx0)   // 앱에서 고른 언어로
         val store = Store(ctx)
@@ -59,6 +95,8 @@ object Reminder {
         if (store.reminderDay == today) return
         store.reminderDay = today
         if (LocalDateTime.now().isAfter(LocalDate.now().atTime(store.reminderHour, store.reminderMinute).plusHours(2))) return
+        // 절기가 시작되는 날 (일 년에 네 번): 오늘 썼어도 따로 한 번
+        seasonNotice(ctx, store, LocalDate.now())
         val fills = store.loadFills()
         if (fills.any { it.epochDay == today }) return
         store.postedDay = today
@@ -90,6 +128,9 @@ object Reminder {
         runCatching { nm.notify(ID, n) }
     }
 }
+
+/** 판화 한 점 (알림용, 반으로 줄여 읽음). */
+private fun plateBitmap(ctx: Context, id: String) = runCatching { ctx.assets.open("plates/$id.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull()
 
 /** 펼치면 그 장(없으면 오늘)의 판화가 크게. 그림을 못 읽으면 글만. */
 private fun plateStyle(ctx: Context, store: Store, b: Int, ch: Int, body: String): android.app.Notification.Style? {

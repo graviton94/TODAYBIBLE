@@ -234,6 +234,52 @@ object MyBible {
         return out
     }
 
+    /** 묵상 노트 PDF (1.3): 한 해 동안 장을 마치며 남긴 한 줄을 달마다 날짜순으로. 표지는 고른 표지 판화. */
+    fun reflections(ctx: Context, store: Store, tr: Translation, year: Int): File? {
+        val korean = tr == Translation.KRV
+        val notes = store.loadNotes().filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.REFLECTION && it.translation == tr && LocalDate.ofEpochDay(it.epochDay).year == year }.sortedBy { it.epochDay }
+        if (notes.isEmpty()) return null
+        val c = Tokens.light
+        val cc = Lang.content(ctx, tr)
+        val serif = ResourcesCompat.getFont(ctx, if (korean) R.font.serif_kr_medium else R.font.garamond_medium)
+        fun name(b: Int) = if (korean) io.github.graviton94.todaybible.core.Canon.books[b].ko else io.github.graviton94.todaybible.core.Canon.books[b].en
+        val doc = PdfDocument(); var no = 0
+        fun page(): PdfDocument.Page { no++; return doc.startPage(PdfDocument.PageInfo.Builder(W, H, no).create()).also { it.canvas.drawColor(c.leaf.toArgb()) } }
+        run {
+            val pg = page()
+            val plate = store.coverPlate.takeIf { it.isNotEmpty() } ?: "creation"
+            cover(ctx, pg.canvas, plate, "NOTAE CORDIS · " + io.github.graviton94.todaybible.core.Latin.roman(year), cc.getString(R.string.reflect_book, year),
+                listOfNotNull(cc.getString(R.string.reflect_count, notes.size), store.ownerName.takeIf { it.isNotBlank() }), store.dedication, korean)
+            doc.finishPage(pg)
+        }
+        val body = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 11f; color = c.ink.toArgb() }
+        val small = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 8f; color = c.inkSoft.toArgb() }
+        val day = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = ResourcesCompat.getFont(ctx, R.font.display); textSize = 18f; color = c.gilt.toArgb() }
+        val month = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = ResourcesCompat.getFont(ctx, R.font.caps); textSize = 7.5f; letterSpacing = 0.2f; color = c.giltText.toArgb() }
+        val rule = Paint().apply { color = c.hair.toArgb(); strokeWidth = 0.4f }
+        val mfmt = DateTimeFormatter.ofPattern(cc.getString(R.string.fmt_month), Lang.locale(tr))
+        val gutter = 34f; val colW = (W - 2 * M - gutter).toInt()
+        var pg = page(); var y = M.toFloat(); var lastMonth = -1
+        for (n in notes) {
+            val d = LocalDate.ofEpochDay(n.epochDay)
+            val lay = StaticLayout.Builder.obtain(n.text, 0, n.text.length, body, colW).setLineSpacing(0f, 1.3f).setIncludePad(false).build()
+            val need = lay.height + 30f + (if (d.monthValue != lastMonth) 28f else 0f)
+            if (y + need > H - M) { doc.finishPage(pg); pg = page(); y = M.toFloat() }
+            val cv = pg.canvas
+            if (d.monthValue != lastMonth) { lastMonth = d.monthValue; cv.drawText(d.format(mfmt).uppercase(), M.toFloat(), y + 8f, month); y += 22f }
+            cv.drawText("${d.dayOfMonth}", M.toFloat(), y + 16f, day)
+            cv.drawText(Lang.chapterRef(ctx, tr, name(n.book), n.chapter), M + gutter, y + 7f, small)
+            cv.save(); cv.translate(M + gutter, y + 13f); lay.draw(cv); cv.restore()
+            y += lay.height + 22f
+            cv.drawLine(M + gutter, y - 6f, (W - M).toFloat(), y - 6f, rule)
+        }
+        doc.finishPage(pg)
+        val dir = File(ctx.cacheDir, "share").apply { mkdirs() }
+        val out = File(dir, "notae_cordis_$year.pdf")
+        out.outputStream().use { doc.writeTo(it) }; doc.close()
+        return out
+    }
+
     fun share(ctx: Context, f: File) {
         val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", f)
         val send = Intent(Intent.ACTION_SEND).setType("application/pdf").putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)

@@ -42,6 +42,16 @@ class Store(val context: Context) {
     fun append(fills: List<Fill>) {
         fillsFile.appendText(fills.joinToString("") { "${it.translation}\t${it.key.raw}\t${it.mode}\t${it.epochDay}\t${it.atMillis}\n" })
     }
+    /** 기록을 통째로 다시 씀 (새로 쓰기로 한 장을 지울 때만). */
+    fun rewrite(fills: List<Fill>) {
+        val tmp = File(fillsFile.parentFile, "fills.tsv.tmp")
+        tmp.writeText(fills.joinToString("") { "${it.translation}\t${it.key.raw}\t${it.mode}\t${it.epochDay}\t${it.atMillis}\n" })
+        if (!tmp.renameTo(fillsFile)) { fillsFile.writeText(tmp.readText()); tmp.delete() }
+    }
+    /** 나의 순례길에서 뺀 장 ("번역:권:장"). 그 장에 다시 쓰면 돌아와요. */
+    var hiddenPaused: Set<String>
+        get() = prefs.getStringSet("hidden_paused", emptySet())!!.toSet()
+        set(v) = prefs.edit().putStringSet("hidden_paused", v).apply()
     fun loadEarned(): Map<Milestone, Long> = if (!earnedFile.exists()) emptyMap() else earnedFile.readLines().mapNotNull { l ->
         val p = l.split('\t'); runCatching { Milestone.valueOf(p[0]) to p[1].toLong() }.getOrNull()
     }.toMap()
@@ -80,6 +90,10 @@ class Store(val context: Context) {
     var reminderMinute: Int
         get() = prefs.getInt("reminder_min", 0)
         set(v) = prefs.edit().putInt("reminder_min", v).apply()
+    /** 절기 시작 알림 (대림 · 사순 · 부활 · 성령강림 첫날 아침). */
+    var seasonNotice: Boolean
+        get() = prefs.getBoolean("season_notice", true)
+        set(v) = prefs.edit().putBoolean("season_notice", v).apply()
     /** 오늘의 분량 (절 수, -1 = 하루 한 장). */
     var dailyGoal: Int
         get() = prefs.getInt("goal", io.github.graviton94.todaybible.core.Goal.CHAPTER)

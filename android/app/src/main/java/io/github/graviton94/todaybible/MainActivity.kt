@@ -142,7 +142,7 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         val s = state ?: return
         // 알림 · 위젯으로 들어오면 위에 덮인 창들은 닫고 그 자리로
-        if (intent.hasExtra("page") || intent.hasExtra("prayer") || intent.hasExtra("at") || intent.hasExtra("aloud") || intent.hasExtra("listening")) s.closeOverlays()
+        if (intent.hasExtra("page") || intent.hasExtra("prayer") || intent.hasExtra("at") || intent.hasExtra("aloud") || intent.hasExtra("listening") || intent.hasExtra("season_plan") || intent.hasExtra("season_read")) s.closeOverlays()
         if (intent.getBooleanExtra("listening", false)) { s.goToListening(); intent.removeExtra("listening") }
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; intent.removeExtra("page") }
         openAloud(s, intent); intent.getStringExtra("prayer")?.let { id -> s.prayerOpen = id; intent.removeExtra("prayer") }
@@ -157,6 +157,12 @@ class MainActivity : ComponentActivity() {
 
     /** 아침 알림의 ‘함께 읽기’: 그 절로 열고 낭독을 곧바로. */
     private fun openAloud(s: AppState, i: Intent) {
+        // 절기 시작 알림: 계획 시작 · 오늘 말씀
+        if (i.getBooleanExtra("season_plan", false)) { i.removeExtra("season_plan"); s.opening = false; s.page = io.github.graviton94.todaybible.ui.AppState.TODAY; s.planOpen = true; return }
+        if (i.getBooleanExtra("season_read", false)) {
+            i.removeExtra("season_read"); s.opening = false
+            s.read(i.getIntExtra("at_b", 0), i.getIntExtra("at_c", 1), i.getIntExtra("at_v", 0).takeIf { it > 0 }); return
+        }
         // 알림에서: aloud = 함께 읽기로, at = 그 절의 필사 자리로
         val aloud = i.getBooleanExtra("aloud", false)
         if (!aloud && !i.getBooleanExtra("at", false)) return
@@ -250,6 +256,8 @@ class MainActivity : ComponentActivity() {
         if (i.getBooleanExtra("tb.film", false)) Thread { filmShots(s) }.start()
         if (i.getBooleanExtra("tb.news", false)) s.news = true
         if (i.getBooleanExtra("tb.keep", false)) s.keepOpen = true
+        s.debugPilgrim = i.getBooleanExtra("tb.pilgrim", false)
+        if (i.getBooleanExtra("tb.seasonNotice", false)) Thread { io.github.graviton94.todaybible.data.Reminder.seasonNotice(this, s.store, java.time.LocalDate.now(), force = true) }.start()
         if (i.hasExtra("tb.focus")) s.focusMode = i.getBooleanExtra("tb.focus", false)
         if (i.hasExtra("tb.keepWifi") && i.getBooleanExtra("tb.keepWifi", true) != s.keepWifiOnly) s.flipKeepWifiOnly()
         i.getIntExtra("tb.keepBook", 0).takeIf { it > 0 }?.let { s.keepNarration(it - 1) }

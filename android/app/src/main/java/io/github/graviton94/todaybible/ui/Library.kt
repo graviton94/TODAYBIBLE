@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -242,8 +244,32 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         Text(io.github.graviton94.todaybible.core.Latin.book(b), style = Theme.caps(), maxLines = 1)
         Text(s.bookName(b), style = Theme.title(s.korean, Tokens.Text.display))
-        Text(stringResource(R.string.choose_chapter), style = Theme.small())
-        Text(stringResource(R.string.grid_legend), style = Theme.small().copy(color = c.inkSoft))
+        // 한 줄 요약: 다 쓴 장 · 쓴 절
+        val doneCh = (1..t.chapterCount).count { p.chapterFraction(s.translation, t, it) >= 1f }
+        val allV = (1..t.chapterCount).sumOf { t.fillable(it).size }
+        val doneV = (1..t.chapterCount).sumOf { ch -> t.fillable(ch).count { p.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(b, ch, it)) } }
+        val nf = java.text.NumberFormat.getIntegerInstance()
+        Text(stringResource(R.string.grid_sum, t.chapterCount, doneCh, nf.format(allV), nf.format(doneV)), style = Theme.small())
+        // 나의 순례길: 이 권에서 쓰다 멈춘 장이 있으면 맨 위에
+        remember(s.fills.size, s.pausedRev, b) { s.pausedChapters(40).firstOrNull { it.book == b } }?.let { pz ->
+            Row(Modifier.fillMaxWidth().background(c.gilt.copy(alpha = Tokens.Alpha.foldWash)).drawBehind { drawRect(c.gilt, Offset.Zero, Size(Tokens.Stroke.rule.toPx() * 1.5f, size.height)) }
+                .clickable(role = Role.Button) { onPick(pz.chapter) }.heightIn(min = Tokens.Size.touch).padding(horizontal = Tokens.Space.s4),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                Text("PEREGRINATIO", style = Theme.caps(), maxLines = 1)
+                Text(stringResource(R.string.paused_row, stringResource(R.string.ch_n, pz.chapter), pz.next), style = Theme.label().copy(color = c.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.pil_continue) + " ›", style = Theme.small().copy(color = c.giltText), maxLines = 1)
+            }
+        }
+        // 범례: 흑단 = 다 씀 · 금빛 막대 = 쓰는 중 · 종이 = 아직
+        Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s4), verticalAlignment = Alignment.CenterVertically) {
+            @Composable fun key(label: String, swatch: Modifier) = Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                Box(swatch.size(Tokens.Size.legend))
+                Text(label, style = Theme.small(), maxLines = 1)
+            }
+            key(stringResource(R.string.legend_done), Modifier.background(c.ebony).border(Tokens.Stroke.hair, c.foil))
+            key(stringResource(R.string.legend_part), Modifier.background(c.paper).drawBehind { drawRect(c.gilt, Offset(0f, size.height * 0.7f), Size(size.width, size.height * 0.3f)) })
+            key(stringResource(R.string.legend_todo), Modifier.background(c.paper).border(Tokens.Stroke.hair, c.hair))
+        }
         if (p.bookDone(s.translation, t)) BookButton(stringResource(R.string.my_bible_pdf), Modifier.fillMaxWidth(), locked = s.premiumOn, quiet = true) { s.requestPdf(b) }
         val ctx = androidx.compose.ui.platform.LocalContext.current
         // 내 목소리로 읽은 장이 있으면: 한 권 오디오북
@@ -270,32 +296,53 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
             BookButton(stringResource(R.string.notes_pdf), Modifier.weight(1f), locked = s.premiumOn, quiet = true) { s.requestNotes(b) }
         }
         Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            (1..t.chapterCount).chunked(6).forEach { row ->
+            (1..t.chapterCount).chunked(FOLIO_COLS).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                    row.forEach { ch ->
-                        val f = p.chapterFraction(s.translation, t, ch)
-                        // 다 쓴 장 = 옅은 금빛 바탕 + 금빛 테, 쓰는 중 = 가는 테 위에 쓴 만큼 금빛 호
-                        Box(
-                            Modifier.weight(1f).aspectRatio(1f)
-                                .drawBehind {
-                                    val r = size.minDimension * 0.33f; val ctr = Offset(size.width / 2, size.height / 2)
-                                    val g = Tokens.Stroke.gilt.toPx(); val h = Tokens.Stroke.hair.toPx()
-                                    if (f >= 1f) { drawCircle(c.gilt.copy(alpha = 0.14f), r, ctr); drawCircle(c.gilt, r, ctr, style = Stroke(g)) }
-                                    else if (f > 0f) {
-                                        drawCircle(c.hair, r, ctr, style = Stroke(h))
-                                        drawArc(c.gilt, -90f, 360f * f, false, Offset(ctr.x - r, ctr.y - r), Size(r * 2, r * 2), style = Stroke(g, cap = androidx.compose.ui.graphics.StrokeCap.Round))
-                                    }
-                                }
-                                .clickable(role = Role.Button) { onPick(ch) },
-                            contentAlignment = Alignment.TopCenter,
-                        ) {
-                            Box(Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {
-                                Text("$ch", style = Theme.lining(Tokens.Text.gridNum).copy(color = when { f >= 1f -> c.giltText; f > 0f -> c.ink; else -> c.inkSoft }), maxLines = 1)
-                            }
-                        }
-                    }
-                    repeat(6 - row.size) { Box(Modifier.weight(1f)) }
+                    row.forEach { ch -> Folio(ch, t.fillable(ch).size, p.chapterFraction(s.translation, t, ch), Modifier.weight(1f)) { onPick(ch) } }
+                    repeat(FOLIO_COLS - row.size) { Box(Modifier.weight(1f)) }
                 }
+            }
+        }
+    }
+}
+
+private const val FOLIO_COLS = 4
+
+/**
+ * 장 낱장 (옛 종이): 위 로마 숫자 · 가운데 절 수 · 아래 진행.
+ * 다 쓴 장 = 흑단 가죽 + 금박 숫자 + 안쪽 금빛 두 줄 테 + 금빛 마름모 선, 쓰는 중 = 종이 + 진한 숫자 + 금빛 막대와 %, 아직 = 종이 그대로 (0%는 쓰지 않음).
+ */
+@Composable
+private fun Folio(ch: Int, verses: Int, f: Float, modifier: Modifier, onClick: () -> Unit) {
+    val c = Theme.c
+    val done = f >= 1f; val part = f > 0f && !done
+    Column(
+        modifier.aspectRatio(Tokens.Ratio.folio)
+            .then(if (done) Modifier.background(c.ebony).drawBehind {
+                val g = Tokens.Stroke.hair.toPx(); val a = Tokens.Size.folioFrame.toPx(); val b2 = a + Tokens.Size.bandGap.toPx()
+                drawRect(c.foil, Offset(a, a), Size(size.width - a * 2, size.height - a * 2), style = Stroke(g))
+                drawRect(c.foil.copy(alpha = Tokens.Alpha.faint), Offset(b2, b2), Size(size.width - b2 * 2, size.height - b2 * 2), style = Stroke(g))
+            } else Modifier.background(c.paper).border(Tokens.Stroke.hair, c.hair))
+            .clickable(role = Role.Button, onClick = onClick).padding(vertical = Tokens.Space.s2, horizontal = Tokens.Space.s1),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text(io.github.graviton94.todaybible.core.Latin.roman(ch), style = Theme.caps().copy(fontSize = Tokens.Text.folioNum, letterSpacing = androidx.compose.ui.unit.TextUnit(0.03f, androidx.compose.ui.unit.TextUnitType.Em),
+            color = when { done -> c.foil; part -> c.ink; else -> c.inkSoft }, fontWeight = if (done) androidx.compose.ui.text.font.FontWeight.SemiBold else null), maxLines = 1, softWrap = false)
+        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Text(stringResource(R.string.grid_verse, verses), style = Theme.small().copy(color = if (done) c.ebonyInk else c.inkSoft), maxLines = 1)
+        }
+        Box(Modifier.fillMaxWidth().height(Tokens.Size.folioFoot), contentAlignment = Alignment.Center) {
+            if (part) Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                Box(Modifier.fillMaxWidth(0.8f).height(Tokens.Size.segment).background(c.hair)) { Box(Modifier.fillMaxWidth(f).height(Tokens.Size.segment).background(c.gilt)) }
+                Text("${(f * 100).toInt().coerceAtLeast(1)}%", style = Theme.lining(Tokens.Text.small).copy(color = c.giltText), maxLines = 1)
+            }
+            // 다 쓴 장: 가는 금빛 선 가운데 마름모 하나
+            else if (done) Canvas(Modifier.fillMaxWidth(0.6f).height(Tokens.Size.folioOrn)) {
+                val y = size.height / 2; val r = size.height / 2
+                drawLine(c.foil, Offset(0f, y), Offset(size.width, y), Tokens.Stroke.hair.toPx())
+                val m = size.width / 2
+                drawPath(androidx.compose.ui.graphics.Path().apply { moveTo(m, y - r); lineTo(m + r, y); lineTo(m, y + r); lineTo(m - r, y); close() }, c.ebony)
+                drawPath(androidx.compose.ui.graphics.Path().apply { moveTo(m, y - r * 0.7f); lineTo(m + r * 0.7f, y); lineTo(m, y + r * 0.7f); lineTo(m - r * 0.7f, y); close() }, c.foil)
             }
         }
     }

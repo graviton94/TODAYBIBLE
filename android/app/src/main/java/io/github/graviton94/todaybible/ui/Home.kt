@@ -25,6 +25,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -107,13 +109,17 @@ fun HomePage(s: AppState) {
             BookButton(stringResource(R.string.read_short), Modifier.fillMaxWidth().coach("today_read"), quiet = true) { s.read(cb, cc) }
         }
         // 쓰다 멈춘 곳: 다른 장 · 다른 권에서 쓰다 만 자리 (최근 순, 둘까지)
-        val paused = remember(s.fills.size, cb, cc) { s.pausedChapters(2, cb to cc) }
+        val paused = remember(s.fills.size, s.pausedRev, cb, cc) { s.pausedChapters(2, cb to cc) }
+        var pick by remember { mutableStateOf<AppState.Paused?>(null) }
         if (paused.isNotEmpty()) Column(Modifier.fillMaxWidth()) {
             SectionHead("PEREGRINATIO", stringResource(R.string.paused_title), 1)
+            // 한 번 누르면: 이어 쓰기 · 새로 쓰기 · 순례길에서 빼기
             paused.forEach { p ->
-                ListRow(stringResource(R.string.paused_row, s.chapterRef(p.book, p.chapter), p.next), "${p.done} / ${p.total}") { s.open(p.book, p.chapter) }
+                ListRow(stringResource(R.string.paused_row, s.chapterRef(p.book, p.chapter), p.next), "${p.done} / ${p.total}") { pick = p }
             }
         }
+        androidx.compose.runtime.LaunchedEffect(paused) { if (s.debugPilgrim && paused.isNotEmpty()) { pick = paused.first(); s.debugPilgrim = false } }
+        pick?.let { p -> PilgrimSheet(s, p) { pick = null } }
         // 아래: 오늘 할 수 있는 일들을 같은 줄 모양으로
         Column(Modifier.fillMaxWidth()) {
             SectionHead("HODIE", stringResource(R.string.today_more), if (paused.isNotEmpty()) 2 else 1)
@@ -396,4 +402,49 @@ private fun BigAction(text: String, primary: Boolean = true, onClick: () -> Unit
     // 하나만 채우고 나머지는 가는 테 (크기는 그대로 커서 누르기 쉬움)
     Box(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.bigAction).then(if (primary) Modifier.background(c.leather) else Modifier.border(Tokens.Stroke.hair, c.ink)).clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center) { Text(text, style = Theme.title(true).copy(color = if (primary) c.leatherInk else c.ink)) }
+}
+
+/** 나의 순례길 한 줄을 눌렀을 때: 이어 쓰기 · 새로 쓰기 (한 번 더 확인) · 빼기 (한 번 더 확인). */
+@Composable
+fun PilgrimSheet(s: AppState, p: AppState.Paused, onClose: () -> Unit) {
+    val c = Theme.c; val k = s.korean
+    var ask by remember { mutableStateOf(0) }   // 0 고르기 · 1 새로 쓰기 확인 · 2 빼기 확인
+    val ref = s.chapterRef(p.book, p.chapter)
+    BookSheet(onClose) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            when (ask) {
+                0 -> {
+                    Text("PEREGRINATIO", style = Theme.caps(), maxLines = 1)
+                    Text(ref, style = Theme.title(k), maxLines = 1)
+                    @Composable fun opt(title: String, sub: String, warn: Boolean = false, onClick: () -> Unit) =
+                        Column(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.rowTall).clickable(role = Role.Button, onClick = onClick)
+                            .drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }
+                            .padding(vertical = Tokens.Space.s3), verticalArrangement = Arrangement.Center) {
+                            Text(title, style = Theme.label().copy(color = if (warn) c.wrong else c.ink, fontWeight = FontWeight.SemiBold), maxLines = 1)
+                            Text(sub, style = Theme.small(), maxLines = 2)
+                        }
+                    opt(stringResource(R.string.pil_continue), stringResource(R.string.pil_continue_sub, p.next)) { onClose(); s.open(p.book, p.chapter) }
+                    opt(stringResource(R.string.pil_restart), stringResource(R.string.pil_restart_sub)) { ask = 1 }
+                    opt(stringResource(R.string.pil_remove), stringResource(R.string.pil_remove_sub)) { ask = 2 }
+                }
+                1 -> {
+                    Text(stringResource(R.string.pil_restart_h, ref), style = Theme.title(k))
+                    Text(stringResource(R.string.pil_restart_body, p.done), style = Theme.body())
+                    Text(stringResource(R.string.pil_restart_warn), style = Theme.small().copy(color = c.wrong))
+                    Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                        BookButton(stringResource(R.string.pil_keep), Modifier.weight(1f), quiet = true) { onClose() }
+                        BookButton(stringResource(R.string.pil_restart_go), Modifier.weight(1f)) { s.restartChapter(p.book, p.chapter); onClose(); s.open(p.book, p.chapter) }
+                    }
+                }
+                else -> {
+                    Text(stringResource(R.string.pil_remove_h), style = Theme.title(k))
+                    Text(stringResource(R.string.pil_remove_body, ref, p.done, s.bookName(p.book), p.chapter, p.next), style = Theme.body())
+                    Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                        BookButton(stringResource(R.string.pil_keep), Modifier.weight(1f), quiet = true) { onClose() }
+                        BookButton(stringResource(R.string.pil_remove_go), Modifier.weight(1f)) { s.hidePaused(p.book, p.chapter); onClose() }
+                    }
+                }
+            }
+        }
+    }
 }

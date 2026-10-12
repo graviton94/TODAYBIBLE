@@ -175,6 +175,8 @@ class AppState(val store: Store) {
     var copyTabNow by mutableIntStateOf(store.copyTab)
     /** 필사 집중 모드 (머리 · 탭 · 아래 이름표를 걷음) 와 곁소리. */
     var focusMode by mutableStateOf(false)
+    /** 캡처용: 오늘 화면을 열면 순례길 첫 줄 시트를 바로. */
+    var debugPilgrim by mutableStateOf(false)
     var focusSound by mutableStateOf(store.focusSound)
     /** 간단 모드: 오늘 화면에 오늘의 장과 큰 버튼 셋만. */
     var simple by mutableStateOf(store.simple)
@@ -365,11 +367,30 @@ class AppState(val store: Store) {
     fun pausedChapters(limit: Int = 3, except: Pair<Int, Int>? = null): List<Paused> {
         val seen = LinkedHashSet<Pair<Int, Int>>()
         fills.filter { it.translation == translation }.sortedByDescending { it.atMillis }.forEach { seen.add(it.key.book to it.key.chapter) }
-        return seen.asSequence().filter { it != except }.mapNotNull { (b, c) ->
+        val hidden = store.hiddenPaused
+        return seen.asSequence().filter { it != except && "${translation.id}:${it.first}:${it.second}" !in hidden }.mapNotNull { (b, c) ->
             val t = store.book(translation, b); val fill = t.fillable(c)
             val done = fill.count { progress.isFilled(translation, io.github.graviton94.todaybible.core.VerseKey(b, c, it)) }
             if (done >= fill.size) null else Paused(b, c, progress.nextVerse(translation, t, c) ?: fill.first(), done, fill.size)
         }.take(limit).toList()
+    }
+
+    /** 순례길 목록이 바뀐 횟수 (빼기 · 새로 쓰기). */
+    var pausedRev by mutableIntStateOf(0)
+    /** 나의 순례길에서 빼기: 목록에서만 사라지고 기록은 그대로. */
+    fun hidePaused(b: Int, c: Int) { store.hiddenPaused = store.hiddenPaused + "${translation.id}:$b:$c"; pausedRev++ }
+    /** 새로 쓰기: 이 장의 기록 (낭독 녹음 · 손글씨 포함) 을 지우고 1절부터. 되돌릴 수 없어요. */
+    fun restartChapter(b: Int, c: Int) {
+        val tr = translation
+        val keep = fills.filterNot { it.translation == tr && it.key.book == b && it.key.chapter == c }
+        store.rewrite(keep); fills.clear(); fills.addAll(keep); cachedProgress = null; cachedSize = -1
+        val ctx = store.context
+        Thread {
+            runCatching { io.github.graviton94.todaybible.data.Voice.verses(ctx, tr.id, b, c).forEach { it.second.delete() } }
+            runCatching { io.github.graviton94.todaybible.data.Ink.verses(ctx, tr.id, b, c).forEach { io.github.graviton94.todaybible.data.Ink.file(ctx, tr.id, b, c, it).delete() } }
+        }.start()
+        store.hiddenPaused = store.hiddenPaused - "${tr.id}:$b:$c"
+        voiceRev++; pausedRev++; widgets()
     }
 
     fun open(b: Int, ch: Int) {
@@ -446,6 +467,9 @@ class AppState(val store: Store) {
     /** 내 목소리 한 권 (오디오북) 만들기. */
     var audiobookBook by mutableStateOf<Int?>(null)
     fun requestAudiobook(b: Int) { if (gated()) purchaseOpen = true else audiobookBook = b }
+    /** 묵상 노트 PDF (한 해). */
+    var reflectYear by mutableStateOf<Int?>(null)
+    fun requestReflections(y: Int) { if (gated()) purchaseOpen = true else reflectYear = y }
     fun requestNotes(b: Int?) { if (gated()) purchaseOpen = true else notesBook = b ?: -1 }
     fun requestPdf(b: Int) { if (!lifetime.unlocked && (lifetime.ready || lifetime.forceReady || forceLock)) purchaseOpen = true else pdfBook = b }
     fun setGoal(g: Int) { dailyGoal = g; store.dailyGoal = g; widgets() }
@@ -542,6 +566,8 @@ class AppState(val store: Store) {
         if (new.isEmpty()) return
         if (store.startDay < 0) store.startDay = day
         store.append(new); fills.addAll(new); widgets()
+        // 순례길에서 뺀 장에 다시 쓰면 목록으로 돌아와요
+        "${tr.id}:$book:$chapter".let { k -> if (k in store.hiddenPaused) { store.hiddenPaused = store.hiddenPaused - k; pausedRev++ } }
         val t = text()
         val wasMet = io.github.graviton94.todaybible.core.Goal.met(effectiveGoal(), todayVerses() - new.size, 0)
         if (progress.chapterDone(tr, t, chapter)) { finished = book to chapter; store.finishedCount = store.finishedCount + 1 }
