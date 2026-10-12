@@ -264,6 +264,28 @@ open --es tb.plan none
 open --es tb.listen "42:15";                                        shot rd1_reader_ribbon 6
 open --es tb.listen "42:1";                                         shot rd2_reader_first 6
 # @end
+# 디자인 리뷰: 다섯 화면을 끝까지
+# @scene rv
+open --ei tb.page 0;                    shot rv_t1 6
+swipe_up;                               shot rv_t2 2
+swipe_up;                               shot rv_t3 2
+open --ei tb.page 1;                    shot rv_b1 4
+swipe_up;                               shot rv_b2 2
+swipe_up; swipe_up;                     shot rv_b3 2
+open --ei tb.page 2 --ei tb.copyTab 0;  shot rv_c1 4
+open --ei tb.page 2 --ei tb.copyTab 1;  shot rv_c2 4
+adb shell input tap 540 1200; sleep 1; adb shell input text "abc"; sleep 1; shot rv_c3 1
+open --ei tb.page 2 --ei tb.copyTab 2;  shot rv_c4 4
+open --ei tb.page 3;                    shot rv_r1 4
+swipe_up;                               shot rv_r2 2
+swipe_up;                               shot rv_r3 2
+swipe_up;                               shot rv_r4 2
+swipe_up;                               shot rv_r5 2
+open --ez tb.settings true;             shot rv_s1 4
+swipe_up;                               shot rv_s2 2
+swipe_up;                               shot rv_s3 2
+open --ez tb.settings true --es tb.section set_alerts; shot rv_s4 4
+# @end
 # @scene gt
 # 넘어가는 화면: 여는 순간 (판화) · 낭독 받기 관문 · 파일 만들기 관문
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT; sleep 3
