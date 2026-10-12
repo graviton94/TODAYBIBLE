@@ -359,7 +359,7 @@ open --ez tb.seed true --es tb.tr WEB --es tb.theme LIGHT --ez tb.keep true; sle
 adb shell cmd statusbar collapse; sleep 1
 adb shell screenrecord --time-limit 40 --size 720x1600 /sdcard/fgk.mp4 &
 sleep 3
-adb shell am start -n $P/.MainActivity --ez tb.keep true --ei tb.keepBook 41 >/dev/null; sleep 8
+adb shell am start -n $P/.MainActivity --ez tb.keep true --ez tb.keepWifi false --ei tb.keepBook 41 >/dev/null; sleep 8
 adb shell input keyevent 3; sleep 5
 adb shell cmd statusbar expand-notifications; sleep 9
 adb shell cmd statusbar collapse; sleep 1
