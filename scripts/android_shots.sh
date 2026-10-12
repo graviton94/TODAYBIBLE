@@ -277,13 +277,13 @@ open --ez tb.night false --ei tb.page 2 --ez tb.focus false; adb shell input tap
 # @scene b3
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ez tb.settings true;  shot b3_set_folded 5
 open --ez tb.settings true --es tb.section set_alerts; swipe_up;  shot b3_set_sticky 3
-open --ez tb.settings false --ei tb.picker 40;                    shot b3_picker 4
+open --ez tb.settings false --ei tb.picker 41;                    shot b3_picker 4
 open --ei tb.picker 0 --ei tb.page 0 --ez tb.pilgrim true;        shot b3_pilgrim 4
 open --ez tb.pilgrim false --ei tb.page 0 --es tb.update available; shot b3_update 4
-open --ez tb.night true --ei tb.picker 40;                        shot b3_picker_night 4
+open --ez tb.night true --ei tb.picker 41;                        shot b3_picker_night 4
 open --ez tb.night true --ei tb.picker 0 --ei tb.page 0 --es tb.update available; shot b3_update_night 4
 open --ez tb.night false --es tb.update none --ei tb.page 3; swipe_up; swipe_up; swipe_up; swipe_up; shot b3_notae 3
-open --ei tb.page 0 --ez tb.seasonNotice true; sleep 2; adb shell cmd statusbar expand-notifications; sleep 2; shot b3_season 1; adb shell cmd statusbar collapse
+adb shell pm grant $P android.permission.POST_NOTIFICATIONS 2>/dev/null; open --ei tb.page 0 --ez tb.seasonNotice true; sleep 2; adb shell cmd statusbar expand-notifications; sleep 2; shot b3_season 1; adb shell cmd statusbar collapse
 
 # @scene rv
 open --ei tb.page 0;                    shot rv_t1 6

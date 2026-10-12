@@ -616,6 +616,14 @@ class AppState(val store: Store) {
         checkMilestones(); award = null
         // 소리 내어 읽은 시간: 지난 이레
         aloudLog = (0..6).associate { end.minusDays(it.toLong()).toEpochDay() to listOf(720, 0, 1260, 540, 960, 300, 840)[it] }.filterValues { it > 0 }; store.saveAloud(aloudLog)
+        // 묵상 노트 견본 (캡처용, 내가 적은 글 자리)
+        if (notes.none { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.REFLECTION }) {
+            val ko = tr == io.github.graviton94.todaybible.core.Translation.KRV
+            val sample = listOf(Triple(0, 1, if (ko) "빛이 있으라. 오늘도 거기서 시작해요" else "Let there be light. Starting there again today"),
+                Triple(40, 1, if (ko) "곧 · 곧 · 곧. 머뭇거리지 않는 부르심" else "Straightway, again and again"),
+                Triple(40, 2, if (ko) "지붕을 뜯어서라도 데려온 친구들" else "Friends who broke open a roof"))
+            saveNotes(notes + sample.mapIndexed { i, (b, c, t) -> io.github.graviton94.todaybible.data.Store.Note(io.github.graviton94.todaybible.data.Store.NoteKind.REFLECTION, tr, b, c, 0, 0, end.minusDays((30 - i * 9).toLong()).toEpochDay(), t) })
+        }
         onboarded = true; store.onboarded = true; opening = false
         open(40, 3); page = 0
     }

@@ -118,7 +118,7 @@ fun HomePage(s: AppState) {
                 ListRow(stringResource(R.string.paused_row, s.chapterRef(p.book, p.chapter), p.next), "${p.done} / ${p.total}") { pick = p }
             }
         }
-        androidx.compose.runtime.LaunchedEffect(paused) { if (s.debugPilgrim && paused.isNotEmpty()) { pick = paused.first(); s.debugPilgrim = false } }
+        androidx.compose.runtime.LaunchedEffect(paused, s.debugPilgrim) { if (s.debugPilgrim && paused.isNotEmpty()) { pick = paused.first(); s.debugPilgrim = false } }
         pick?.let { p -> PilgrimSheet(s, p) { pick = null } }
         // 아래: 오늘 할 수 있는 일들을 같은 줄 모양으로
         Column(Modifier.fillMaxWidth()) {
