@@ -210,6 +210,7 @@ class MainActivity : ComponentActivity() {
         s.plateView = i.getStringExtra("tb.plate")?.let { id -> s.store.plates.firstOrNull { it.id == id } }
         s.peekBook = i.getIntExtra("tb.peek", 0).takeIf { it > 0 }?.minus(1)?.also { s.purchaseOpen = true }
         i.getStringExtra("tb.plan")?.let { s.choosePlan(it); s.store.planStart = s.today().toEpochDay() - 2 }
+        if (i.getBooleanExtra("tb.planSheet", false)) s.planOpen = true
         i.getStringExtra("tb.coverPlate")?.let { s.chooseCoverPlate(it) }
         i.getStringExtra("tb.ink")?.let { s.chooseInk(it) }
         i.getStringExtra("tb.dedication")?.let { s.setDedicationLine(it) }

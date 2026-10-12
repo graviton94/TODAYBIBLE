@@ -250,6 +250,15 @@ open --es tb.finished 2:3;                                                      
 open --es tb.plate noah;                                                              shot v05_plate 4
 open --ez tb.reset true --es tb.theme LIGHT; sleep 3; open --ez tb.seed true --es tb.tr KRV --es tb.open 2:14; shot v06_opener 5
 
+# 절기 머리 · 지나온 길 (1.2)
+# @scene se
+open --es tb.today 2026-12-07;                                      shot se1_advent 5
+open --es tb.today 2026-12-25;                                      shot se2_christmas 5
+open --es tb.today 2027-03-04;                                      shot se3_lent 5
+open --es tb.today 2027-05-16;                                      shot se4_pentecost 5
+open --es tb.plan mark30 --ez tb.planSheet true;                    shot se5_plan_path 4
+open --es tb.plan none
+# @end
 # @scene gt
 # 넘어가는 화면: 여는 순간 (판화) · 낭독 받기 관문 · 파일 만들기 관문
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT; sleep 3

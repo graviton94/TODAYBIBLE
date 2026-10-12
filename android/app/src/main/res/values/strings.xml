@@ -4,6 +4,24 @@
     <string name="keep_notif">%1$s · %2$d / %3$d chapters</string>
     <string name="keep_notif_left">%1$d more waiting</string>
     <string name="today_more">For today</string>
+    <string name="season_ADVENT">Advent</string>
+    <string name="season_CHRISTMAS">Christmas</string>
+    <string name="season_EPIPHANY">After Epiphany</string>
+    <string name="season_LENT">Lent</string>
+    <string name="season_EASTER">Easter</string>
+    <string name="season_PENTECOST">Pentecost</string>
+    <string name="season_ORDINARY">After Pentecost</string>
+    <string name="season_ADVENT_la">Tempus Adventus</string>
+    <string name="season_CHRISTMAS_la">Tempus Nativitatis</string>
+    <string name="season_EPIPHANY_la">Tempus post Epiphaniam</string>
+    <string name="season_LENT_la">Quadragesima</string>
+    <string name="season_EASTER_la">Tempus Paschale</string>
+    <string name="season_PENTECOST_la">Pentecoste</string>
+    <string name="season_ORDINARY_la">Tempus per Annum</string>
+    <string name="season_week">week %1$d</string>
+    <string name="season_to">%2$d days to %1$s</string>
+    <string name="season_today">Today is %1$s</string>
+    <string name="plan_path_legend">Gold = a day you wrote · ring = today · dashed = days ahead</string>
     <string name="paused_title">Where you left off</string>
     <string name="paused_row">%1$s · from v. %2$d</string>
     <string name="keep_title">Download narration</string>
@@ -666,7 +684,7 @@
     <string name="fmt_date_day">EEEE, MMMM d</string>
     <string name="fmt_date_full">EEEE, MMMM d, yyyy</string>
     <string name="fmt_month">MMMM yyyy</string>
-    <string name="fmt_md">MMM d</string>
+    <string name="fmt_md">M/d</string>
     <string name="fmt_ymd">MMM d, yyyy</string>
     <string name="fmt_md_time">MMM d, h:mm a</string>
     <string name="fmt_hour">h a</string>

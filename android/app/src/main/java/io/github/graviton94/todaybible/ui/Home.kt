@@ -25,6 +25,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +35,8 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -71,6 +75,8 @@ fun HomePage(s: AppState) {
     val v = pn?.third ?: s.progress.nextVerse(s.translation, ct, cc)
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s3, bottom = Tokens.Space.s5),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+        // 절기 머리: 절기색 띠 · 옅은 절기 판화 · 이름 · 몇째 주 · 남은 날 · 절기 말씀
+        SeasonHead(s, today)
         // 이어 쓰기 날수 · 요일 점 (하루의 편지 R1)
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Text(androidx.compose.ui.text.buildAnnotatedString {
@@ -88,12 +94,14 @@ fun HomePage(s: AppState) {
             Text(stringResource(R.string.listen_head, s.bookName(cb), cc), style = Theme.title(k, Tokens.Text.display), maxLines = 1)
             Text(stringResource(R.string.ch_progress, inCh, fill.size) + if (verses > 0) " · " + stringResource(R.string.today_written, verses) else "", style = Theme.small(), maxLines = 1)
         }
-        Segments(fill.size, inCh)
+        // 진도 막대 · 이어 쓸 절 번호는 절기색 (성탄 · 부활은 금빛 그대로)
+        val accent = seasonColor(remember(today) { io.github.graviton94.todaybible.core.Seasons.at(today) }.season)
+        androidx.compose.runtime.CompositionLocalProvider(io.github.graviton94.todaybible.design.LocalPalette provides c.copy(gilt = accent)) { Segments(fill.size, inCh) }
         if (goal > 0) Text(if (met) stringResource(R.string.goal_done) else stringResource(R.string.goal_left, (goal - verses).coerceAtLeast(0)),
             style = Theme.small().copy(color = if (met) c.giltText else c.inkSoft), maxLines = 1)
-        if (v != null) Text(androidx.compose.ui.text.buildAnnotatedString {
-            withStyle(androidx.compose.ui.text.SpanStyle(color = c.giltText)) { append("$v ") }; append(Markup.plain(ct.verse(cc, v)))
-        }, style = Theme.verse(k), maxLines = 3, overflow = TextOverflow.Ellipsis)
+        if (v != null) InkText(androidx.compose.ui.text.buildAnnotatedString {
+            withStyle(androidx.compose.ui.text.SpanStyle(color = accent)) { append("$v ") }; append(Markup.plain(ct.verse(cc, v)))
+        }, Theme.verse(k), play = remember(today) { s.store.inkDay != today.toEpochDay() }.also { if (it) s.store.inkDay = today.toEpochDay() })
         Column(Modifier.fillMaxWidth()) {
             BookButton(if (v != null) stringResource(R.string.continue_at_verse, v) else stringResource(R.string.continue_now), Modifier.fillMaxWidth().coach("today_go")) { s.open(cb, cc) }
             BookButton(stringResource(R.string.read_short), Modifier.fillMaxWidth().coach("today_read"), quiet = true) { s.read(cb, cc) }
@@ -138,6 +146,129 @@ fun HomePage(s: AppState) {
             if (!s.lifetime.unlocked) ListRow(stringResource(R.string.lifetime_row), stringResource(R.string.lifetime_row_more)) { s.purchaseOpen = true }
         }
     }
+}
+
+/**
+ * 지나온 길 (하루의 편지 편지 길): 오늘 앞뒤 일곱 날. 쓴 날 = 금빛 점, 오늘 = 먹 테, 앞날 = 점선 네모. 사이는 가는 금선.
+ */
+@Composable
+private fun PlanPath(s: AppState, total: Int) {
+    val c = Theme.c
+    val day = s.planDay().coerceIn(1, total); val days = s.progress.days()
+    val start = s.today().minusDays((day - 1).toLong())
+    val from = (day - 3).coerceIn(1, maxOf(1, total - 6)); val to = minOf(total, from + 6)
+    Column(Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Text("ITER · " + stringResource(R.string.plan_day, day, total), style = Theme.caps(), maxLines = 1)
+        Row(Modifier.fillMaxWidth().height(Tokens.Size.pathNode).drawBehind {
+            val y = size.height / 2
+            drawLine(c.gilt.copy(alpha = Tokens.Alpha.pathLine), Offset(0f, y), Offset(size.width, y), Tokens.Stroke.gilt.toPx())
+        }, horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            for (d in from..to) {
+                val date = start.plusDays((d - 1).toLong()); val wrote = date.toEpochDay() in days
+                Box(Modifier.size(Tokens.Size.pathNode).background(c.leaf).drawBehind {
+                    val r = size.minDimension / 2
+                    when {
+                        d == day -> { if (wrote) drawCircle(c.gilt, r * 0.55f); drawCircle(c.ink, r - Tokens.Stroke.rule.toPx() / 2, style = Stroke(Tokens.Stroke.rule.toPx())) }
+                        d < day -> drawCircle(if (wrote) c.gilt else c.hair, r * if (wrote) 0.8f else 0.5f)
+                        else -> drawRect(c.unwritten, Offset(r * 0.25f, r * 0.25f), Size(r * 1.5f, r * 1.5f), style = Stroke(Tokens.Stroke.hair.toPx(), pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(4f, 3f))))
+                    }
+                })
+            }
+        }
+        Text(stringResource(R.string.plan_path_legend), style = Theme.small(), maxLines = 2)
+    }
+}
+
+/** 절기 색 (띠 · 글): 성탄 · 부활은 금박. */
+@Composable
+fun seasonColor(se: io.github.graviton94.todaybible.core.Season): androidx.compose.ui.graphics.Color {
+    val c = Theme.c
+    return when (se) {
+        io.github.graviton94.todaybible.core.Season.ADVENT -> c.advent
+        io.github.graviton94.todaybible.core.Season.LENT -> c.lent
+        io.github.graviton94.todaybible.core.Season.PENTECOST -> c.pentecost
+        io.github.graviton94.todaybible.core.Season.ORDINARY, io.github.graviton94.todaybible.core.Season.EPIPHANY -> c.ordinary
+        else -> c.giltText
+    }
+}
+
+/**
+ * 절기 머리 (오늘 탭 맨 위): 화면 끝까지 닿는 절기색 띠 (성탄 · 부활은 금박), 뒤에 옅게 깐 절기 판화 (아래로 사라짐),
+ * 라틴 머리글 · 절기 이름 · 제n주 · 다음 큰 날까지 · 절기 말씀 한 절 (성경 파일 그대로).
+ */
+@Composable
+private fun SeasonHead(s: AppState, today: java.time.LocalDate) {
+    val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
+    val now = remember(today) { io.github.graviton94.todaybible.core.Seasons.at(today) }
+    val se = now.season; val col = seasonColor(se)
+    val feast = se == io.github.graviton94.todaybible.core.Season.CHRISTMAS || se == io.github.graviton94.todaybible.core.Season.EASTER
+    val img = rememberPlate(io.github.graviton94.todaybible.core.Seasons.plate(se))
+    fun name(x: io.github.graviton94.todaybible.core.Season) = ctx.getString(ctx.resources.getIdentifier("season_${x.name}", "string", ctx.packageName))
+    val (vb, vc, vv) = io.github.graviton94.todaybible.core.Seasons.verse(se)
+    val bleed = Tokens.Space.s5
+    Box(Modifier.fillMaxWidth().bleed(bleed)) {
+        // 옅은 판화 (아래로 사라짐)
+        if (img != null) Image(img, null, Modifier.matchParentSize().graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen; alpha = Tokens.Alpha.seasonPlate }
+            .drawWithContent { drawContent(); drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0.3f to androidx.compose.ui.graphics.Color.Black, 1f to androidx.compose.ui.graphics.Color.Transparent), blendMode = androidx.compose.ui.graphics.BlendMode.DstIn) },
+            contentScale = ContentScale.Crop, alignment = androidx.compose.ui.BiasAlignment(0f, -0.4f), colorFilter = androidx.compose.ui.graphics.ColorFilter.colorMatrix(SEPIA_MATRIX))
+        Column(Modifier.fillMaxWidth()) {
+            // 띠
+            Box(Modifier.fillMaxWidth().height(Tokens.Size.seasonBand).background(if (feast) androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(c.giltLo, c.gilt, c.giltHi, c.gilt, c.giltLo))
+                else androidx.compose.ui.graphics.SolidColor(col)))
+            Column(Modifier.fillMaxWidth().padding(horizontal = bleed).padding(top = Tokens.Space.s4, bottom = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                Text(stringResource(ctx.resources.getIdentifier("season_${se.name}_la", "string", ctx.packageName)).uppercase(), style = Theme.caps().copy(color = col), maxLines = 1)
+                Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                    Text(name(se), style = Theme.title(k), maxLines = 1)
+                    Text(stringResource(R.string.season_week, now.week), style = Theme.small(), maxLines = 1, modifier = Modifier.padding(bottom = Tokens.Space.s1))
+                }
+                now.daysTo?.let { n ->
+                    Text(if (n == 0) stringResource(R.string.season_today, name(se)) else stringResource(R.string.season_to, name(now.next ?: se), n),
+                        style = Theme.small().copy(color = col, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), maxLines = 1)
+                }
+                val verse = remember(se, s.translation) { Markup.plain(s.store.book(s.translation, vb).verse(vc, vv)) }
+                Text(androidx.compose.ui.text.buildAnnotatedString {
+                    append(verse); append("  ")
+                    withStyle(androidx.compose.ui.text.SpanStyle(color = c.inkSoft, fontSize = Tokens.Text.small)) { append(stringResource(R.string.ref_verse, s.bookName(vb), vc, vv)) }
+                }, style = Theme.body(), modifier = Modifier.padding(top = Tokens.Space.s2).drawBehind {
+                    drawRect(col, Offset(-Tokens.Space.s3.toPx(), 0f), Size(Tokens.Stroke.rule.toPx(), size.height))
+                }.padding(start = Tokens.Space.s1))
+            }
+        }
+    }
+}
+
+/**
+ * 먹이 번지듯 (하루의 편지 InkText): 한 줄씩 왼쪽부터 펜으로 쓰듯 드러나요. 하루 첫 열기에만, 동작 줄이기면 바로.
+ */
+@Composable
+private fun InkText(text: androidx.compose.ui.text.AnnotatedString, style: androidx.compose.ui.text.TextStyle, play: Boolean) {
+    val ctx = LocalContext.current
+    val calm = remember { android.provider.Settings.Global.getFloat(ctx.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f }
+    val p = remember { androidx.compose.animation.core.Animatable(if (play && !calm) 0f else 1f) }
+    var lay by remember { androidx.compose.runtime.mutableStateOf<androidx.compose.ui.text.TextLayoutResult?>(null) }
+    androidx.compose.runtime.LaunchedEffect(play) { if (p.value < 1f) p.animateTo(1f, androidx.compose.animation.core.tween(Tokens.Motion.inkMs, easing = androidx.compose.animation.core.LinearEasing)) }
+    Text(text, style = style, maxLines = 3, overflow = TextOverflow.Ellipsis, onTextLayout = { lay = it },
+        modifier = Modifier.graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }.drawWithContent {
+            drawContent()
+            val l = lay ?: return@drawWithContent
+            if (p.value >= 1f) return@drawWithContent
+            val n = l.lineCount; val feather = Tokens.Size.inkFeather.toPx()
+            for (i in 0 until n) {
+                val lp = ((p.value * n) - i).coerceIn(0f, 1f)
+                val top = l.getLineTop(i); val bottom = l.getLineBottom(i); val right = l.getLineRight(i) + feather
+                val x = -feather + (right + feather) * lp
+                // 아직 안 쓴 부분 지우기 (끝은 부드럽게)
+                drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(0f to androidx.compose.ui.graphics.Color.Transparent, 1f to androidx.compose.ui.graphics.Color.Black, startX = x, endX = x + feather),
+                    Offset(x, top), Size(size.width - x, bottom - top), blendMode = androidx.compose.ui.graphics.BlendMode.DstOut)
+            }
+        })
+}
+
+/** 부모의 좌우 여백을 넘어 화면 끝까지 (띠 · 배경 그림). */
+private fun Modifier.bleed(x: androidx.compose.ui.unit.Dp): Modifier = this.layout { m, cons ->
+    val e = x.roundToPx() * 2
+    val p = m.measure(cons.copy(minWidth = cons.minWidth + e, maxWidth = cons.maxWidth + e))
+    layout(cons.maxWidth, p.height) { p.place(-e / 2, 0) }
 }
 
 /** 지금 때의 기도 한 줄 (아침 · 낮 · 저녁 · 밤). */
@@ -216,6 +347,7 @@ fun PlanSheet(s: AppState) {
     BookSheet({ s.planOpen = false }) {
         Text("ORDO LECTIONIS", style = Theme.caps(), maxLines = 1)
         Text(stringResource(R.string.plan), style = Theme.title(k, Tokens.Text.display), modifier = Modifier.fillMaxWidth())
+        s.plan?.let { pl -> PlanPath(s, pl.days) }
         io.github.graviton94.todaybible.core.Plans.all.forEach { pl ->
             val verses = remember(pl.id, s.translation) { pl.chapters.sumOf { (b, ch) -> s.store.book(s.translation, b).fillable(ch).size } }
             val on = s.planId == pl.id

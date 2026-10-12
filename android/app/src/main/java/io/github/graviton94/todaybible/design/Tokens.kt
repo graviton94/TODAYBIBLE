@@ -114,6 +114,11 @@ object Tokens {
         val grainChain = 38.dp
         val seal = 64.dp
         val widgetPlateMinH = 110.dp
+        val marginDate = 34.dp
+        val readRibbon = 64.dp
+        val seasonBand = 8.dp
+        val inkFeather = 30.dp
+        val pathNode = 18.dp
     }
     object Text {
         val verse = 21.sp
@@ -161,6 +166,7 @@ object Tokens {
         val emptyMark = 15.sp
         val seal = 7.sp
         val widgetPlateVerse = 14.sp
+        val marginDate = 11.sp
     }
     /** 잉크 (꾸미기 1.2): 쓴 글자 · 손글씨 색. Light 는 종이 위, Dark 는 밤빛 위. */
     object Inks {
@@ -185,7 +191,7 @@ object Tokens {
         const val goldMs = 900
         const val goldHoldMs = 500
         const val coachDelayMs = 700
-        const val inkMs = 600
+        const val inkMs = 2400
         const val veilMs = 1400
         const val pageMs = 420
         const val toastMs = 2400
@@ -220,7 +226,7 @@ object Tokens {
         const val introDriftMs = 9000
         const val introBreatheMs = 2600
         const val coverOpenMs = 1500
-        const val ribbonMs = 800
+        const val ribbonMs = 900
         const val litStepMs = 55
         const val pressMs = 90
         const val pressScale = 0.97f
@@ -248,6 +254,7 @@ object Tokens {
         const val newsArt = 1.25f
         const val purchaseArt = 1.6f
         const val widgetPlate = 0.66f
+        const val firstLetter = 1.3f
     }
     object Alpha {
         const val aloudAhead = 0.62f
@@ -274,6 +281,8 @@ object Tokens {
         const val grainChain = 0.025f
         const val vignette = 0.35f
         const val sealFill = 0.55f
+        const val seasonPlate = 0.16f
+        const val pathLine = 0.5f
     }
     object Leading {
         const val verse = 1.8f

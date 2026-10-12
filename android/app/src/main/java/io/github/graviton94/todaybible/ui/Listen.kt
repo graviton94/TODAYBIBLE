@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -181,32 +182,60 @@ private fun ChapterText(s: AppState, book: Int, ch: Int, voiceAt: Int?, picked: 
     LaunchedEffect(voiceAt) { voiceAt?.let { v -> verses.indexOf(v).takeIf { it >= 0 }?.let { list.animateScrollToItem(it) } } }
     LaunchedEffect(jump) { jump?.let { v -> verses.indexOf(v).takeIf { it >= 0 }?.let { list.scrollToItem(it + 1); s.readVerse = null } } }
     val filled = s.progress.filled(s.translation)
+    // 쓴 날 (여백에 작게) · 쓰다 멈춘 절 (리본)
+    val when_ = remember(s.fills.size, book, ch, s.translation) { s.fills.filter { it.translation == s.translation && it.key.book == book && it.key.chapter == ch }.associate { it.key.verse to it.epochDay } }
+    val pausedAt = remember(s.fills.size, book, ch) { if (when_.isEmpty()) null else s.progress.nextVerse(s.translation, t, ch) }
+    val drop = remember(book, ch) { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(book, ch, pausedAt) { if (pausedAt != null) drop.animateTo(1f, androidx.compose.animation.core.tween(Tokens.Motion.ribbonMs, easing = androidx.compose.animation.core.FastOutSlowInEasing)) }
+    val mdFmt = java.time.format.DateTimeFormatter.ofPattern(stringResource(R.string.fmt_md))
     // 한영 대조 (I2): 다른 번역의 같은 절을 아래에 작게 (절 번호가 없는 곳은 비워요)
     val otherTr = if (s.translation == io.github.graviton94.todaybible.core.Translation.KRV) s.store.englishBible else io.github.graviton94.todaybible.core.Translation.KRV
     val other = if (s.parallel) remember(book, otherTr) { s.store.book(otherTr, book) } else null
     LazyColumn(state = list, modifier = Modifier.fillMaxSize(),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(start = Tokens.Space.s3, end = Tokens.Space.s5, top = Tokens.Space.s3, bottom = Tokens.Space.s3),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        item { ChapterInitial(ch, false, Modifier.padding(bottom = Tokens.Space.s1)) }
+        item { ChapterInitial(ch, false, Modifier.padding(start = Tokens.Size.marginDate, bottom = Tokens.Space.s1)) }
         items(verses, key = { it }) { v ->
             val key = VerseKey(book, ch, v)
             val marked = s.isMarked(key)
             val dim = voiceAt != null && voiceAt != v
-            Text(buildAnnotatedString {
-                withStyle(SpanStyle(fontFamily = Fonts.black, color = c.rubric, fontSize = Tokens.Leading.verseNumber.em)) { append("$v ") }
-                withStyle(SpanStyle(color = if (dim) c.inkSoft else c.ink, background = if (marked) c.mark else androidx.compose.ui.graphics.Color.Unspecified)) { append(Markup.plain(t.verse(ch, v))) }
-            }, style = Theme.verse(k), modifier = Modifier.fillMaxWidth()
-                .drawBehind {
-                    // 고른 절 · 듣는 절: 왼쪽 붉은 줄 / 내가 쓴 절: 금빛 점
-                    if (v == picked || v == voiceAt) drawRect(c.rubric, Offset(-Tokens.Space.s3.toPx(), 0f), Size(Tokens.Stroke.rule.toPx(), size.height))
-                    else if (key.raw in filled) drawCircle(c.gilt, Tokens.Size.dot.toPx() / 2, Offset(-Tokens.Space.s3.toPx(), Tokens.Size.dot.toPx() * 1.5f))
+            val day = when_[v]
+            val here = v == pausedAt
+            Row(Modifier.fillMaxWidth()) {
+                // 여백: 쓴 날 (월.일)
+                Box(Modifier.width(Tokens.Size.marginDate).padding(top = Tokens.Space.s2)) {
+                    if (day != null) Text(java.time.LocalDate.ofEpochDay(day).format(mdFmt), style = Theme.lining(Tokens.Text.marginDate).copy(color = c.unwritten), maxLines = 1)
                 }
-                .clickable(role = Role.Button) { onTap(v) })
+                val body = Markup.plain(t.verse(ch, v))
+                Text(buildAnnotatedString {
+                    withStyle(SpanStyle(fontFamily = Fonts.black, color = c.rubric, fontSize = Tokens.Leading.verseNumber.em)) { append("$v ") }
+                    withStyle(SpanStyle(color = if (dim || (pausedAt != null && day == null)) c.inkSoft else c.ink, background = if (marked) c.mark else androidx.compose.ui.graphics.Color.Unspecified)) {
+                        // 장 첫 절: 첫 글자만 금빛으로 조금 크게 (줄 높이는 그대로)
+                        if (v == verses.first() && body.isNotEmpty()) {
+                            withStyle(SpanStyle(color = c.gilt, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold, fontSize = Tokens.Ratio.firstLetter.em)) { append(body.substring(0, 1)) }
+                            append(body.substring(1))
+                        } else append(body)
+                    }
+                }, style = Theme.verse(k), modifier = Modifier.weight(1f)
+                    .drawBehind {
+                        // 고른 절 · 듣는 절: 왼쪽 붉은 줄 / 쓰다 멈춘 절: 왼쪽 금빛 줄 + 오른쪽 위 리본
+                        if (v == picked || v == voiceAt) drawRect(c.rubric, Offset(-Tokens.Space.s2.toPx(), 0f), Size(Tokens.Stroke.rule.toPx(), size.height))
+                        else if (here) drawRect(c.gilt, Offset(-Tokens.Space.s2.toPx(), 0f), Size(Tokens.Stroke.rule.toPx(), size.height))
+                        if (here) {
+                            val rw = Tokens.Size.ribbonW.toPx(); val full = Tokens.Size.readRibbon.toPx() * drop.value; val x = size.width - rw
+                            val top = -Tokens.Space.s4.toPx()
+                            val path = Path().apply { moveTo(x, top); lineTo(x + rw, top); lineTo(x + rw, top + full); lineTo(x + rw / 2, top + full - rw * 0.7f); lineTo(x, top + full); close() }
+                            drawPath(path, c.gilt)
+                        }
+                    }
+                    .padding(end = if (here) Tokens.Size.ribbonW + Tokens.Space.s1 else Tokens.Space.s1)
+                    .clickable(role = Role.Button) { onTap(v) })
+            }
             other?.takeIf { ch <= it.chapterCount && v <= it.verseCount(ch) }?.verse(ch, v)?.takeIf { it.isNotBlank() }?.let { o ->
-                Text(Markup.plain(o), style = Theme.verse(!k).copy(fontSize = Theme.body().fontSize, color = c.inkSoft), modifier = Modifier.fillMaxWidth().padding(bottom = Tokens.Space.s2))
+                Text(Markup.plain(o), style = Theme.verse(!k).copy(fontSize = Theme.body().fontSize, color = c.inkSoft), modifier = Modifier.fillMaxWidth().padding(start = Tokens.Size.marginDate, bottom = Tokens.Space.s2))
             }
         }
-        item { Text(stringResource(R.string.read_hint), style = Theme.small(), modifier = Modifier.padding(top = Tokens.Space.s4)) }
+        item { Text(stringResource(R.string.read_hint), style = Theme.small(), modifier = Modifier.padding(start = Tokens.Size.marginDate, top = Tokens.Space.s4)) }
     }
 }
 

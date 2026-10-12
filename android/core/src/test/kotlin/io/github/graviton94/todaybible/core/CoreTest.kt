@@ -263,3 +263,23 @@ class CoreTest {
         assertEquals("MARCUS · III", Latin.head(40, 3))
     }
 }
+
+class SeasonsTest {
+    @Test fun adventStartIsFourthSundayBeforeChristmas() {
+        assertEquals(LocalDate.of(2026, 11, 29), Seasons.adventStart(2026))
+        assertEquals(LocalDate.of(2027, 11, 28), Seasons.adventStart(2027))
+        assertEquals(LocalDate.of(2022, 11, 27), Seasons.adventStart(2022))   // 성탄이 주일인 해
+    }
+    @Test fun seasonsAcrossTheYear() {
+        fun at(y: Int, m: Int, d: Int) = Seasons.at(LocalDate.of(y, m, d))
+        assertEquals(Seasons.Now(Season.ADVENT, 2, 18, Season.CHRISTMAS), at(2026, 12, 7))
+        assertEquals(Seasons.Now(Season.CHRISTMAS, 1, 0, null), at(2026, 12, 25))
+        assertEquals(Season.CHRISTMAS, at(2027, 1, 3).season)
+        assertEquals(Season.EPIPHANY, at(2027, 1, 20).season)
+        assertEquals(Seasons.Now(Season.LENT, 4, 24, Season.EASTER), at(2027, 3, 4))
+        assertEquals(Seasons.Now(Season.EASTER, 1, 0, null), at(2027, 3, 28))
+        assertEquals(Seasons.Now(Season.EASTER, 2, 41, Season.PENTECOST), at(2027, 4, 5))
+        assertEquals(Seasons.Now(Season.PENTECOST, 1, 0, null), at(2027, 5, 16))
+        assertEquals(Seasons.Now(Season.ORDINARY, 21, 48, Season.ADVENT), at(2026, 10, 12))
+    }
+}

@@ -72,6 +72,10 @@ class Store(val context: Context) {
     var widgetPlate: Boolean
         get() = prefs.getBoolean("widget_plate", true)
         set(v) = prefs.edit().putBoolean("widget_plate", v).apply()
+    /** 오늘 말씀이 먹 번지듯 나온 날 (하루 한 번). */
+    var inkDay: Long
+        get() = prefs.getLong("ink_day", -1)
+        set(v) = prefs.edit().putLong("ink_day", v).apply()
     /** 매일 알림 분 (0..55, 5분 단위). */
     var reminderMinute: Int
         get() = prefs.getInt("reminder_min", 0)
