@@ -1,0 +1,48 @@
+name: Fetch UI art candidates
+# 장 고르기 낱장 · 밀랍 봉인용 공개 도메인/CC0 사진 후보를 위키미디어에서 찾아 ui-art 브랜치에 올린다 (라이선스 기록 포함)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["art/ui-search.tsv", ".github/workflows/fetch-ui-art.yml"]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Search and download
+        run: |
+          python3 - <<'PY'
+          import json, os, time, urllib.parse, urllib.request, re
+          UA={"User-Agent":"TodayBible/1.2 (https://github.com/graviton94/TODAYBIBLE; ruahn49@gmail.com)"}
+          def get(u): return json.load(urllib.request.urlopen(urllib.request.Request(u,headers=UA),timeout=60))
+          os.makedirs("out",exist_ok=True)
+          man=open("out/manifest.tsv","w")
+          ok=re.compile(r"(public domain|^pd|cc0|cc-zero)",re.I)
+          for line in open("art/ui-search.tsv"):
+              if line.startswith("#") or not line.strip(): continue
+              key,q=line.rstrip("\n").split("\t")
+              r=get("https://commons.wikimedia.org/w/api.php?"+urllib.parse.urlencode({"action":"query","format":"json","generator":"search","gsrnamespace":6,"gsrsearch":q,"gsrlimit":25,"prop":"imageinfo","iiprop":"url|extmetadata|mime|size","iiurlwidth":1000}))
+              pages=sorted(r.get("query",{}).get("pages",{}).values(),key=lambda p:p.get("index",99))
+              n=0
+              for p in pages:
+                  ii=(p.get("imageinfo") or [{}])[0]
+                  if ii.get("mime") not in ("image/jpeg","image/png"): continue
+                  md=ii.get("extmetadata",{}); lic=md.get("LicenseShortName",{}).get("value","")
+                  if not ok.search(lic): continue
+                  n+=1; out=f"out/{key}_{n}.jpg"
+                  try: data=urllib.request.urlopen(urllib.request.Request(ii["thumburl"],headers=UA),timeout=120).read()
+                  except Exception as e: print("fail",e); continue
+                  open(out,"wb").write(data)
+                  art=re.sub("<[^>]+>","",md.get("Artist",{}).get("value",""))
+                  man.write("\t".join([f"{key}_{n}",p["title"],lic,art.replace("\t"," ").replace("\n"," ")[:160],ii["descriptionurl"]])+"\n")
+                  print(key,n,p["title"],lic); time.sleep(1)
+                  if n>=6: break
+          PY
+      - name: Push to ui-art branch
+        run: |
+          cd out && git init -q && git checkout -q -b ui-art
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add . && git commit -qm "UI art candidates" && git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ui-art
