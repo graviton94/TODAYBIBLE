@@ -79,10 +79,10 @@ for st in "180 1000 300 1000" "240 960 240 1040" "200 1060 290 1080" "340 990 42
 shot p08_hand_written 2
 open --ez tb.voice false
 # 낭독 세 갈래 · 원고지 · 형광펜 · 한 해 · 밤 · 아주 크게
-open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0;         shot q01_aloud_responsive 6
-open --es tb.listen "41:3";                                        shot q02_listen_reader 4
-open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 2;         shot q03_aloud_alone_big 4
-open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 2 --ez tb.aloudBig false; shot q04_aloud_alone_small 4
+open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0;         shot qa13_01_aloud_responsive 6
+open --es tb.listen "41:3";                                        shot qa13_02_listen_reader 4
+open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 2;         shot qa13_03_aloud_alone_big 4
+open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 2 --ez tb.aloudBig false; shot qa13_04_aloud_alone_small 4
 open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0 --ez tb.aloudBig true
 open --ei tb.page 2 --ei tb.copyTab 1;          shot k04_copy_grid 4
 open --ei tb.page 2 --ei tb.copyTab 1 --es tb.mark "1,2"; shot k05_marked 4
@@ -289,19 +289,19 @@ adb shell pm grant $P android.permission.POST_NOTIFICATIONS 2>/dev/null; open --
 
 # @scene qa13
 # 1.3 점검: 촛불 · 어두운 · 큰 글씨 · 영어
-open --ez tb.seed true --es tb.tr KRV --es tb.theme CANDLE --ei tb.page 2 --ei tb.copyTab 1 --ez tb.focus false; shot q1_candle_type 5
-open --ei tb.picker 41;                                            shot q2_candle_picker 4
-open --ei tb.picker 0 --es tb.theme DARK --ei tb.page 0 --ez tb.pilgrim true; shot q3_dark_pilgrim 4
-open --es tb.theme LIGHT --ef tb.scale 1.15 --ei tb.page 2 --ei tb.copyTab 0; shot q4_huge_aloud 4
-open --ef tb.scale 1.15 --ei tb.page 2 --ei tb.copyTab 2;           shot q5_huge_hand 4
-open --ef tb.scale 1.15 --ei tb.picker 41;                          shot q6_huge_picker 4
-open --ef tb.scale 1.0 --ei tb.picker 0 --es tb.tr WEB --ei tb.page 2 --ei tb.copyTab 0; shot q7_en_aloud 5
-open --ei tb.page 2 --ei tb.copyTab 1;                              shot q8_en_type 4
-open --ei tb.picker 41;                                             shot q9_en_picker 4
-open --ei tb.picker 0 --ei tb.page 0 --ez tb.pilgrim true --ei tb.pilgrimAsk 2; shot q10_en_remove 4
-open --ez tb.settings true --es tb.section set_alerts;              shot q11_en_alerts 4
-open --ez tb.settings false --ez tb.news true;                      shot q12_en_news 4
-open --ez tb.news false --es tb.tr KRV --ez tb.news true;           shot q13_ko_news 4
+open --ez tb.seed true --es tb.tr KRV --es tb.theme CANDLE --ei tb.page 2 --ei tb.copyTab 1 --ez tb.focus false; shot qa13_1_candle_type 5
+open --ei tb.picker 41;                                            shot qa13_2_candle_picker 4
+open --ei tb.picker 0 --es tb.theme DARK --ei tb.page 0 --ez tb.pilgrim true; shot qa13_3_dark_pilgrim 4
+open --es tb.theme LIGHT --ef tb.scale 1.15 --ei tb.page 2 --ei tb.copyTab 0; shot qa13_4_huge_aloud 4
+open --ef tb.scale 1.15 --ei tb.page 2 --ei tb.copyTab 2;           shot qa13_5_huge_hand 4
+open --ef tb.scale 1.15 --ei tb.picker 41;                          shot qa13_6_huge_picker 4
+open --ef tb.scale 1.0 --ei tb.picker 0 --es tb.tr WEB --ei tb.page 2 --ei tb.copyTab 0; shot qa13_7_en_aloud 5
+open --ei tb.page 2 --ei tb.copyTab 1;                              shot qa13_8_en_type 4
+open --ei tb.picker 41;                                             shot qa13_9_en_picker 4
+open --ei tb.picker 0 --ei tb.page 0 --ez tb.pilgrim true --ei tb.pilgrimAsk 2; shot qa13_10_en_remove 4
+open --ez tb.settings true --es tb.section set_alerts;              shot qa13_11_en_alerts 4
+open --ez tb.settings false --ez tb.news true;                      shot qa13_12_en_news 4
+open --ez tb.news false --es tb.tr KRV --ez tb.news true;           shot qa13_13_ko_news 4
 
 # @scene rv
 open --ei tb.page 0;                    shot rv_t1 6
