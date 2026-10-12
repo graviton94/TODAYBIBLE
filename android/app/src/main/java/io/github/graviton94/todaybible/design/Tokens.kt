@@ -112,7 +112,7 @@ object Tokens {
         val medalBig = 168.dp
         val grainLaid = 4.dp
         val grainChain = 38.dp
-        val seal = 64.dp
+        val seal = 74.dp
         val widgetPlateMinH = 110.dp
         val marginDate = 34.dp
         val readRibbon = 64.dp
@@ -164,7 +164,7 @@ object Tokens {
         val wheel = 28.sp
         val sectionNum = 20.sp
         val emptyMark = 15.sp
-        val seal = 7.sp
+        val seal = 6.5.sp
         val widgetPlateVerse = 14.sp
         val marginDate = 11.sp
     }

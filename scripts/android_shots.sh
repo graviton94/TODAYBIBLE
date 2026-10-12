@@ -259,6 +259,11 @@ open --es tb.today 2027-05-16;                                      shot se4_pen
 open --es tb.plan mark30 --ez tb.planSheet true;                    shot se5_plan_path 4
 open --es tb.plan none
 # @end
+# 읽기 화면: 리본 · 첫 글자 · 여백 날짜 (누가복음 15장, 25절에서 멈춤)
+# @scene rd
+open --es tb.listen "42:15";                                        shot rd1_reader_ribbon 6
+open --es tb.listen "42:1";                                         shot rd2_reader_first 6
+# @end
 # @scene gt
 # 넘어가는 화면: 여는 순간 (판화) · 낭독 받기 관문 · 파일 만들기 관문
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT; sleep 3
