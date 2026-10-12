@@ -104,7 +104,7 @@ fun LibraryPage(s: AppState) {
                     Text(if (st.partial != null) stringResource(R.string.lib_partial, st.partial) else stringResource(R.string.lib_next, at), style = Theme.small(), maxLines = 1)
                     Box(Modifier.padding(top = Tokens.Space.s1)) { Progress(st.fraction) }
                 }
-                Hair()
+                if (b != going.last().key) Hair()
             }
         }
         // 할 수 있는 일: 줄 목록
