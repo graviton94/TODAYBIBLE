@@ -377,6 +377,14 @@ class AppState(val store: Store) {
         }.take(limit).toList()
     }
 
+    /** 듣기를 시작할 절: 이 장을 듣다 멈췄으면 그 절부터 (장 끝까지 들었으면 처음부터). */
+    fun listenFrom(b: Int, ch: Int): Int {
+        val first = text(b).fillable(ch).firstOrNull() ?: 1
+        val p = store.lastListen.split(':').takeIf { it.size == 5 } ?: return first
+        if (p[0] != translation.id || p[1].toIntOrNull() != b || p[2].toIntOrNull() != ch) return first
+        val v = p[3].toIntOrNull() ?: return first
+        return v.takeIf { it in text(b).fillable(ch) && it != text(b).fillable(ch).lastOrNull() } ?: first
+    }
     /** 순례길 목록이 바뀐 횟수 (빼기 · 새로 쓰기). */
     var pausedRev by mutableIntStateOf(0)
     /** 나의 순례길에서 빼기: 목록에서만 사라지고 기록은 그대로. */

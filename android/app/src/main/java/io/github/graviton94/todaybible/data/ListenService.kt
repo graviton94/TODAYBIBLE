@@ -76,6 +76,37 @@ class ListenService : Service() {
     private var wake: android.os.PowerManager.WakeLock? = null
     private var wifi: android.net.wifi.WifiManager.WifiLock? = null
 
+    // 오디오 포커스: 다른 앱이 소리를 내면 멈추고 (화면 버튼도 ‘이어 듣기’로), 잠깐 빼앗긴 거면 돌아올 때 다시
+    private val audio by lazy { getSystemService(android.media.AudioManager::class.java) }
+    private var focusReq: android.media.AudioFocusRequest? = null
+    private var resumeOnGain = false
+    private val focusListener = android.media.AudioManager.OnAudioFocusChangeListener { change ->
+        ui.post {
+            when (change) {
+                android.media.AudioManager.AUDIOFOCUS_LOSS -> { resumeOnGain = false; pause() }
+                android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT, android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> { if (!paused) { resumeOnGain = true; pause() } }
+                android.media.AudioManager.AUDIOFOCUS_GAIN -> { if (resumeOnGain && paused) { resumeOnGain = false; resume() } }
+            }
+        }
+    }
+    private fun requestFocus(): Boolean {
+        val am = audio ?: return true
+        return if (Build.VERSION.SDK_INT >= 26) {
+            val req = focusReq ?: android.media.AudioFocusRequest.Builder(android.media.AudioManager.AUDIOFOCUS_GAIN).setAudioAttributes(Sound.speech)
+                .setWillPauseWhenDucked(true).setOnAudioFocusChangeListener(focusListener, ui).build().also { focusReq = it }
+            am.requestAudioFocus(req) != android.media.AudioManager.AUDIOFOCUS_REQUEST_FAILED
+        } else @Suppress("DEPRECATION") (am.requestAudioFocus(focusListener, android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.AUDIOFOCUS_GAIN) != android.media.AudioManager.AUDIOFOCUS_REQUEST_FAILED)
+    }
+    private fun abandonFocus() {
+        val am = audio ?: return
+        if (Build.VERSION.SDK_INT >= 26) focusReq?.let { am.abandonAudioFocusRequest(it) } else @Suppress("DEPRECATION") am.abandonAudioFocus(focusListener)
+    }
+    // 이어폰을 빼면 멈춤 (스피커로 갑자기 나오지 않게)
+    private val noisy = object : android.content.BroadcastReceiver() {
+        override fun onReceive(c: Context?, i: Intent?) { if (i?.action == android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY) { resumeOnGain = false; pause() } }
+    }
+    private var noisyOn = false
+
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -104,7 +135,9 @@ class ListenService : Service() {
             q.toList().chunked(4).forEach { queue.addLast(it.toIntArray()) }
             queue.removeFirstOrNull()?.let { book = it[0]; chapter = it[1]; verse = it[2]; to = it[3] }
         }
-        paused = false
+        paused = false; resumeOnGain = false
+        requestFocus()
+        if (!noisyOn) { noisyOn = true; androidx.core.content.ContextCompat.registerReceiver(this, noisy, android.content.IntentFilter(android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY), androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED) }
         foreground()
         if (wake == null) wake = getSystemService(android.os.PowerManager::class.java)?.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "harubible:listen")?.apply { setReferenceCounted(false); acquire(3 * 60 * 60 * 1000L) }
         if (wifi == null) wifi = runCatching { applicationContext.getSystemService(android.net.wifi.WifiManager::class.java)?.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "harubible:listen")?.apply { setReferenceCounted(false); acquire() } }.getOrNull()
@@ -208,6 +241,7 @@ class ListenService : Service() {
 
     private fun resume() {
         if (!paused) return
+        requestFocus()
         paused = false
         _now.value = _now.value?.copy(playing = true)
         foreground()
@@ -262,6 +296,8 @@ class ListenService : Service() {
                             Sound.player(lift = true) { setDataSource(f.path) }.apply {
                                 if (rate != 1f) playbackParams = playbackParams.setSpeed(rate)
                                 setOnCompletionListener { after() }
+                                // 소리가 끊기면 (다른 앱 · 장치 문제) 멈춘 상태로 두어 화면이 ‘이어 듣기’를 보여요
+                                setOnErrorListener { _, _, _ -> ui.post { if (t == token) { resumeStep = { step(i) }; paused = true; _now.value = _now.value?.copy(playing = false); foreground() } }; true }
                                 start()
                             }
                         }.getOrNull() ?: run { after(); null }
@@ -295,7 +331,9 @@ class ListenService : Service() {
         runCatching { player?.release() }; player = null
         guide?.release(); guide = null
         _now.value = null; _timer.value = 0; stopAt = 0L
-        paused = false; resumeStep = null
+        paused = false; resumeStep = null; resumeOnGain = false
+        abandonFocus()
+        if (noisyOn) { noisyOn = false; runCatching { unregisterReceiver(noisy) } }
         runCatching { session?.isActive = false; session?.release() }; session = null; started = false
         runCatching { wake?.release() }; wake = null; runCatching { wifi?.release() }; wifi = null
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE) else @Suppress("DEPRECATION") stopForeground(true)

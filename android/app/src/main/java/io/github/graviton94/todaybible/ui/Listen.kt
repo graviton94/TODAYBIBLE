@@ -156,8 +156,10 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
         }
         // 아래 띠: 듣기 · 이 장 필사하기
         Row(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, androidx.compose.ui.geometry.Offset.Zero, androidx.compose.ui.geometry.Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            BookButton(stringResource(if (playing) R.string.listen_stop else R.string.listen_start), Modifier.weight(1f).coach("read_listen")) {
-                if (playing) ListenService.stop(ctx) else ListenService.start(ctx, book, ch, s.text(book).fillable(ch).firstOrNull() ?: 1, s.aloudRate())
+            // 듣는 중 = 멈추기, 멈춰 있으면 (다른 앱 소리 · 이어폰 빠짐 포함) = 이어 듣기, 아니면 들은 자리부터 듣기
+            val paused = playing && now?.playing == false
+            BookButton(stringResource(when { paused -> R.string.listen_resume; playing -> R.string.listen_stop; else -> R.string.listen_start }), Modifier.weight(1f).coach("read_listen")) {
+                when { paused -> ListenService.control(ctx, "play"); playing -> ListenService.stop(ctx); else -> ListenService.start(ctx, book, ch, s.listenFrom(book, ch), s.aloudRate()) }
             }
             BookButton(stringResource(R.string.copy_this), Modifier.weight(1f).coach("read_copy"), quiet = true) { ListenService.stop(ctx); s.open(book, ch) }
         }

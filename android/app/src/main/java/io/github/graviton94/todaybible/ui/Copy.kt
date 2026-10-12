@@ -165,7 +165,7 @@ fun CopyPage(s: AppState) {
                 ListRow(stringResource(R.string.listen_mode), "") {
                     more = false
                     if (pass != null) io.github.graviton94.todaybible.data.ListenService.startPassages(ctx0, listOf(pass), s.aloudRate(), s.prayerWrite?.let { "prayer:${it.first}" } ?: "read")
-                    else { s.read(s.book, s.chapter); io.github.graviton94.todaybible.data.ListenService.start(ctx0, s.book, s.chapter, 1, s.aloudRate()) }
+                    else { s.read(s.book, s.chapter); io.github.graviton94.todaybible.data.ListenService.start(ctx0, s.book, s.chapter, s.listenFrom(s.book, s.chapter), s.aloudRate()) }
                 }
                 ListRow(stringResource(R.string.help), "") { more = false; s.coachAgain("copy$tab") }
                 ListRow(stringResource(R.string.settings), "") { more = false; s.settingsOpen = true }
