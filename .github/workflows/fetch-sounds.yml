@@ -1,0 +1,55 @@
+name: Fetch focus sound candidates
+# 필사 집중 모드 소리 (빗소리 · 촛불 · 시냇물) 공개 도메인/CC0 후보를 위키미디어에서 찾아 sound-cands 브랜치에 올린다 (라이선스 기록 + 미리 듣기 mp3)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["art/sound-search.tsv", ".github/workflows/fetch-sounds.yml"]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ffmpeg
+        run: which ffmpeg || (sudo apt-get update -q && sudo apt-get install -yq ffmpeg)
+      - name: Search and download
+        run: |
+          python3 - <<'PY'
+          import json, os, time, urllib.parse, urllib.request, re, subprocess
+          UA={"User-Agent":"TodayBible/1.3 (https://github.com/graviton94/TODAYBIBLE)"}
+          def get(u): return json.load(urllib.request.urlopen(urllib.request.Request(u,headers=UA),timeout=60))
+          os.makedirs("out",exist_ok=True)
+          man=open("out/manifest.tsv","w")
+          ok=re.compile(r"(public domain|^pd|cc0|cc-zero)",re.I)
+          seen=set(); count={}
+          for line in open("art/sound-search.tsv"):
+              if line.startswith("#") or not line.strip(): continue
+              key,q=line.rstrip("\n").split("\t")
+              r=get("https://commons.wikimedia.org/w/api.php?"+urllib.parse.urlencode({"action":"query","format":"json","generator":"search","gsrnamespace":6,"gsrsearch":q,"gsrlimit":30,"prop":"imageinfo","iiprop":"url|extmetadata|mime|size"}))
+              pages=sorted(r.get("query",{}).get("pages",{}).values(),key=lambda p:p.get("index",99))
+              for p in pages:
+                  if p["title"] in seen or count.get(key,0)>=6: continue
+                  ii=(p.get("imageinfo") or [{}])[0]
+                  if not str(ii.get("mime","")).startswith(("audio/","application/ogg","video/webm")): continue
+                  if (ii.get("duration") or 999)<15: continue
+                  md=ii.get("extmetadata",{}); lic=md.get("LicenseShortName",{}).get("value","")
+                  if not ok.search(lic): continue
+                  seen.add(p["title"]); n=count[key]=count.get(key,0)+1
+                  name=f"{key}_{n}"; raw=f"/tmp/{name}.src"
+                  try: open(raw,"wb").write(urllib.request.urlopen(urllib.request.Request(ii["url"],headers=UA),timeout=180).read())
+                  except Exception as e: print("fail",e); count[key]-=1; continue
+                  # 미리 듣기: 앞 40초 · 모노 · 소리 크기 맞춤
+                  subprocess.run(["ffmpeg","-y","-loglevel","error","-i",raw,"-t","40","-ac","1","-af","loudnorm=I=-28:TP=-3","-b:a","96k",f"out/{name}.mp3"])
+                  d=subprocess.run(["ffprobe","-v","error","-show_entries","format=duration","-of","csv=p=0",raw],capture_output=True,text=True).stdout.strip()
+                  art=re.sub("<[^>]+>","",md.get("Artist",{}).get("value",""))
+                  man.write("\t".join([name,p["title"],lic,art.replace("\t"," ").replace("\n"," ")[:160],ii["descriptionurl"],d])+"\n")
+                  print(name,p["title"],lic,d); time.sleep(1)
+          PY
+          ls -la out
+      - name: Push to sound-cands branch
+        run: |
+          cd out && git init -q && git checkout -q -b sound-cands
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add . && git commit -qm "Focus sound candidates" && git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" sound-cands
