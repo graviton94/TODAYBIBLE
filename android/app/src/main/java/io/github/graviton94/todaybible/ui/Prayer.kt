@@ -175,11 +175,10 @@ fun PrayerBell(s: AppState, id: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** 기도 알림 정하기: 끄기 / 자주 쓰는 시각 / 다른 시각 (시계). 켤 때 알림 허락이 없으면 먼저 물어요. */
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+/** 기도 알림 정하기: 시각 휠 하나 (오전/오후 · 시 · 분) + 끄기 / 저장. 켤 때 알림 허락이 없으면 먼저 물어요. */
 @Composable
 fun PrayerBellSheet(s: AppState, id: String) {
-    val c = Theme.c; val ctx = LocalContext.current
+    val ctx = LocalContext.current
     val p = Prayers.byId(id) ?: return
     val at = s.prayerTimes[id]
     var want by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Int?>(null) }
@@ -190,27 +189,51 @@ fun PrayerBellSheet(s: AppState, id: String) {
         if (android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) { want = m; ask.launch(android.Manifest.permission.POST_NOTIFICATIONS) }
         else s.setPrayerTime(id, m)
     }
+    // 처음엔 이 기도의 때에 맞춘 시각
+    val first = at ?: when (p.hour) {
+        io.github.graviton94.todaybible.core.Hour.MORNING -> 6 * 60
+        io.github.graviton94.todaybible.core.Hour.NOON -> 12 * 60
+        io.github.graviton94.todaybible.core.Hour.EVENING -> 18 * 60
+        io.github.graviton94.todaybible.core.Hour.NIGHT -> 22 * 60
+        null -> 7 * 60
+    }
+    var pick by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(first) }
     BookSheet({ s.prayerBell = null }) {
+        Text("HORA ORANDI", style = Theme.caps(), maxLines = 1)
         Text(stringResource(R.string.prayer_bell_h, prayerName(p)), style = Theme.title(s.korean))
+        TimeWheel(first, s.korean) { pick = it }
+        Text(stringResource(R.string.wheel_say, prayerTime(pick)), style = Theme.small(), modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         Text(stringResource(R.string.prayer_bell_note), style = Theme.small())
         ExactAlarmNote(s)
-        // 이 기도의 때에 맞춘 시각을 앞에
-        val presets = when (p.hour) {
-            io.github.graviton94.todaybible.core.Hour.MORNING -> listOf(5 * 60, 5 * 60 + 30, 6 * 60, 6 * 60 + 30, 7 * 60, 7 * 60 + 30, 8 * 60, 9 * 60)
-            io.github.graviton94.todaybible.core.Hour.NOON -> listOf(11 * 60 + 30, 12 * 60, 12 * 60 + 30, 13 * 60)
-            io.github.graviton94.todaybible.core.Hour.EVENING -> listOf(17 * 60, 18 * 60, 18 * 60 + 30, 19 * 60, 20 * 60)
-            io.github.graviton94.todaybible.core.Hour.NIGHT -> listOf(21 * 60, 21 * 60 + 30, 22 * 60, 22 * 60 + 30, 23 * 60)
-            null -> listOf(6 * 60, 7 * 60, 12 * 60, 18 * 60, 21 * 60, 22 * 60)
+        Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            BookButton(stringResource(R.string.reminder_off), Modifier.weight(1f), quiet = true) { s.setPrayerTime(id, null); s.prayerBell = null }
+            BookButton(stringResource(R.string.wheel_save), Modifier.weight(1f)) { choose(pick); s.prayerBell = null }
         }
-        androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            BookButton(stringResource(R.string.reminder_off), quiet = at != null) { s.setPrayerTime(id, null); s.prayerBell = null }
-            (presets + listOfNotNull(at?.takeIf { it !in presets })).forEach { m ->
-                BookButton(prayerTime(m), quiet = m != at) { choose(m); s.prayerBell = null }
+    }
+}
+
+/** 매일 알림 시각: 기도 알림과 같은 휠. */
+@Composable
+fun MorningBellSheet(s: AppState) {
+    val ctx = LocalContext.current
+    var want by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf<Int?>(null) }
+    val ask = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestPermission()) { ok ->
+        if (ok) want?.let { s.setReminder(it / 60, it % 60) } else s.toast = ctx.getString(R.string.reminder_denied)
+    }
+    val first = (if (s.reminderHour >= 0) s.reminderHour else s.store.lastReminderHour) * 60 + s.reminderMinute
+    var pick by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(first) }
+    BookSheet({ s.prayerBell = null }) {
+        Text("HORA MATUTINA", style = Theme.caps(), maxLines = 1)
+        Text(stringResource(R.string.reminder_on), style = Theme.title(s.korean))
+        TimeWheel(first, s.korean) { pick = it }
+        Text(stringResource(R.string.wheel_say, prayerTime(pick)), style = Theme.small(), modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            BookButton(stringResource(R.string.reminder_off), Modifier.weight(1f), quiet = true) { s.setReminder(-1); s.prayerBell = null }
+            BookButton(stringResource(R.string.wheel_save), Modifier.weight(1f)) {
+                if (android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) { want = pick; ask.launch(android.Manifest.permission.POST_NOTIFICATIONS) }
+                else s.setReminder(pick / 60, pick % 60)
+                s.prayerBell = null
             }
-        }
-        BookButton(stringResource(R.string.prayer_bell_other), Modifier.fillMaxWidth(), quiet = true) {
-            val start = at ?: presets.first()
-            android.app.TimePickerDialog(ctx, { _, h, mi -> choose(h * 60 + mi); s.prayerBell = null }, start / 60, start % 60, android.text.format.DateFormat.is24HourFormat(ctx)).show()
         }
     }
 }

@@ -29,7 +29,7 @@ object Reminder {
     private const val WINDOW_MS = 15 * 60_000L
 
     /**
-     * 다음 알림 한 번을 맞춰요 (정각, 잠든 폰에서도 몇 분 안에). 알림이 울리면 받는 쪽에서 다음 날 것을 다시 맞춰요.
+     * 다음 알림 한 번을 맞춰요 (정한 시각, 잠든 폰에서도 몇 분 안에). 알림이 울리면 받는 쪽에서 다음 날 것을 다시 맞춰요.
      * 앱을 정각 조금 뒤에 열었는데 오늘 알림이 아직이면 곧바로 한 번.
      */
     fun schedule(ctx: Context, hour: Int) {
@@ -39,7 +39,7 @@ object Reminder {
         am.cancel(pi); am.cancel(backup)
         if (hour < 0) return
         val now = LocalDateTime.now(); val today = LocalDate.now()
-        var at = today.atTime(hour, 0)
+        var at = today.atTime(hour, Store(ctx).reminderMinute)
         if (!at.isAfter(now)) {
             val missedToday = Store(ctx).reminderDay != today.toEpochDay() && now.isBefore(at.plusHours(2))
             at = if (missedToday) now.plusSeconds(30) else at.plusDays(1)
@@ -58,7 +58,7 @@ object Reminder {
         val today = LocalDate.now().toEpochDay()
         if (store.reminderDay == today) return
         store.reminderDay = today
-        if (LocalDateTime.now().isAfter(LocalDate.now().atTime(store.reminderHour, 0).plusHours(2))) return
+        if (LocalDateTime.now().isAfter(LocalDate.now().atTime(store.reminderHour, store.reminderMinute).plusHours(2))) return
         val fills = store.loadFills()
         if (fills.any { it.epochDay == today }) return
         store.postedDay = today

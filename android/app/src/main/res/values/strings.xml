@@ -3,6 +3,7 @@
 <resources>
     <string name="keep_notif">%1$s · %2$d / %3$d chapters</string>
     <string name="keep_notif_left">%1$d more waiting</string>
+    <string name="today_more">For today</string>
     <string name="paused_title">Where you left off</string>
     <string name="paused_row">%1$s · from v. %2$d</string>
     <string name="keep_title">Download narration</string>
@@ -475,12 +476,16 @@
     <string name="lib_marks">Bookmarks %1$d · Highlights %2$d</string>
     <string name="old_count">Old Testament · 39</string>
     <string name="new_count">New Testament · 27</string>
+    <string name="lib_tools">Kept at hand</string>
+    <string name="lib_canon">66 books</string>
+    <string name="empty_bm_h">No bookmarks yet</string>
+    <string name="empty_hl_h">No highlights yet</string>
     <string name="lib_done">Finished</string>
     <string name="lib_chapters">%1$d chapters</string>
     <string name="lib_verses">%1$d of %2$d verses</string>
     <string name="marks_title">Highlights</string>
-    <string name="marks_none_bm">No bookmarks yet. Tap Bookmark at the top while reading.</string>
-    <string name="marks_none_hl">No highlights yet. Tap a verse while reading.</string>
+    <string name="marks_none_bm">While reading, tap Bookmark at the top and it gathers here.</string>
+    <string name="marks_none_hl">While reading, tap a verse to highlight it.</string>
     <string name="grid_legend">Gold ring = finished · gold arc = how much is written</string>
     <string name="about_01">Creation and the patriarchs</string>
     <string name="about_02">Out of Egypt and the covenant at Sinai</string>
@@ -806,6 +811,9 @@
     <string name="prayer_bell">Reminder</string>
     <string name="prayer_bell_h">%1$s · reminder</string>
     <string name="prayer_bell_on">On</string>
+    <string name="wheel_say">Every day at %1$s.</string>
+    <string name="wheel_save">Save</string>
+    <string name="reminder_time">Time</string>
     <string name="prayer_bell_other">Other time…</string>
     <string name="prayer_bell_note">At that time you get the first words of this prayer. If you already prayed it today, it stays quiet.</string>
     <string name="prayer_reminder_none">Tap the bell next to a prayer to get a reminder.</string>

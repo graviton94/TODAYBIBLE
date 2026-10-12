@@ -139,7 +139,7 @@ fun Root(s: AppState) {
         if (s.sermonOpen != null) SermonSheet(s)
         if (s.prayersOpen) PrayersSheet(s)
         s.prayerOpen?.let { id -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PrayerPage(s, id) } }
-        s.prayerBell?.let { PrayerBellSheet(s, it) }
+        s.prayerBell?.let { if (it == AppState.MORNING_BELL) MorningBellSheet(s) else PrayerBellSheet(s, it) }
         s.exportJob?.let { ExportSheet(s, it) }
         s.opener?.let { (b, ch) -> ChapterOpener(s, b, ch) }
         if (s.keepOpen) Box(Modifier.fillMaxSize().background(Theme.c.leaf).statusBarsPadding().navigationBarsPadding()) { KeepPage(s) }

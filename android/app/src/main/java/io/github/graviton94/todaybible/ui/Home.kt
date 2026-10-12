@@ -75,7 +75,7 @@ fun HomePage(s: AppState) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Text(androidx.compose.ui.text.buildAnnotatedString {
                 append(stringResource(R.string.streak_pre)); append(" ")
-                withStyle(Theme.big(Tokens.Text.streak).toSpanStyle()) { append("$run") }
+                withStyle(Theme.lining(Tokens.Text.streak).toSpanStyle()) { append("$run") }
                 append(stringResource(R.string.streak_post))
             }, style = Theme.body(), maxLines = 1, modifier = Modifier.weight(1f))
             if (s.ownerName.isNotBlank()) Text(s.ownerName, style = Theme.small(), maxLines = 1)
@@ -101,15 +101,14 @@ fun HomePage(s: AppState) {
         // 쓰다 멈춘 곳: 다른 장 · 다른 권에서 쓰다 만 자리 (최근 순, 둘까지)
         val paused = remember(s.fills.size, cb, cc) { s.pausedChapters(2, cb to cc) }
         if (paused.isNotEmpty()) Column(Modifier.fillMaxWidth()) {
-            Text("PAUSA · " + stringResource(R.string.paused_title), style = Theme.caps().copy(color = c.inkSoft), maxLines = 1, modifier = Modifier.padding(bottom = Tokens.Space.s1))
-            Hair()
+            SectionHead("PAUSA", stringResource(R.string.paused_title), 1)
             paused.forEach { p ->
                 ListRow(stringResource(R.string.paused_row, s.chapterRef(p.book, p.chapter), p.next), "${p.done} / ${p.total}") { s.open(p.book, p.chapter) }
             }
         }
         // 아래: 오늘 할 수 있는 일들을 같은 줄 모양으로
         Column(Modifier.fillMaxWidth()) {
-            Hair()
+            SectionHead("HODIE", stringResource(R.string.today_more), if (paused.isNotEmpty()) 2 else 1)
             PrayerRow(s)
             ResumeListenRow(s)
             if (today.dayOfWeek == java.time.DayOfWeek.SUNDAY || s.sermonOn(today.toEpochDay()) != null)

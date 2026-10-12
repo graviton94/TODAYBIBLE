@@ -158,7 +158,7 @@ fun SettingsPage(s: AppState) {
             }
             Group(stringResource(R.string.deco_icon)) { IconPicker(s) }
             }
-            Section(stringResource(R.string.set_alerts), if (s.reminderHour >= 0) fmtDate(R.string.fmt_hour, java.time.LocalTime.of(s.reminderHour, 0)) else stringResource(R.string.reminder_off), openSec == "set_alerts") { openSec = if (openSec == "set_alerts") null else "set_alerts" }
+            Section(stringResource(R.string.set_alerts), if (s.reminderHour >= 0) prayerTime(s.reminderHour * 60 + s.reminderMinute) else stringResource(R.string.reminder_off), openSec == "set_alerts") { openSec = if (openSec == "set_alerts") null else "set_alerts" }
             if (openSec == "set_alerts") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
             Group(stringResource(R.string.reminder)) {
                 // 매일 알림: 끄기 · 켜기, 켜면 정각 아무 시나 (안드로이드 13+ 는 처음 켤 때 알림 허락을 물음)
@@ -168,16 +168,8 @@ fun SettingsPage(s: AppState) {
                 fun turnOn(h: Int) { if (android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) { pending = h; ask.launch(android.Manifest.permission.POST_NOTIFICATIONS) } else s.setReminder(h) }
                 val on = s.reminderHour >= 0
                 ChoiceRow(stringResource(R.string.reminder_on), on) { if (on) s.setReminder(-1) else turnOn(s.store.lastReminderHour) }
-                // 시각: 자주 쓰는 때를 바로 고르기 (한 시간씩 누르지 않게)
-                if (on) androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                    REMINDER_HOURS.forEach { h ->
-                        val sel = h == s.reminderHour
-                        Box(Modifier.heightIn(min = Tokens.Size.touch).border(Tokens.Stroke.hair, if (sel) c.gilt else c.hair)
-                            .clickable(role = Role.RadioButton) { turnOn(h) }.padding(horizontal = Tokens.Space.s4), contentAlignment = Alignment.Center) {
-                            Text(fmtDate(R.string.fmt_hour, java.time.LocalTime.of(h, 0)), style = Theme.label().copy(color = if (sel) c.giltText else c.inkSoft), maxLines = 1)
-                        }
-                    }
-                }
+                // 시각: 누르면 휠 (오전/오후 · 시 · 분)
+                if (on) ListRow(stringResource(R.string.reminder_time), prayerTime(s.reminderHour * 60 + s.reminderMinute)) { s.prayerBell = AppState.MORNING_BELL }
             }
             Group(stringResource(R.string.prayer_reminder)) {
                 // 기도 알림은 기도문마다 (종): 여기서는 켜진 것만 한눈에
@@ -271,7 +263,6 @@ fun SettingsPage(s: AppState) {
 }
 
 /** 매일 알림 시각 고르기. */
-private val REMINDER_HOURS = listOf(5, 6, 7, 8, 9, 12, 18, 20, 21, 22)
 
 /** 설정의 큰 갈래 (접힘): 제목 · 지금 고른 것 한 줄 · ›. 누르면 그 갈래만 펼쳐요. */
 @Composable

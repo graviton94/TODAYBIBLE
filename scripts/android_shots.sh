@@ -169,6 +169,7 @@ open --es tb.prayer morning --es tb.prayerPlay morning;             sleep 4; adb
 open --es tb.prayerPlay morning --ei tb.page 0;                    shot h21_now_playing_bar 4
 open --ez tb.prayers true --es tb.prayerTimes "morning=420,night=1290";  shot h22_prayer_bells 4
 open --es tb.prayerTimes morning=420 --es tb.prayer morning --es tb.prayerBell morning; shot h23_prayer_bell_sheet 4
+open --es tb.prayerBell _daily;                                    shot h23b_daily_wheel 4
 open --ei tb.page 0;                                               shot h24_today_prayer_link 4
 open --es tb.listen "43:3" --ez tb.parallel true --ef tb.scale 1.0; shot h15_parallel 4
 open --es tb.listen "43:3" --ez tb.parallel false;                 sleep 1

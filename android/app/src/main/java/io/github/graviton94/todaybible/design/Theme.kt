@@ -62,6 +62,8 @@ object Theme {
     @Composable fun brand(korean: Boolean): TextStyle = title(korean, Tokens.Text.brand).copy(color = c.inkSoft)
     /** 장 마침 화면의 큰 붉은 장 번호. */
     @Composable fun initial(): TextStyle = number().copy(fontSize = Tokens.Text.initialLg * scale)
+    /** 줄 서는 숫자 (장 고르기 · 기록 셈): 높이 고른 숫자. 본문 절 번호는 그대로. */
+    @Composable fun lining(size: TextUnit = Tokens.Text.numBig): TextStyle = big(size).copy(fontFeatureSettings = "lnum, tnum")
     @Composable fun number(): TextStyle = TextStyle(lineBreak = phrase, fontFamily = Fonts.display, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.title * scale, color = c.giltText)
 }
 

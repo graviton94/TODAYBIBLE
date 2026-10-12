@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -75,8 +76,8 @@ fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = fal
     val pressed by source.collectIsPressedAsState()
     val fill = when { quiet -> Color.Transparent; !enabled -> c.hair; pressed -> c.leatherDeep; else -> c.leather }
     Box(
-        modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(fill)
-            .clickable(source, null, enabled = enabled, role = Role.Button, onClick = onClick)
+        modifier.pressScale(source).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(fill)
+            .clickable(source, null, enabled = enabled, role = Role.Button, onClick = tap(onClick))
             .padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s3),
         contentAlignment = Alignment.Center,
     ) {
@@ -87,6 +88,21 @@ fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = fal
             Text(text, style = (if (quiet) Theme.body().copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline) else Theme.body()).copy(color = ink, textAlign = TextAlign.Center), maxLines = 2)
         }
     }
+}
+
+/** 누름 반응 (하루의 편지): 누르는 동안 3% 작아짐. */
+@Composable
+fun Modifier.pressScale(source: MutableInteractionSource): Modifier {
+    val pressed by source.collectIsPressedAsState()
+    val k by androidx.compose.animation.core.animateFloatAsState(if (pressed) Tokens.Motion.pressScale else 1f, tween(Tokens.Motion.pressMs), label = "press")
+    return this.graphicsLayer { scaleX = k; scaleY = k }
+}
+
+/** 누를 때 가벼운 진동 한 번 (종이를 누르는 손맛). */
+@Composable
+fun tap(onClick: () -> Unit): () -> Unit {
+    val h = androidx.compose.ui.platform.LocalHapticFeedback.current
+    return { h.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove); onClick() }
 }
 
 /** 테 (1.1: 장식 띠 없이 가는 선 하나만). 가죽 칸 · 토스트에 남은 자리를 위해 이름은 그대로. */
@@ -342,11 +358,43 @@ fun ChapterInitial(chapter: Int, done: Boolean, modifier: Modifier = Modifier, b
 @Composable
 fun Hair(modifier: Modifier = Modifier) { val c = Theme.c; Box(modifier.fillMaxWidth().height(Tokens.Stroke.hair).background(c.hair)) }
 
+/**
+ * 구획 머리 (하루의 편지 목차처럼): 위에 먹색 선 한 줄, 라틴 머리글 · 우리말 · 오른쪽 금빛 로마 숫자.
+ * 한 화면에서 역할이 바뀌는 곳에만. 같은 구획 안의 줄은 Hair.
+ */
+@Composable
+fun SectionHead(latin: String, title: String, n: Int, modifier: Modifier = Modifier) {
+    val c = Theme.c
+    Row(modifier.fillMaxWidth().drawBehind { drawLine(c.ink, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx() * 1.5f) }
+        .padding(top = Tokens.Space.s3, bottom = Tokens.Space.s1), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Text(latin, style = Theme.caps().copy(color = c.ink), maxLines = 1, modifier = Modifier.clearAndSetSemantics { })
+        Text(title, style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Text(io.github.graviton94.todaybible.core.Latin.roman(n), style = Theme.big(Tokens.Text.sectionNum).copy(color = c.gilt), maxLines = 1, modifier = Modifier.clearAndSetSemantics { })
+    }
+}
+
+/** 빈 자리 (하루의 편지): 점선 마름모 안 작은 십자 · 한 문장 · 할 일 하나. */
+@Composable
+fun EmptyNote(title: String, body: String, action: String? = null, onAction: () -> Unit = {}) {
+    val c = Theme.c
+    Column(Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s4), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Box(Modifier.size(Tokens.Size.emptyMark).drawBehind {
+            val d = size.minDimension / 2; val ctr = center
+            val path = androidx.compose.ui.graphics.Path().apply { moveTo(ctr.x, ctr.y - d); lineTo(ctr.x + d, ctr.y); lineTo(ctr.x, ctr.y + d); lineTo(ctr.x - d, ctr.y); close() }
+            drawPath(path, c.unwritten, style = Stroke(Tokens.Stroke.hair.toPx() * 1.5f, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6f, 5f))))
+        }, contentAlignment = Alignment.Center) { Text("✠", style = Theme.caps().copy(color = c.gilt, fontSize = Tokens.Text.emptyMark), modifier = Modifier.clearAndSetSemantics { }) }
+        Text(title, style = Theme.body().copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, textAlign = TextAlign.Center))
+        Text(body, style = Theme.small().copy(textAlign = TextAlign.Center))
+        if (action != null) BookButton(action, quiet = true, onClick = onAction)
+    }
+}
+
 /** 줄 목록 한 칸: 왼쪽 이름 · 오른쪽 작은 값 · 아래 가는 선. 상자 없이. */
 @Composable
 fun ListRow(title: String, value: String, leading: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
     val c = Theme.c
-    Column(Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onClick)) {
+    val source = remember { MutableInteractionSource() }
+    Column(Modifier.fillMaxWidth().pressScale(source).clickable(source, androidx.compose.foundation.LocalIndication.current, role = Role.Button, onClick = tap(onClick))) {
         Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).padding(vertical = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             leading?.invoke()
             Text(title, style = Theme.body(), maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))

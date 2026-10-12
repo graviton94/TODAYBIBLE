@@ -3,6 +3,7 @@
 <resources>
     <string name="keep_notif">%1$s · %2$d / %3$d장</string>
     <string name="keep_notif_left">다음 %1$d권 기다림</string>
+    <string name="today_more">오늘 곁들일 것</string>
     <string name="paused_title">쓰다 멈춘 곳</string>
     <string name="paused_row">%1$s · %2$d절부터</string>
     <string name="keep_title">낭독 미리 받기</string>
@@ -475,12 +476,16 @@
     <string name="lib_marks">내 책갈피 %1$d · 형광펜 %2$d</string>
     <string name="old_count">구약 39권</string>
     <string name="new_count">신약 27권</string>
+    <string name="lib_tools">곁에 두는 것</string>
+    <string name="lib_canon">66권</string>
+    <string name="empty_bm_h">아직 책갈피가 없어요</string>
+    <string name="empty_hl_h">아직 형광펜이 없어요</string>
     <string name="lib_done">다 씀</string>
     <string name="lib_chapters">%1$d장</string>
     <string name="lib_verses">%2$d절 중 %1$d절</string>
     <string name="marks_title">형광펜</string>
-    <string name="marks_none_bm">아직 책갈피가 없어요. 읽다가 위의 ‘책갈피’를 누르세요.</string>
-    <string name="marks_none_hl">아직 형광펜이 없어요. 읽다가 절을 누르세요.</string>
+    <string name="marks_none_bm">읽다가 위의 ‘책갈피’를 누르면 여기 모여요.</string>
+    <string name="marks_none_hl">읽다가 절을 누르면 형광펜을 칠해요.</string>
     <string name="grid_legend">금빛 테 = 다 쓴 장 · 금빛 호 = 쓴 만큼</string>
     <string name="about_01">천지 창조와 족장들의 이야기</string>
     <string name="about_02">이집트 탈출과 시내산 언약</string>
@@ -806,6 +811,9 @@
     <string name="prayer_bell">알림</string>
     <string name="prayer_bell_h">%1$s · 알림</string>
     <string name="prayer_bell_on">켜기</string>
+    <string name="wheel_say">매일 %1$s에 알려 드려요.</string>
+    <string name="wheel_save">저장</string>
+    <string name="reminder_time">시각</string>
     <string name="prayer_bell_other">다른 시각…</string>
     <string name="prayer_bell_note">그 시각에 이 기도의 첫 말씀으로 알려 드려요. 오늘 이미 드렸으면 울리지 않아요.</string>
     <string name="prayer_reminder_none">기도문 옆 종을 누르면 알림을 켤 수 있어요.</string>

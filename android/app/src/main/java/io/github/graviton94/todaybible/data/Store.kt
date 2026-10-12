@@ -68,6 +68,10 @@ class Store(val context: Context) {
     var reminderHour: Int
         get() = prefs.getInt("reminder", -1)
         set(v) = prefs.edit().putInt("reminder", v).apply()
+    /** 매일 알림 분 (0..55, 5분 단위). */
+    var reminderMinute: Int
+        get() = prefs.getInt("reminder_min", 0)
+        set(v) = prefs.edit().putInt("reminder_min", v).apply()
     /** 오늘의 분량 (절 수, -1 = 하루 한 장). */
     var dailyGoal: Int
         get() = prefs.getInt("goal", io.github.graviton94.todaybible.core.Goal.CHAPTER)

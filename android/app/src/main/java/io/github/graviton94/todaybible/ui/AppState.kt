@@ -22,6 +22,8 @@ class AppState(val store: Store) {
     companion object {
         /** 아래 이름표 차례: 오늘 · 성경 · 필사 · 기록. */
         const val TODAY = 0; const val BIBLE = 1; const val COPY = 2; const val RECORD = 3
+        /** 매일 알림 시각 휠을 띄울 때 prayerBell 에 넣는 값. */
+        const val MORNING_BELL = "_daily"
     }
 
     val fills = mutableStateListOf<Fill>().apply { addAll(store.loadFills()) }
@@ -86,6 +88,7 @@ class AppState(val store: Store) {
     /** 이 장에서 고른 절 (없으면 다음 빈 절). */
     var target by mutableStateOf<Int?>(null)
     var reminderHour by mutableStateOf(store.reminderHour)
+    var reminderMinute by mutableStateOf(store.reminderMinute)
     /** 평생권 (Google Play). */
     val lifetime = io.github.graviton94.todaybible.data.Lifetime(store.context)
     var purchaseOpen by mutableStateOf(false)
@@ -266,7 +269,7 @@ class AppState(val store: Store) {
     var prayersOpen by mutableStateOf(false)
     /** 기도문마다 알림 시각 (아이디 → 하루 중 분) · 종을 누른 기도문 (시각 고르는 창). */
     var prayerTimes by mutableStateOf(store.prayerTimes)
-    var prayerBell by mutableStateOf<String?>(null)
+    var prayerBell by mutableStateOf<String?>(null)   // 기도문 id, 또는 MORNING_BELL (매일 알림 시각)
     /** 정확한 알람 허락 (폰 설정에서 바뀌면 돌아올 때 다시 봐요). */
     var exactAlarm by mutableStateOf(io.github.graviton94.todaybible.data.ExactAlarm.allowed(store.context))
     fun checkExactAlarm() {
@@ -526,7 +529,7 @@ class AppState(val store: Store) {
     fun plateFraction(pl: io.github.graviton94.todaybible.data.Plate, started: Set<Int> = startedBooks()): Float =
         if (pl.book !in started) 0f else progress.chapterFraction(translation, store.book(translation, pl.book), pl.chapter)
 
-    fun setReminder(h: Int) { reminderHour = h; store.reminderHour = h; if (h >= 0) { store.lastReminderHour = h; val today = java.time.LocalDate.now().toEpochDay(); store.reminderDay = if (java.time.LocalTime.now().hour >= h || store.postedDay == today) today else -1 }; io.github.graviton94.todaybible.data.Reminder.schedule(store.context, h) }
+    fun setReminder(h: Int, m: Int = reminderMinute) { reminderHour = h; store.reminderHour = h; reminderMinute = m; store.reminderMinute = m; if (h >= 0) { store.lastReminderHour = h; val today = java.time.LocalDate.now().toEpochDay(); store.reminderDay = if (!java.time.LocalTime.now().isBefore(java.time.LocalTime.of(h, m)) || store.postedDay == today) today else -1 }; io.github.graviton94.todaybible.data.Reminder.schedule(store.context, h) }
 
     /** 절(들)을 채움. 장을 다 채우면 finished, 새 발자취가 생기면 award. */
     fun fill(verses: List<Int>, mode: Mode) {

@@ -93,7 +93,7 @@ fun LibraryPage(s: AppState) {
         // 이어 쓰던 책 (최근 순, 셋까지): 어디서 멈췄는지 · 가는 진행선
         val going = states.filter { !it.value.done }.entries.sortedByDescending { it.value.lastAt }.take(3)
         if (going.isNotEmpty()) Column {
-            Text("PERGERE · " + stringResource(R.string.lib_going), style = Theme.caps().copy(color = c.inkSoft), maxLines = 1, modifier = Modifier.padding(bottom = Tokens.Space.s1))
+            SectionHead("PERGERE", stringResource(R.string.lib_going), 1)
             going.forEach { (b, st) ->
                 val at = st.partial ?: (s.store.book(s.translation, b).let { t -> (1..t.chapterCount).firstOrNull { p.chapterFraction(s.translation, t, it) < 1f } } ?: 1)
                 Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.open(b, at) }.padding(vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
@@ -108,15 +108,17 @@ fun LibraryPage(s: AppState) {
             }
         }
         // 할 수 있는 일: 줄 목록
+        val sec0 = if (going.isNotEmpty()) 1 else 0
         Column {
             val nb = s.bookmarks.count { it.translation == s.translation }; val nm = s.marks.count { it.translation == s.translation }
-            Hair()
+            SectionHead("INSTRUMENTA", stringResource(R.string.lib_tools), sec0 + 1)
             ListRow(stringResource(R.string.prayer_title), stringResource(R.string.prayer_row_short)) { s.prayersOpen = true }
             Box(Modifier.coach("lib_marks")) { ListRow(stringResource(R.string.lib_marks_title), "$nb · $nm") { s.marksOpen = true } }
             if (s.narrator != io.github.graviton94.todaybible.data.Narration.DEVICE) ListRow(stringResource(R.string.keep_title), stringResource(R.string.keep_row_more)) { s.keepOpen = true }
             ListRow(stringResource(R.string.plan), s.plan?.let { planName(ctx, it.id) } ?: stringResource(R.string.plan_none_short)) { s.planOpen = true }
         }
         // 구약 · 신약
+        SectionHead("CANON", stringResource(R.string.lib_canon), sec0 + 2, Modifier.padding(top = Tokens.Space.s2))
         Row(Modifier.fillMaxWidth().coach("lib_testament").drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
             listOf(false to stringResource(R.string.old_count), true to stringResource(R.string.new_count)).forEach { (nt, label) ->
                 val on = newT == nt
@@ -175,7 +177,7 @@ fun MarksSheet(s: AppState) {
         val hl = s.marks.filter { it.translation == s.translation }.sortedByDescending { it.epochDay }
         Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid * 2).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             Text(stringResource(R.string.bookmark), style = Theme.title(k))
-            if (bm.isEmpty()) Text(stringResource(R.string.marks_none_bm), style = Theme.small())
+            if (bm.isEmpty()) EmptyNote(stringResource(R.string.empty_bm_h), stringResource(R.string.marks_none_bm))
             bm.forEach { m ->
                 Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clickable(role = Role.Button) { s.marksOpen = false; s.read(m.key.book, m.key.chapter, m.key.verse) },
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
@@ -184,7 +186,7 @@ fun MarksSheet(s: AppState) {
                 }
             }
             Text(stringResource(R.string.marks_title), style = Theme.title(k), modifier = Modifier.padding(top = Tokens.Space.s3))
-            if (hl.isEmpty()) Text(stringResource(R.string.marks_none_hl), style = Theme.small())
+            if (hl.isEmpty()) EmptyNote(stringResource(R.string.empty_hl_h), stringResource(R.string.marks_none_hl))
             hl.forEach { m ->
                 val v = m.key
                 Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.marksOpen = false; s.read(v.book, v.chapter, v.verse) }.padding(vertical = Tokens.Space.s1),
@@ -283,7 +285,7 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
                             contentAlignment = Alignment.TopCenter,
                         ) {
                             Box(Modifier.fillMaxWidth().fillMaxHeight(), contentAlignment = Alignment.Center) {
-                                Text("$ch", style = Theme.big(Tokens.Text.gridNum).copy(color = when { f >= 1f -> c.giltText; f > 0f -> c.ink; else -> c.inkSoft }), maxLines = 1)
+                                Text("$ch", style = Theme.lining(Tokens.Text.gridNum).copy(color = when { f >= 1f -> c.giltText; f > 0f -> c.ink; else -> c.inkSoft }), maxLines = 1)
                             }
                         }
                     }

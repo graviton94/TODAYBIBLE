@@ -34,6 +34,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
@@ -78,7 +79,7 @@ fun RecordPage(s: AppState) {
         // 화첩: 쓰는 중 · 다 모은 것부터 여섯 점, 펼치면 모두
         var allPlates by remember { mutableStateOf(false) }
         val plates = remember(s.fills.size) { s.store.plates.sortedWith(compareByDescending<Plate> { plateFraction(s, it).let { f -> if (f > 0f && f < 1f) 2 else if (f >= 1f) 1 else 0 } }.thenByDescending { plateFraction(s, it) }) }
-        Section(stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size}", k)
+        Section("TABULAE", stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size}", 1, k)
         // 화첩 미리보기 세 점 → 어두운 화첩 화면
         Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.galleryOpen = true }, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             plates.take(3).forEach { pl -> PlateThumb(s, pl, Modifier.weight(1f)) }
@@ -87,24 +88,30 @@ fun RecordPage(s: AppState) {
         // 발자취: 받은 것 최근 넷 (없으면 처음 넷), 펼치면 모두
         var allMiles by remember { mutableStateOf(false) }
         val miles = Milestone.entries.sortedByDescending { s.earned[it] ?: Long.MIN_VALUE }
-        Section(stringResource(R.string.milestones), "${s.earned.size} / ${Milestone.entries.size}", k)
+        Section("VESTIGIA", stringResource(R.string.milestones), "${s.earned.size} / ${Milestone.entries.size}", 2, k)
         MilestoneList(s, if (allMiles) miles else miles.take(MILES_SHOWN))
         BookButton(stringResource(if (allMiles) R.string.fold else R.string.unfold_all, miles.size), Modifier.fillMaxWidth(), quiet = true) { allMiles = !allMiles }
         if (s.marks.isNotEmpty()) {
-            Section(stringResource(R.string.marks), "${s.marks.count { it.translation == s.translation }}", k)
+            Section("NOTAE", stringResource(R.string.marks), "${s.marks.count { it.translation == s.translation }}", 3, k)
             MarkList(s)
         }
     }
 }
 
+/** 구획 머리: 먹색 선 · 라틴 머리글 · 이름 · 셈 · 금빛 로마 숫자. */
 @Composable
-private fun Section(title: String, right: String, korean: Boolean) {
-    Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+private fun Section(latin: String, title: String, right: String, n: Int, korean: Boolean) {
+    val c = Theme.c
+    Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s2).drawBehind { drawLine(c.ink, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx() * 1.5f) }.padding(top = Tokens.Space.s3),
+        verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(latin, style = Theme.caps().copy(color = c.ink), maxLines = 1, modifier = Modifier.weight(1f).clearAndSetSemantics { })
+            Text(io.github.graviton94.todaybible.core.Latin.roman(n), style = Theme.big(Tokens.Text.sectionNum).copy(color = c.gilt), maxLines = 1, modifier = Modifier.clearAndSetSemantics { })
+        }
         Row(verticalAlignment = Alignment.Bottom) {
             Text(title, style = Theme.title(korean, Tokens.Text.label), maxLines = 1, modifier = Modifier.weight(1f))
             Text(right, style = Theme.small(), maxLines = 1)
         }
-        Hair()
     }
 }
 
@@ -117,7 +124,7 @@ private fun MyBibleHead(s: AppState) {
         Text("BIBLIA MEA", style = Theme.caps(), maxLines = 1)
         Text(if (s.ownerName.isNotBlank()) stringResource(R.string.mybook_named, s.ownerName) else stringResource(R.string.mybook), style = Theme.title(k, Tokens.Text.display), maxLines = 1)
         Row(verticalAlignment = Alignment.Bottom) {
-            Text("%,d".format(filled), style = Theme.big(), maxLines = 1)
+            Text("%,d".format(filled), style = Theme.lining(), maxLines = 1)
             Text(" " + stringResource(R.string.verse_unit), style = Theme.body(), maxLines = 1, modifier = Modifier.weight(1f).padding(bottom = Tokens.Space.s2))
             Text(stringResource(R.string.of_total_pct, "%,d".format(total), "%.1f".format(filled * 100f / total)), style = Theme.small(), maxLines = 1, modifier = Modifier.padding(bottom = Tokens.Space.s2))
         }
