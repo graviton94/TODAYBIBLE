@@ -1,5 +1,6 @@
 package io.github.graviton94.todaybible.ui
 
+import androidx.compose.ui.graphics.luminance
 import android.os.Build
 import androidx.compose.runtime.rememberCoroutineScope
 import io.github.graviton94.todaybible.data.Voice
@@ -261,9 +262,9 @@ private fun WritePage(s: AppState, verse: Int?) {
         // 아래 띠 (세 방식 공통): 안내 한 줄 · 쓰기 시작 / 키보드 내리기. 틀린 글자가 있으면 진홍 점 한 줄로 바뀌어요.
         if (shown != null) CopyBand(Modifier.align(Alignment.BottomCenter)) {
             val wrong = fixHint && marks.any { it == TypeJudge.Mark.WRONG }
-            if (wrong) Box(Modifier.size(Tokens.Size.hintDot).background(c.wrong, androidx.compose.foundation.shape.CircleShape))
-            Text(stringResource(if (wrong) R.string.type_fix_hint else R.string.grid_hint), style = Theme.small().copy(color = if (wrong) c.wrong else c.inkSoft), maxLines = 2, modifier = Modifier.weight(1f))
-            if (focused) Text(stringResource(R.string.kb_hide), style = Theme.small().copy(color = c.ink), maxLines = 1,
+            if (wrong) Box(Modifier.size(Tokens.Size.hintDot).background(Theme.c.wrong, androidx.compose.foundation.shape.CircleShape))
+            Text(stringResource(if (wrong) R.string.type_fix_hint else R.string.grid_hint), style = Theme.small().copy(color = if (wrong) Theme.c.wrong else Theme.c.ink), maxLines = 2, modifier = Modifier.weight(1f))
+            if (focused) Text(stringResource(R.string.kb_hide), style = Theme.small().copy(color = Theme.c.giltText, textDecoration = TextDecoration.Underline), maxLines = 1,
                 modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { keyboard?.hide(); focusManager.clearFocus() })
             else BookButton(stringResource(R.string.tap_to_write), Modifier.coach("type_start")) { write() }
         }
@@ -830,14 +831,15 @@ private fun AloudTab(s: AppState, verse: Int) {
             }
             // 아래 띠 (세 방식 공통): 마이크 · 지금 상태 · 짧은 안내
             CopyBand {
-                Box(Modifier.coach("aloud_mic").size(Tokens.Size.touch).clip(androidx.compose.foundation.shape.CircleShape).background(if (running) c.rubric else c.leather)
+                val b = Theme.c
+                Box(Modifier.coach("aloud_mic").size(Tokens.Size.touch).clip(androidx.compose.foundation.shape.CircleShape).background(if (running) b.rubric else b.leather)
                     .semantics { contentDescription = micLabel }.clickable(role = Role.Button) { if (!mic) whyMic = true else running = !running },
-                    contentAlignment = Alignment.Center) { MicMark(c.leatherInk, Modifier.size(Tokens.Size.iconSm)) }
+                    contentAlignment = Alignment.Center) { MicMark(b.leatherInk, Modifier.size(Tokens.Size.iconSm)) }
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(when { spoken >= 0 && guideTurn -> R.string.resp_guide; spoken >= 0 -> R.string.guide_reading; on && mode == 0 -> R.string.resp_you; on && record -> R.string.voice_recording; on && useGuide -> R.string.guide_your_turn; on -> R.string.aloud_listening; mode == 0 -> R.string.resp_start; useGuide -> R.string.guide_start; else -> R.string.aloud_listen }),
-                        style = Theme.label().copy(color = if (running) c.rubric else c.ink), maxLines = 1)
+                        style = Theme.label().copy(color = if (running) b.rubric else b.ink, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), maxLines = 1)
                     // 교독: 인도 목소리가 먼저 읽는다는 것부터 (녹음만 하는 줄 알지 않게)
-                    Text(stringResource(if (mode == 0) (if (record) R.string.resp_hint_rec else R.string.resp_hint) else if (record) R.string.voice_keep_hint else R.string.aloud_hint), style = Theme.small(), maxLines = 2)
+                    Text(stringResource(if (mode == 0) (if (record) R.string.resp_hint_rec else R.string.resp_hint) else if (record) R.string.voice_keep_hint else R.string.aloud_hint), style = Theme.small().copy(color = b.ink), maxLines = 2)
                 }
             }
         }
@@ -862,7 +864,7 @@ private fun AloudTab(s: AppState, verse: Int) {
             VerseText(s, verse, source, lit = lit)
         }
         CopyBand {
-            Text(stringResource(R.string.aloud_no_mic), style = Theme.small(), maxLines = 2, modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.aloud_no_mic), style = Theme.small().copy(color = Theme.c.ink), maxLines = 2, modifier = Modifier.weight(1f))
             if (lit >= plain.length) BookButton(stringResource(R.string.aloud_done)) { s.fill(listOf(verse), Mode.ALOUD) }
             else BookButton(stringResource(if (playing) R.string.aloud_pause else R.string.aloud_start)) { playing = !playing }
         }
@@ -872,11 +874,18 @@ private fun AloudTab(s: AppState, verse: Int) {
 /** 필사 아래 띠 (낭독 · 타자 · 손글씨 공통): 위 가는 선 · 왼쪽 보조 · 가운데 안내 · 오른쪽 주 버튼. 키보드가 열리면 그 바로 위. */
 @Composable
 fun CopyBand(modifier: Modifier = Modifier, content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
-    val c = Theme.c
-    Row(modifier.fillMaxWidth().background(c.leaf).drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }
-        .heightIn(min = Tokens.Size.band).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s2),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3), content = content)
+    // 꼭 알아야 하는 안내라서 새 버전 띠처럼 테마와 반대 색 (밝은 테마 = 먹 띠 · 어두운 테마 = 종이 띠)
+    val inv = inversePalette()
+    androidx.compose.runtime.CompositionLocalProvider(io.github.graviton94.todaybible.design.LocalPalette provides inv) {
+        Row(modifier.fillMaxWidth().background(inv.leaf)
+            .heightIn(min = Tokens.Size.band).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s2),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3), content = content)
+    }
 }
+
+/** 지금 테마와 반대 색 한 벌 (띠 · 알림용). */
+@Composable
+fun inversePalette(): io.github.graviton94.todaybible.design.Palette = if (Theme.c.leaf.luminance() < 0.5f) Tokens.light else Tokens.dark
 
 /** 집중 모드 맨 위: 지금 절 · 쓴 시간 · 오늘 절 수 · 닫기, 그 아래 소리 고르기. */
 @Composable

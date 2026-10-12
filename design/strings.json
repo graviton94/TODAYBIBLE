@@ -412,7 +412,7 @@
   "resp_guide": {"en": "Leader reads", "ko": "인도 · 들어요"},
   "resp_you": {"en": "Your turn", "ko": "회중 · 내 차례예요"},
   "resp_hint": {"en": "The leader reads, then you", "ko": "인도 다음에 내가 읽어요"},
-  "resp_hint_rec": {"en": "The leader reads, then you · Recorded on this phone only", "ko": "인도 다음에 내가 읽어요 · 녹음은 이 폰에만"},
+  "resp_hint_rec": {"en": "The leader reads, then you. Recorded on this phone only", "ko": "인도 다음에 내가 읽어요. 녹음은 이 폰에만"},
   "resp_start": {"en": "Begin responsive reading", "ko": "교독 시작"},
   "aloud_big": {"en": "Large", "ko": "큰 글씨"},
   "verse_n": {"en": "Verse %1$d", "ko": "%1$d절"},

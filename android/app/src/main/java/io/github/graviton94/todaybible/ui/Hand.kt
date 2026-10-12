@@ -194,9 +194,10 @@ fun HandTab(s: AppState, verse: Int) {
     }
     // 아래 띠 (세 방식 공통): 되돌리기 · 안내 · 다 썼어요 (또는 다음 쪽)
     CopyBand(Modifier.coach("hand_buttons")) {
-        Text(stringResource(R.string.hand_undo), style = Theme.small().copy(color = if (strokes.isNotEmpty()) c.ink else c.unwritten, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline), maxLines = 1,
+        val b = Theme.c   // 띠의 반대 색
+        Text(stringResource(R.string.hand_undo), style = Theme.small().copy(color = if (strokes.isNotEmpty()) b.ink else b.unwritten, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline), maxLines = 1,
             modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(enabled = strokes.isNotEmpty(), role = Role.Button) { strokes.removeAt(strokes.lastIndex) })
-        Text(stringResource(R.string.hand_hint), style = Theme.small(), maxLines = 2, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+        Text(stringResource(R.string.hand_hint), style = Theme.small().copy(color = b.ink), maxLines = 2, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
         // 밑글씨가 다음 쪽으로 이어지면 ‘다음 쪽’, 마지막 쪽이면 ‘다 썼어요’
         if (s.handGuide && sheet + 1 < sheetsNeeded) BookButton(stringResource(R.string.hand_next), enabled = strokes.isNotEmpty()) { earlier.add(strokes.toList()); strokes.clear() }
         else BookButton(stringResource(R.string.hand_done), enabled = strokes.isNotEmpty() || earlier.isNotEmpty()) {

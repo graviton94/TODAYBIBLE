@@ -414,7 +414,7 @@
     <string name="resp_guide">인도 · 들어요</string>
     <string name="resp_you">회중 · 내 차례예요</string>
     <string name="resp_hint">인도 다음에 내가 읽어요</string>
-    <string name="resp_hint_rec">인도 다음에 내가 읽어요 · 녹음은 이 폰에만</string>
+    <string name="resp_hint_rec">인도 다음에 내가 읽어요. 녹음은 이 폰에만</string>
     <string name="resp_start">교독 시작</string>
     <string name="aloud_big">큰 글씨</string>
     <string name="verse_n">%1$d절</string>

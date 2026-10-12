@@ -414,7 +414,7 @@
     <string name="resp_guide">Leader reads</string>
     <string name="resp_you">Your turn</string>
     <string name="resp_hint">The leader reads, then you</string>
-    <string name="resp_hint_rec">The leader reads, then you · Recorded on this phone only</string>
+    <string name="resp_hint_rec">The leader reads, then you. Recorded on this phone only</string>
     <string name="resp_start">Begin responsive reading</string>
     <string name="aloud_big">Large</string>
     <string name="verse_n">Verse %1$d</string>
