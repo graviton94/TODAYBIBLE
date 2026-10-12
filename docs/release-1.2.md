@@ -38,4 +38,4 @@
 - `MainActivity.NEWS` 가 "1.2" 인지 확인
 - Play 출시 노트 ko-KR · en-US 를 news_body 와 같게
 - android-release 를 version 1.2.0 으로
-- Play Console: 구독 `monthly` ₩2,900 · `yearly` ₩6,900 (새로), 인앱 `lifetime` ₩9,900
+- Play Console: 구독 `monthly` ₩2,900 · `yearly` ₩6,900 (새로), 인앱 `lifetime` ₩9,900 (할인 평생권 `lifetime_member` 는 판매 중지)

@@ -508,6 +508,8 @@
   "rec_days_n": {"en": "%1$d days", "ko": "%1$d일"},
   "rec_numbers": {"en": "By the numbers", "ko": "숫자로 본 기록"},
   "turn_on": {"en": "On", "ko": "켜기"},
+  "from_verse": {"en": "from v. %1$d", "ko": "%1$d절부터"},
+  "other_place": {"en": "Elsewhere", "ko": "다른 곳"},
   "lib_done": {"en": "Finished", "ko": "다 씀"},
   "lib_chapters": {"en": "%1$d chapters", "ko": "%1$d장"},
   "lib_verses": {"en": "%1$d of %2$d verses", "ko": "%2$d절 중 %1$d절"},

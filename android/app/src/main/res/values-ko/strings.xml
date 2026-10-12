@@ -510,6 +510,8 @@
     <string name="rec_days_n">%1$d일</string>
     <string name="rec_numbers">숫자로 본 기록</string>
     <string name="turn_on">켜기</string>
+    <string name="from_verse">%1$d절부터</string>
+    <string name="other_place">다른 곳</string>
     <string name="lib_done">다 씀</string>
     <string name="lib_chapters">%1$d장</string>
     <string name="lib_verses">%2$d절 중 %1$d절</string>

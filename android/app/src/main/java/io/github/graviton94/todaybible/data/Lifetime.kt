@@ -18,7 +18,7 @@ import com.android.billingclient.api.QueryPurchasesParams
 
 /**
  * 여는 길 세 가지 (Google Play): 월 구독 (`monthly`) · 연 구독 (`yearly`) · 평생권 (한 번 결제 `lifetime`).
- * 구독 중인 사람에게는 더 싼 평생권 (`lifetime_member`) 을 보여 줘요. 가격은 모두 Play Console 에서 정하고 앱은 Play 가 준 글을 그대로 써요.
+ * 가격은 모두 Play Console 에서 정하고 앱은 Play 가 준 글을 그대로 써요. (예전 할인 평생권 `lifetime_member` 는 팔지 않고, 이미 산 기록만 인정해요.)
  * 결제 정보는 앱이 받지 않음 (Play 가 처리). 산 기록은 기기에 남겨 두어 Play 에 닿지 않을 때도 열려 있게.
  */
 class Lifetime(context: Context) {
@@ -54,7 +54,6 @@ class Lifetime(context: Context) {
     val lifetimePrice: String? get() = if (subscribed && memberPrice != null) memberPrice else price
 
     private var details: ProductDetails? = null
-    private var member: ProductDetails? = null
     private var monthly: ProductDetails? = null
     private var yearly: ProductDetails? = null
     private val client: BillingClient = BillingClient.newBuilder(context.applicationContext)
@@ -104,12 +103,10 @@ class Lifetime(context: Context) {
     private fun query() {
         // 한 번 결제 상품과 구독은 따로 물어야 해요
         client.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder().setProductList(listOf(
-            product(ID, BillingClient.ProductType.INAPP), product(MEMBER, BillingClient.ProductType.INAPP))).build()) { r, result ->
+            product(ID, BillingClient.ProductType.INAPP))).build()) { r, result ->
             if (r.responseCode != BillingClient.BillingResponseCode.OK) return@queryProductDetailsAsync
             details = result.productDetailsList.firstOrNull { it.productId == ID }
-            member = result.productDetailsList.firstOrNull { it.productId == MEMBER }
             price = details?.oneTimePurchaseOfferDetails?.formattedPrice
-            memberPrice = member?.oneTimePurchaseOfferDetails?.formattedPrice
         }
         client.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder().setProductList(listOf(product(MONTHLY, BillingClient.ProductType.SUBS), product(YEARLY, BillingClient.ProductType.SUBS))).build()) { r, result ->
             if (r.responseCode != BillingClient.BillingResponseCode.OK) return@queryProductDetailsAsync
@@ -153,10 +150,10 @@ class Lifetime(context: Context) {
         }
     }
 
-    /** 평생권 사기: 구독 중이면 할인 상품으로. */
+    /** 평생권 사기. */
     fun buy(activity: Activity): Boolean {
         if (!client.isReady) { tries = 0; connect() }
-        val d = (if (subscribed) member else null) ?: details ?: return false
+        val d = details ?: return false
         val p = BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(d).build()
         return client.launchBillingFlow(activity, BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(p)).build()).responseCode == BillingClient.BillingResponseCode.OK
     }

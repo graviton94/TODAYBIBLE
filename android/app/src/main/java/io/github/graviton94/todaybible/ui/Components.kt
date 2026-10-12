@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.border
 import androidx.compose.material3.Text
 import androidx.compose.ui.res.stringResource
 import io.github.graviton94.todaybible.R
@@ -74,14 +75,15 @@ fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = fal
     val c = Theme.c
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
-    val fill = when { quiet -> Color.Transparent; !enabled -> c.hair; pressed -> c.leatherDeep; else -> c.leather }
+    val fill = when { quiet || !enabled -> Color.Transparent; pressed -> c.leatherDeep; else -> c.leather }
     Box(
         modifier.pressScale(source).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(fill)
+            .then(if (!enabled && !quiet) Modifier.border(Tokens.Stroke.hair, c.hair, RoundedCornerShape(Tokens.Radius.button)) else Modifier)
             .clickable(source, null, enabled = enabled, role = Role.Button, onClick = tap(onClick))
             .padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s3),
         contentAlignment = Alignment.Center,
     ) {
-        val ink = if (quiet) c.ink else if (enabled) c.leatherInk else c.inkSoft
+        val ink = if (!enabled) c.unwritten else if (quiet) c.ink else c.leatherInk
         // 평생권 기능: "· 평생권" 글자 대신 작은 금빛 자물쇠 (좁은 버튼에서도 말이 잘리지 않게)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1, Alignment.CenterHorizontally)) {
             if (locked) LockMark(if (quiet) c.giltText else c.gilt, Modifier.size(Tokens.Size.lock))
@@ -192,6 +194,22 @@ fun UnderlineTabs(items: List<String>, selected: Int, modifier: Modifier = Modif
                 },
                 contentAlignment = Alignment.Center,
             ) { Text(s, style = Theme.label().copy(color = if (on) c.ink else c.inkSoft, textAlign = TextAlign.Center), maxLines = 2, modifier = Modifier.padding(horizontal = Tokens.Space.s1)) }
+        }
+    }
+}
+
+/** 작은 칩 줄 (탭 아래 둘째 고르기): 고른 것은 먹 테 + 옅은 바탕. */
+@Composable
+fun Chips(items: List<String>, selected: Int, modifier: Modifier = Modifier, onSelect: (Int) -> Unit) {
+    val c = Theme.c
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        items.forEachIndexed { i, label ->
+            val on = i == selected
+            Box(Modifier.heightIn(min = Tokens.Size.tab).clickable(role = Role.Tab) { onSelect(i) }, contentAlignment = Alignment.Center) {
+                Text(label, style = Theme.small().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1,
+                    modifier = Modifier.clip(RoundedCornerShape(Tokens.Radius.pill)).background(if (on) c.ink.copy(alpha = Tokens.Alpha.chipOn) else Color.Transparent)
+                        .border(Tokens.Stroke.hair, if (on) c.ink else c.hair, RoundedCornerShape(Tokens.Radius.pill)).padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s1))
+            }
         }
     }
 }

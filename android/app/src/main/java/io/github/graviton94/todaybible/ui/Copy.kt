@@ -131,10 +131,12 @@ fun CopyPage(s: AppState) {
 
     Column(Modifier.fillMaxSize()) {
         Column(Modifier.padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                RunningHead(s.chapterRef(), stringResource(R.string.verse_of, doneCount, fillable.size), k,
-                    Modifier.weight(1f).clickable(role = Role.Button) { s.picker = s.book })
-                // 이 장 책갈피
+            // 머리 (다른 탭과 같은 틀): 라틴 머리글 · 큰 제목 (누르면 장 고르기) · 오른쪽 위 책갈피 · 듣기
+            Row(verticalAlignment = Alignment.Top) {
+                Column(Modifier.weight(1f).clickable(role = Role.Button) { s.picker = s.book }) {
+                    HeadText(s, s.book, s.chapter)
+                    Text(s.chapterRef(), style = Theme.title(k, Tokens.Text.title), maxLines = 1)
+                }
                 val marked = s.isBookmarked(s.book, s.chapter)
                 Box(Modifier.size(Tokens.Size.tab).clickable(role = Role.Button) { s.toggleBookmark(s.book, s.chapter, next ?: 1) }
                     .semantics { contentDescription = ctx0.getString(R.string.bookmark) }, contentAlignment = Alignment.Center) {
@@ -142,9 +144,22 @@ fun CopyPage(s: AppState) {
                 }
                 // 듣기: 성경 탭에서 이 장을 책 읽어 주듯 이어서
                 Row(Modifier.heightIn(min = Tokens.Size.tab).clickable(role = Role.Button) { if (pass != null) io.github.graviton94.todaybible.data.ListenService.startPassages(ctx0, listOf(pass), s.aloudRate(), s.prayerWrite?.let { "prayer:${it.first}" } ?: "read") else { s.read(s.book, s.chapter); io.github.graviton94.todaybible.data.ListenService.start(ctx0, s.book, s.chapter, 1, s.aloudRate()) } }
-                    .padding(horizontal = Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                    .padding(horizontal = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                     PlayMark(Theme.c.rubric, false, Modifier.size(Tokens.Size.iconSm))
                     Text(stringResource(R.string.listen_mode), style = Theme.small().copy(color = Theme.c.ink), maxLines = 1)
+                }
+            }
+            Text(stringResource(R.string.ch_progress, doneCount, fillable.size) + (next?.let { " · " + stringResource(R.string.from_verse, it) } ?: ""), style = Theme.small(), maxLines = 1)
+            Segments(fillable.size, doneCount)
+            // 다른 곳: 권마다 따로 이어 쓰기 (쓰다 멈춘 다른 장 하나)
+            val hairC = Theme.c.hair
+            if (pass == null) remember(s.fills.size, s.book, s.chapter) { s.pausedChapters(1, s.book to s.chapter).firstOrNull() }?.let { o ->
+                Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.tab).drawBehind {
+                    drawLine(hairC, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx()); drawLine(hairC, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx())
+                }.clickable(role = Role.Button) { s.open(o.book, o.chapter) }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                    Text(stringResource(R.string.other_place), style = Theme.small(), maxLines = 1)
+                    Text(stringResource(R.string.paused_row, s.chapterRef(o.book, o.chapter), o.next), style = Theme.small().copy(color = Theme.c.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Text("›", style = Theme.small().copy(color = Theme.c.unwritten))
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -232,9 +247,12 @@ private fun WritePage(s: AppState, verse: Int?) {
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None),
             modifier = Modifier.size(Tokens.Size.hiddenField).alpha(0f).focusRequester(focus).onFocusChanged { focused = it.isFocused },
         )
-        if (fixHint && marks.any { it == TypeJudge.Mark.WRONG }) Text(stringResource(R.string.type_fix_hint),
-            style = Theme.label().copy(color = c.leatherInk, textAlign = androidx.compose.ui.text.style.TextAlign.Center),
-            modifier = Modifier.align(Alignment.BottomCenter).imePadding().padding(Tokens.Space.s3).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.rubric).padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s2))
+        // 틀린 글자 안내: 덩어리 대신 진홍 점 한 줄 (키보드 바로 위)
+        if (fixHint && marks.any { it == TypeJudge.Mark.WRONG }) Row(Modifier.align(Alignment.BottomCenter).imePadding().fillMaxWidth().background(c.leaf).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s2),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            Box(Modifier.size(Tokens.Size.hintDot).background(c.wrong, androidx.compose.foundation.shape.CircleShape))
+            Text(stringResource(R.string.type_fix_hint), style = Theme.small().copy(color = c.wrong), maxLines = 2)
+        }
         // 쓰기 시작: 키보드가 닫혀 있을 때만 아래 띠로
         if (!focused && shown != null) Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(c.leaf)
             .drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }
@@ -530,7 +548,7 @@ private fun NarrationBanner(s: AppState, loading: Boolean, failed: Boolean) {
 private fun AloudControls(s: AppState, guideReady: Boolean) {
     // 화면에는 읽는 방식만. 빠르기 · 큰 글씨는 설정 › 낭독으로 (처음엔 보통 · 큰 글씨)
     // 교독 · 나만 읽기 (듣기는 따로: 장 머리의 ‘듣기’)
-    if (guideReady) UnderlineTabs(listOf(stringResource(R.string.resp_mode), stringResource(R.string.guide_alone)), if (s.aloudMode == 2) 1 else 0, Modifier.coach("aloud_modes")) { s.chooseAloudMode(if (it == 0) 0 else 2) }
+    if (guideReady) Chips(listOf(stringResource(R.string.resp_mode), stringResource(R.string.guide_alone)), if (s.aloudMode == 2) 1 else 0, Modifier.coach("aloud_modes")) { s.chooseAloudMode(if (it == 0) 0 else 2) }
 }
 
 /**

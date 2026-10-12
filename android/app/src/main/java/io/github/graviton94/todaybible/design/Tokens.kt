@@ -27,6 +27,7 @@ object Tokens {
         val frame = 0.dp
         val card = 2.dp
         val chip = 2.dp
+        val pill = 999.dp
     }
     object Stroke {
         val hair = 1.dp
@@ -119,6 +120,7 @@ object Tokens {
         val seasonBand = 8.dp
         val inkFeather = 30.dp
         val pathNode = 18.dp
+        val hintDot = 6.dp
     }
     object Text {
         val verse = 21.sp
@@ -283,6 +285,7 @@ object Tokens {
         const val sealFill = 0.55f
         const val seasonPlate = 0.16f
         const val pathLine = 0.5f
+        const val chipOn = 0.06f
     }
     object Leading {
         const val verse = 1.8f

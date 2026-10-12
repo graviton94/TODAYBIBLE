@@ -510,6 +510,8 @@
     <string name="rec_days_n">%1$d days</string>
     <string name="rec_numbers">By the numbers</string>
     <string name="turn_on">On</string>
+    <string name="from_verse">from v. %1$d</string>
+    <string name="other_place">Elsewhere</string>
     <string name="lib_done">Finished</string>
     <string name="lib_chapters">%1$d chapters</string>
     <string name="lib_verses">%1$d of %2$d verses</string>

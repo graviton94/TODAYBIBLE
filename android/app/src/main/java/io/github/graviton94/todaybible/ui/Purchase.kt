@@ -91,7 +91,6 @@ fun PurchasePage(s: AppState) {
                             primary = life.subscribed || !(subs || years)) { (ctx as? Activity)?.let { life.buy(it) } }
                     }
                     if (life.subscribed) {
-                        Text(stringResource(R.string.member_note), style = Theme.small().copy(textAlign = TextAlign.Center))
                         Text(stringResource(R.string.manage_sub), style = Theme.small().copy(color = c.rubric), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
                             .heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
                                 runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/account/subscriptions?package=${ctx.packageName}"))) }

@@ -215,22 +215,23 @@ private fun SeasonHead(s: AppState, today: java.time.LocalDate) {
             // 띠
             Box(Modifier.fillMaxWidth().height(Tokens.Size.seasonBand).background(if (feast) androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(c.giltLo, c.gilt, c.giltHi, c.gilt, c.giltLo))
                 else androidx.compose.ui.graphics.SolidColor(col)))
-            Column(Modifier.fillMaxWidth().padding(horizontal = bleed).padding(top = Tokens.Space.s4, bottom = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+            // 낮은 머리 (A): 라틴 · 이름 · 제n주 · 남은 날 한 줄, 말씀은 작은 글씨 두 줄까지
+            Column(Modifier.fillMaxWidth().padding(horizontal = bleed).padding(top = Tokens.Space.s2, bottom = Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                 Text(stringResource(ctx.resources.getIdentifier("season_${se.name}_la", "string", ctx.packageName)).uppercase(), style = Theme.caps().copy(color = col), maxLines = 1)
                 Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                    Text(name(se), style = Theme.title(k), maxLines = 1)
-                    Text(stringResource(R.string.season_week, now.week), style = Theme.small(), maxLines = 1, modifier = Modifier.padding(bottom = Tokens.Space.s1))
-                }
-                now.daysTo?.let { n ->
-                    Text(if (n == 0) stringResource(R.string.season_today, name(se)) else stringResource(R.string.season_to, name(now.next ?: se), n),
-                        style = Theme.small().copy(color = col, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), maxLines = 1)
+                    Text(name(se), style = Theme.title(k, Tokens.Text.label), maxLines = 1)
+                    Text(stringResource(R.string.season_week, now.week) + if (now.daysTo != null) " ·" else "", style = Theme.small(), maxLines = 1)
+                    now.daysTo?.let { n ->
+                        Text(if (n == 0) stringResource(R.string.season_today, name(se)) else stringResource(R.string.season_to, name(now.next ?: se), n),
+                            style = Theme.small().copy(color = col, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
                 }
                 val verse = remember(se, s.translation) { Markup.plain(s.store.book(s.translation, vb).verse(vc, vv)) }
                 Text(androidx.compose.ui.text.buildAnnotatedString {
                     append(verse); append("  ")
-                    withStyle(androidx.compose.ui.text.SpanStyle(color = c.inkSoft, fontSize = Tokens.Text.small)) { append(stringResource(R.string.ref_verse, s.bookName(vb), vc, vv)) }
-                }, style = Theme.body(), modifier = Modifier.padding(top = Tokens.Space.s2).drawBehind {
-                    drawRect(col, Offset(-Tokens.Space.s3.toPx(), 0f), Size(Tokens.Stroke.rule.toPx(), size.height))
+                    withStyle(androidx.compose.ui.text.SpanStyle(color = c.inkSoft)) { append(stringResource(R.string.ref_verse, s.bookName(vb), vc, vv)) }
+                }, style = Theme.small().copy(color = c.ink), maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = Tokens.Space.s1).drawBehind {
+                    drawRect(col, Offset(-Tokens.Space.s2.toPx(), 0f), Size(Tokens.Stroke.rule.toPx(), size.height))
                 }.padding(start = Tokens.Space.s1))
             }
         }
