@@ -110,16 +110,14 @@ fun HomePage(s: AppState) {
         }
         // 쓰다 멈춘 곳: 다른 장 · 다른 권에서 쓰다 만 자리 (최근 순, 둘까지)
         val paused = remember(s.fills.size, s.pausedRev, cb, cc) { s.pausedChapters(2, cb to cc) }
-        var pick by remember { mutableStateOf<AppState.Paused?>(null) }
         if (paused.isNotEmpty()) Column(Modifier.fillMaxWidth()) {
             SectionHead("PEREGRINATIO", stringResource(R.string.paused_title), 1)
             // 한 번 누르면: 이어 쓰기 · 새로 쓰기 · 순례길에서 빼기
             paused.forEach { p ->
-                ListRow(stringResource(R.string.paused_row, s.chapterRef(p.book, p.chapter), p.next), "${p.done} / ${p.total}") { pick = p }
+                ListRow(stringResource(R.string.paused_row, s.chapterRef(p.book, p.chapter), p.next), "${p.done} / ${p.total}") { s.pilgrim = p }
             }
         }
-        androidx.compose.runtime.LaunchedEffect(paused, s.debugPilgrim) { if (s.debugPilgrim && paused.isNotEmpty()) { pick = paused.first(); s.debugPilgrim = false } }
-        pick?.let { p -> PilgrimSheet(s, p) { pick = null } }
+        androidx.compose.runtime.LaunchedEffect(paused, s.debugPilgrim) { if (s.debugPilgrim && paused.isNotEmpty()) { s.pilgrim = paused.first(); s.debugPilgrim = false } }
         // 아래: 오늘 할 수 있는 일들을 같은 줄 모양으로
         Column(Modifier.fillMaxWidth()) {
             SectionHead("HODIE", stringResource(R.string.today_more), if (paused.isNotEmpty()) 2 else 1)
@@ -408,7 +406,7 @@ private fun BigAction(text: String, primary: Boolean = true, onClick: () -> Unit
 @Composable
 fun PilgrimSheet(s: AppState, p: AppState.Paused, onClose: () -> Unit) {
     val c = Theme.c; val k = s.korean
-    var ask by remember { mutableStateOf(0) }   // 0 고르기 · 1 새로 쓰기 확인 · 2 빼기 확인
+    var ask by remember { mutableStateOf(s.debugPilgrimAsk.also { s.debugPilgrimAsk = 0 }) }   // 0 고르기 · 1 새로 쓰기 확인 · 2 빼기 확인
     val ref = s.chapterRef(p.book, p.chapter)
     BookSheet(onClose) {
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {

@@ -175,8 +175,11 @@ class AppState(val store: Store) {
     var copyTabNow by mutableIntStateOf(store.copyTab)
     /** 필사 집중 모드 (머리 · 탭 · 아래 이름표를 걷음) 와 곁소리. */
     var focusMode by mutableStateOf(false)
+    /** 나의 순례길에서 누른 장 (이어 쓰기 · 새로 쓰기 · 빼기 시트). */
+    var pilgrim by mutableStateOf<Paused?>(null)
     /** 캡처용: 오늘 화면을 열면 순례길 첫 줄 시트를 바로. */
     var debugPilgrim by mutableStateOf(false)
+    var debugPilgrimAsk = 0
     var focusSound by mutableStateOf(store.focusSound)
     /** 간단 모드: 오늘 화면에 오늘의 장과 큰 버튼 셋만. */
     var simple by mutableStateOf(store.simple)
@@ -439,7 +442,7 @@ class AppState(val store: Store) {
     fun closeOverlays() {
         keepOpen = false
         settingsOpen = false; purchaseOpen = false; plateView = null; finished = null; picker = null; marksOpen = false; found = null
-        memoryOpen = null; sermonOpen = null; prayersOpen = false; galleryOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; handBook = null; planOpen = false; award = null; opening = false; leaveAsk = null
+        memoryOpen = null; sermonOpen = null; prayersOpen = false; galleryOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; handBook = null; planOpen = false; pilgrim = null; award = null; opening = false; leaveAsk = null
     }
     /** 앱을 처음부터 다시 (언어처럼 화면 전체가 바뀌는 설정 뒤에). 여는 순간은 이번만 건너뛰어요. */
     fun restartApp(a: android.app.Activity) {

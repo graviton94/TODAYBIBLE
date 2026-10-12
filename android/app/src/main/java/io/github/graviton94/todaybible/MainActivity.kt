@@ -256,7 +256,7 @@ class MainActivity : ComponentActivity() {
         if (i.getBooleanExtra("tb.film", false)) Thread { filmShots(s) }.start()
         if (i.getBooleanExtra("tb.news", false)) s.news = true
         if (i.getBooleanExtra("tb.keep", false)) s.keepOpen = true
-        s.debugPilgrim = i.getBooleanExtra("tb.pilgrim", false)
+        s.debugPilgrim = i.getBooleanExtra("tb.pilgrim", false); s.debugPilgrimAsk = i.getIntExtra("tb.pilgrimAsk", 0)
         if (i.getBooleanExtra("tb.seasonNotice", false)) Thread { io.github.graviton94.todaybible.data.Reminder.seasonNotice(this, s.store, java.time.LocalDate.now(), force = true) }.start()
         if (i.hasExtra("tb.focus")) s.focusMode = i.getBooleanExtra("tb.focus", false)
         if (i.hasExtra("tb.keepWifi") && i.getBooleanExtra("tb.keepWifi", true) != s.keepWifiOnly) s.flipKeepWifiOnly()
