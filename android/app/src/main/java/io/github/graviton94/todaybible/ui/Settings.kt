@@ -84,7 +84,7 @@ fun SettingsPage(s: AppState) {
         val padTop = with(dens) { Tokens.Space.s3.toPx() }
         var settle by remember { mutableIntStateOf(0) }
         fun toggle(id: String) { openSec = if (openSec == id) null else id; settle++ }
-        LaunchedEffect(settle) {
+        androidx.compose.runtime.LaunchedEffect(settle) {
             val id = openSec ?: return@LaunchedEffect
             // 위 갈래가 접혀 자리가 바뀐 다음 (두 장면 뒤) 에 그 머리로
             androidx.compose.runtime.withFrameNanos { }; androidx.compose.runtime.withFrameNanos { }
