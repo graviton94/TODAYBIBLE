@@ -351,6 +351,23 @@ done
 adb shell am broadcast -a com.android.systemui.demo -e command exit >/dev/null
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # @end
+# @scene fgk
+# Play 포그라운드 서비스 신고용 영상 (영어): 낭독 미리 받기 시작 → 홈으로 나가도 받기 계속 → 알림판의 진행 알림 → 앱으로 돌아오기
+adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
+adb shell pm grant $P android.permission.POST_NOTIFICATIONS 2>/dev/null
+open --ez tb.seed true --es tb.tr WEB --es tb.theme LIGHT --ez tb.keep true; sleep 5
+adb shell cmd statusbar collapse; sleep 1
+adb shell screenrecord --time-limit 40 --size 720x1600 /sdcard/fgk.mp4 &
+sleep 3
+adb shell am start -n $P/.MainActivity --ez tb.keep true --ei tb.keepBook 41 >/dev/null; sleep 8
+adb shell input keyevent 3; sleep 5
+adb shell cmd statusbar expand-notifications; sleep 9
+adb shell cmd statusbar collapse; sleep 1
+adb shell am start -n $P/.MainActivity --ez tb.keep true >/dev/null; sleep 7
+wait; sleep 2
+adb pull /sdcard/fgk.mp4 "$OUT/fgk_demo.mp4" >/dev/null 2>&1; ls -la "$OUT/fgk_demo.mp4"
+adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
+# @end
 # @scene fgs
 # Play 포그라운드 서비스 신고용 영상 (영어): 듣기 시작 → 홈으로 나가도 재생 → 알림판의 재생 알림 → 앱으로 돌아오기
 adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
