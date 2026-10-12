@@ -173,6 +173,9 @@ class AppState(val store: Store) {
     var bookmarks by mutableStateOf(store.loadBookmarks())
     /** 필사의 지금 탭 (첫 안내가 어느 화면인지 알게). */
     var copyTabNow by mutableIntStateOf(store.copyTab)
+    /** 필사 집중 모드 (머리 · 탭 · 아래 이름표를 걷음) 와 곁소리. */
+    var focusMode by mutableStateOf(false)
+    var focusSound by mutableStateOf(store.focusSound)
     /** 간단 모드: 오늘 화면에 오늘의 장과 큰 버튼 셋만. */
     var simple by mutableStateOf(store.simple)
     fun flipSimple() { simple = !simple; store.simple = simple }

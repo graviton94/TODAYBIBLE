@@ -3,7 +3,7 @@
 <resources>
     <string name="keep_notif">%1$s · %2$d / %3$d장</string>
     <string name="keep_notif_left">다음 %1$d권 기다림</string>
-    <string name="today_more">오늘 곁들일 것</string>
+    <string name="today_more">오늘의 묵상</string>
     <string name="season_ADVENT">대림절</string>
     <string name="season_CHRISTMAS">성탄절</string>
     <string name="season_EPIPHANY">주현절 후</string>
@@ -22,7 +22,7 @@
     <string name="season_to">%1$s까지 %2$d일</string>
     <string name="season_today">오늘은 %1$s</string>
     <string name="plan_path_legend">금빛 = 쓴 날 · 테 = 오늘 · 점선 = 앞날</string>
-    <string name="paused_title">쓰다 멈춘 곳</string>
+    <string name="paused_title">나의 순례길</string>
     <string name="paused_row">%1$s · %2$d절부터</string>
     <string name="keep_title">낭독 미리 받기</string>
     <string name="keep_lede">와이파이에서 받아 두면 인터넷 없이 들어요. 받아 둔 권은 저절로 지워지지 않아요. 지금 이 폰에 %1$sMB</string>
@@ -312,7 +312,7 @@
     <string name="widget_goal_desc">오늘 쓴 절 고리와 며칠째 이어 쓰는지</string>
     <string name="run_label">일째 이어 씀</string>
     <string name="voice_keep">내 목소리</string>
-    <string name="voice_keep_hint">소리 내어 읽으면 이 폰에만 녹음돼요. 마음에 들지 않으면 지울 수 있어요.</string>
+    <string name="voice_keep_hint">녹음은 이 폰에만 남고, 언제든 지울 수 있어요</string>
     <string name="voice_recording">녹음 중</string>
     <string name="voice_done_reading">다 읽었어요</string>
     <string name="voice_chapter">내 낭독 · %1$d절 · %2$s</string>
@@ -344,7 +344,7 @@
     <string name="hi_evening">%1$s님, 평안한 저녁이에요</string>
     <string name="reminder_named">%1$s님, 오늘 쓸 절 · %2$s</string>
     <string name="backup_hint">쓴 글자 · 손글씨 · 목소리를 파일 하나로. 구글 드라이브에 두면 폰을 바꿔도 그대로 이어 써요.</string>
-    <string name="hand_hint">손가락이나 펜으로 줄 위에 써요</string>
+    <string name="hand_hint">줄 위에 따라 써요</string>
     <string name="hand_sheet">%1$d장째</string>
     <string name="hand_undo">되돌리기</string>
     <string name="hand_more">한 쪽 더</string>
@@ -413,8 +413,8 @@
     <string name="resp_mode">교독</string>
     <string name="resp_guide">인도 · 들어요</string>
     <string name="resp_you">회중 · 내 차례예요</string>
-    <string name="resp_hint">누르면 인도 목소리가 먼저 읽고, 이어서 내 차례예요.</string>
-    <string name="resp_hint_rec">누르면 인도 목소리가 먼저 읽고, 이어서 내 차례예요. 내 목소리는 이 폰에만 녹음돼요.</string>
+    <string name="resp_hint">인도 다음에 내가 읽어요</string>
+    <string name="resp_hint_rec">인도 다음에 내가 읽어요 · 녹음은 이 폰에만</string>
     <string name="resp_start">교독 시작</string>
     <string name="aloud_big">큰 글씨</string>
     <string name="verse_n">%1$d절</string>
@@ -425,7 +425,7 @@
     <string name="gift_title">내 목소리로 읽은 %1$s %2$d장</string>
     <string name="gift_title_named">%1$s님이 읽어 주는 %2$s %3$d장</string>
     <string name="view_grid">원고지</string>
-    <string name="grid_hint">칸의 옅은 글자를 따라 한 글자씩 쳐요.</string>
+    <string name="grid_hint">옅은 글자를 따라 쳐요</string>
     <string name="reminder_aloud">소리 내어 읽기</string>
     <string name="hand_phrase">구절만</string>
     <string name="hand_whole">절 전체</string>
@@ -928,4 +928,14 @@
     <string name="opener_note">이 장을 다 쓰면 이 판화가 화첩에 걸려요. 지금까지 %1$d절을 썼어요.</string>
     <string name="write_from">%1$d절부터 쓰기</string>
     <string name="listen_first">먼저 들어 보기</string>
+    <string name="copy_count">%1$d/%2$d</string>
+    <string name="focus">집중</string>
+    <string name="more">더 보기</string>
+    <string name="focus_line">%1$d분 · 오늘 %2$d절</string>
+    <string name="focus_end">집중 끝내기</string>
+    <string name="focus_quiet">조용히</string>
+    <string name="focus_rain">빗소리</string>
+    <string name="focus_candle">촛불</string>
+    <string name="focus_stream">시냇물</string>
+    <string name="kb_hide">키보드 내리기</string>
 </resources>

@@ -250,6 +250,7 @@ class MainActivity : ComponentActivity() {
         if (i.getBooleanExtra("tb.film", false)) Thread { filmShots(s) }.start()
         if (i.getBooleanExtra("tb.news", false)) s.news = true
         if (i.getBooleanExtra("tb.keep", false)) s.keepOpen = true
+        if (i.hasExtra("tb.focus")) s.focusMode = i.getBooleanExtra("tb.focus", false)
         if (i.hasExtra("tb.keepWifi") && i.getBooleanExtra("tb.keepWifi", true) != s.keepWifiOnly) s.flipKeepWifiOnly()
         i.getIntExtra("tb.keepBook", 0).takeIf { it > 0 }?.let { s.keepNarration(it - 1) }
         when (i.getStringExtra("tb.update")) {

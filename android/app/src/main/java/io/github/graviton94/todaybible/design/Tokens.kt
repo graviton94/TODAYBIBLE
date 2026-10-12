@@ -38,6 +38,7 @@ object Tokens {
     }
     object Size {
         val touch = 56.dp
+        val band = 60.dp
         val row = 52.dp
         val tab = 48.dp
         val rowTall = 64.dp
@@ -131,6 +132,7 @@ object Tokens {
         val small = 13.sp
         val brand = 20.sp
         val title = 24.sp
+        val head = 19.sp
         val display = 34.sp
         val initial = 40.sp
         val initialLg = 64.sp
@@ -197,6 +199,7 @@ object Tokens {
         const val veilMs = 1400
         const val pageMs = 420
         const val toastMs = 2400
+        const val focusTickMs = 30000
         const val fadeMs = 220
         const val typeSettleMs = 350
         const val turnSnap = 0.2f
@@ -318,5 +321,6 @@ object Tokens {
         const val voiceTargetRms = 0.1f
         const val voiceMaxGain = 8.0f
         const val penLevel = 0.075f
+        const val focusLevel = 0.35f
     }
 }

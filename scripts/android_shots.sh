@@ -265,6 +265,15 @@ open --es tb.listen "42:15";                                        shot rd1_rea
 open --es tb.listen "42:1";                                         shot rd2_reader_first 6
 # @end
 # 디자인 리뷰: 다섯 화면을 끝까지
+# @scene cp
+open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0 --ez tb.focus false;  shot cp1_aloud 5
+open --ei tb.page 2 --ei tb.copyTab 1 --ez tb.focus false;  shot cp2_type 4
+adb shell input tap 540 1000; sleep 1; adb shell input text "abc"; sleep 1; shot cp3_type_kb 1
+open --ei tb.page 2 --ei tb.copyTab 2 --ez tb.focus false;  shot cp4_hand 4
+open --ei tb.page 2 --ei tb.copyTab 1 --ez tb.focus true;   shot cp5_focus 4
+open --ez tb.night true --ei tb.page 2 --ei tb.copyTab 0 --ez tb.focus false; shot cp6_night 4
+open --ez tb.night false --ei tb.page 2 --ez tb.focus false; adb shell input tap 1020 200; sleep 2; shot cp7_more 1
+
 # @scene rv
 open --ei tb.page 0;                    shot rv_t1 6
 swipe_up;                               shot rv_t2 2

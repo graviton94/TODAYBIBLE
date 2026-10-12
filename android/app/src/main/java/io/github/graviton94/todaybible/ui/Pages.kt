@@ -107,7 +107,8 @@ fun Root(s: AppState) {
 
     Box(Modifier.fillMaxSize().background(c.leaf)) {
         Column(Modifier.fillMaxSize().statusBarsPadding().imePadding()) {
-            TopBar(s, coachScreen(s, pager.currentPage))
+            // 필사는 제 머리 한 줄에 도움말 · 설정을 함께 둬요 (위 줄을 하나 덜어 원고지 자리를 넓게)
+            if (pager.currentPage != AppState.COPY) TopBar(s, coachScreen(s, pager.currentPage))
             HorizontalPager(
                 pager, Modifier.weight(1f).fillMaxWidth(), beyondViewportPageCount = 0,
                 // 페이지는 아래 이름표로만 옮겨요 (옆으로 밀기는 위아래 스크롤과 다퉈서 없앰)
@@ -125,9 +126,11 @@ fun Root(s: AppState) {
                     }
                 }
             }
-            if (!typing) NowPlayingBar(s)
-            if (!typing) UpdateBar(s)
-            if (!typing) PageTabs(pager.currentPage) { turnTo(it) }
+            // 집중 모드: 아래 띠들도 걷어요
+            val bare = typing || (s.focusMode && pager.currentPage == AppState.COPY)
+            if (!bare) NowPlayingBar(s)
+            if (!bare) UpdateBar(s)
+            if (!bare) PageTabs(pager.currentPage) { turnTo(it) }
         }
         if (s.settingsOpen) Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { SettingsPage(s) }
         s.finished?.let { (b, ch) -> FinishedPage(s, b, ch) }

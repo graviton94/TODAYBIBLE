@@ -39,6 +39,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -129,41 +130,49 @@ fun CopyPage(s: AppState) {
     LaunchedEffect(s.forceTab) { s.forceTab?.let { tab = it; s.store.copyTab = it; s.forceTab = null } }
     LaunchedEffect(s.aloudNow) { if (s.aloudNow) { tab = 0; s.store.copyTab = 0; if (next == null) s.aloudNow = false } }
 
+    // 집중: 머리 · 탭 · 아래 이름표를 걷고 지금 쓰는 절만. 소리는 맨 위에서 (아래는 키보드 자리)
+    androidx.activity.compose.BackHandler(enabled = s.focusMode) { s.focusMode = false }
+    val focusCtx = LocalContext.current
+    DisposableEffect(s.focusMode, s.focusSound) {
+        io.github.graviton94.todaybible.data.FocusSound.play(focusCtx, if (s.focusMode) s.focusSound.takeIf { it.isNotEmpty() } else null)
+        onDispose { if (!s.focusMode) io.github.graviton94.todaybible.data.FocusSound.play(focusCtx, null) }
+    }
+    DisposableEffect(Unit) { onDispose { io.github.graviton94.todaybible.data.FocusSound.play(focusCtx, null); s.focusMode = false } }
+
     Column(Modifier.fillMaxSize()) {
-        Column(Modifier.padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            // 머리 (다른 탭과 같은 틀): 라틴 머리글 · 큰 제목 (누르면 장 고르기) · 오른쪽 위 책갈피 · 듣기
-            Row(verticalAlignment = Alignment.Top) {
-                Column(Modifier.weight(1f).clickable(role = Role.Button) { s.picker = s.book }) {
-                    HeadText(s, s.book, s.chapter)
-                    Text(s.chapterRef(), style = Theme.title(k, Tokens.Text.title), maxLines = 1)
+        if (s.focusMode) FocusBar(s, next)
+        else {
+            // 머리 한 줄 (세 방식 공통): 제목 ▾ (장 고르기) · 쓴 절 / 전체 · 집중 · 책갈피 · ⋯ (듣기 · 도움말 · 설정)
+            var more by remember { mutableStateOf(false) }
+            Row(Modifier.fillMaxWidth().padding(start = Tokens.Space.s5, end = Tokens.Space.s1).heightIn(min = Tokens.Size.touch), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Button) { s.picker = s.book }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                    Text(s.chapterRef(), style = Theme.title(k, Tokens.Text.head), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                    Text("▾", style = Theme.small().copy(color = Theme.c.giltText))
+                    Text(stringResource(R.string.copy_count, doneCount, fillable.size), style = Theme.small().copy(fontFeatureSettings = "lnum"), maxLines = 1)
                 }
+                Text(stringResource(R.string.focus), style = Theme.small().copy(color = Theme.c.ink), maxLines = 1,
+                    modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { s.focusMode = true }
+                        .padding(horizontal = Tokens.Space.s1).border(Tokens.Stroke.hair, Theme.c.hair, RoundedCornerShape(Tokens.Radius.pill)).padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s1))
                 val marked = s.isBookmarked(s.book, s.chapter)
-                Box(Modifier.size(Tokens.Size.tab).clickable(role = Role.Button) { s.toggleBookmark(s.book, s.chapter, next ?: 1) }
+                Box(Modifier.size(Tokens.Size.touch).clickable(role = Role.Button) { s.toggleBookmark(s.book, s.chapter, next ?: 1) }
                     .semantics { contentDescription = ctx0.getString(R.string.bookmark) }, contentAlignment = Alignment.Center) {
                     Ribbon(if (marked) Theme.c.rubric else Theme.c.inkSoft, marked, Modifier.size(Tokens.Size.iconSm))
                 }
-                // 듣기: 성경 탭에서 이 장을 책 읽어 주듯 이어서
-                Row(Modifier.heightIn(min = Tokens.Size.tab).clickable(role = Role.Button) { if (pass != null) io.github.graviton94.todaybible.data.ListenService.startPassages(ctx0, listOf(pass), s.aloudRate(), s.prayerWrite?.let { "prayer:${it.first}" } ?: "read") else { s.read(s.book, s.chapter); io.github.graviton94.todaybible.data.ListenService.start(ctx0, s.book, s.chapter, 1, s.aloudRate()) } }
-                    .padding(horizontal = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                    PlayMark(Theme.c.rubric, false, Modifier.size(Tokens.Size.iconSm))
-                    Text(stringResource(R.string.listen_mode), style = Theme.small().copy(color = Theme.c.ink), maxLines = 1)
+                Box(Modifier.size(Tokens.Size.touch).clickable(role = Role.Button) { more = true }.semantics { contentDescription = ctx0.getString(R.string.more) }, contentAlignment = Alignment.Center) {
+                    Text("⋯", style = Theme.label().copy(color = Theme.c.inkSoft, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold))
                 }
             }
-            Text(stringResource(R.string.ch_progress, doneCount, fillable.size) + (next?.let { " · " + stringResource(R.string.from_verse, it) } ?: ""), style = Theme.small(), maxLines = 1)
-            Segments(fillable.size, doneCount)
-            // 다른 곳: 권마다 따로 이어 쓰기 (쓰다 멈춘 다른 장 하나)
-            val hairC = Theme.c.hair
-            if (pass == null) remember(s.fills.size, s.book, s.chapter) { s.pausedChapters(1, s.book to s.chapter).firstOrNull() }?.let { o ->
-                Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.tab).drawBehind {
-                    drawLine(hairC, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx()); drawLine(hairC, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx())
-                }.clickable(role = Role.Button) { s.open(o.book, o.chapter) }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                    Text(stringResource(R.string.other_place), style = Theme.small(), maxLines = 1)
-                    Text(stringResource(R.string.paused_row, s.chapterRef(o.book, o.chapter), o.next), style = Theme.small().copy(color = Theme.c.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                    Text("›", style = Theme.small().copy(color = Theme.c.unwritten))
+            // 진행선: 머리 밑줄이 곧 절 진행
+            Segments(fillable.size, doneCount, Modifier.padding(horizontal = Tokens.Space.s5))
+            UnderlineTabs(listOf(stringResource(R.string.mode_aloud), stringResource(R.string.mode_type), stringResource(R.string.mode_paper)), tab, Modifier.padding(horizontal = Tokens.Space.s5).coach("copy_tabs")) { tab = it; s.store.copyTab = it }
+            if (more) BookSheet({ more = false }) {
+                ListRow(stringResource(R.string.listen_mode), "") {
+                    more = false
+                    if (pass != null) io.github.graviton94.todaybible.data.ListenService.startPassages(ctx0, listOf(pass), s.aloudRate(), s.prayerWrite?.let { "prayer:${it.first}" } ?: "read")
+                    else { s.read(s.book, s.chapter); io.github.graviton94.todaybible.data.ListenService.start(ctx0, s.book, s.chapter, 1, s.aloudRate()) }
                 }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                UnderlineTabs(listOf(stringResource(R.string.mode_aloud), stringResource(R.string.mode_type), stringResource(R.string.mode_paper)), tab, Modifier.weight(1f).coach("copy_tabs")) { tab = it; s.store.copyTab = it }
+                ListRow(stringResource(R.string.help), "") { more = false; s.coachAgain("copy$tab") }
+                ListRow(stringResource(R.string.settings), "") { more = false; s.settingsOpen = true }
             }
         }
         when (tab) {
@@ -173,11 +182,12 @@ fun CopyPage(s: AppState) {
                 if (io.github.graviton94.todaybible.data.Ink.verses(LocalContext.current, s.translation.id, s.book, s.chapter).isNotEmpty())
                     BookButton(stringResource(R.string.notes_pdf), Modifier.fillMaxWidth(), quiet = true) { s.requestNotes(s.book) }
             }
-            else -> Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+            else -> {
                 // 녹음을 지우고 다시 읽기를 고른 절이 있으면 그 절부터
                 val again = s.reread?.takeIf { it.first == s.book && it.second == s.chapter && it.third in fillable }?.third
                 val aloudVerse = again ?: next
-                if (aloudVerse == null) { ChapterDoneNote(s); VoiceRow(s) } else AloudTab(s, aloudVerse)
+                if (aloudVerse == null) Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) { ChapterDoneNote(s); VoiceRow(s) }
+                else AloudTab(s, aloudVerse)
             }
         }
     }
@@ -195,6 +205,7 @@ private fun WritePage(s: AppState, verse: Int?) {
     val haptic = LocalHapticFeedback.current
     val focus = remember { FocusRequester() }
     val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     var focused by remember { mutableStateOf(false) }
     // 금빛으로 마무리하는 동안은 그 절을 그대로 보여 주고 입력은 받지 않아요
     var sealing by remember(s.book, s.chapter) { mutableStateOf<Pair<Int, String>?>(null) }
@@ -247,17 +258,14 @@ private fun WritePage(s: AppState, verse: Int?) {
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None),
             modifier = Modifier.size(Tokens.Size.hiddenField).alpha(0f).focusRequester(focus).onFocusChanged { focused = it.isFocused },
         )
-        // 틀린 글자 안내: 덩어리 대신 진홍 점 한 줄 (키보드 바로 위)
-        if (fixHint && marks.any { it == TypeJudge.Mark.WRONG }) Row(Modifier.align(Alignment.BottomCenter).imePadding().fillMaxWidth().background(c.leaf).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s2),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            Box(Modifier.size(Tokens.Size.hintDot).background(c.wrong, androidx.compose.foundation.shape.CircleShape))
-            Text(stringResource(R.string.type_fix_hint), style = Theme.small().copy(color = c.wrong), maxLines = 2)
-        }
-        // 쓰기 시작: 키보드가 닫혀 있을 때만 아래 띠로
-        if (!focused && shown != null) Row(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(c.leaf)
-            .drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }
-            .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) {
-            BookButton(stringResource(R.string.tap_to_write), Modifier.fillMaxWidth().coach("type_start")) { write() }
+        // 아래 띠 (세 방식 공통): 안내 한 줄 · 쓰기 시작 / 키보드 내리기. 틀린 글자가 있으면 진홍 점 한 줄로 바뀌어요.
+        if (shown != null) CopyBand(Modifier.align(Alignment.BottomCenter)) {
+            val wrong = fixHint && marks.any { it == TypeJudge.Mark.WRONG }
+            if (wrong) Box(Modifier.size(Tokens.Size.hintDot).background(c.wrong, androidx.compose.foundation.shape.CircleShape))
+            Text(stringResource(if (wrong) R.string.type_fix_hint else R.string.grid_hint), style = Theme.small().copy(color = if (wrong) c.wrong else c.inkSoft), maxLines = 2, modifier = Modifier.weight(1f))
+            if (focused) Text(stringResource(R.string.kb_hide), style = Theme.small().copy(color = c.ink), maxLines = 1,
+                modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { keyboard?.hide(); focusManager.clearFocus() })
+            else BookButton(stringResource(R.string.tap_to_write), Modifier.coach("type_start")) { write() }
         }
     }
 }
@@ -282,7 +290,7 @@ private fun Manuscript(s: AppState, verse: Int, source: String, typed: String, m
     val scroll = rememberScrollState()
     val dens = LocalDensity.current
     Column(Modifier.fillMaxSize().verticalScroll(scroll).clickable(remember { MutableInteractionSource() }, null) { onWrite() }
-        .padding(start = Tokens.Space.s5, end = Tokens.Space.s5, top = Tokens.Space.s3, bottom = if (typing) Tokens.Space.s3 else Tokens.Size.touch * 2),
+        .padding(start = Tokens.Space.s5, end = Tokens.Space.s5, top = Tokens.Space.s3, bottom = Tokens.Size.band + Tokens.Space.s3),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         // 절 번호 · 형광펜
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -338,7 +346,6 @@ private fun Manuscript(s: AppState, verse: Int, source: String, typed: String, m
             }
         }
         if (gold > 0f) Text(stringResource(R.string.grid_done, verse), style = Theme.label().copy(color = c.giltText), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-        else if (!typing) Text(stringResource(R.string.grid_hint), style = Theme.small())
     }
 }
 
@@ -663,8 +670,11 @@ private fun AloudTab(s: AppState, verse: Int) {
     // 0 교독 · 1 듣기 · 2 나만 읽기 (낭독 목소리를 쓸 수 없으면 나만 읽기)
     val mode = if (guideReady) s.aloudMode.let { if (it == 1) 0 else it } else 2
     val useGuide = false
-    // 교독: 장의 첫째 · 셋째 … 절은 인도(낭독 목소리), 둘째 · 넷째 … 는 회중(나)
-    val guideTurn = mode == 0 && s.text().fillable(s.chapter).indexOf(verse) % 2 == 0
+    // 교독: 들어왔을 때 화면에 보이는 절이 인도(낭독 목소리), 그다음 절이 회중(나), 그 뒤로 번갈아
+    // (장 전체의 홀짝으로 고정하면 이미 쓴 절이 인도 자리에 보여서 목소리가 왜 안 나오는지 헷갈려요)
+    val all = remember(s.book, s.chapter, s.translation) { s.text().fillable(s.chapter) }
+    val anchor = remember(s.book, s.chapter, mode) { all.indexOf(verse) }
+    val guideTurn = mode == 0 && Math.floorMod(all.indexOf(verse) - anchor, 2) == 0
     // 읽는 동안 화면이 꺼지지 않게 (나1)
     val view = androidx.compose.ui.platform.LocalView.current
     DisposableEffect(running) { view.keepScreenOn = running; onDispose { view.keepScreenOn = false } }
@@ -797,33 +807,40 @@ private fun AloudTab(s: AppState, verse: Int) {
             }
         }
         LeaveGuard(s, running, recording = true, onStop = { running = false })
-        NarrationBanner(s, narrLoading, narr == -1)
-        AloudControls(s, guideReady)
         val at = if (spoken >= 0) spoken else lit
-        // 교독: 인도 절과 회중 절을 한 화면에 함께
-        if (mode == 0) Box(Modifier.coach("resp_pair")) { ResponsivePair(s, verse, source, at, guideTurn) }
-        else {
-            // 앞뒤 절도 조금: 앞 절은 두 줄까지 옅게, 다음 절은 두 줄까지 더 옅게
-            val all = s.text().fillable(s.chapter); val vi = all.indexOf(verse)
-            all.getOrNull(vi - 1)?.let { v -> AloudNeighbor(s, v, before = true) }
-            if (s.aloudBig) AloudLines(s, verse, plain, at, emptyList(), guiding = spoken >= 0)
-            else VerseText(s, verse, source, lit = at)
-            all.getOrNull(vi + 1)?.let { v -> AloudNeighbor(s, v, before = false) }
-        }
-        justRecorded?.let { v -> RecordedBar(s, v, onKeep = { justRecorded = null }, onAgain = { justRecorded = null; s.reread = Triple(s.book, s.chapter, v) }) }
         val micLabel = stringResource(R.string.aloud_listen)
-        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            Box(Modifier.coach("aloud_mic").size(Tokens.Size.emblem).clip(androidx.compose.foundation.shape.CircleShape).background(if (running) c.rubric else c.leather)
-                .semantics { contentDescription = micLabel }.clickable(role = Role.Button) { if (!mic) whyMic = true else running = !running },
-                contentAlignment = Alignment.Center) { MicMark(c.leatherInk, Modifier.size(Tokens.Size.iconMd)) }
-            Text(stringResource(when { spoken >= 0 && guideTurn -> R.string.resp_guide; spoken >= 0 -> R.string.guide_reading; on && mode == 0 -> R.string.resp_you; on && record -> R.string.voice_recording; on && useGuide -> R.string.guide_your_turn; on -> R.string.aloud_listening; mode == 0 -> R.string.resp_start; useGuide -> R.string.guide_start; else -> R.string.aloud_listen }),
-                style = Theme.label().copy(color = if (running) c.rubric else c.ink))
-            if (on && !recognize) BookButton(stringResource(R.string.voice_done_reading), Modifier.fillMaxWidth()) { complete() }
-            if (running && useGuide && spoken < 0) BookButton(stringResource(R.string.guide_again), Modifier.fillMaxWidth(), quiet = true) { replay++ }
-            // 교독: 인도 목소리가 먼저 읽는다는 것부터 (녹음만 하는 줄 알지 않게)
-            Text(stringResource(if (mode == 0) (if (record) R.string.resp_hint_rec else R.string.resp_hint) else if (record) R.string.voice_keep_hint else R.string.aloud_hint), style = Theme.small().copy(textAlign = TextAlign.Center))
+        Column(Modifier.fillMaxSize()) {
+            Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                NarrationBanner(s, narrLoading, narr == -1)
+                AloudControls(s, guideReady)
+                // 교독: 인도 절과 회중 절을 한 화면에 함께
+                if (mode == 0) Box(Modifier.coach("resp_pair")) { ResponsivePair(s, verse, source, at, guideTurn) }
+                else {
+                    // 앞뒤 절도 조금: 앞 절은 두 줄까지 옅게, 다음 절은 두 줄까지 더 옅게
+                    val vi = all.indexOf(verse)
+                    all.getOrNull(vi - 1)?.let { v -> AloudNeighbor(s, v, before = true) }
+                    if (s.aloudBig) AloudLines(s, verse, plain, at, emptyList(), guiding = spoken >= 0)
+                    else VerseText(s, verse, source, lit = at)
+                    all.getOrNull(vi + 1)?.let { v -> AloudNeighbor(s, v, before = false) }
+                }
+                justRecorded?.let { v -> RecordedBar(s, v, onKeep = { justRecorded = null }, onAgain = { justRecorded = null; s.reread = Triple(s.book, s.chapter, v) }) }
+                if (on && !recognize) BookButton(stringResource(R.string.voice_done_reading), Modifier.fillMaxWidth()) { complete() }
+                if (running && useGuide && spoken < 0) BookButton(stringResource(R.string.guide_again), Modifier.fillMaxWidth(), quiet = true) { replay++ }
+                VoiceRow(s)
+            }
+            // 아래 띠 (세 방식 공통): 마이크 · 지금 상태 · 짧은 안내
+            CopyBand {
+                Box(Modifier.coach("aloud_mic").size(Tokens.Size.touch).clip(androidx.compose.foundation.shape.CircleShape).background(if (running) c.rubric else c.leather)
+                    .semantics { contentDescription = micLabel }.clickable(role = Role.Button) { if (!mic) whyMic = true else running = !running },
+                    contentAlignment = Alignment.Center) { MicMark(c.leatherInk, Modifier.size(Tokens.Size.iconSm)) }
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(when { spoken >= 0 && guideTurn -> R.string.resp_guide; spoken >= 0 -> R.string.guide_reading; on && mode == 0 -> R.string.resp_you; on && record -> R.string.voice_recording; on && useGuide -> R.string.guide_your_turn; on -> R.string.aloud_listening; mode == 0 -> R.string.resp_start; useGuide -> R.string.guide_start; else -> R.string.aloud_listen }),
+                        style = Theme.label().copy(color = if (running) c.rubric else c.ink), maxLines = 1)
+                    // 교독: 인도 목소리가 먼저 읽는다는 것부터 (녹음만 하는 줄 알지 않게)
+                    Text(stringResource(if (mode == 0) (if (record) R.string.resp_hint_rec else R.string.resp_hint) else if (record) R.string.voice_keep_hint else R.string.aloud_hint), style = Theme.small(), maxLines = 2)
+                }
+            }
         }
-        VoiceRow(s)
         return
     }
 
@@ -838,12 +855,46 @@ private fun AloudTab(s: AppState, verse: Int) {
         }
         if (lit >= plain.length) playing = false
     }
-    NarrationBanner(s, narrLoading, narr == -1)
-    AloudControls(s, guideReady)
-    VerseText(s, verse, source, lit = lit)
-    Text(stringResource(R.string.aloud_no_mic), style = Theme.small())
-    if (lit >= plain.length) BookButton(stringResource(R.string.aloud_done), Modifier.fillMaxWidth()) { s.fill(listOf(verse), Mode.ALOUD) }
-    else BookButton(stringResource(if (playing) R.string.aloud_pause else R.string.aloud_start), Modifier.fillMaxWidth()) { playing = !playing }
+    Column(Modifier.fillMaxSize()) {
+        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            NarrationBanner(s, narrLoading, narr == -1)
+            AloudControls(s, guideReady)
+            VerseText(s, verse, source, lit = lit)
+        }
+        CopyBand {
+            Text(stringResource(R.string.aloud_no_mic), style = Theme.small(), maxLines = 2, modifier = Modifier.weight(1f))
+            if (lit >= plain.length) BookButton(stringResource(R.string.aloud_done)) { s.fill(listOf(verse), Mode.ALOUD) }
+            else BookButton(stringResource(if (playing) R.string.aloud_pause else R.string.aloud_start)) { playing = !playing }
+        }
+    }
+}
+
+/** 필사 아래 띠 (낭독 · 타자 · 손글씨 공통): 위 가는 선 · 왼쪽 보조 · 가운데 안내 · 오른쪽 주 버튼. 키보드가 열리면 그 바로 위. */
+@Composable
+fun CopyBand(modifier: Modifier = Modifier, content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit) {
+    val c = Theme.c
+    Row(modifier.fillMaxWidth().background(c.leaf).drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }
+        .heightIn(min = Tokens.Size.band).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s2),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3), content = content)
+}
+
+/** 집중 모드 맨 위: 지금 절 · 쓴 시간 · 오늘 절 수 · 닫기, 그 아래 소리 고르기. */
+@Composable
+private fun FocusBar(s: AppState, verse: Int?) {
+    val c = Theme.c; val ctx = LocalContext.current
+    val t0 = remember { System.currentTimeMillis() }
+    var mins by remember { mutableIntStateOf(0) }
+    LaunchedEffect(Unit) { while (true) { mins = ((System.currentTimeMillis() - t0) / 60000).toInt(); delay(Tokens.Motion.focusTickMs.toLong()) } }
+    Row(Modifier.fillMaxWidth().padding(start = Tokens.Space.s5, end = Tokens.Space.s1).heightIn(min = Tokens.Size.touch), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        Text(verse?.let { s.chapterRef() + ":" + it } ?: s.chapterRef(), style = Theme.small().copy(color = c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Text(stringResource(R.string.focus_line, mins, s.todayVerses()), style = Theme.small().copy(fontFeatureSettings = "lnum"), maxLines = 1)
+        Box(Modifier.size(Tokens.Size.touch).clickable(role = Role.Button) { s.focusMode = false }.semantics { contentDescription = ctx.getString(R.string.focus_end) }, contentAlignment = Alignment.Center) {
+            Text("✕", style = Theme.label().copy(color = c.inkSoft))
+        }
+    }
+    val sounds = remember { listOf("") + io.github.graviton94.todaybible.data.FocusSound.available(ctx) }
+    val names = sounds.map { when (it) { "rain" -> stringResource(R.string.focus_rain); "candle" -> stringResource(R.string.focus_candle); "stream" -> stringResource(R.string.focus_stream); else -> stringResource(R.string.focus_quiet) } }
+    if (sounds.size > 1) Chips(names, sounds.indexOf(s.focusSound).coerceAtLeast(0), Modifier.padding(horizontal = Tokens.Space.s5)) { s.focusSound = sounds[it]; s.store.focusSound = sounds[it] }
 }
 
 /** 마이크 (가는 선). */

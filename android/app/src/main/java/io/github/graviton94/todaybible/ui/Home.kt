@@ -109,7 +109,7 @@ fun HomePage(s: AppState) {
         // 쓰다 멈춘 곳: 다른 장 · 다른 권에서 쓰다 만 자리 (최근 순, 둘까지)
         val paused = remember(s.fills.size, cb, cc) { s.pausedChapters(2, cb to cc) }
         if (paused.isNotEmpty()) Column(Modifier.fillMaxWidth()) {
-            SectionHead("PAUSA", stringResource(R.string.paused_title), 1)
+            SectionHead("PEREGRINATIO", stringResource(R.string.paused_title), 1)
             paused.forEach { p ->
                 ListRow(stringResource(R.string.paused_row, s.chapterRef(p.book, p.chapter), p.next), "${p.done} / ${p.total}") { s.open(p.book, p.chapter) }
             }

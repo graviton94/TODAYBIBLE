@@ -115,7 +115,8 @@ fun HandTab(s: AppState, verse: Int) {
         .background(c.leaf).verticalScroll(rememberScrollState()).padding(Tokens.Space.s5)) {
         Text(buildAnnotatedString { withStyle(SpanStyle(color = c.rubric)) { append("$verse ") }; append(plain) }, style = Theme.verse(k).copy(fontSize = Theme.verse(k).fontSize * Tokens.Ratio.wideVerse))
     }
-    Column(Modifier.weight(1f).fillMaxHeight().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+    Column(Modifier.weight(1f).fillMaxHeight()) {
+    Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         // 펜 · 밑글씨는 설정 ‘손글씨’에서. 여기에는 지금 절과 쪽만.
         if (s.handGuide) Text(stringResource(R.string.hand_where, verse, sheet + 1, maxOf(sheetsNeeded, sheet + 1)), style = Theme.small().copy(color = c.rubric), maxLines = 1)
         else Box(Modifier.fillMaxWidth().heightIn(max = Tokens.Size.handModel).verticalScroll(rememberScrollState())) {
@@ -132,7 +133,7 @@ fun HandTab(s: AppState, verse: Int) {
                     drawText(guide, color = c.ink.copy(alpha = Tokens.Alpha.guide), topLeft = Offset(inset.toPx(), -sheet * perSheet * lh))
                 }
             }
-            if (!s.handGuide && strokes.isEmpty()) Text(stringResource(if (earlier.isEmpty()) R.string.hand_hint else R.string.hand_sheet, earlier.size + 1),
+            if (!s.handGuide && strokes.isEmpty() && earlier.isNotEmpty()) Text(stringResource(R.string.hand_sheet, earlier.size + 1),
                 style = Theme.body().copy(fontSize = Tokens.Text.hint * s.scale, color = c.unwritten, textAlign = TextAlign.Center),
                 modifier = Modifier.align(Alignment.Center).padding(Tokens.Space.s5))
             // 다 그은 획 (바뀔 때만 다시 그림)
@@ -187,22 +188,26 @@ fun HandTab(s: AppState, verse: Int) {
                 }
             }) { live?.let { drawStroke(Ink.Stroke(it), size.width, ink, s.pen) } }
         }
-        Row(Modifier.fillMaxWidth().coach("hand_buttons"), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            BookButton(stringResource(R.string.hand_undo), Modifier.weight(1f), quiet = true, enabled = strokes.isNotEmpty()) { strokes.removeAt(strokes.lastIndex) }
-            // 밑글씨가 다음 쪽으로 이어지면 ‘다음 쪽’, 마지막 쪽이면 ‘다 썼어요’
-            if (s.handGuide && sheet + 1 < sheetsNeeded) BookButton(stringResource(R.string.hand_next), Modifier.weight(1f), enabled = strokes.isNotEmpty()) { earlier.add(strokes.toList()); strokes.clear() }
-            else BookButton(stringResource(R.string.hand_done), Modifier.weight(1f), enabled = strokes.isNotEmpty() || earlier.isNotEmpty()) {
-                val sheets = (earlier + listOf(strokes.toList())).filter { it.isNotEmpty() }
-                val f = Ink.file(ctx, s.translation.id, s.book, s.chapter, verse); val page = Ink.Page(sheets, lineH.value * ctx.resources.displayMetrics.density / padW, s.pen)
-                // 파일 쓰기는 뒤에서 (화면이 멈칫하지 않게)
-                Thread { runCatching { Ink.save(f, page) } }.start()
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                s.fill(listOf(verse), Mode.PAPER)
-            }
-        }
         // 밑글씨 없이 쓸 때 쪽이 모자라면
         if (!s.handGuide && strokes.isNotEmpty()) Text(stringResource(R.string.hand_more), style = Theme.small().copy(color = c.rubric), maxLines = 1,
             modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { earlier.add(strokes.toList()); strokes.clear() })
+    }
+    // 아래 띠 (세 방식 공통): 되돌리기 · 안내 · 다 썼어요 (또는 다음 쪽)
+    CopyBand(Modifier.coach("hand_buttons")) {
+        Text(stringResource(R.string.hand_undo), style = Theme.small().copy(color = if (strokes.isNotEmpty()) c.ink else c.unwritten, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline), maxLines = 1,
+            modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(enabled = strokes.isNotEmpty(), role = Role.Button) { strokes.removeAt(strokes.lastIndex) })
+        Text(stringResource(R.string.hand_hint), style = Theme.small(), maxLines = 2, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+        // 밑글씨가 다음 쪽으로 이어지면 ‘다음 쪽’, 마지막 쪽이면 ‘다 썼어요’
+        if (s.handGuide && sheet + 1 < sheetsNeeded) BookButton(stringResource(R.string.hand_next), enabled = strokes.isNotEmpty()) { earlier.add(strokes.toList()); strokes.clear() }
+        else BookButton(stringResource(R.string.hand_done), enabled = strokes.isNotEmpty() || earlier.isNotEmpty()) {
+            val sheets = (earlier + listOf(strokes.toList())).filter { it.isNotEmpty() }
+            val f = Ink.file(ctx, s.translation.id, s.book, s.chapter, verse); val page = Ink.Page(sheets, lineH.value * ctx.resources.displayMetrics.density / padW, s.pen)
+            // 파일 쓰기는 뒤에서 (화면이 멈칫하지 않게)
+            Thread { runCatching { Ink.save(f, page) } }.start()
+            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+            s.fill(listOf(verse), Mode.PAPER)
+        }
+    }
     }
     }
     }
