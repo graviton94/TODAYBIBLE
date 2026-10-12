@@ -329,7 +329,7 @@ private fun Folio(ch: Int, verses: Int, f: Float, modifier: Modifier, onClick: (
         Text(io.github.graviton94.todaybible.core.Latin.roman(ch), style = Theme.caps().copy(fontSize = Tokens.Text.folioNum, letterSpacing = androidx.compose.ui.unit.TextUnit(0.03f, androidx.compose.ui.unit.TextUnitType.Em),
             color = when { done -> c.foil; part -> c.ink; else -> c.inkSoft }, fontWeight = if (done) androidx.compose.ui.text.font.FontWeight.SemiBold else null), maxLines = 1, softWrap = false)
         Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-            Text(stringResource(R.string.grid_verse, verses), style = Theme.small().copy(color = if (done) c.ebonyInk else c.inkSoft), maxLines = 1)
+            Text(stringResource(R.string.folio_verses, verses), style = Theme.small().copy(color = if (done) c.ebonyInk else c.inkSoft), maxLines = 1)
         }
         Box(Modifier.fillMaxWidth().height(Tokens.Size.folioFoot), contentAlignment = Alignment.Center) {
             if (part) Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {

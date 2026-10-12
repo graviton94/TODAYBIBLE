@@ -960,5 +960,6 @@
   "season_plan_start": {"en": "Start a plan", "ko": "계획 시작"},
   "season_word": {"en": "Today's word", "ko": "오늘 말씀"},
   "season_notice": {"en": "Church year", "ko": "절기"},
-  "season_notice_row": {"en": "Tell me when Advent, Lent, Easter and Pentecost begin", "ko": "대림 · 사순 · 부활 · 성령강림이 시작되는 날 알림"}
+  "season_notice_row": {"en": "Tell me when Advent, Lent, Easter and Pentecost begin", "ko": "대림 · 사순 · 부활 · 성령강림이 시작되는 날 알림"},
+  "folio_verses": {"en": "%1$d vv.", "ko": "%1$d절"}
 }

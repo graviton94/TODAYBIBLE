@@ -963,4 +963,5 @@
     <string name="season_word">오늘 말씀</string>
     <string name="season_notice">절기</string>
     <string name="season_notice_row">대림 · 사순 · 부활 · 성령강림이 시작되는 날 알림</string>
+    <string name="folio_verses">%1$d절</string>
 </resources>
