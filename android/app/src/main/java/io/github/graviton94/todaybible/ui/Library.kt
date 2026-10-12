@@ -99,9 +99,9 @@ fun LibraryPage(s: AppState) {
                 Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.open(b, at) }.padding(vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(s.bookName(b), style = Theme.title(k), maxLines = 1, modifier = Modifier.weight(1f))
-                        Text(stringResource(R.string.lib_ch_of, st.doneChapters, Canon.books[b].chapters), style = Theme.small(), maxLines = 1)
+                        Text("${(st.fraction * 100).toInt().coerceAtLeast(1)}%", style = Theme.lining(Tokens.Text.title).copy(color = c.giltText), maxLines = 1)
                     }
-                    Text(if (st.partial != null) stringResource(R.string.lib_partial, st.partial) else stringResource(R.string.lib_next, at), style = Theme.small(), maxLines = 1)
+                    Text(if (st.partial != null) stringResource(R.string.lib_partial_full, st.partial, st.doneChapters, Canon.books[b].chapters) else stringResource(R.string.lib_next, at), style = Theme.small(), maxLines = 1)
                     Box(Modifier.padding(top = Tokens.Space.s1)) { Progress(st.fraction) }
                 }
                 if (b != going.last().key) Hair()
@@ -127,6 +127,11 @@ fun LibraryPage(s: AppState) {
                 }, contentAlignment = Alignment.CenterStart) { Text(label, style = Theme.body().copy(color = if (on) c.ink else c.unwritten), maxLines = 1) }
             }
         }
+        // 자물쇠 뜻 (구독권이 없을 때만, 한 줄)
+        if (!s.lifetime.unlocked) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+            LockMark(c.giltText, Modifier.size(Tokens.Size.lock))
+            Text(stringResource(R.string.lock_legend), style = Theme.small().copy(color = c.giltText), maxLines = 1)
+        }
         Group.entries.filter { g -> Canon.inGroup(g).firstOrNull()?.let { (it.index >= 39) == newT } == true }.forEach { g ->
             Column {
                 Text(stringResource(groupNames.getValue(g)).uppercase(), style = Theme.caps().copy(color = c.inkSoft), maxLines = 1, modifier = Modifier.padding(top = Tokens.Space.s2, bottom = Tokens.Space.s1))
@@ -138,7 +143,7 @@ fun LibraryPage(s: AppState) {
                         .padding(vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                         Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                             Text(if (k) b.ko else b.en, style = Theme.title(k, Tokens.Text.label).copy(color = if (st == null) c.inkSoft else c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                            if (s.premium(b.index) && st?.done != true) PremiumTag()
+                            if (s.premium(b.index) && st?.done != true) LockMark(c.giltText, Modifier.size(Tokens.Size.lock))
                             when {
                                 st?.done == true -> Text("✓ " + stringResource(R.string.lib_done), style = Theme.small().copy(color = c.giltText, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), maxLines = 1)
                                 st != null -> Text(stringResource(R.string.lib_ch_of, st.doneChapters, b.chapters) + " · ${(st.fraction * 100).toInt().coerceAtLeast(1)}%", style = Theme.small().copy(color = c.ink), maxLines = 1)
@@ -325,11 +330,20 @@ private fun FindBox(s: AppState) {
         cursorBrush = androidx.compose.ui.graphics.SolidColor(c.rubric),
         keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Go),
         keyboardActions = androidx.compose.foundation.text.KeyboardActions(onGo = { go() }),
-        // 상자 없이 밑줄 한 줄 (하루의 편지)
-        modifier = Modifier.fillMaxWidth().coach("lib_find").heightIn(min = Tokens.Size.row).drawBehind { drawLine(c.inkSoft.copy(alpha = 0.5f), Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
-        decorationBox = { inner -> Box(contentAlignment = Alignment.CenterStart, modifier = Modifier.heightIn(min = Tokens.Size.row)) {
-            if (q.isEmpty()) Text(stringResource(R.string.find_hint), style = Theme.body().copy(color = c.unwritten), maxLines = 1)
-            inner()
+        // 찾기 칸: 옅은 바탕 + 돋보기 + 들어가기 표 (찾는 칸인 줄 한눈에)
+        modifier = Modifier.fillMaxWidth().coach("lib_find").heightIn(min = Tokens.Size.row).clip(RoundedCornerShape(Tokens.Radius.button)).background(c.paper)
+            .drawBehind { drawRect(c.hair, style = Stroke(Tokens.Stroke.hair.toPx())) },
+        decorationBox = { inner -> Row(Modifier.heightIn(min = Tokens.Size.row).padding(horizontal = Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            Box(Modifier.size(Tokens.Size.iconSm).drawBehind {
+                val r = size.minDimension * 0.34f; val ctr = Offset(size.width * 0.42f, size.height * 0.42f); val w = Tokens.Stroke.rule.toPx()
+                drawCircle(c.inkSoft, r, ctr, style = Stroke(w))
+                drawLine(c.inkSoft, Offset(ctr.x + r * 0.7f, ctr.y + r * 0.7f), Offset(size.width * 0.92f, size.height * 0.92f), w, cap = androidx.compose.ui.graphics.StrokeCap.Round)
+            })
+            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                if (q.isEmpty()) Text(stringResource(R.string.find_hint), style = Theme.body().copy(color = c.unwritten), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                inner()
+            }
+            if (q.isNotEmpty()) Text(stringResource(R.string.find_go), style = Theme.small().copy(color = c.giltText), modifier = Modifier.clickable(role = Role.Button) { go() }.padding(Tokens.Space.s1))
         } },
     )
 }

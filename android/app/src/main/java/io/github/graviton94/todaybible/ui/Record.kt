@@ -66,9 +66,12 @@ fun RecordPage(s: AppState) {
     val days = s.progress.days()
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s3, bottom = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
         MyBibleHead(s)
+        Section("LIBRI", stringResource(R.string.rec_books), "", 1, k)
         BookIndex(s)
         yearShown(s)?.let { YearCard(s, it) }
+        Section("DIES", stringResource(R.string.rec_days), stringResource(R.string.rec_days_n, days.size), 2, k)
         CalendarPanel(s, days)
+        Section("NUMERI", stringResource(R.string.rec_numbers), "", 3, k)
         Stats(s)
         // 소리 내어 읽은 시간: 한 줄
         if (s.aloudLog.isNotEmpty()) {
@@ -79,7 +82,7 @@ fun RecordPage(s: AppState) {
         // 화첩: 쓰는 중 · 다 모은 것부터 여섯 점, 펼치면 모두
         var allPlates by remember { mutableStateOf(false) }
         val plates = remember(s.fills.size) { s.store.plates.sortedWith(compareByDescending<Plate> { plateFraction(s, it).let { f -> if (f > 0f && f < 1f) 2 else if (f >= 1f) 1 else 0 } }.thenByDescending { plateFraction(s, it) }) }
-        Section("TABULAE", stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size}", 1, k)
+        Section("TABULAE", stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size}", 4, k)
         // 화첩 미리보기 세 점 → 어두운 화첩 화면
         Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.galleryOpen = true }, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             plates.take(3).forEach { pl -> PlateThumb(s, pl, Modifier.weight(1f)) }
@@ -87,12 +90,15 @@ fun RecordPage(s: AppState) {
         ListRow(stringResource(R.string.gallery_open), "") { s.galleryOpen = true }
         // 발자취: 받은 것 최근 넷 (없으면 처음 넷), 펼치면 모두
         var allMiles by remember { mutableStateOf(false) }
-        val miles = Milestone.entries.sortedByDescending { s.earned[it] ?: Long.MIN_VALUE }
-        Section("VESTIGIA", stringResource(R.string.milestones), "${s.earned.size} / ${Milestone.entries.size}", 2, k)
-        MilestoneList(s, if (allMiles) miles else miles.take(MILES_SHOWN))
+        // 접혔을 때: 얻은 것 최근 셋 + 다음에 얻을 것 셋 (석고), 펼치면 모두
+        val got = Milestone.entries.filter { it in s.earned }.sortedByDescending { s.earned[it] }
+        val next = Milestone.entries.filter { it !in s.earned }.sortedByDescending { m -> MILESTONE_DAYS[m]?.let { s.progress.days().size.toFloat() / it } ?: 0f }
+        val miles = got + next
+        Section("VESTIGIA", stringResource(R.string.milestones), "${s.earned.size} / ${Milestone.entries.size}", 5, k)
+        MilestoneList(s, if (allMiles) miles else got.take(3) + next.take(6 - minOf(3, got.size)))
         BookButton(stringResource(if (allMiles) R.string.fold else R.string.unfold_all, miles.size), Modifier.fillMaxWidth(), quiet = true) { allMiles = !allMiles }
         if (s.marks.isNotEmpty()) {
-            Section("NOTAE", stringResource(R.string.marks), "${s.marks.count { it.translation == s.translation }}", 3, k)
+            Section("NOTAE", stringResource(R.string.marks), "${s.marks.count { it.translation == s.translation }}", 6, k)
             MarkList(s)
         }
     }
@@ -308,7 +314,6 @@ private fun DayVerses(s: AppState, d: LocalDate) {
 }
 
 private const val PLATES_SHOWN = 6
-private const val MILES_SHOWN = 4
 
 @Composable
 private fun DayCell(s: AppState, d: LocalDate, present: Boolean, today: Boolean, future: Boolean) {

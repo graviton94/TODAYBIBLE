@@ -17,12 +17,12 @@ import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 
 /**
- * 여는 길 두 가지 (Google Play): 월 구독 (`monthly`) · 평생권 (한 번 결제 `lifetime`).
+ * 여는 길 세 가지 (Google Play): 월 구독 (`monthly`) · 연 구독 (`yearly`) · 평생권 (한 번 결제 `lifetime`).
  * 구독 중인 사람에게는 더 싼 평생권 (`lifetime_member`) 을 보여 줘요. 가격은 모두 Play Console 에서 정하고 앱은 Play 가 준 글을 그대로 써요.
  * 결제 정보는 앱이 받지 않음 (Play 가 처리). 산 기록은 기기에 남겨 두어 Play 에 닿지 않을 때도 열려 있게.
  */
 class Lifetime(context: Context) {
-    companion object { const val ID = "lifetime"; const val MEMBER = "lifetime_member"; const val MONTHLY = "monthly" }
+    companion object { const val ID = "lifetime"; const val MEMBER = "lifetime_member"; const val MONTHLY = "monthly"; const val YEARLY = "yearly" }
     private val prefs = context.getSharedPreferences("today", Context.MODE_PRIVATE)
 
     var owned by mutableStateOf(prefs.getBoolean("lifetime", false))
@@ -36,26 +36,33 @@ class Lifetime(context: Context) {
         private set
     var memberPrice by mutableStateOf<String?>(null)
         private set
+    var yearlyPrice by mutableStateOf<String?>(null)
+        private set
+    /** 연 구독을 열두 달로 나눈 값 (예: ₩575). */
+    var yearlyPerMonth by mutableStateOf<String?>(null)
+        private set
     /** 결제 · 되찾기 결과 한 줄 (화면이 토스트로 보여 주고 지워요). */
     enum class Note { BOUGHT, SUBSCRIBED, RESTORED, NOTHING, PENDING, FAILED }
     var note by mutableStateOf<Note?>(null)
     private fun note(n: Note) { note = n }
     /** 잠긴 것이 모두 열려 있음 (평생권이거나 구독 중). */
     val unlocked: Boolean get() = owned || subscribed
-    val ready: Boolean get() = details != null || monthly != null
+    val ready: Boolean get() = details != null || monthly != null || yearly != null
     val canSubscribe: Boolean get() = monthly != null
+    val canSubscribeYear: Boolean get() = yearly != null
     /** 지금 보여 줄 평생권 가격: 구독 중이면 할인 가격. */
     val lifetimePrice: String? get() = if (subscribed && memberPrice != null) memberPrice else price
 
     private var details: ProductDetails? = null
     private var member: ProductDetails? = null
     private var monthly: ProductDetails? = null
+    private var yearly: ProductDetails? = null
     private val client: BillingClient = BillingClient.newBuilder(context.applicationContext)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .enableAutoServiceReconnection()
         .setListener { r, list ->
             when (r.responseCode) {
-                BillingClient.BillingResponseCode.OK -> list?.forEach { p -> if (p.purchaseState == Purchase.PurchaseState.PENDING) note(Note.PENDING) else { grant(p); note(if (MONTHLY in p.products) Note.SUBSCRIBED else Note.BOUGHT) } }
+                BillingClient.BillingResponseCode.OK -> list?.forEach { p -> if (p.purchaseState == Purchase.PurchaseState.PENDING) note(Note.PENDING) else { grant(p); note(if (MONTHLY in p.products || YEARLY in p.products) Note.SUBSCRIBED else Note.BOUGHT) } }
                 BillingClient.BillingResponseCode.USER_CANCELED -> {}   // 스스로 닫았으면 말없이
                 BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> restore(asked = true)
                 else -> note(Note.FAILED)
@@ -104,11 +111,18 @@ class Lifetime(context: Context) {
             price = details?.oneTimePurchaseOfferDetails?.formattedPrice
             memberPrice = member?.oneTimePurchaseOfferDetails?.formattedPrice
         }
-        client.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder().setProductList(listOf(product(MONTHLY, BillingClient.ProductType.SUBS))).build()) { r, result ->
+        client.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder().setProductList(listOf(product(MONTHLY, BillingClient.ProductType.SUBS), product(YEARLY, BillingClient.ProductType.SUBS))).build()) { r, result ->
             if (r.responseCode != BillingClient.BillingResponseCode.OK) return@queryProductDetailsAsync
             monthly = result.productDetailsList.firstOrNull { it.productId == MONTHLY }
-            // 기본 요금 (무료 체험 같은 앞 단계가 있어도 마지막 단계가 매달 내는 값)
+            yearly = result.productDetailsList.firstOrNull { it.productId == YEARLY }
+            // 기본 요금 (무료 체험 같은 앞 단계가 있어도 마지막 단계가 매번 내는 값)
             monthlyPrice = monthly?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice
+            val yp = yearly?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()
+            yearlyPrice = yp?.formattedPrice
+            yearlyPerMonth = yp?.let { ph -> runCatching {
+                val f = java.text.NumberFormat.getCurrencyInstance(); f.currency = java.util.Currency.getInstance(ph.priceCurrencyCode)
+                f.maximumFractionDigits = f.currency!!.defaultFractionDigits; f.format(ph.priceAmountMicros / 12 / 1_000_000.0)
+            }.getOrNull() }
         }
         restore()
     }
@@ -131,7 +145,7 @@ class Lifetime(context: Context) {
         client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()) { r, list ->
             if (r.responseCode == BillingClient.BillingResponseCode.OK) {
                 // 해지 · 만료된 구독은 Play 가 돌려주지 않아요: 없으면 닫힘
-                val live = list.filter { MONTHLY in it.products && it.purchaseState == Purchase.PurchaseState.PURCHASED }
+                val live = list.filter { (MONTHLY in it.products || YEARLY in it.products) && it.purchaseState == Purchase.PurchaseState.PURCHASED }
                 if (live.isNotEmpty()) found.set(true)
                 markSubscribed(live.isNotEmpty()); live.forEach(::acknowledge)
             }
@@ -147,10 +161,10 @@ class Lifetime(context: Context) {
         return client.launchBillingFlow(activity, BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(p)).build()).responseCode == BillingClient.BillingResponseCode.OK
     }
 
-    /** 월 구독 시작. */
-    fun subscribe(activity: Activity): Boolean {
+    /** 구독 시작 (yearly = 연 구독). */
+    fun subscribe(activity: Activity, yearlyPlan: Boolean = false): Boolean {
         if (!client.isReady) { tries = 0; connect() }
-        val d = monthly ?: return false
+        val d = (if (yearlyPlan) yearly else monthly) ?: return false
         val token = d.subscriptionOfferDetails?.firstOrNull()?.offerToken ?: return false
         val p = BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(d).setOfferToken(token).build()
         return client.launchBillingFlow(activity, BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(p)).build()).responseCode == BillingClient.BillingResponseCode.OK
@@ -166,14 +180,15 @@ class Lifetime(context: Context) {
         if (p.purchaseState != Purchase.PurchaseState.PURCHASED) return
         when {
             ID in p.products || MEMBER in p.products -> markOwned(true)
-            MONTHLY in p.products -> markSubscribed(true)
+            MONTHLY in p.products || YEARLY in p.products -> markSubscribed(true)
             else -> return
         }
         acknowledge(p)
     }
 
     /** 캡처 · 시험용 (debug 빌드만). */
-    fun debugSet(own: Boolean?, readyPrice: String?, monthPrice: String? = null, memberP: String? = null, sub: Boolean? = null) {
+    fun debugSet(own: Boolean?, readyPrice: String?, monthPrice: String? = null, memberP: String? = null, sub: Boolean? = null, yearPrice: String? = null, yearMonth: String? = null) {
+        yearPrice?.let { yearlyPrice = it }; yearMonth?.let { yearlyPerMonth = it }
         debugged = own != null || sub != null
         own?.let { owned = it }
         readyPrice?.let { price = it; forceReady = true }

@@ -84,7 +84,7 @@
     <string name="news_title">What\'s new</string>
     <string name="news_ok">Start</string>
     <string name="news_again">What\'s new in this version</string>
-    <string name="news_body">Shared cards are now one design: the verse with its engraving\nTurn a chapter you read aloud into a vertical video, with the words lighting up as you speak\nPersonalize: cover engraving, dedication, ink color, headings and app icon\nWhile listening, pause or skip verses from the notification and lock screen, and resume where you left off\nThe opening screen shows engravings you have hung, and widgets and PDFs have a new look\nNew versions can be installed right inside the app</string>
+    <string name="news_body">Shared cards are now one design: the verse with its engraving\nTurn a chapter you read aloud into a vertical video, with the words lighting up as you speak\nPersonalize: cover engraving, dedication, ink color, headings and app icon\nWhile listening, pause or skip verses from the notification and lock screen, and resume where you left off\nThe opening screen shows engravings you have hung, and widgets and PDFs have a new look\nNew versions can be installed right inside the app\nNarration downloads keep going after you close the app, and every book remembers where you paused\nToday now follows the church year: season color, engraving, week and season verse\nMilestones are engraving medals and the gallery is a catalogue per book\nThe reader shows a gold ribbon where you paused and the dates you wrote\nPick reminder times on a wheel, down to the minute\nA yearly plan is now available</string>
     <string name="gate_going">Going to %1$s…</string>
     <string name="gate_ready">%1$s is ready</string>
     <string name="gate_text">Chapter text</string>
@@ -114,7 +114,7 @@
     <string name="continue_at">Continue · %1$s %2$d</string>
     <string name="chapter_n">Chapter %1$d</string>
     <string name="choose_chapter">Choose a chapter</string>
-    <string name="locked_book">Included with Lifetime</string>
+    <string name="locked_book">Opens with a plan</string>
     <string name="mode_type">Type</string>
     <string name="mode_paper">By hand</string>
     <string name="mode_aloud">Read aloud</string>
@@ -271,7 +271,7 @@
     <string name="cmp_ads">Ads</string>
     <string name="cmp_none">None</string>
     <string name="cmp_once">One-time payment</string>
-    <string name="peek_head">%1$s is included with Lifetime</string>
+    <string name="peek_head">%1$s opens with a plan</string>
     <string name="tap_open">Tap to open</string>
     <string name="books_n">%1$d books</string>
     <string name="feast_reward_on">Write that day to earn “%1$s”</string>
@@ -332,7 +332,8 @@
     <string name="backup_import">Restore from Drive or a file</string>
     <string name="backup_done">Your records are restored</string>
     <string name="backup_bad">This file can\'t be read</string>
-    <string name="find_hint">Passage or word · John 3:16, shepherd</string>
+    <string name="find_hint">Search · John 3:16 or a word</string>
+    <string name="find_go">Go</string>
     <string name="find_none">Nothing found. Try a passage like John 3:16 or a word.</string>
     <string name="owner_note">Used in greetings and pressed in gold on your cover</string>
     <string name="ob_name">What shall we call you?</string>
@@ -504,6 +505,11 @@
     <string name="catalog_count">%1$d of %2$d plates</string>
     <string name="deco_widget">Verse widget</string>
     <string name="widget_plate">Engraving behind the verse (4×2 and larger)</string>
+    <string name="rec_books">The 66 books</string>
+    <string name="rec_days">Days written</string>
+    <string name="rec_days_n">%1$d days</string>
+    <string name="rec_numbers">By the numbers</string>
+    <string name="turn_on">On</string>
     <string name="lib_done">Finished</string>
     <string name="lib_chapters">%1$d chapters</string>
     <string name="lib_verses">%1$d of %2$d verses</string>
@@ -797,12 +803,12 @@
     <string name="set_write">Writing</string>
     <string name="set_alerts">Reminders</string>
     <string name="set_keep">Records &amp; backup</string>
-    <string name="set_help">Lifetime pass &amp; help</string>
+    <string name="set_help">Plans &amp; help</string>
     <string name="cancel">Cancel</string>
     <string name="lang_confirm_title">Change the language?</string>
     <string name="lang_confirm_body">The app will reopen in the new language, with the Bible text and narrating voice to match. What you\'ve written in each language stays.</string>
     <string name="lang_confirm_go">Change and reopen</string>
-    <string name="premium_tag">Lifetime</string>
+    <string name="premium_tag">Plan</string>
     <string name="lifetime_card_line">All 66 books to write out · every engraving · My Bible PDF · brush pen and pencil · your-voice audiobook</string>
     <string name="lifetime_card_go">One payment, for good · %1$s ›</string>
     <string name="lifetime_price_hint">see price</string>
@@ -811,7 +817,7 @@
     <string name="lang_en_short">English</string>
     <string name="set_write_sum">Daily amount · name · pen</string>
     <string name="set_keep_sum">Recordings · Google Drive backup</string>
-    <string name="set_help_sum">Lifetime pass · feedback · guide again</string>
+    <string name="set_help_sum">Plans · feedback · guide again</string>
     <string name="prayer_written">You\'ve written out this prayer.</string>
     <string name="prayer_next_passage">Next passage · %1$s</string>
     <string name="prayer_return">Back to the prayer</string>
@@ -842,8 +848,8 @@
     <string name="prayer_bell_note">At that time you get the first words of this prayer. If you already prayed it today, it stays quiet.</string>
     <string name="prayer_reminder_none">Tap the bell next to a prayer to get a reminder.</string>
     <string name="prayer_reminder_manage">Set reminders per prayer</string>
-    <string name="plans_title">Monthly or lifetime</string>
-    <string name="cmp_paid">Plus</string>
+    <string name="plans_title">Plans</string>
+    <string name="cmp_paid">Plan</string>
     <string name="subscribe_monthly">Subscribe · %1$s a month</string>
     <string name="subscribe_note">About a cup of coffee a month. Cancel anytime in Google Play.</string>
     <string name="subscribed_now">You\'re subscribed · everything is open</string>
@@ -856,6 +862,12 @@
     <string name="plan_month_price">%1$s / month</string>
     <string name="plan_month_note">About a coffee a month · cancel anytime</string>
     <string name="plan_month_on">Subscribed</string>
+    <string name="plan_year">Yearly</string>
+    <string name="plan_year_price">%1$s / year</string>
+    <string name="plan_year_note">About %1$s a month</string>
+    <string name="plan_year_note_plain">Best value</string>
+    <string name="lock_legend">Books with a lock open with a plan</string>
+    <string name="lib_partial_full">Left off in ch. %1$d · %2$d of %3$d ch. done</string>
     <string name="plan_life">Lifetime</string>
     <string name="plan_life_note">One payment, yours for good</string>
     <string name="plan_life_member">Subscribers: %1$s</string>
@@ -895,7 +907,7 @@
     <string name="sermon_write_short">Write</string>
     <string name="prayer_go_short">Pray</string>
     <string name="lifetime_row">Open the whole Bible</string>
-    <string name="lifetime_row_more">Plans</string>
+    <string name="lifetime_row_more">Monthly · yearly · lifetime</string>
     <string name="prayer_row_short">Lord\'s Prayer · morning · evening</string>
     <string name="lib_marks_title">Bookmarks · highlights</string>
     <string name="plan_none_short">Choose</string>

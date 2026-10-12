@@ -102,7 +102,7 @@ fun SettingsPage(s: AppState) {
                 // 또렷하게 (나2): 흐린 글자를 진하게, 가는 줄을 또렷하게
                 ChoiceRow(stringResource(R.string.contrast_setting), s.contrast) { s.flipContrast() }
                 // 지금 고른 번역 · 크기로 창세기 1:1
-                Box(Modifier.fillMaxWidth().border(Tokens.Stroke.hair, c.hair).padding(Tokens.Space.s4)) {
+                Box(Modifier.fillMaxWidth().background(c.paper).padding(Tokens.Space.s4)) {
                     VerseText(s, 1, s.text(0).verse(1, 1))
                 }
             }
@@ -172,7 +172,7 @@ fun SettingsPage(s: AppState) {
                 val ask = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { ok -> if (ok) s.setReminder(pending) else s.toast = ctx.getString(R.string.reminder_denied) }
                 fun turnOn(h: Int) { if (android.os.Build.VERSION.SDK_INT >= 33 && androidx.core.content.ContextCompat.checkSelfPermission(ctx, android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) { pending = h; ask.launch(android.Manifest.permission.POST_NOTIFICATIONS) } else s.setReminder(h) }
                 val on = s.reminderHour >= 0
-                ChoiceRow(stringResource(R.string.reminder_on), on) { if (on) s.setReminder(-1) else turnOn(s.store.lastReminderHour) }
+                ChoiceRow(stringResource(R.string.turn_on), on) { if (on) s.setReminder(-1) else turnOn(s.store.lastReminderHour) }
                 // 시각: 누르면 휠 (오전/오후 · 시 · 분)
                 if (on) ListRow(stringResource(R.string.reminder_time), prayerTime(s.reminderHour * 60 + s.reminderMinute)) { s.prayerBell = AppState.MORNING_BELL }
             }

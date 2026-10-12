@@ -75,23 +75,26 @@ fun PurchasePage(s: AppState) {
             when {
                 life.owned -> Text(stringResource(R.string.owned), style = Theme.label().copy(color = c.giltText))
                 life.ready || life.forceReady -> {
-                    // 두 길을 나란히: 월 구독 · 평생권 (구독 중이면 평생권이 할인가로)
-                    Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                        if (life.canSubscribe || life.monthlyPrice != null || life.subscribed)
-                            PlanCard(Modifier.weight(1f), stringResource(R.string.plan_month),
-                                if (life.subscribed) stringResource(R.string.plan_month_on) else stringResource(R.string.plan_month_price, life.monthlyPrice ?: ""),
-                                null, stringResource(R.string.plan_month_note), primary = !life.subscribed, enabled = !life.subscribed) { (ctx as? Activity)?.let { life.subscribe(it) } }
+                    // 세 길: 월 구독 · 연 구독 (가장 알뜰, 먼저 눈에) · 평생권. 구독 중이면 평생권이 할인가로
+                    val subs = life.canSubscribe || life.monthlyPrice != null || life.subscribed
+                    val years = life.canSubscribeYear || life.yearlyPrice != null
+                    Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                        if (subs) PlanCard(Modifier.weight(1f), stringResource(R.string.plan_month),
+                            if (life.subscribed) stringResource(R.string.plan_month_on) else stringResource(R.string.plan_month_price, life.monthlyPrice ?: ""),
+                            null, stringResource(R.string.plan_month_note), primary = false, enabled = !life.subscribed) { (ctx as? Activity)?.let { life.subscribe(it) } }
+                        if (years && !life.subscribed) PlanCard(Modifier.weight(1f), stringResource(R.string.plan_year), stringResource(R.string.plan_year_price, life.yearlyPrice ?: ""), null,
+                            life.yearlyPerMonth?.let { stringResource(R.string.plan_year_note, it) } ?: stringResource(R.string.plan_year_note_plain), primary = true) { (ctx as? Activity)?.let { life.subscribe(it, yearlyPlan = true) } }
                         val member = life.subscribed && life.memberPrice != null
                         PlanCard(Modifier.weight(1f), stringResource(R.string.plan_life), life.lifetimePrice ?: "",
                             if (member) life.price else null,
                             when { member -> stringResource(R.string.plan_life_discount); life.memberPrice != null -> stringResource(R.string.plan_life_member, life.memberPrice!!); else -> stringResource(R.string.plan_life_note) },
-                            primary = life.subscribed || !(life.canSubscribe || life.monthlyPrice != null)) { (ctx as? Activity)?.let { life.buy(it) } }
+                            primary = life.subscribed || !(subs || years)) { (ctx as? Activity)?.let { life.buy(it) } }
                     }
                     if (life.subscribed) {
                         Text(stringResource(R.string.member_note), style = Theme.small().copy(textAlign = TextAlign.Center))
                         Text(stringResource(R.string.manage_sub), style = Theme.small().copy(color = c.rubric), textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()
                             .heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
-                                runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/account/subscriptions?sku=${io.github.graviton94.todaybible.data.Lifetime.MONTHLY}&package=${ctx.packageName}"))) }
+                                runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://play.google.com/store/account/subscriptions?package=${ctx.packageName}"))) }
                             })
                     }
                 }
