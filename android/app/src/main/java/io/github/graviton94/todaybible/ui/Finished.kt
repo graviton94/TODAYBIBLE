@@ -93,7 +93,7 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
     val run = io.github.graviton94.todaybible.core.Presence.streak(s.progress.days(), s.today())
     val hung = s.store.plates.count { s.plateFraction(it) >= 1f }
     Column(
-        Modifier.fillMaxSize().background(c.leaf).systemBarsPadding().imePadding().verticalScroll(rememberScrollState())
+        Modifier.fillMaxSize().background(c.leaf).paperGrain(c.ink).systemBarsPadding().imePadding().verticalScroll(rememberScrollState())
             .padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5),
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3),
     ) {
@@ -105,6 +105,8 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
             val img = rememberPlate(plate.id)
             Box(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3).drawBehind { drawRect(c.gilt.copy(alpha = Tokens.Alpha.frame), style = Stroke(Tokens.Stroke.hair.toPx())) }.padding(Tokens.Space.s2)) {
                 if (img != null) Image(img, s.plateName(plate), Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).graphicsLayer { alpha = shown.value }, contentScale = ContentScale.Crop)
+                // 그림 오른쪽 위 구석에 작은 인장 (글은 가리지 않게)
+                CompletumSeal(io.github.graviton94.todaybible.core.Latin.roman(chapter) + " · " + io.github.graviton94.todaybible.core.Latin.roman(s.today().year), Modifier.align(Alignment.TopEnd).padding(Tokens.Space.s2))
             }
             Text("〈" + s.plateName(plate) + "〉 " + s.plateBy(plate) + " · " + stringResource(R.string.ref_verse, s.bookName(plate.book), plate.chapter, plate.verse),
                 style = Theme.small().copy(textAlign = TextAlign.Center, color = c.unwritten), maxLines = 2)
@@ -173,20 +175,30 @@ private fun PlateUnderVeil(s: AppState, p: Plate, t: Float, modifier: Modifier) 
     }
 }
 
-/** 새 발자취: 시트 한 장. */
+/** 발자취 한 장: 큰 판화 메달 · 이름 · 조건 · 얻은 날 (방금 얻었으면 "새 발자취"). 얻은 것만 나누기. */
 @Composable
 fun AwardCard(s: AppState, m: Milestone) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     val name = milestoneName(ctx, m); val rule = milestoneRule(ctx, m)
+    val day = s.earned[m]; val fresh = day != null && day == s.today().toEpochDay()
+    val goal = MILESTONE_DAYS[m]; val days = s.progress.days().size
     BookSheet({ s.award = null }) {
-        Text(io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1), style = Theme.big(Tokens.Text.display).copy(color = c.giltText), maxLines = 1, modifier = Modifier.padding(top = Tokens.Space.s2))
-        Text(stringResource(R.string.new_milestone).uppercase(), style = Theme.caps(), maxLines = 1)
-        Text(name, style = Theme.title(k).copy(textAlign = TextAlign.Center), maxLines = 1)
-        Text(rule, style = Theme.small().copy(textAlign = TextAlign.Center), maxLines = 1)
+        Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            Text(if (fresh) stringResource(R.string.new_milestone).uppercase() else "VESTIGIUM · " + io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1), style = Theme.caps(), maxLines = 1)
+            PlateMedal(m, day != null, goal?.let { days.toFloat() / it }, Tokens.Size.medalBig, Modifier.padding(vertical = Tokens.Space.s2))
+            Text(name, style = Theme.title(k).copy(textAlign = TextAlign.Center), maxLines = 1)
+            Text(rule, style = Theme.small().copy(textAlign = TextAlign.Center), maxLines = 1)
+            Box(Modifier.size(Tokens.Size.cardRule, Tokens.Stroke.hair).background(c.gilt))
+            Text(when {
+                day != null -> stringResource(R.string.medal_got, fmtDate(R.string.fmt_ymd, java.time.LocalDate.ofEpochDay(day)))
+                goal != null -> stringResource(R.string.medal_left, (goal - days).coerceAtLeast(0))
+                else -> stringResource(R.string.medal_not_yet)
+            }, style = Theme.small().copy(color = if (day != null) c.giltText else c.inkSoft, textAlign = TextAlign.Center), maxLines = 2)
+        }
         Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             BookButton(stringResource(R.string.close), Modifier.weight(1f), quiet = true) { s.award = null }
-            BookButton(stringResource(R.string.share), Modifier.weight(1f)) {
-                Cards.share(s, ctx, Cards.year(ctx, k, name, io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1), listOf(rule), s.coverPlateId(), "VESTIGIUM"), "milestone")
+            if (day != null) BookButton(stringResource(R.string.share), Modifier.weight(1f)) {
+                Cards.share(s, ctx, Cards.year(ctx, k, name, io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1), listOf(rule), MILESTONE_PLATE[m] ?: s.coverPlateId(), "VESTIGIUM"), "milestone")
             }
         }
     }

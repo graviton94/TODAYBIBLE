@@ -157,6 +157,11 @@ fun SettingsPage(s: AppState) {
                 }
             }
             Group(stringResource(R.string.deco_icon)) { IconPicker(s) }
+            Group(stringResource(R.string.deco_widget)) {
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                var on by remember { mutableStateOf(s.store.widgetPlate) }
+                ChoiceRow(stringResource(R.string.widget_plate), on) { on = !on; s.store.widgetPlate = on; Thread { io.github.graviton94.todaybible.widget.VerseWidget.refresh(ctx) }.start() }
+            }
             }
             Section(stringResource(R.string.set_alerts), if (s.reminderHour >= 0) prayerTime(s.reminderHour * 60 + s.reminderMinute) else stringResource(R.string.reminder_off), openSec == "set_alerts") { openSec = if (openSec == "set_alerts") null else "set_alerts" }
             if (openSec == "set_alerts") Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {

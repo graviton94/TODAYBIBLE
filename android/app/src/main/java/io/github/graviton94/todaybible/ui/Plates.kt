@@ -103,7 +103,7 @@ private fun PlateDark(s: AppState, p: Plate) {
 
 /** 화첩 칸 한 점: 걸린 것은 그림 그대로 + 금빛 밑줄, 걷히는 중은 조각 가림, 아직은 가는 테두리 안에 어디서 얻는지. */
 @Composable
-fun PlateThumb(s: AppState, p: Plate, modifier: Modifier = Modifier, index: Int? = null) {
+fun PlateThumb(s: AppState, p: Plate, modifier: Modifier = Modifier, index: Int? = null, bare: Boolean = false) {
     val c = Theme.c
     val f = s.plateFraction(p)
     val n = Pieces.revealed(f); val shown = remember(p.id) { Pieces.order(p.id.hashCode()) }.take(n).toSet()
@@ -124,7 +124,7 @@ fun PlateThumb(s: AppState, p: Plate, modifier: Modifier = Modifier, index: Int?
                 Text(s.chapterRef(p.book, p.chapter), style = Theme.small().copy(color = c.inkSoft, textAlign = androidx.compose.ui.text.style.TextAlign.Center), maxLines = 1)
             }
         }
-        Text(if (n >= Pieces.COUNT) (index?.let { io.github.graviton94.todaybible.core.Latin.roman(it) } ?: s.plateName(p)) else if (n > 0) "${(f * 100).toInt()}%" else "",
+        if (!bare) Text(if (n >= Pieces.COUNT) (index?.let { io.github.graviton94.todaybible.core.Latin.roman(it) } ?: s.plateName(p)) else if (n > 0) "${(f * 100).toInt()}%" else "",
             style = if (index != null && n >= Pieces.COUNT) Theme.caps().copy(color = c.unwritten) else Theme.small(), maxLines = 1)
     }
 }
@@ -139,7 +139,7 @@ fun GalleryPage(s: AppState) {
         var tab by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
         val all = s.store.plates
         val hung = all.count { s.plateFraction(it) >= 1f }
-        Column(Modifier.fillMaxSize().background(c.leaf)) {
+        Column(Modifier.fillMaxSize().background(c.leaf).paperGrain(c.ink)) {
             Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
                 val backLabel = stringResource(R.string.back)
                 Box(Modifier.size(Tokens.Size.touch).semantics { contentDescription = backLabel }.clickable(role = Role.Button) { s.galleryOpen = false }, contentAlignment = Alignment.Center) { BackArrow(Modifier.size(Tokens.Size.icon)) }
@@ -166,12 +166,9 @@ fun GalleryPage(s: AppState) {
             }
             val list = all.filter { it.book in groups[tab].second }.sortedWith(compareBy({ it.book }, { it.chapter }))
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                list.chunked(3).forEachIndexed { r, row ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                        row.forEachIndexed { j, p -> PlateThumb(s, p, Modifier.weight(1f), index = r * 3 + j + 1) }
-                        repeat(3 - row.size) { Box(Modifier.weight(1f)) }
-                    }
-                }
+                // 권마다 도록 한 장
+                var n = 0
+                list.groupBy { it.book }.forEach { (b, plates) -> n++; CatalogCard(s, b, plates, n) }
             }
             // 다음 판화까지
             s.nextPlate()?.let { (pl, _) ->
@@ -188,6 +185,36 @@ fun GalleryPage(s: AppState) {
     }
 }
 
+
+/**
+ * 도록 한 장 (하루의 편지 화첩 도록): 머리글 CATALOGUS · 권 · N°, 권 이름, 판화 네 칸씩, 아래 모은 수.
+ * 한 권의 판화를 다 모으면 이름이 금박 글자 + 작은 금빛 십자, 아래에 COMPLETUM.
+ */
+@Composable
+private fun CatalogCard(s: AppState, b: Int, plates: List<Plate>, n: Int) {
+    val c = Theme.c; val k = s.korean
+    val got = plates.count { s.plateFraction(it) >= 1f }; val done = got == plates.size
+    Column(Modifier.fillMaxWidth().background(c.paper).drawBehind { drawRect(c.hair, style = androidx.compose.ui.graphics.drawscope.Stroke(Tokens.Stroke.hair.toPx())) }
+        .padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Row {
+            Text("CATALOGUS · " + io.github.graviton94.todaybible.core.Latin.book(b), style = Theme.caps(), maxLines = 1, modifier = Modifier.weight(1f))
+            Text("N° " + io.github.graviton94.todaybible.core.Latin.roman(n), style = Theme.caps(), maxLines = 1)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            val title = Theme.title(k, Tokens.Text.title)
+            Text(s.bookName(b), maxLines = 1, style = if (done) title.copy(brush = androidx.compose.ui.graphics.Brush.linearGradient(listOf(c.giltLo, c.gilt, c.giltHi, c.gilt, c.giltLo)), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) else title)
+            if (done) StampMark(STAMP_CROSS, c.gilt, Modifier.size(Tokens.Size.iconSm))
+        }
+        if (done) Text("COMPLETUM", style = Theme.caps().copy(color = c.giltText), maxLines = 1)
+        plates.sortedBy { it.chapter }.chunked(4).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                row.forEach { p -> PlateThumb(s, p, Modifier.weight(1f), index = null, bare = true) }
+                repeat(4 - row.size) { Box(Modifier.weight(1f)) }
+            }
+        }
+        Text(stringResource(R.string.catalog_count, got, plates.size), style = Theme.small(), maxLines = 1)
+    }
+}
 
 /** 장 여는 화면 (하루의 편지 C4 이달의 전시): 판화가 위를 가득 채우고 어둠으로 녹아들어요. 장면 설명 · 마디 띠 · 버튼 하나. */
 @Composable

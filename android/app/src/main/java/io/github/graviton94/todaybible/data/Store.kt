@@ -68,6 +68,10 @@ class Store(val context: Context) {
     var reminderHour: Int
         get() = prefs.getInt("reminder", -1)
         set(v) = prefs.edit().putInt("reminder", v).apply()
+    /** 말씀 위젯 판화 바탕 (4×2 이상). */
+    var widgetPlate: Boolean
+        get() = prefs.getBoolean("widget_plate", true)
+        set(v) = prefs.edit().putBoolean("widget_plate", v).apply()
     /** 매일 알림 분 (0..55, 5분 단위). */
     var reminderMinute: Int
         get() = prefs.getInt("reminder_min", 0)

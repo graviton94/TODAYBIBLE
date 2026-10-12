@@ -107,6 +107,13 @@ object Tokens {
         val wheelRow = 44.dp
         val wheelCol = 84.dp
         val emptyMark = 44.dp
+        val medalRing = 4.dp
+        val medalGrid = 84.dp
+        val medalBig = 168.dp
+        val grainLaid = 4.dp
+        val grainChain = 38.dp
+        val seal = 64.dp
+        val widgetPlateMinH = 110.dp
     }
     object Text {
         val verse = 21.sp
@@ -152,6 +159,8 @@ object Tokens {
         val wheel = 28.sp
         val sectionNum = 20.sp
         val emptyMark = 15.sp
+        val seal = 7.sp
+        val widgetPlateVerse = 14.sp
     }
     /** 잉크 (꾸미기 1.2): 쓴 글자 · 손글씨 색. Light 는 종이 위, Dark 는 밤빛 위. */
     object Inks {
@@ -189,7 +198,7 @@ object Tokens {
         const val turnEdge = 12.0f
         const val breathDrift = 24.0f
         const val aloudNormal = 1.0f
-        const val sealMs = 900
+        const val sealMs = 700
         const val sealHoldMs = 1600
         const val openDrawMs = 700
         const val openShineMs = 650
@@ -215,6 +224,7 @@ object Tokens {
         const val litStepMs = 55
         const val pressMs = 90
         const val pressScale = 0.97f
+        const val sealDelayMs = 900
     }
     object Ratio {
         const val plateAspect = 0.766f
@@ -237,6 +247,7 @@ object Tokens {
         const val gateArt = 0.62f
         const val newsArt = 1.25f
         const val purchaseArt = 1.6f
+        const val widgetPlate = 0.66f
     }
     object Alpha {
         const val aloudAhead = 0.62f
@@ -258,6 +269,11 @@ object Tokens {
         const val guide = 0.22f
         const val contrastHair = 0.45f
         const val wrongCell = 0.14f
+        const val plaster = 0.8f
+        const val grainLaid = 0.035f
+        const val grainChain = 0.025f
+        const val vignette = 0.35f
+        const val sealFill = 0.55f
     }
     object Leading {
         const val verse = 1.8f

@@ -13,6 +13,8 @@ import android.widget.RemoteViews
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -88,6 +90,12 @@ class VerseWidget : AppWidgetProvider() {
             val days = p.days(); val todayN = fills.count { it.translation == tr && it.epochDay == today.toEpochDay() }
             val name = Canon.books[b].let { if (korean) it.ko else it.en }
             val phrase = LineBreak.Paragraph.copy(wordBreak = LineBreak.WordBreak.Phrase)
+            // 판화 바탕 (4×2 이상): 위 약 65%는 그 장(없으면 오늘)의 판화, 아래는 검은 바닥으로 서서히 → 글은 바닥에만
+            if (store.widgetPlate && hDp >= Tokens.Size.widgetPlateMinH.value) {
+                val pid = store.plateFor(b, ch)?.id ?: store.plates.takeIf { it.isNotEmpty() }?.let { it[Math.floorMod(today.toEpochDay(), it.size.toLong()).toInt()].id }
+                val img = pid?.let { id -> runCatching { ctx.assets.open("plates/$id.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull() }
+                if (img != null) return platedBitmap(ctx, (wDp * d).toInt(), (hDp * d).toInt(), density, img.asImageBitmap(), korean, b, ch, v, name, if (v == null) ctx.getString(R.string.chapter_done, name, ch) else Markup.plain(text.verse(ch, v)))
+            }
             return Cards.render(ctx, (wDp * d).toInt(), (hDp * d).toInt(), density) { m ->
                 // 1.2 틀: 종이 (어두우면 밤빛) · 금빛 라틴 머리글 · 다음 한 절 · 장절 · 마디 띠 (5절마다 한 칸)
                 val pad = Tokens.Size.widgetPad.toPx(); val w = size.width - 2 * pad
@@ -128,5 +136,32 @@ class VerseWidget : AppWidgetProvider() {
                 drawText(lay, topLeft = Offset(pad, top))
             }
         }
+
+        /** 판화 바탕 위젯: 판화(세피아) 위 65% · 아래로 검게 이어짐 · 바닥에 말씀 두 줄과 장절. */
+        private fun platedBitmap(ctx: Context, wPx: Int, hPx: Int, density: Density, img: androidx.compose.ui.graphics.ImageBitmap, korean: Boolean, b: Int, ch: Int, v: Int?, name: String, verse: String): Bitmap =
+            Cards.render(ctx, wPx, hPx, density) { m ->
+                val pad = Tokens.Size.widgetPad.toPx(); val w = size.width - 2 * pad
+                val r = CornerRadius(Tokens.Radius.page.toPx())
+                val clip = androidx.compose.ui.graphics.Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(androidx.compose.ui.geometry.Rect(Offset.Zero, size), r)) }
+                clipPath(clip) {
+                    drawRect(androidx.compose.ui.graphics.Color.Black)
+                    val ih = size.height * Tokens.Ratio.widgetPlate
+                    // 가운데 위쪽을 기준으로 채워 자르기
+                    val scale = maxOf(size.width / img.width, ih / img.height)
+                    val sw = (size.width / scale).toInt(); val sh = (ih / scale).toInt()
+                    val sx = ((img.width - sw) / 2).coerceAtLeast(0); val sy = ((img.height - sh) * 0.3f).toInt().coerceAtLeast(0)
+                    drawImage(img, androidx.compose.ui.unit.IntOffset(sx, sy), androidx.compose.ui.unit.IntSize(sw, sh), dstSize = androidx.compose.ui.unit.IntSize(size.width.toInt(), ih.toInt()),
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.colorMatrix(io.github.graviton94.todaybible.ui.SEPIA_MATRIX))
+                    drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0.35f to androidx.compose.ui.graphics.Color.Transparent, 1f to androidx.compose.ui.graphics.Color.Black, startY = 0f, endY = ih), size = Size(size.width, ih))
+                }
+                val gold = Tokens.dark.giltText; val paper = Tokens.dark.ink
+                val ref = m.measure(if (v == null) "" else "$name $ch:$v", TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.small, color = gold), maxLines = 1)
+                val refY = size.height - pad * 0.7f - ref.size.height
+                drawText(ref, topLeft = Offset(pad, refY))
+                val style = TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.garamond, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.widgetPlateVerse,
+                    lineHeight = Tokens.Leading.body.em, color = paper, lineBreak = LineBreak.Paragraph.copy(wordBreak = LineBreak.WordBreak.Phrase))
+                val lay = m.measure(verse, style, maxLines = 2, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w.toInt()))
+                drawText(lay, topLeft = Offset(pad, refY - lay.size.height))
+            }
     }
 }

@@ -205,40 +205,6 @@ fun PageColumn(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
 @Composable
 fun RowScope.Spacer1() = Box(Modifier.weight(1f))
 
-// ── 발자취 메달: 무광 가죽 원 + 금박 테 한 줄 + 금박 선 문양 하나 (SVG 경로, 64×64 기준) ──
-private val ICONS: Map<String, List<String>> = mapOf(
-    "light" to listOf("M26 32a6 6 0 1 0 12 0a6 6 0 1 0 -12 0", "M32 18v-4M32 50v-4M18 32h-4M50 32h-4M22 22l-3-3M45 45l-3-3M22 42l-3 3M42 22l3-3"),
-    "seven" to listOf("M19 24l5 16l5-16M35 24v16M43 24v16M17 22h30M17 42h30"),
-    "dawn" to listOf("M14 40h36", "M22 40a10 10 0 0 1 20 0", "M32 24v-5M22 28l-3-3M42 28l3-3"),
-    "crook" to listOf("M34 48V25a6 6 0 1 0 -11 0"),
-    "forty" to listOf("M14 44l11-14l7 8l6-9l12 15z"),
-    "leaf" to listOf("M20 44c2-14 12-22 26-24c-2 14-12 24-26 24z", "M20 44l18-18"),
-    "palm" to listOf("M32 48V22M32 22c-6-4-11-4-15 0M32 22c6-4 11-4 15 0M32 28c-5-2-9-1-12 2M32 28c5-2 9-1 12 2"),
-    "tomb" to listOf("M18 46V32a12 12 0 0 1 24 0v14", "M38 40a6 6 0 1 0 12 0a6 6 0 1 0 -12 0", "M14 46h36"),
-    "flame" to listOf("M32 16c6 8 9 12 9 18a9 9 0 0 1 -18 0c0-4 2-7 4-10c0 3 2 5 3 6c0-5 1-9 2-14z"),
-    "wheat" to listOf("M32 48V18", "M29 22c-3 2-3 6 0 8M35 22c3 2 3 6 0 8M29 30c-3 2-3 6 0 8M35 30c3 2 3 6 0 8"),
-    "star" to listOf("M32 16l3 10l10-3l-7 8l7 8l-10-3l-3 10l-3-10l-10 3l7-8l-7-8l10 3z"),
-    "lamp" to listOf("M15 36c5 6 25 6 30 0z", "M45 36c3-1 5 0 6 1", "M42 30c-2 2-2 4 0 5c2-1 2-3 0-5z"),
-    "tablets" to listOf("M18 46V25a5 5 0 0 1 10 0v21z", "M36 46V25a5 5 0 0 1 10 0v21z"),
-    "scroll" to listOf("M20 20h22v24H22a3 3 0 0 1 -3 -3V22", "M46 14L31 35"),
-    "wreath" to listOf("M26 47c-8-4-11-12-9-21M38 47c8-4 11-12 9-21", "M27 32h10M32 27v10"),
-    "ao" to listOf("M20 40l5-16l5 16M22 34h6", "M36 40h3a6 7 0 1 1 6 0h3"),
-)
-private val parsed = HashMap<String, List<Path>>()
-private fun paths(id: String): List<Path> = parsed.getOrPut(id) { ICONS[id].orEmpty().map { PathParser().parsePathString(it).toPath() } }
-
-fun DrawScope.medal(m: Milestone, earned: Boolean, leather: Color, gilt: Color, faint: Color) {
-    val s = size.minDimension / 64f
-    val center = Offset(size.width / 2, size.height / 2)
-    drawCircle(if (earned) leather else Color.Transparent, 30f * s, center)
-    drawCircle(if (earned) gilt else faint, 26.5f * s, center, style = Stroke(1.2f * s))
-    if (!earned) drawCircle(faint, 30f * s, center, style = Stroke(1f * s))
-    val ink = if (earned) gilt else faint
-    withTransform({ translate(center.x - 32f * s, center.y - 32f * s); scale(s, s, Offset.Zero) }) {
-        paths(m.icon).forEach { drawPath(it, ink, style = Stroke(1.7f, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)) }
-    }
-}
-
 // ── 도장 표: 글꼴에 없는 기호라 직접 그림 (24×24 기준) ──
 private fun crossPattee(): Path = Path().apply {
     // 가운데로 좁아지는 네 팔
@@ -373,6 +339,39 @@ fun SectionHead(latin: String, title: String, n: Int, modifier: Modifier = Modif
     }
 }
 
+/** 종이 결 (하루의 편지 paperGrain): 가로 결 4dp마다 · 세로 줄 결 38dp마다 · 가장자리 그늘. 어두운 화면 바탕에. */
+fun Modifier.paperGrain(line: Color): Modifier = this.drawBehind {
+    val a = line.copy(alpha = Tokens.Alpha.grainLaid); val b = line.copy(alpha = Tokens.Alpha.grainChain)
+    val step = Tokens.Size.grainLaid.toPx(); var y = 0f
+    while (y < size.height) { drawLine(a, Offset(0f, y), Offset(size.width, y), 1f); y += step }
+    val cstep = Tokens.Size.grainChain.toPx(); var x = cstep / 2
+    while (x < size.width) { drawLine(b, Offset(x, 0f), Offset(x, size.height), 1f); x += cstep }
+    drawRect(androidx.compose.ui.graphics.Brush.radialGradient(0.55f to Color.Transparent, 1f to Color.Black.copy(alpha = Tokens.Alpha.vignette),
+        center = Offset(size.width / 2, size.height * 0.4f), radius = maxOf(size.width, size.height) * 0.75f))
+}
+
+/** COMPLETUM 인장 (작게): 금빛 두 줄 테 · 두 줄 글. 떨어지며 비스듬히 찍혀요. */
+@Composable
+fun CompletumSeal(line2: String, modifier: Modifier = Modifier, play: Boolean = true) {
+    val c = Theme.c
+    val k = remember { Animatable(if (play) 0f else 1f) }
+    LaunchedEffect(Unit) { if (play) { kotlinx.coroutines.delay(Tokens.Motion.sealDelayMs.toLong()); k.animateTo(1f, tween(Tokens.Motion.sealMs, easing = androidx.compose.animation.core.FastOutSlowInEasing)) } }
+    Box(modifier.size(Tokens.Size.seal).graphicsLayer {
+        val v = k.value; alpha = v.coerceIn(0f, 1f)
+        val sc = 1f + (1f - v) * 0.8f; scaleX = sc; scaleY = sc; rotationZ = -10f - (1f - v) * 12f
+    }.drawBehind {
+        val r = size.minDimension / 2; val g = Tokens.Stroke.gilt.toPx()
+        drawCircle(Color.Black.copy(alpha = Tokens.Alpha.sealFill), r)
+        drawCircle(c.gilt, r - g / 2, style = Stroke(g))
+        drawCircle(c.gilt, r - g * 3, style = Stroke(g * 0.6f))
+    }.clearAndSetSemantics { }, contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text("COMPLETUM", style = Theme.caps().copy(color = c.gilt, fontSize = Tokens.Text.seal), maxLines = 1)
+            Text(line2, style = Theme.caps().copy(color = c.gilt, fontSize = Tokens.Text.seal), maxLines = 1)
+        }
+    }
+}
+
 /** 빈 자리 (하루의 편지): 점선 마름모 안 작은 십자 · 한 문장 · 할 일 하나. */
 @Composable
 fun EmptyNote(title: String, body: String, action: String? = null, onAction: () -> Unit = {}) {
@@ -382,7 +381,7 @@ fun EmptyNote(title: String, body: String, action: String? = null, onAction: () 
             val d = size.minDimension / 2; val ctr = center
             val path = androidx.compose.ui.graphics.Path().apply { moveTo(ctr.x, ctr.y - d); lineTo(ctr.x + d, ctr.y); lineTo(ctr.x, ctr.y + d); lineTo(ctr.x - d, ctr.y); close() }
             drawPath(path, c.unwritten, style = Stroke(Tokens.Stroke.hair.toPx() * 1.5f, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6f, 5f))))
-        }, contentAlignment = Alignment.Center) { Text("✠", style = Theme.caps().copy(color = c.gilt, fontSize = Tokens.Text.emptyMark), modifier = Modifier.clearAndSetSemantics { }) }
+        }, contentAlignment = Alignment.Center) { StampMark(STAMP_CROSS, c.gilt, Modifier.size(Tokens.Size.iconSm)) }
         Text(title, style = Theme.body().copy(fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold, textAlign = TextAlign.Center))
         Text(body, style = Theme.small().copy(textAlign = TextAlign.Center))
         if (action != null) BookButton(action, quiet = true, onClick = onAction)

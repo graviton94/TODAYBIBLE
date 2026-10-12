@@ -80,7 +80,7 @@ object Reminder {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val body = Markup.plain(text.verse(ch, v))
         val n = android.app.Notification.Builder(ctx, CHANNEL).setSmallIcon(R.drawable.ic_stat_cross).setContentTitle(title).setContentText(body)
-            .setStyle(android.app.Notification.BigTextStyle().bigText(body)).setContentIntent(open).setAutoCancel(true)
+            .setStyle(plateStyle(ctx, store, b, ch, body) ?: android.app.Notification.BigTextStyle().bigText(body)).setContentIntent(open).setAutoCancel(true)
             // 함께 읽기 (Y1): 누르면 앱이 그 절로 열리고 가이드 목소리가 곧바로 읽기 시작
             .addAction(android.app.Notification.Action.Builder(android.graphics.drawable.Icon.createWithResource(ctx, R.drawable.ic_stat_cross), ctx.getString(R.string.reminder_aloud),
                 PendingIntent.getActivity(ctx, 7, Intent(ctx, MainActivity::class.java).setAction("aloud").putExtra("page", io.github.graviton94.todaybible.ui.AppState.COPY).putExtra("aloud", true)
@@ -89,6 +89,14 @@ object Reminder {
             .build()
         runCatching { nm.notify(ID, n) }
     }
+}
+
+/** 펼치면 그 장(없으면 오늘)의 판화가 크게. 그림을 못 읽으면 글만. */
+private fun plateStyle(ctx: Context, store: Store, b: Int, ch: Int, body: String): android.app.Notification.Style? {
+    val plates = store.plates
+    val id = store.plateFor(b, ch)?.id ?: plates.takeIf { it.isNotEmpty() }?.let { it[Math.floorMod(LocalDate.now().toEpochDay(), it.size.toLong()).toInt()].id } ?: return null
+    val bmp = runCatching { ctx.assets.open("plates/$id.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull() ?: return null
+    return android.app.Notification.BigPictureStyle().bigPicture(bmp).setSummaryText(body)
 }
 
 class ReminderReceiver : BroadcastReceiver() {

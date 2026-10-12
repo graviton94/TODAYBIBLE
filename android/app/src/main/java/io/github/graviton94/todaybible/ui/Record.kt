@@ -392,25 +392,26 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
     }
 }
 
-/** 발자취: 한 줄 이름 + 한 줄 조건. 얻은 것은 가죽 메달, 아직은 빈 테. */
+/** 발자취: 판화 메달 세 줄 칸. 이름 · 얻은 차례(로마 숫자) 또는 진행. 누르면 큰 메달. */
 @Composable
 private fun MilestoneList(s: AppState, list: List<Milestone>) {
     val c = Theme.c; val ctx = LocalContext.current
-    val fmt = DateTimeFormatter.ofPattern(androidx.compose.ui.res.stringResource(R.string.fmt_ymd), androidx.compose.ui.platform.LocalConfiguration.current.locales[0])
-    Column(Modifier.coach("rec_miles")) {
-        list.forEach { m ->
-            val day = s.earned[m]
-            Row(
-                Modifier.fillMaxWidth().heightIn(min = Tokens.Size.rowTall).drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }
-                    .padding(vertical = Tokens.Space.s2),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3),
-            ) {
-                Text(io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1), style = Theme.caps().copy(color = if (day != null) c.giltText else c.unwritten), maxLines = 1, modifier = Modifier.width(Tokens.Size.romanCol))
-                Column(Modifier.weight(1f)) {
-                    Text(milestoneName(ctx, m), style = Theme.label().copy(color = if (day != null) c.ink else c.inkSoft), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(milestoneRule(ctx, m), style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+    val days = s.progress.days().size
+    Column(Modifier.coach("rec_miles"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+        list.chunked(3).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                row.forEach { m ->
+                    val day = s.earned[m]
+                    val goal = MILESTONE_DAYS[m]
+                    Column(Modifier.weight(1f).clickable(role = Role.Button) { s.award = m }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                        PlateMedal(m, day != null, goal?.let { days.toFloat() / it }, Tokens.Size.medalGrid)
+                        Text(milestoneName(ctx, m), style = Theme.small().copy(color = if (day != null) c.ink else c.inkSoft, textAlign = TextAlign.Center,
+                            fontWeight = if (day != null) androidx.compose.ui.text.font.FontWeight.SemiBold else null), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(when { day != null -> io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1); goal != null -> "${minOf(days, goal)} / $goal"; else -> "·" },
+                            style = Theme.lining(Tokens.Text.small).copy(color = if (day != null) c.giltText else c.unwritten), maxLines = 1)
+                    }
                 }
-                if (day != null) Text(LocalDate.ofEpochDay(day).format(fmt), style = Theme.small().copy(color = c.giltText), maxLines = 1)
+                repeat(3 - row.size) { Box(Modifier.weight(1f)) }
             }
         }
     }

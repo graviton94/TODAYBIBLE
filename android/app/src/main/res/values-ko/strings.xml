@@ -131,6 +131,9 @@
     <string name="about">정보</string>
     <string name="about_text">개신교 66권 · 개역한글(1961) · World English Bible · KJV(1611) · 판화 귀스타브 도레(1866)</string>
     <string name="back">뒤로</string>
+    <string name="medal_got">%1$s에 얻었어요</string>
+    <string name="medal_left">쓴 날 %1$d일 더</string>
+    <string name="medal_not_yet">아직이에요</string>
     <string name="ms_BEGINNING_name">태초에</string>
     <string name="ms_BEGINNING_rule">첫 절을 채우다</string>
     <string name="ms_SEVEN_name">일곱 날</string>
@@ -480,6 +483,9 @@
     <string name="lib_canon">66권</string>
     <string name="empty_bm_h">아직 책갈피가 없어요</string>
     <string name="empty_hl_h">아직 형광펜이 없어요</string>
+    <string name="catalog_count">%1$d / %2$d점</string>
+    <string name="deco_widget">말씀 위젯</string>
+    <string name="widget_plate">판화 바탕 (4×2 이상)</string>
     <string name="lib_done">다 씀</string>
     <string name="lib_chapters">%1$d장</string>
     <string name="lib_verses">%2$d절 중 %1$d절</string>

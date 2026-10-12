@@ -131,6 +131,9 @@
     <string name="about">About</string>
     <string name="about_text">Protestant 66 books · Korean Revised Version (1961) · World English Bible · King James Version (1611) · engravings by Gustave Doré (1866)</string>
     <string name="back">Back</string>
+    <string name="medal_got">Received on %1$s</string>
+    <string name="medal_left">%1$d more days of writing</string>
+    <string name="medal_not_yet">Not yet</string>
     <string name="ms_BEGINNING_name">In the Beginning</string>
     <string name="ms_BEGINNING_rule">Complete your first verse</string>
     <string name="ms_SEVEN_name">Seven Days</string>
@@ -480,6 +483,9 @@
     <string name="lib_canon">66 books</string>
     <string name="empty_bm_h">No bookmarks yet</string>
     <string name="empty_hl_h">No highlights yet</string>
+    <string name="catalog_count">%1$d of %2$d plates</string>
+    <string name="deco_widget">Verse widget</string>
+    <string name="widget_plate">Engraving behind the verse (4×2 and larger)</string>
     <string name="lib_done">Finished</string>
     <string name="lib_chapters">%1$d chapters</string>
     <string name="lib_verses">%1$d of %2$d verses</string>
