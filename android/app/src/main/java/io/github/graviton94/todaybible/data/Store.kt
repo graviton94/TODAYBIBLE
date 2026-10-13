@@ -48,6 +48,18 @@ class Store(val context: Context) {
         tmp.writeText(fills.joinToString("") { "${it.translation}\t${it.key.raw}\t${it.mode}\t${it.epochDay}\t${it.atMillis}\n" })
         if (!tmp.renameTo(fillsFile)) { fillsFile.writeText(tmp.readText()); tmp.delete() }
     }
+    /** 기록 탭 갈래 (0 걸음 · 1 모음 · 2 노트). */
+    var recordTab: Int
+        get() = prefs.getInt("record_tab", 0)
+        set(v) = prefs.edit().putInt("record_tab", v).apply()
+    /** 권 다 쓰기 의식을 본 권 ("번역:권"). */
+    var ritualSeen: Set<String>
+        get() = prefs.getStringSet("ritual_seen", emptySet())!!.toSet()
+        set(v) = prefs.edit().putStringSet("ritual_seen", v).apply()
+    /** 외운 절 (1.4 암송 메달): "번역:절키:날". */
+    var memoKnown: Set<String>
+        get() = prefs.getStringSet("memo_known", emptySet())!!.toSet()
+        set(v) = prefs.edit().putStringSet("memo_known", v).apply()
     /** 나의 순례길에서 뺀 장 ("번역:권:장"). 그 장에 다시 쓰면 돌아와요. */
     var hiddenPaused: Set<String>
         get() = prefs.getStringSet("hidden_paused", emptySet())!!.toSet()

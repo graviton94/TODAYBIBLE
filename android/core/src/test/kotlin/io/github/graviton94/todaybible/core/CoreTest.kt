@@ -75,6 +75,18 @@ class CoreTest {
         assertTrue(Milestone.PASTURES in earned && Milestone.BEGINNING in earned)
     }
 
+    @Test fun memoryMedals() {
+        val earned = Milestones.earned(Milestones.State(emptyList(), emptySet(), emptySet(), korea = true, memorized = (1..30).map { 20000L + it }.shuffled()))
+        assertEquals(20007L, earned[Milestone.VERSE7]); assertEquals(20030L, earned[Milestone.VERSE30]); assertFalse(Milestone.VERSE100 in earned)
+    }
+
+    @Test fun rotulusMarks() {
+        assertEquals("field" to "eiffel", Rotulus.around(125f).let { it.first?.id to it.second?.id })
+        assertEquals(null to "bus", Rotulus.around(3f).let { it.first?.id to it.second?.id })
+        assertEquals(Rotulus.MARKS.last().id, Rotulus.around(20000f).first?.id)
+        assertTrue(Rotulus.scaleEnd(125f) > 330f)
+    }
+
     @Test fun weekComplete() {
         val sun = LocalDate.of(2026, 10, 4)
         val days = (1..5).map { sun.plusDays(it.toLong()).toEpochDay() }.toSet()

@@ -181,11 +181,10 @@ fun AwardCard(s: AppState, m: Milestone) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     val name = milestoneName(ctx, m); val rule = milestoneRule(ctx, m)
     val day = s.earned[m]; val fresh = day != null && day == s.today().toEpochDay()
-    val goal = MILESTONE_DAYS[m]; val days = s.progress.days().size
     BookSheet({ s.award = null }) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             Text(if (fresh) stringResource(R.string.new_milestone).uppercase() else "VESTIGIUM · " + io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1), style = Theme.caps(), maxLines = 1)
-            PlateMedal(m, day != null, goal?.let { days.toFloat() / it }, Tokens.Size.medalBig, Modifier.padding(vertical = Tokens.Space.s2))
+            PlateMedal(m, day != null, milestoneProgress(s, m), Tokens.Size.medalBig, Modifier.padding(vertical = Tokens.Space.s2))
             Text(name, style = Theme.title(k).copy(textAlign = TextAlign.Center), maxLines = 1)
             Text(rule, style = Theme.small().copy(textAlign = TextAlign.Center), maxLines = 1)
             Box(Modifier.size(Tokens.Size.cardRule, Tokens.Stroke.hair).background(c.gilt))

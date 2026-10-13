@@ -305,6 +305,27 @@ open --ez tb.settings false --ez tb.news true;                      shot qa13_12
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 open --ez tb.news false --es tb.tr KRV --ez tb.news true;           shot qa13_13_ko_news 4
 
+# @scene a14
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 3 --ei tb.recordTab 0; shot a14_walk 5
+swipe_up; swipe_up;                                                shot a14_walk_scroll 2
+open --ei tb.page 3 --ei tb.recordTab 1;                           shot a14_collect 4
+swipe_up;                                                          shot a14_collect_more 2
+open --ei tb.page 3 --ei tb.recordTab 2;                           shot a14_notes 4
+open --ei tb.page 3 --ez tb.shelf true;                            shot a14_shelf 4
+swipe_up;                                                          shot a14_shelf_nt 2
+open --ez tb.shelf false --ei tb.liber 8;                          shot a14_liber 5
+open --ei tb.liber 0 --ei tb.ritual 8;                             shot a14_ritual1 5
+open --ei tb.ritual 8 --ei tb.ritualStep 1;                        shot a14_ritual2 4
+open --ei tb.ritual 8 --ei tb.ritualStep 2;                        shot a14_ritual3 4
+open --ei tb.ritual 0 --ei tb.ritualStep 0 --es tb.memory "43:3:16" --ez tb.memoryOpen true --ei tb.memoryLevel 2; shot a14_memo 4
+adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
+open --ez tb.seed true --es tb.tr WEB --ei tb.page 3 --ez tb.shelf true; shot a14_en_shelf 5
+swipe_up;                                                          shot a14_en_shelf_nt 2
+open --ez tb.shelf false --ei tb.page 3 --ei tb.recordTab 1;        shot a14_en_collect 4
+adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
+open --es tb.tr KRV --ef tb.scale 1.15 --ei tb.page 3 --ez tb.shelf true; shot a14_huge_shelf 4
+open --ef tb.scale 1.0 --ez tb.shelf false --ez tb.night true --ei tb.page 3 --ei tb.recordTab 1; shot a14_night_collect 4
+
 # @scene rv
 open --ei tb.page 0;                    shot rv_t1 6
 swipe_up;                               shot rv_t2 2

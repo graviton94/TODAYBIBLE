@@ -258,6 +258,11 @@ class MainActivity : ComponentActivity() {
         if (i.getBooleanExtra("tb.keep", false)) s.keepOpen = true
         s.debugPilgrim = i.getBooleanExtra("tb.pilgrim", false); s.debugPilgrimAsk = i.getIntExtra("tb.pilgrimAsk", 0)
         if (i.getBooleanExtra("tb.seasonNotice", false)) Thread { io.github.graviton94.todaybible.data.Reminder.seasonNotice(this, s.store, java.time.LocalDate.now(), force = true) }.start()
+        if (i.hasExtra("tb.recordTab")) s.recordTab = i.getIntExtra("tb.recordTab", 0)
+        s.liber = i.getIntExtra("tb.liber", 0).takeIf { it > 0 }?.minus(1)
+        s.ritual = i.getIntExtra("tb.ritual", 0).takeIf { it > 0 }?.minus(1); s.debugRitualStep = i.getIntExtra("tb.ritualStep", 0)
+        s.shelfOpen = i.getBooleanExtra("tb.shelf", false)
+        if (i.hasExtra("tb.memoKnown")) i.getIntExtra("tb.memoKnown", 0).let { n -> s.memory.filter { it.translation == s.translation }.take(n).forEach { m -> if (!s.isKnown(m.key)) s.toggleKnown(m.key) } }
         if (i.hasExtra("tb.focus")) s.focusMode = i.getBooleanExtra("tb.focus", false)
         if (i.hasExtra("tb.keepWifi") && i.getBooleanExtra("tb.keepWifi", true) != s.keepWifiOnly) s.flipKeepWifiOnly()
         i.getIntExtra("tb.keepBook", 0).takeIf { it > 0 }?.let { s.keepNarration(it - 1) }

@@ -6,7 +6,14 @@ import java.time.LocalDate
 enum class Milestone(val icon: String) {
     BEGINNING("light"), SEVEN("seven"), DAWN("dawn"), PASTURES("crook"), FORTY("forty"), OLIVE("leaf"),
     HOSANNA("palm"), TOMB("tomb"), FIRE("flame"), FIRSTFRUITS("wheat"), STAR("star"), LAMP("lamp"),
-    TABLETS("tablets"), EPISTLES("scroll"), YEAR("wreath"), OMEGA("ao");
+    TABLETS("tablets"), EPISTLES("scroll"), YEAR("wreath"), OMEGA("ao"),
+    // 암송 메달 (1.4): 마음에 새기기에서 "외웠어요"로 표시한 절 수
+    VERSE7("verse"), VERSE30("verse"), VERSE100("verse");
+
+    companion object {
+        /** 암송 메달마다 외울 절 수. */
+        val MEMORY = mapOf(VERSE7 to 7, VERSE30 to 30, VERSE100 to 100)
+    }
 }
 
 /** 발자취를 얻었는지: 지금까지의 기록만 보고 판단 (순수 함수). */
@@ -16,6 +23,8 @@ object Milestones {
         val doneChapters: Set<Int>,   // chapterKey (BBCCC)
         val doneBooks: Set<Int>,      // book index
         val korea: Boolean,
+        /** "외웠어요"로 표시한 날들 (절마다 하나, 순서 상관없음). */
+        val memorized: List<Long> = emptyList(),
     )
     private fun ck(book: Int, ch: Int) = (book + 1) * 1000 + ch
     fun earned(s: State): Map<Milestone, Long> {
@@ -24,6 +33,8 @@ object Milestones {
         val dates = days.map { LocalDate.ofEpochDay(it) }
         fun firstDayWhere(p: (LocalDate) -> Boolean) = dates.firstOrNull(p)?.toEpochDay()
         s.fills.minByOrNull { it.atMillis }?.let { out[Milestone.BEGINNING] = it.epochDay }
+        val memo = s.memorized.sorted()
+        Milestone.MEMORY.forEach { (m, n) -> if (memo.size >= n) out[m] = memo[n - 1] }
         if (days.size >= 7) out[Milestone.SEVEN] = days.elementAt(6)
         if (days.size >= 40) out[Milestone.FORTY] = days.elementAt(39)
         if (days.size >= 365) out[Milestone.YEAR] = days.elementAt(364)

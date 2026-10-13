@@ -30,10 +30,15 @@ val MILESTONE_PLATE = mapOf(
     Milestone.FORTY to "juniper", Milestone.OLIVE to "dove", Milestone.HOSANNA to "entry", Milestone.TOMB to "ascension",
     Milestone.FIRE to "cornelius", Milestone.FIRSTFRUITS to "ruth", Milestone.STAR to "nativity", Milestone.LAMP to "law_read",
     Milestone.TABLETS to "sinai", Milestone.EPISTLES to "paul_crowd", Milestone.YEAR to "ladder", Milestone.OMEGA to "three_angels",
+    Milestone.VERSE7 to "law_read", Milestone.VERSE30 to "sinai", Milestone.VERSE100 to "sermon",
 )
 
 /** 날 수로 얻는 발자취의 목표 (호로 진행을 보여요). */
 val MILESTONE_DAYS = mapOf(Milestone.SEVEN to 7, Milestone.FORTY to 40, Milestone.YEAR to 365)
+
+/** 아직 얻지 않은 발자취의 진행 (날 수 · 외운 절 수), 셀 수 없는 것은 null. */
+fun milestoneProgress(s: io.github.graviton94.todaybible.ui.AppState, m: Milestone): Float? =
+    MILESTONE_DAYS[m]?.let { s.progress.days().size.toFloat() / it } ?: Milestone.MEMORY[m]?.let { s.knownDays().size.toFloat() / it }
 
 /** 세피아 (판화 톤): 회색으로 바꾼 뒤 따뜻하게. */
 val SEPIA_MATRIX = ColorMatrix(floatArrayOf(

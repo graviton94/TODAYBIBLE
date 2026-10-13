@@ -10,6 +10,8 @@ data class Book(val index: Int, val osis: String, val ko: String, val en: String
 
 /** 개신교 66권 정경 (개역한글 · KJV 공통 순서). */
 object Canon {
+    /** 신약이 시작하는 권 (마태복음). */
+    const val NT_START = 39
     private val raw = listOf(
         "Gen" to ("창세기" to "Genesis"), "Exod" to ("출애굽기" to "Exodus"), "Lev" to ("레위기" to "Leviticus"), "Num" to ("민수기" to "Numbers"), "Deut" to ("신명기" to "Deuteronomy"),
         "Josh" to ("여호수아" to "Joshua"), "Judg" to ("사사기" to "Judges"), "Ruth" to ("룻기" to "Ruth"), "1Sam" to ("사무엘상" to "1 Samuel"), "2Sam" to ("사무엘하" to "2 Samuel"),

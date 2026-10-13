@@ -93,6 +93,12 @@ fun MemorySheet(s: AppState) {
             }
             BookButton(stringResource(R.string.memory_read), Modifier.weight(1f), quiet = true) { s.memoryOpen = null; s.read(key.book, key.chapter, key.verse) }
         }
+        // 다 가린 단계: 막힘없이 되뇌었으면 스스로 "외웠어요" (채점 없이). 외운 절이 7 · 30 · 100절이면 암송 메달
+        if (level == Memorize.LEVELS - 1 || s.isKnown(key)) {
+            val known = s.isKnown(key)
+            BookButton(stringResource(if (known) R.string.memory_known_undo else R.string.memory_known), Modifier.fillMaxWidth(), quiet = known) { s.toggleKnown(key) }
+            if (!known) Text(stringResource(R.string.memory_known_hint), style = Theme.small())
+        }
         Text(stringResource(R.string.memory_remove), style = Theme.small().copy(color = c.inkSoft),
             modifier = Modifier.heightIn(min = Tokens.Size.touch).clickable(role = Role.Button) { s.toggleMemory(key); s.memoryOpen = null }.padding(vertical = Tokens.Space.s2))
     }

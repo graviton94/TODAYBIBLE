@@ -175,6 +175,14 @@ class AppState(val store: Store) {
     var copyTabNow by mutableIntStateOf(store.copyTab)
     /** 필사 집중 모드 (머리 · 탭 · 아래 이름표를 걷음). */
     var focusMode by mutableStateOf(false)
+    /** 1.4 기록: 다 쓴 권 화면 · 권 다 쓰기 의식 · 66권 책장 · 묵상 노트 한 줄 · 기록 갈래 (캡처 · 알림에서 바로). */
+    var liber by mutableStateOf<Int?>(null)
+    var ritual by mutableStateOf<Int?>(null)
+    var pendingRitual: Int? = null
+    var debugRitualStep = 0
+    var shelfOpen by mutableStateOf(false)
+    var noteOpen by mutableStateOf<io.github.graviton94.todaybible.data.Store.Note?>(null)
+    var recordTab by mutableStateOf<Int?>(null)
     /** 나의 순례길에서 누른 장 (이어 쓰기 · 새로 쓰기 · 빼기 시트). */
     var pilgrim by mutableStateOf<Paused?>(null)
     /** 캡처용: 오늘 화면을 열면 순례길 첫 줄 시트를 바로. */
@@ -244,6 +252,15 @@ class AppState(val store: Store) {
     var memoryOpen by mutableStateOf<io.github.graviton94.todaybible.core.VerseKey?>(null)
     /** 캡처용: 되뇌기 창을 처음부터 가린 단계로. */
     var memoryStartLevel = 0
+    /** 외운 절 (마음에 새기기의 "외웠어요"): 지금 번역의 절 키 → 날. */
+    var known by mutableStateOf(store.memoKnown)
+    fun knownDays(): List<Long> = known.mapNotNull { it.split(':').takeIf { p -> p.size == 3 && p[0] == translation.id }?.get(2)?.toLongOrNull() }
+    fun isKnown(k: io.github.graviton94.todaybible.core.VerseKey) = known.any { it.startsWith("${translation.id}:${k.raw}:") }
+    fun toggleKnown(k: io.github.graviton94.todaybible.core.VerseKey) {
+        known = if (isKnown(k)) known.filterNot { it.startsWith("${translation.id}:${k.raw}:") }.toSet() else known + "${translation.id}:${k.raw}:${today().toEpochDay()}"
+        store.memoKnown = known
+        checkMilestones()
+    }
     fun isMemory(k: io.github.graviton94.todaybible.core.VerseKey) = memory.any { it.translation == translation && it.key == k }
     fun toggleMemory(k: io.github.graviton94.todaybible.core.VerseKey) {
         memory = if (isMemory(k)) memory.filterNot { it.translation == translation && it.key == k }
@@ -449,7 +466,7 @@ class AppState(val store: Store) {
     fun closeOverlays() {
         keepOpen = false
         settingsOpen = false; purchaseOpen = false; plateView = null; finished = null; picker = null; marksOpen = false; found = null
-        memoryOpen = null; sermonOpen = null; prayersOpen = false; galleryOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; handBook = null; planOpen = false; pilgrim = null; award = null; opening = false; leaveAsk = null
+        memoryOpen = null; sermonOpen = null; prayersOpen = false; galleryOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; handBook = null; planOpen = false; pilgrim = null; liber = null; shelfOpen = false; noteOpen = null; award = null; opening = false; leaveAsk = null
     }
     /** 앱을 처음부터 다시 (언어처럼 화면 전체가 바뀌는 설정 뒤에). 여는 순간은 이번만 건너뛰어요. */
     fun restartApp(a: android.app.Activity) {
@@ -580,7 +597,11 @@ class AppState(val store: Store) {
         "${tr.id}:$book:$chapter".let { k -> if (k in store.hiddenPaused) { store.hiddenPaused = store.hiddenPaused - k; pausedRev++ } }
         val t = text()
         val wasMet = io.github.graviton94.todaybible.core.Goal.met(effectiveGoal(), todayVerses() - new.size, 0)
-        if (progress.chapterDone(tr, t, chapter)) { finished = book to chapter; store.finishedCount = store.finishedCount + 1 }
+        if (progress.chapterDone(tr, t, chapter)) {
+            finished = book to chapter; store.finishedCount = store.finishedCount + 1
+            // 권의 마지막 장까지: 장 마침 다음에 권 다 쓰기 의식 (권마다 한 번)
+            if (progress.bookDone(tr, t) && "${tr.id}:$book" !in store.ritualSeen) pendingRitual = book
+        }
         else if (!wasMet && goalMet()) toast = store.context.getString(io.github.graviton94.todaybible.R.string.goal_done)
         else if (mode != Mode.TYPE) toast = store.context.getString(io.github.graviton94.todaybible.R.string.filled_n, new.size)
         checkMilestones()
@@ -595,7 +616,7 @@ class AppState(val store: Store) {
             (1..t.chapterCount).forEach { c -> if (p.chapterDone(translation, t, c)) doneChapters += (b + 1) * 1000 + c }
             if (p.bookDone(translation, t)) doneBooks += b
         }
-        val got = Milestones.earned(Milestones.State(fills.filter { it.translation == translation }, doneChapters, doneBooks, korea = korean))
+        val got = Milestones.earned(Milestones.State(fills.filter { it.translation == translation }, doneChapters, doneBooks, korea = korean, memorized = knownDays()))
         val fresh = got.keys - earned.keys
         if (fresh.isNotEmpty()) {
             earned = earned + fresh.associateWith { got[it] ?: today().toEpochDay() }
@@ -608,7 +629,7 @@ class AppState(val store: Store) {
     fun seedDemo() {
         val tr = translation; val end = today()
         val plan = listOf(0 to (1..8).map { it to 1f }, 18 to listOf(23 to 1f), 40 to listOf(1 to 1f, 2 to 1f, 3 to 0.35f),
-            1 to listOf(14 to 0.42f), 41 to listOf(15 to 0.75f), 39 to listOf(5 to 0.17f))
+            1 to listOf(14 to 0.42f), 41 to listOf(15 to 0.75f), 39 to listOf(5 to 0.17f), 7 to (1..4).map { it to 1f })
         val keys = plan.flatMap { (b, chs) -> val t = store.book(tr, b); chs.flatMap { (ch, f) -> val v = t.fillable(ch); v.take((v.size * f).toInt()).map { VerseKey(b, ch, it) } } }
         // 쓴 날: 41일 전부터, 주일 몇 번 · 평일 사흘은 쉼
         val days = (40 downTo 0).map { end.minusDays(it.toLong()) }.filterIndexed { i, d -> !(d.dayOfWeek == java.time.DayOfWeek.SUNDAY && i % 3 != 0) && i !in setOf(5, 17, 26) }

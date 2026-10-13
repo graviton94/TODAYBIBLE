@@ -1,5 +1,7 @@
 package io.github.graviton94.todaybible.ui
 
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.foundation.layout.BoxWithConstraints
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -62,81 +64,137 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun RecordPage(s: AppState) {
-    val k = s.korean; val c = Theme.c
+    val c = Theme.c
     val days = s.progress.days()
-    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s3, bottom = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
+    // 머리 (쓴 절 · 진행선) 아래 세 갈래: 걸음 · 모음 · 노트. 마지막에 본 갈래로 열려요.
+    var sub by remember { androidx.compose.runtime.mutableIntStateOf(s.store.recordTab) }
+    LaunchedEffect(s.recordTab) { s.recordTab?.let { sub = it; s.store.recordTab = it; s.recordTab = null } }
+    Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s3, bottom = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         MyBibleHead(s)
-        Section("LIBRI", stringResource(R.string.rec_books), "", 1, k)
-        BookIndex(s)
-        yearShown(s)?.let { YearCard(s, it) }
-        Section("DIES", stringResource(R.string.rec_days), stringResource(R.string.rec_days_n, days.size), 2, k)
-        CalendarPanel(s, days)
-        Section("NUMERI", stringResource(R.string.rec_numbers), "", 3, k)
-        Stats(s)
-        // 소리 내어 읽은 시간: 한 줄
-        if (s.aloudLog.isNotEmpty()) {
-            val today = s.today().toEpochDay()
-            val week = (0..6).sumOf { s.aloudLog[today - it] ?: 0 }
-            Text(stringResource(R.string.aloud_line, ((s.aloudLog[today] ?: 0) + 30) / 60, (week + 30) / 60), style = Theme.body().copy(color = c.inkSoft))
-        }
-        // 화첩: 쓰는 중 · 다 모은 것부터 여섯 점, 펼치면 모두
-        var allPlates by remember { mutableStateOf(false) }
-        val plates = remember(s.fills.size) { s.store.plates.sortedWith(compareByDescending<Plate> { plateFraction(s, it).let { f -> if (f > 0f && f < 1f) 2 else if (f >= 1f) 1 else 0 } }.thenByDescending { plateFraction(s, it) }) }
-        Section("TABULAE", stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size}", 4, k)
-        // 화첩 미리보기 세 점 → 어두운 화첩 화면
-        Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.galleryOpen = true }, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            plates.take(3).forEach { pl -> PlateThumb(s, pl, Modifier.weight(1f)) }
-        }
-        ListRow(stringResource(R.string.gallery_open), "") { s.galleryOpen = true }
-        // 발자취: 받은 것 최근 넷 (없으면 처음 넷), 펼치면 모두
-        var allMiles by remember { mutableStateOf(false) }
-        // 접혔을 때: 얻은 것 최근 셋 + 다음에 얻을 것 셋 (석고), 펼치면 모두
-        val got = Milestone.entries.filter { it in s.earned }.sortedByDescending { s.earned[it] }
-        val next = Milestone.entries.filter { it !in s.earned }.sortedByDescending { m -> MILESTONE_DAYS[m]?.let { s.progress.days().size.toFloat() / it } ?: 0f }
-        val miles = got + next
-        Section("VESTIGIA", stringResource(R.string.milestones), "${s.earned.size} / ${Milestone.entries.size}", 5, k)
-        MilestoneList(s, if (allMiles) miles else got.take(3) + next.take(6 - minOf(3, got.size)))
-        BookButton(stringResource(if (allMiles) R.string.fold else R.string.unfold_all, miles.size), Modifier.fillMaxWidth(), quiet = true) { allMiles = !allMiles }
-        // 묵상 노트 (1.3): 장을 마치며 남긴 한 줄을 달마다
-        val reflections = s.notes.filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.REFLECTION && it.translation == s.translation }.sortedByDescending { it.epochDay }
-        if (reflections.isNotEmpty()) {
-            Section("NOTAE CORDIS", stringResource(R.string.reflect_title_h), "${reflections.size}", 6, k)
-            ReflectionList(s, reflections)
-        }
-        if (s.marks.isNotEmpty()) {
-            Section("SIGNA", stringResource(R.string.marks), "${s.marks.count { it.translation == s.translation }}", if (reflections.isNotEmpty()) 7 else 6, k)
-            MarkList(s)
+        UnderlineTabs(listOf(stringResource(R.string.rec_walk), stringResource(R.string.rec_collect), stringResource(R.string.rec_notes)), sub) { sub = it; s.store.recordTab = it }
+        when (sub) {
+            0 -> {
+                yearShown(s)?.let { YearCard(s, it) }
+                CalendarPanel(s, days)
+                Stats(s)
+            }
+            1 -> Collection(s)
+            else -> NotesTab(s)
         }
     }
 }
 
-/** 묵상 노트: 달 머리 · 날 (금빛 숫자) · 장 · 한 줄. 줄을 누르면 그 장을 읽어요. 처음엔 넷, 펼치면 모두. 맨 아래 한 해 PDF. */
+/** 모음: 다 쓴 권 · 판화 · 발자취 · 암송 메달 (한 줄 셈) · 책장 · 화첩 · 메달. 갈래마다 미리보기 한 줄과 "모두 ›". */
 @Composable
-private fun ReflectionList(s: AppState, notes: List<io.github.graviton94.todaybible.data.Store.Note>) {
-    val c = Theme.c; val ctx = LocalContext.current
-    var all by remember { mutableStateOf(false) }
-    val shown = if (all) notes else notes.take(REFLECT_FOLDED)
-    var lastMonth: YearMonth? = null
-    Column(Modifier.fillMaxWidth()) {
-        shown.forEach { n ->
-            val d = LocalDate.ofEpochDay(n.epochDay); val ym = YearMonth.from(d)
-            if (ym != lastMonth) { lastMonth = ym; Text(Lang.date(ctx, R.string.fmt_month, d.atStartOfDay(java.time.ZoneId.systemDefault())).uppercase(), style = Theme.caps(), maxLines = 1, modifier = Modifier.padding(top = Tokens.Space.s3, bottom = Tokens.Space.s1)) }
-            Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.read(n.book, n.chapter) }
-                .drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }
-                .padding(vertical = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                Text("${d.dayOfMonth}", style = Theme.big(Tokens.Text.sectionNum).copy(color = c.gilt), maxLines = 1, modifier = Modifier.width(Tokens.Size.romanCol))
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                    Text(s.chapterRef(n.book, n.chapter), style = Theme.small(), maxLines = 1)
-                    Text(n.text, style = Theme.body())
-                }
+private fun Collection(s: AppState) {
+    val fr = bookFractions(s)
+    val plates = remember(s.fills.size) { s.store.plates.sortedWith(compareByDescending<Plate> { plateFraction(s, it).let { f -> if (f > 0f && f < 1f) 2 else if (f >= 1f) 1 else 0 } }.thenByDescending { plateFraction(s, it) }) }
+    val memo = Milestone.MEMORY.keys
+    Row(Modifier.fillMaxWidth()) {
+        listOf(fr.count { it.value >= 1f } to R.string.count_books, s.store.plates.count { plateFraction(s, it) >= 1f } to R.string.count_plates,
+            s.earned.keys.count { it !in memo } to R.string.count_steps, s.earned.keys.count { it in memo } to R.string.count_memory).forEach { (n, l) ->
+            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("$n", style = Theme.lining(Tokens.Text.sectionNum), maxLines = 1)
+                Text(stringResource(l), style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
-        if (notes.size > REFLECT_FOLDED) BookButton(stringResource(if (all) R.string.fold else R.string.unfold_all, notes.size), Modifier.fillMaxWidth(), quiet = true) { all = !all }
-        BookButton(stringResource(R.string.reflect_pdf, s.today().year), Modifier.fillMaxWidth().padding(top = Tokens.Space.s2), locked = s.premiumOn, quiet = true) { s.requestReflections(s.today().year) }
+    }
+    // 책장: 최근 쓴 권부터 여섯 (모자라면 다음 권들), 누르면 그 권 · 모두 = 66권
+    SubHead("LIBRI", stringResource(R.string.shelf_title), stringResource(R.string.shelf_all)) { s.shelfOpen = true }
+    val recent = remember(s.fills.size, s.translation) {
+        val seen = LinkedHashSet<Int>()
+        s.fills.filter { it.translation == s.translation }.sortedByDescending { it.atMillis }.forEach { seen += it.key.book }
+        (seen.toList() + (0 until 66)).distinct().take(SHELF_COLS)
+    }
+    Box(Modifier.coach("rec_plates")) { ShelfRows(s, recent, fr) }
+    Text(stringResource(R.string.shelf_legend), style = Theme.small())
+    // 화첩: 세 점 미리보기
+    SubHead("TABULAE", stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size} ›") { s.galleryOpen = true }
+    Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.galleryOpen = true }, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        plates.take(3).forEach { pl -> PlateThumb(s, pl, Modifier.weight(1f)) }
+    }
+    // 메달: 발자취 + 암송, 얻은 것 최근부터 · 다음에 얻을 것 (석고). 정원 다섯 칸, 모두 = 이름까지 세 칸
+    var allMiles by remember { mutableStateOf(false) }
+    val got = Milestone.entries.filter { it in s.earned }.sortedByDescending { s.earned[it] }
+    val next = Milestone.entries.filter { it !in s.earned }.sortedByDescending { milestoneProgress(s, it) ?: 0f }
+    SubHead("MEDALLAE", stringResource(R.string.medals_title), "${s.earned.size} / ${Milestone.entries.size} ›") { allMiles = !allMiles }
+    if (allMiles) MilestoneList(s, got + next)
+    else Column(Modifier.coach("rec_miles"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        (got.take(MEDAL_COLS) + next).take(MEDAL_COLS * 2).chunked(MEDAL_COLS).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                row.forEach { m ->
+                    BoxWithConstraints(Modifier.weight(1f).aspectRatio(1f).clickable(role = Role.Button) { s.award = m }, contentAlignment = Alignment.Center) {
+                        PlateMedal(m, m in s.earned, milestoneProgress(s, m), minOf(maxWidth, maxHeight))
+                    }
+                }
+                repeat(MEDAL_COLS - row.size) { Box(Modifier.weight(1f)) }
+            }
+        }
     }
 }
 
-private const val REFLECT_FOLDED = 4
+private const val MEDAL_COLS = 5
+
+/** 갈래 머리 (모음 · 노트 안): 가는 선 · 라틴 · 이름 · 오른쪽 셈 또는 "모두 ›". */
+@Composable
+private fun SubHead(latin: String, title: String, right: String, onClick: (() -> Unit)? = null) {
+    val c = Theme.c
+    Row(Modifier.fillMaxWidth().drawBehind { drawLine(c.ink, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }
+        .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
+        .heightIn(min = Tokens.Size.touch).padding(top = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Text(latin, style = Theme.caps().copy(color = c.ink), maxLines = 1, modifier = Modifier.clearAndSetSemantics { })
+        Text(title, style = Theme.title(true, Tokens.Text.label), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Text(right, style = Theme.small().copy(color = if (onClick != null) c.giltText else c.inkSoft), maxLines = 1)
+    }
+}
+
+/** 노트: 묵상 노트 · 설교 노트 · 형광펜. 한 줄씩 (날짜 · 어디 머리, 글은 말줄임), 누르면 전체. */
+@Composable
+private fun NotesTab(s: AppState) {
+    val ctx = LocalContext.current
+    val md = java.time.format.DateTimeFormatter.ofPattern(stringResource(R.string.fmt_md_short), androidx.compose.ui.platform.LocalConfiguration.current.locales[0])
+    fun day(e: Long) = LocalDate.ofEpochDay(e).format(md)
+    val Kind = io.github.graviton94.todaybible.data.Store.NoteKind
+    val reflections = s.notes.filter { it.kind == Kind.REFLECTION && it.translation == s.translation }.sortedByDescending { it.epochDay }
+    val sermons = s.notes.filter { it.kind == Kind.SERMON }.sortedByDescending { it.epochDay }
+    val marks = s.marks.filter { it.translation == s.translation }.sortedByDescending { it.epochDay }
+    if (reflections.isEmpty() && sermons.isEmpty() && marks.isEmpty()) { EmptyNote(stringResource(R.string.notes_empty_h), stringResource(R.string.notes_empty)); return }
+    var allR by remember { mutableStateOf(false) }
+    if (reflections.isNotEmpty()) {
+        SubHead("NOTAE CORDIS", stringResource(R.string.reflect_title_h), "${reflections.size}")
+        Column {
+            (if (allR) reflections else reflections.take(NOTES_FOLDED)).forEach { n -> NoteRow(day(n.epochDay), s.chapterRef(n.book, n.chapter), n.text) { s.noteOpen = n } }
+            if (reflections.size > NOTES_FOLDED) BookButton(stringResource(if (allR) R.string.fold else R.string.unfold_all, reflections.size), Modifier.fillMaxWidth(), quiet = true) { allR = !allR }
+        }
+        BookButton(stringResource(R.string.reflect_pdf, s.today().year), Modifier.fillMaxWidth(), locked = s.premiumOn, quiet = true) { s.requestReflections(s.today().year) }
+    }
+    var allS by remember { mutableStateOf(false) }
+    if (sermons.isNotEmpty()) {
+        SubHead("CONCIONES", stringResource(R.string.sermons_title), "${sermons.size}")
+        Column {
+            (if (allS) sermons else sermons.take(NOTES_FOLDED)).forEach { n ->
+                val where = if (n.from > 0) Lang.passage(ctx, s.translation, s.bookName(n.book), n.chapter, n.from, n.to) else stringResource(R.string.sermon_title)
+                NoteRow(day(n.epochDay), where, n.text.lineSequence().firstOrNull { it.isNotBlank() }.orEmpty()) { s.sermonOpen = n.epochDay }
+            }
+            if (sermons.size > NOTES_FOLDED) BookButton(stringResource(if (allS) R.string.fold else R.string.unfold_all, sermons.size), Modifier.fillMaxWidth(), quiet = true) { allS = !allS }
+        }
+    }
+    var allM by remember { mutableStateOf(false) }
+    if (marks.isNotEmpty()) {
+        SubHead("SIGNA", stringResource(R.string.marks), "${marks.size}")
+        Column {
+            (if (allM) marks else marks.take(NOTES_FOLDED)).forEach { m ->
+                val v = m.key
+                NoteRow(day(m.epochDay), "${s.bookName(v.book)} ${v.chapter}:${v.verse}", Markup.plain(s.store.book(s.translation, v.book).verse(v.chapter, v.verse))) { s.read(v.book, v.chapter, v.verse) }
+            }
+            if (marks.size > NOTES_FOLDED) BookButton(stringResource(if (allM) R.string.fold else R.string.unfold_all, marks.size), Modifier.fillMaxWidth(), quiet = true) { allM = !allM }
+        }
+    }
+}
+
+private const val NOTES_FOLDED = 4
+
+
 
 /** 구획 머리: 먹색 선 · 라틴 머리글 · 이름 · 셈 · 금빛 로마 숫자. */
 @Composable
@@ -169,46 +227,6 @@ private fun MyBibleHead(s: AppState) {
             Text(stringResource(R.string.of_total_pct, "%,d".format(total), "%.1f".format(filled * 100f / total)), style = Theme.small(), maxLines = 1, modifier = Modifier.padding(bottom = Tokens.Space.s2))
         }
         Box(Modifier.fillMaxWidth().height(Tokens.Stroke.rule).background(c.hair)) { Box(Modifier.fillMaxWidth((filled.toFloat() / total).coerceIn(0.004f, 1f)).height(Tokens.Stroke.rule).background(c.gilt)) }
-    }
-}
-
-/**
- * 66권 목차: 책장 그림 대신 활자로. 다 쓴 책은 금빛 밑줄, 쓰는 중은 진하게, 아직은 옅게. 누르면 그 책 장 고르기.
- */
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
-@Composable
-private fun BookIndex(s: AppState) {
-    val c = Theme.c; val k = s.korean
-    val filled = s.progress.filled(s.translation)
-    val state by androidx.compose.runtime.produceState(emptyMap<Int, Boolean>(), filled.size, s.translation) {
-        val tr = s.translation
-        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-            filled.groupingBy { io.github.graviton94.todaybible.core.VerseKey(it).book }.eachCount().mapValues { (b, n) -> n >= s.store.book(tr, b).fillableTotal }
-        }
-    }
-    Column(Modifier.coach("rec_plates"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
-        listOf(false to "VETUS TESTAMENTUM", true to "NOVUM TESTAMENTUM").forEach { (nt, head) ->
-            val range = if (nt) 39 until 66 else 0 until 39
-            Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text("$head · ${range.count()}", style = Theme.caps().copy(color = c.inkSoft), maxLines = 1, modifier = Modifier.weight(1f))
-                    Text(stringResource(R.string.index_counts, range.count { state[it] == true }, range.count { it in state && state[it] != true }), style = Theme.small(), maxLines = 1)
-                }
-                androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                    range.forEach { b ->
-                        val done = state[b] == true; val going = b in state && !done
-                        // 다 쓴 권 = 금빛 바탕 + ✓, 쓰는 중 = 금빛 테
-                        Text((if (done) "✓ " else "") + s.bookName(b), style = Theme.body().copy(color = when { done -> c.paper; going -> c.ink; else -> c.unwritten }, fontWeight = if (done || going) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Medium),
-                            maxLines = 1, modifier = Modifier.clickable(role = Role.Button) { if (s.locked(b)) { s.peekBook = b; s.purchaseOpen = true } else { s.pickToRead = false; s.picker = b } }
-                                .drawBehind {
-                                    val r = CornerRadius(size.height / 2)
-                                    if (done) drawRoundRect(c.gilt, cornerRadius = r)
-                                    else if (going) drawRoundRect(c.gilt, cornerRadius = r, style = androidx.compose.ui.graphics.drawscope.Stroke(Tokens.Stroke.hair.toPx()))
-                                }.padding(horizontal = Tokens.Space.s2, vertical = Tokens.Space.s1))
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -443,10 +461,11 @@ private fun MilestoneList(s: AppState, list: List<Milestone>) {
                     val day = s.earned[m]
                     val goal = MILESTONE_DAYS[m]
                     Column(Modifier.weight(1f).clickable(role = Role.Button) { s.award = m }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                        PlateMedal(m, day != null, goal?.let { days.toFloat() / it }, Tokens.Size.medalGrid)
+                        PlateMedal(m, day != null, milestoneProgress(s, m), Tokens.Size.medalGrid)
                         Text(milestoneName(ctx, m), style = Theme.small().copy(color = if (day != null) c.ink else c.inkSoft, textAlign = TextAlign.Center,
                             fontWeight = if (day != null) androidx.compose.ui.text.font.FontWeight.SemiBold else null), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(when { day != null -> io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1); goal != null -> "${minOf(days, goal)} / $goal"; else -> "·" },
+                        val memo = Milestone.MEMORY[m]
+                        Text(when { day != null -> io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1); goal != null -> "${minOf(days, goal)} / $goal"; memo != null -> "${minOf(s.knownDays().size, memo)} / $memo"; else -> "·" },
                             style = Theme.lining(Tokens.Text.small).copy(color = if (day != null) c.giltText else c.unwritten), maxLines = 1)
                     }
                 }
@@ -508,29 +527,6 @@ private fun Stats(s: AppState) {
     }
 }
 
-
-private const val MARKS_SHOWN = 5
-
-/** 형광펜 그은 절 (N): 최근 것부터. 누르면 그 절로. */
-@Composable
-private fun MarkList(s: AppState) {
-    val c = Theme.c; val k = s.korean
-    var all by remember { mutableStateOf(false) }
-    val list = s.marks.filter { it.translation == s.translation }.sortedByDescending { it.epochDay }
-    val fmt = java.time.format.DateTimeFormatter.ofPattern(androidx.compose.ui.res.stringResource(R.string.fmt_md), androidx.compose.ui.platform.LocalConfiguration.current.locales[0])
-    Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-        (if (all) list else list.take(MARKS_SHOWN)).forEach { m ->
-            val v = m.key
-            Column(Modifier.fillMaxWidth().clickable(role = androidx.compose.ui.semantics.Role.Button) { s.open(v.book, v.chapter); s.target = v.verse; s.page = AppState.COPY }
-                .padding(vertical = Tokens.Space.s1), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                Text(io.github.graviton94.todaybible.core.Markup.plain(s.store.book(s.translation, v.book).verse(v.chapter, v.verse)),
-                    style = Theme.body().copy(background = c.mark), maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
-                Text("${s.bookName(v.book)} ${v.chapter}:${v.verse} · ${java.time.LocalDate.ofEpochDay(m.epochDay).format(fmt)}", style = Theme.small(), maxLines = 1)
-            }
-        }
-        if (!all && list.size > MARKS_SHOWN) BookButton(stringResource(R.string.see_all, list.size), Modifier.fillMaxWidth(), quiet = true) { all = true }
-    }
-}
 
 /** 올해의 필사 (R1)를 보여 줄 해: 12월 15일부터 이듬해 1월 7일까지. */
 private fun yearShown(s: AppState): Int? {

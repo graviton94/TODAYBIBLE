@@ -43,6 +43,11 @@ object Tokens {
         val folioFoot = 24.dp
         val folioOrn = 7.dp
         val legend = 10.dp
+        val spine = 122.dp
+        val spineBand = 2.dp
+        val liberArt = 220.dp
+        val scrollTrack = 64.dp
+        val scrollLabel = 96.dp
         val row = 52.dp
         val tab = 48.dp
         val rowTall = 64.dp
@@ -100,7 +105,6 @@ object Tokens {
         val narrButton = 96.dp
         val bookW = 44.dp
         val bookH = 60.dp
-        val spineBand = 2.dp
         val scroll = 30.dp
         val scrollRoll = 9.dp
         val shelfRow = 68.dp
@@ -138,6 +142,11 @@ object Tokens {
         val title = 24.sp
         val head = 19.sp
         val folioNum = 16.sp
+        val spineNum = 7.5.sp
+        val spineKo = 10.5.sp
+        val spineEn = 10.5.sp
+        val noteDate = 15.sp
+        val scrollMark = 10.sp
         val display = 34.sp
         val initial = 40.sp
         val initialLg = 64.sp
@@ -205,6 +214,7 @@ object Tokens {
         const val pageMs = 420
         const val toastMs = 2400
         const val focusTickMs = 30000
+        const val ritualPlateMs = 1800
         const val fadeMs = 220
         const val typeSettleMs = 350
         const val turnSnap = 0.2f
@@ -246,6 +256,7 @@ object Tokens {
         const val plateAspect = 0.766f
         const val foldTail = 0.7f
         const val folio = 0.75f
+        const val spineLine = 1.08f
         const val systemFontMax = 1.15f
         const val veilInset = 0.06f
         const val veilMark = 0.16f
@@ -297,6 +308,8 @@ object Tokens {
         const val pathLine = 0.5f
         const val chipOn = 0.06f
         const val foldWash = 0.07f
+        const val spineFill = 0.38f
+        const val shelfBoard = 0.5f
     }
     object Leading {
         const val verse = 1.8f
