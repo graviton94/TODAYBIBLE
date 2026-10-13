@@ -680,7 +680,7 @@
     <string name="credit_text">Bible texts</string>
     <string name="credit_text_d">Korean Revised Version (개역한글, 1961) — its copyright term has ended. King James Version (1611) — public domain (Crown patent in the UK). World English Bible Updated — public domain, unchanged ("World English Bible" is a trademark of eBible.org). Texts from the CrossWire SWORD modules and eBible.org.</string>
     <string name="credit_art">Engravings</string>
-    <string name="credit_art_d">Gustave Doré, illustrations for the Bible (1866) — public domain, via Wikimedia Commons.</string>
+    <string name="credit_art_d">Gustave Doré, illustrations for the Bible (1866), and Julius Schnorr von Carolsfeld, Die Bibel in Bildern (1860) — public domain, via Wikimedia Commons.</string>
     <string name="credit_voice">Narration</string>
     <string name="credit_voice_d">Made with Supertonic 3 by Supertone, under the OpenRAIL-M license.</string>
     <string name="credit_fonts">Fonts</string>
@@ -1026,4 +1026,5 @@
     <string name="medal_left_verses">%1$d more verses to learn</string>
     <string name="season_widget_name">Church year</string>
     <string name="season_widget_desc">Today\'s season with its engraving, week and verse</string>
+    <string name="set_title">Engravings for %1$s</string>
 </resources>

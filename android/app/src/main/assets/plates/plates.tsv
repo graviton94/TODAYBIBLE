@@ -1,4 +1,4 @@
-# 판화 → 장면이 나오는 장. 이름<TAB>권(osis)<TAB>장<TAB>제목(한)<TAB>제목(영)<TAB>장면의 절<TAB>출처(한)<TAB>출처(영)
+# 판화 → 장면이 나오는 장. 이름<TAB>권(osis)<TAB>장<TAB>제목(한)<TAB>제목(영)<TAB>장면의 절<TAB>출처(한)<TAB>출처(영)<TAB>달마다 판화 세트(구독, 해-달 · 비면 도레)
 noah	Gen	7	홍수	The Deluge	23	귀스타브 도레 · 『성경』 판화, 1866	Gustave Doré · La Sainte Bible, 1866
 moses_sea	Exod	14	홍해	The Egyptians Drowned in the Red Sea	28	귀스타브 도레 · 『성경』 판화, 1866	Gustave Doré · La Sainte Bible, 1866
 nativity	Luke	2	목자들의 경배	The Adoration of the Shepherds	16	작자 미상 · 러시아 화보 잡지 판화, 1886	Unknown engraver · Zhivopisnoye obozreniye, 1886
@@ -155,3 +155,7 @@ lunatic	Luke	9	귀신 들린 아이	Jesus Healing the Lunatic	42	귀스타브 �
 dark_cross	Luke	23	온 땅에 어둠이	Darkness at the Crucifixion	44	귀스타브 도레 · 『성경』 판화, 1866	Gustave Doré · La Sainte Bible, 1866
 adulteress	John	8	먼저 돌로 치라	The Woman Taken in Adultery	7	귀스타브 도레 · 『성경』 판화, 1866	Gustave Doré · La Sainte Bible, 1866
 cornelius	Acts	10	고넬료의 집	Peter at the House of Cornelius	25	귀스타브 도레 · 『성경』 판화, 1866	Gustave Doré · La Sainte Bible, 1866
+schnorr_eden	Gen	3	동산에서 내보내심	Driven from the Garden	24	율리우스 슈노르 폰 카롤스펠트 · 『그림 성경』, 1860	Julius Schnorr von Carolsfeld · Die Bibel in Bildern, 1860	2026-11
+schnorr_cain	Gen	4	가인과 아벨의 제물	The Offerings of Cain and Abel	4	율리우스 슈노르 폰 카롤스펠트 · 『그림 성경』, 1860	Julius Schnorr von Carolsfeld · Die Bibel in Bildern, 1860	2026-11
+schnorr_solomon	1Kgs	3	솔로몬의 재판	The Judgment of Solomon	25	율리우스 슈노르 폰 카롤스펠트 · 『그림 성경』, 1860	Julius Schnorr von Carolsfeld · Die Bibel in Bildern, 1860	2026-11
+schnorr_pentecost	Acts	2	성령이 임하심	The Coming of the Spirit	3	율리우스 슈노르 폰 카롤스펠트 · 『그림 성경』, 1860	Julius Schnorr von Carolsfeld · Die Bibel in Bildern, 1860	2026-11

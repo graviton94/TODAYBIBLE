@@ -164,8 +164,30 @@ fun GalleryPage(s: AppState) {
                     }
                 }
             }
-            val list = all.filter { it.book in groups[tab].second }.sortedWith(compareBy({ it.book }, { it.chapter }))
+            val list = all.filter { it.book in groups[tab].second && it.set.isEmpty() }.sortedWith(compareBy({ it.book }, { it.chapter }))
+            // 이달의 판화 (구독 세트): 가장 최근 세트 한 줄 위에. 잠금은 결제가 열리면 (1.4.x)
+            val sets = all.filter { it.set.isNotEmpty() }.groupBy { it.set }
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                sets.keys.maxOrNull()?.let { key ->
+                    val set = sets.getValue(key)
+                    val month = key.substringAfter('-').toIntOrNull() ?: 1
+                    Column(Modifier.fillMaxWidth().drawBehind { drawLine(c.gilt, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }.padding(bottom = Tokens.Space.s4),
+                        verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                        Text("TABULAE MENSIS · " + io.github.graviton94.todaybible.core.Latin.roman(month), style = Theme.caps(), maxLines = 1)
+                        Text(stringResource(R.string.set_title, java.time.Month.of(month).getDisplayName(java.time.format.TextStyle.FULL, androidx.compose.ui.platform.LocalConfiguration.current.locales[0])), style = Theme.title(k), maxLines = 1)
+                        Text(if (k) set.first().byKo else set.first().byEn, style = Theme.small(), maxLines = 2)
+                        set.chunked(2).forEach { row ->
+                            Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                                row.forEach { pl -> Column(Modifier.weight(1f).clickable(role = Role.Button) { s.plateView = pl }, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                                    PlateThumb(s, pl, Modifier.fillMaxWidth())
+                                    Text(s.plateName(pl), style = Theme.small().copy(color = c.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                    Text(s.chapterRef(pl.book, pl.chapter), style = Theme.small(), maxLines = 1)
+                                } }
+                                repeat(2 - row.size) { Box(Modifier.weight(1f)) }
+                            }
+                        }
+                    }
+                }
                 // 권마다 도록 한 장
                 var n = 0
                 list.groupBy { it.book }.forEach { (b, plates) -> n++; CatalogCard(s, b, plates, n) }

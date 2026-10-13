@@ -678,7 +678,7 @@
   "credit_text": {"en": "Bible texts", "ko": "성경 본문"},
   "credit_text_d": {"en": "Korean Revised Version (개역한글, 1961) — its copyright term has ended. King James Version (1611) — public domain (Crown patent in the UK). World English Bible Updated — public domain, unchanged (\"World English Bible\" is a trademark of eBible.org). Texts from the CrossWire SWORD modules and eBible.org.", "ko": "개역한글(1961) — 저작권 보호 기간이 끝난 판. King James Version(1611) — 공개 도메인(영국은 왕실 특허). World English Bible Updated — 공개 도메인, 고치지 않고 그대로 ('World English Bible' 은 eBible.org 의 상표). 본문은 CrossWire SWORD 모듈과 eBible.org 에서."},
   "credit_art": {"en": "Engravings", "ko": "판화"},
-  "credit_art_d": {"en": "Gustave Doré, illustrations for the Bible (1866) — public domain, via Wikimedia Commons.", "ko": "귀스타브 도레, 성경 삽화 (1866) — 공개 도메인, Wikimedia Commons에서."},
+  "credit_art_d": {"en": "Gustave Doré, illustrations for the Bible (1866), and Julius Schnorr von Carolsfeld, Die Bibel in Bildern (1860) — public domain, via Wikimedia Commons.", "ko": "귀스타브 도레, 성경 삽화 (1866) · 율리우스 슈노르 폰 카롤스펠트, 『그림 성경』 (1860) — 공개 도메인, Wikimedia Commons."},
   "credit_voice": {"en": "Narration", "ko": "낭독 목소리"},
   "credit_voice_d": {"en": "Made with Supertonic 3 by Supertone, under the OpenRAIL-M license.", "ko": "Supertone의 Supertonic 3 (OpenRAIL-M 라이선스)으로 만든 음원."},
   "credit_fonts": {"en": "Fonts", "ko": "글꼴"},
@@ -1023,5 +1023,6 @@
   "fmt_md_short": {"en": "M/d", "ko": "M.dd"},
   "medal_left_verses": {"en": "%1$d more verses to learn", "ko": "외운 절 %1$d절 더"},
   "season_widget_name": {"en": "Church year", "ko": "절기"},
-  "season_widget_desc": {"en": "Today's season with its engraving, week and verse", "ko": "오늘의 절기 · 판화 · 주 · 절기 말씀"}
+  "season_widget_desc": {"en": "Today's season with its engraving, week and verse", "ko": "오늘의 절기 · 판화 · 주 · 절기 말씀"},
+  "set_title": {"en": "Engravings for %1$s", "ko": "%1$s의 판화"}
 }

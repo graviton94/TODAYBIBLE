@@ -680,7 +680,7 @@
     <string name="credit_text">성경 본문</string>
     <string name="credit_text_d">개역한글(1961) — 저작권 보호 기간이 끝난 판. King James Version(1611) — 공개 도메인(영국은 왕실 특허). World English Bible Updated — 공개 도메인, 고치지 않고 그대로 (\'World English Bible\' 은 eBible.org 의 상표). 본문은 CrossWire SWORD 모듈과 eBible.org 에서.</string>
     <string name="credit_art">판화</string>
-    <string name="credit_art_d">귀스타브 도레, 성경 삽화 (1866) — 공개 도메인, Wikimedia Commons에서.</string>
+    <string name="credit_art_d">귀스타브 도레, 성경 삽화 (1866) · 율리우스 슈노르 폰 카롤스펠트, 『그림 성경』 (1860) — 공개 도메인, Wikimedia Commons.</string>
     <string name="credit_voice">낭독 목소리</string>
     <string name="credit_voice_d">Supertone의 Supertonic 3 (OpenRAIL-M 라이선스)으로 만든 음원.</string>
     <string name="credit_fonts">글꼴</string>
@@ -1026,4 +1026,5 @@
     <string name="medal_left_verses">외운 절 %1$d절 더</string>
     <string name="season_widget_name">절기</string>
     <string name="season_widget_desc">오늘의 절기 · 판화 · 주 · 절기 말씀</string>
+    <string name="set_title">%1$s의 판화</string>
 </resources>

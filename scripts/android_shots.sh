@@ -312,6 +312,7 @@ open --ei tb.page 3 --ei tb.recordTab 1;                           shot a14_coll
 swipe_up;                                                          shot a14_collect_more 2
 open --ei tb.page 3 --ei tb.recordTab 2;                           shot a14_notes 4
 open --ei tb.page 3 --ez tb.shelf true;                            shot a14_shelf 4
+open --ez tb.shelf false --ez tb.gallery true;                     shot a14_gallery_set 5
 swipe_up;                                                          shot a14_shelf_nt 2
 open --ez tb.shelf false --ei tb.liber 8;                          shot a14_liber 5
 open --ei tb.liber 0 --ei tb.ritual 8;                             shot a14_ritual1 5

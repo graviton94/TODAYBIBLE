@@ -11,7 +11,8 @@ import io.github.graviton94.todaybible.design.ThemeChoice
 import java.io.File
 
 /** 판화 하나: 그 장면이 나오는 장. */
-data class Plate(val id: String, val book: Int, val chapter: Int, val ko: String, val en: String, val verse: Int, val byKo: String, val byEn: String)
+/** 판화 한 점. set = 달마다 판화 세트 ("2026-11", 구독), 비면 도레 기본 판화. */
+data class Plate(val id: String, val book: Int, val chapter: Int, val ko: String, val en: String, val verse: Int, val byKo: String, val byEn: String, val set: String = "")
 
 /**
  * 기기 안 저장. 필사 기록은 덮어쓰지 않고 한 줄씩 덧붙이기만 함 (fills.tsv). 설정은 SharedPreferences.
@@ -30,10 +31,11 @@ class Store(val context: Context) {
     val plates: List<Plate> by lazy {
         context.assets.open("plates/plates.tsv").bufferedReader().readLines().filter { it.isNotBlank() && !it.startsWith("#") }.mapNotNull { l ->
             val p = l.split('\t'); val b = io.github.graviton94.todaybible.core.Canon.byOsis(p[1]) ?: return@mapNotNull null
-            Plate(p[0], b.index, p[2].toInt(), p[3], p[4], p.getOrNull(5)?.toIntOrNull() ?: 1, p.getOrElse(6) { "" }, p.getOrElse(7) { "" })
+            Plate(p[0], b.index, p[2].toInt(), p[3], p[4], p.getOrNull(5)?.toIntOrNull() ?: 1, p.getOrElse(6) { "" }, p.getOrElse(7) { "" }, p.getOrElse(8) { "" }.trim())
         }
     }
-    fun plateFor(book: Int, chapter: Int): Plate? = plates.firstOrNull { it.book == book && it.chapter == chapter }
+    /** 그 장의 판화: 도레 기본 판화가 먼저, 없으면 달마다 세트. */
+    fun plateFor(book: Int, chapter: Int): Plate? = plates.firstOrNull { it.book == book && it.chapter == chapter && it.set.isEmpty() } ?: plates.firstOrNull { it.book == book && it.chapter == chapter }
 
     fun loadFills(): List<Fill> = if (!fillsFile.exists()) emptyList() else fillsFile.readLines().mapNotNull { l ->
         val p = l.split('\t'); if (p.size < 5) return@mapNotNull null
