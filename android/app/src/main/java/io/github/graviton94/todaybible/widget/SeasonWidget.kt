@@ -115,10 +115,12 @@ class SeasonWidget : AppWidgetProvider() {
                     y -= Tokens.Space.s2.toPx()
                 }
                 if (sub.isNotEmpty()) {
-                    // 주 · 남은 날은 줄을 나눠서 (숫자와 '일'이 갈라지지 않게), 넓으면 한 줄로
-                    val text = if (tall) sub.replace("\n", " · ") else sub
-                    val sl = m.measure(text, TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = gold), maxLines = 2, overflow = TextOverflow.Ellipsis, softWrap = false, constraints = Constraints(maxWidth = w.toInt()))
-                    y -= sl.size.height; drawText(sl, topLeft = Offset(pad, y))
+                    // 주 · 남은 날은 줄마다 따로 (숫자와 '일'이 갈라지지 않게), 넓으면 한 줄로
+                    val lines = if (tall) listOf(sub.replace("\n", " · ")) else sub.split("\n")
+                    lines.reversed().forEach { ln ->
+                        val sl = m.measure(ln, TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = gold), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w.toInt()))
+                        y -= sl.size.height; drawText(sl, topLeft = Offset(pad, y))
+                    }
                 }
                 val nl = m.measure(name, TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.garamond, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.label, color = paper), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w.toInt()))
                 y -= nl.size.height + Tokens.Space.s1.toPx() * 0.5f; drawText(nl, topLeft = Offset(pad, y))
