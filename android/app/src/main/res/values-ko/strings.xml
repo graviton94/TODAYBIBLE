@@ -1023,4 +1023,5 @@
     <string name="rit_next_go">%1$s 시작</string>
     <string name="rit_later">나중에</string>
     <string name="fmt_md_short">M.dd</string>
+    <string name="medal_left_verses">%1$d절 더 외우면 돼요</string>
 </resources>

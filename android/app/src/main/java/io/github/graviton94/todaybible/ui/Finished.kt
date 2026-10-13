@@ -190,7 +190,8 @@ fun AwardCard(s: AppState, m: Milestone) {
             Box(Modifier.size(Tokens.Size.cardRule, Tokens.Stroke.hair).background(c.gilt))
             Text(when {
                 day != null -> stringResource(R.string.medal_got, fmtDate(R.string.fmt_ymd, java.time.LocalDate.ofEpochDay(day)))
-                goal != null -> stringResource(R.string.medal_left, (goal - days).coerceAtLeast(0))
+                MILESTONE_DAYS[m] != null -> stringResource(R.string.medal_left, (MILESTONE_DAYS.getValue(m) - s.progress.days().size).coerceAtLeast(0))
+                Milestone.MEMORY[m] != null -> stringResource(R.string.medal_left_verses, (Milestone.MEMORY.getValue(m) - s.knownDays().size).coerceAtLeast(0))
                 else -> stringResource(R.string.medal_not_yet)
             }, style = Theme.small().copy(color = if (day != null) c.giltText else c.inkSoft, textAlign = TextAlign.Center), maxLines = 2)
         }

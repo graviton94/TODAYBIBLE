@@ -154,9 +154,8 @@ private fun NotesTab(s: AppState) {
     val ctx = LocalContext.current
     val md = java.time.format.DateTimeFormatter.ofPattern(stringResource(R.string.fmt_md_short), androidx.compose.ui.platform.LocalConfiguration.current.locales[0])
     fun day(e: Long) = LocalDate.ofEpochDay(e).format(md)
-    val Kind = io.github.graviton94.todaybible.data.Store.NoteKind
-    val reflections = s.notes.filter { it.kind == Kind.REFLECTION && it.translation == s.translation }.sortedByDescending { it.epochDay }
-    val sermons = s.notes.filter { it.kind == Kind.SERMON }.sortedByDescending { it.epochDay }
+    val reflections = s.notes.filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.REFLECTION && it.translation == s.translation }.sortedByDescending { it.epochDay }
+    val sermons = s.notes.filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.SERMON }.sortedByDescending { it.epochDay }
     val marks = s.marks.filter { it.translation == s.translation }.sortedByDescending { it.epochDay }
     if (reflections.isEmpty() && sermons.isEmpty() && marks.isEmpty()) { EmptyNote(stringResource(R.string.notes_empty_h), stringResource(R.string.notes_empty)); return }
     var allR by remember { mutableStateOf(false) }

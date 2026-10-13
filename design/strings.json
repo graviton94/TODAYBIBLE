@@ -1020,5 +1020,6 @@
   "rit_next": {"en": "%1$s, chapter 1", "ko": "%1$s 1장부터 쓰기"},
   "rit_next_go": {"en": "Begin %1$s", "ko": "%1$s 시작"},
   "rit_later": {"en": "Later", "ko": "나중에"},
-  "fmt_md_short": {"en": "M/d", "ko": "M.dd"}
+  "fmt_md_short": {"en": "M/d", "ko": "M.dd"},
+  "medal_left_verses": {"en": "%1$d more verses to learn", "ko": "%1$d절 더 외우면 돼요"}
 }

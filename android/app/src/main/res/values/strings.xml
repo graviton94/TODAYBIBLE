@@ -1023,4 +1023,5 @@
     <string name="rit_next_go">Begin %1$s</string>
     <string name="rit_later">Later</string>
     <string name="fmt_md_short">M/d</string>
+    <string name="medal_left_verses">%1$d more verses to learn</string>
 </resources>
