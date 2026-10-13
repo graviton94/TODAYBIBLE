@@ -311,7 +311,9 @@ class AppState(val store: Store) {
 
     /** 묵상 한 줄 (A4) · 설교 노트 (A2). */
     var notes by mutableStateOf(store.loadNotes())
-    private fun saveNotes(list: List<io.github.graviton94.todaybible.data.Store.Note>) { notes = list; Thread { runCatching { store.saveNotes(list) } }.start() }
+    // 노트 저장은 한 줄로 차례대로 (자동 저장이 잦아도 앞뒤가 바뀌거나 임시 파일이 겹치지 않게)
+    private val noteWriter = java.util.concurrent.Executors.newSingleThreadExecutor()
+    private fun saveNotes(list: List<io.github.graviton94.todaybible.data.Store.Note>) { notes = list; noteWriter.execute { runCatching { store.saveNotes(list) } } }
     fun reflection(b: Int, ch: Int) = notes.firstOrNull { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.REFLECTION && it.translation == translation && it.book == b && it.chapter == ch }
     fun setReflection(b: Int, ch: Int, text: String) {
         val t = text.trim(); val old = reflection(b, ch)
@@ -592,7 +594,8 @@ class AppState(val store: Store) {
         val new = verses.map { VerseKey(book, chapter, it) }.filter { it.raw !in already }.map { Fill(tr, it, mode, day, now) }
         if (new.isEmpty()) return
         if (store.startDay < 0) store.startDay = day
-        store.append(new); fills.addAll(new); widgets()
+        // 위젯은 절마다 다시 그리지 않아요 (앱을 떠날 때 · 자정에 한 번)
+        store.append(new); fills.addAll(new)
         // 순례길에서 뺀 장에 다시 쓰면 목록으로 돌아와요
         "${tr.id}:$book:$chapter".let { k -> if (k in store.hiddenPaused) { store.hiddenPaused = store.hiddenPaused - k; pausedRev++ } }
         val t = text()

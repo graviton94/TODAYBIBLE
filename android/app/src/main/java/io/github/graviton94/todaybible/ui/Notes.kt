@@ -139,6 +139,14 @@ fun SermonSheet(s: AppState) {
             p?.book ?: 0, p?.chapter ?: 1, p?.from ?: 0, p?.to ?: 0, day, text.trim()))
     }
     fun close() { save(); s.sermonOpen = null }
+    // 예배 중에 적다가 화면이 꺼지거나 앱이 내려가도 남게: 멈추고 1.5초 뒤 · 앱을 떠날 때 저장
+    androidx.compose.runtime.LaunchedEffect(ref, text) { kotlinx.coroutines.delay(1500); if (ref != (old?.takeIf { it.from > 0 }?.let { s.passageLabel(it) } ?: "") || text != (old?.text ?: "")) save() }
+    val owner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val latest = androidx.compose.runtime.rememberUpdatedState { save() }
+    androidx.compose.runtime.DisposableEffect(owner) {
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e -> if (e == androidx.lifecycle.Lifecycle.Event.ON_STOP) latest.value() }
+        owner.lifecycle.addObserver(obs); onDispose { owner.lifecycle.removeObserver(obs) }
+    }
     BookSheet({ close() }) {
         Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid * 2).verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             Text(stringResource(R.string.sermon_title), style = Theme.title(k))

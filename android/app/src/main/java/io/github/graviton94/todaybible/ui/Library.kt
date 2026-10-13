@@ -124,7 +124,7 @@ fun LibraryPage(s: AppState) {
         Row(Modifier.fillMaxWidth().coach("lib_testament").drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
             listOf(false to stringResource(R.string.old_count), true to stringResource(R.string.new_count)).forEach { (nt, label) ->
                 val on = newT == nt
-                Box(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Tab) { newT = nt }.drawBehind {
+                Box(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).chosen(on).clickable(role = Role.Tab) { newT = nt }.drawBehind {
                     if (on) drawRect(c.gilt, Offset(0f, size.height - Tokens.Stroke.rule.toPx()), Size(size.width, Tokens.Stroke.rule.toPx()))
                 }, contentAlignment = Alignment.CenterStart) { Text(label, style = Theme.body().copy(color = if (on) c.ink else c.unwritten), maxLines = 1) }
             }

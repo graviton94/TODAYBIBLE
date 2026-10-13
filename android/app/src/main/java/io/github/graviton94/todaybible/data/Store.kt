@@ -104,10 +104,6 @@ class Store(val context: Context) {
     var reminderMinute: Int
         get() = prefs.getInt("reminder_min", 0)
         set(v) = prefs.edit().putInt("reminder_min", v).apply()
-    /** 절기 시작 알림 (대림 · 사순 · 부활 · 성령강림 첫날 아침). */
-    var seasonNotice: Boolean
-        get() = prefs.getBoolean("season_notice", true)
-        set(v) = prefs.edit().putBoolean("season_notice", v).apply()
     /** 오늘의 분량 (절 수, -1 = 하루 한 장). */
     var dailyGoal: Int
         get() = prefs.getInt("goal", io.github.graviton94.todaybible.core.Goal.CHAPTER)

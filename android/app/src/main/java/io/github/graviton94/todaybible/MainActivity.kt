@@ -135,6 +135,8 @@ class MainActivity : ComponentActivity() {
         // 화면 줄을 붙잡지 않게 뒤에서
         val app = applicationContext
         Thread { runCatching { io.github.graviton94.todaybible.data.Backup.auto(app) } }.start()
+        // 위젯은 홈 화면으로 나갈 때 한 번 (쓰는 동안 절마다 그리지 않게)
+        state?.widgets()
     }
 
     override fun onNewIntent(intent: Intent) {

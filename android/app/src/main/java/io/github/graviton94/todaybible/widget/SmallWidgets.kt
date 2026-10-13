@@ -39,6 +39,8 @@ import java.time.LocalDate
 /** 작은 위젯 (L1) 공통: 앱과 같은 토큰으로 그림 한 장, 누르면 오늘 화면. */
 abstract class SmallWidget : AppWidgetProvider() {
     abstract fun draw(ctx: Context, wDp: Int, hDp: Int, dark: Boolean): Bitmap
+    /** 화면 읽기 (TalkBack) 용 한 줄. */
+    abstract fun describe(ctx: Context): String
     // 그림 그리기는 뒤에서 (받는 쪽 시간 제한 안에)
     override fun onUpdate(ctx: Context, m: AppWidgetManager, ids: IntArray) { val r = goAsync(); Thread { try { ids.forEach { update(ctx, m, it) } } finally { r.finish() } }.start() }
     override fun onAppWidgetOptionsChanged(ctx: Context, m: AppWidgetManager, id: Int, o: Bundle) { val r = goAsync(); Thread { try { update(ctx, m, id) } finally { r.finish() } }.start() }
@@ -50,6 +52,7 @@ abstract class SmallWidget : AppWidgetProvider() {
         val h = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 110).coerceAtLeast(60)
         val views = RemoteViews(ctx.packageName, R.layout.widget_verse)
         views.setImageViewBitmap(R.id.widget_image, runCatching { draw(ctx, w, h, VerseWidget.dark(ctx)) }.getOrNull())
+        runCatching { views.setContentDescription(R.id.widget_image, describe(ctx)) }
         val open = Intent(ctx, MainActivity::class.java).putExtra("page", 0).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
         views.setOnClickPendingIntent(R.id.widget_image, PendingIntent.getActivity(ctx, 3, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
         runCatching { m.updateAppWidget(id, views) }
@@ -83,6 +86,8 @@ private fun frame(ctx: Context, wDp: Int, hDp: Int, dark: Boolean, block: androi
 /** 오늘 (2×2): 오늘의 분량 고리 + 며칠째 이어 쓰는지. 다 채우면 금빛 고리 안에 도장. (예전 '이어 쓴 날' 위젯을 합쳤어요) */
 class GoalWidget : SmallWidget() {
     override fun draw(ctx: Context, wDp: Int, hDp: Int, dark: Boolean): Bitmap { val (n, goal, run) = today(ctx); return paint(ctx, wDp, hDp, dark, n, goal, run) }
+    override fun describe(ctx: Context): String { val (n, goal, run) = today(ctx)
+        return "$run " + ctx.getString(R.string.widget_streak_unit) + " · " + if (goal < 0) ctx.getString(R.string.today_written, n) else ctx.getString(R.string.widget_today, n, goal) }
     /** 값을 받아 그리기 (위젯 고르는 화면의 미리보기는 보기 좋은 예시 값으로). */
     fun paint(ctx: Context, wDp: Int, hDp: Int, dark: Boolean, n: Int, goal: Int, run: Int): Bitmap = frame(ctx, wDp, hDp, dark) { m, c ->
         // 1.2 틀: 금빛 머리글 · 큰 숫자 (며칠째) · 가는 금선 고리 (오늘 분량) · 아래 한 줄

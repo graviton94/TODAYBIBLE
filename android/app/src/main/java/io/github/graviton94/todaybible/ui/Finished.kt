@@ -87,6 +87,8 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
     // 마음에 남은 한 줄: 닫거나 다음 장으로 갈 때 남겨요
     var line by remember(book, chapter) { mutableStateOf(s.reflection(book, chapter)?.text ?: "") }
     fun close() { s.setReflection(book, chapter, line); s.finished = null }
+    // 적다가 앱이 내려가도 남게: 멈추고 1.5초 뒤 저장 (같으면 그대로)
+    LaunchedEffect(line) { kotlinx.coroutines.delay(1500); s.setReflection(book, chapter, line) }
     BackHandler { close() }
     val ctx = LocalContext.current
     val verses = remember(book, chapter) { s.store.book(s.translation, book).fillable(chapter).size }

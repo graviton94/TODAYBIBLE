@@ -103,7 +103,7 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
             }
             // 한영 대조 켜고 끄기
             Text(stringResource(R.string.parallel_short), style = Theme.small().copy(color = if (s.parallel) c.rubric else c.inkSoft), maxLines = 1,
-                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Switch) { s.flipParallel() }.padding(horizontal = Tokens.Space.s2))
+                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().switched(s.parallel).clickable(role = Role.Switch) { s.flipParallel() }.padding(horizontal = Tokens.Space.s2))
             val marked = s.isBookmarked(book, ch)
             Row(Modifier.coach("read_bookmark").heightIn(min = Tokens.Size.tab).clickable(role = Role.Button) { s.toggleBookmark(book, ch, picked ?: 1) }.padding(horizontal = Tokens.Space.s2),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {

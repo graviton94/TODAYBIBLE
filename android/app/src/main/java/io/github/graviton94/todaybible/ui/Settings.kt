@@ -173,7 +173,7 @@ fun SettingsPage(s: AppState) {
                         Box(
                             Modifier.weight(1f).heightIn(min = Tokens.Size.touch)
                                 .drawBehind { if (on) drawLine(c.gilt, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.rule.toPx() * 2) }
-                                .clickable(role = Role.RadioButton) { s.setStampMark(m) },
+                                .chosen(on).clickable(role = Role.RadioButton) { s.setStampMark(m) },
                             contentAlignment = Alignment.Center,
                         ) { StampMark(m, if (on) c.rubric else c.inkSoft, Modifier.size(Tokens.Size.iconMd)) }
                     }
@@ -197,17 +197,14 @@ fun SettingsPage(s: AppState) {
                 ChoiceRow(stringResource(R.string.turn_on), on) { if (on) s.setReminder(-1) else turnOn(s.store.lastReminderHour) }
                 // 시각: 누르면 휠 (오전/오후 · 시 · 분)
                 if (on) ListRow(stringResource(R.string.reminder_time), prayerTime(s.reminderHour * 60 + s.reminderMinute)) { s.prayerBell = AppState.MORNING_BELL }
+                // 절기 시작 (일 년에 네 번): 따로 켜고 끄지 않고 매일 알림이 그날은 절기 알림으로
+                if (on) Text(stringResource(R.string.season_notice_row), style = Theme.small())
             }
             Group(stringResource(R.string.prayer_reminder)) {
                 // 기도 알림은 기도문마다 (종): 여기서는 켜진 것만 한눈에
                 val on = io.github.graviton94.todaybible.core.Prayers.all.mapNotNull { p -> s.prayerTimes[p.id]?.let { prayerName(p) + " " + prayerTime(it) } }
                 Text(if (on.isEmpty()) stringResource(R.string.prayer_reminder_none) else on.joinToString(" · "), style = Theme.small())
                 BookButton(stringResource(R.string.prayer_reminder_manage), Modifier.fillMaxWidth(), quiet = true) { s.prayersOpen = true }
-            }
-            // 절기 시작 알림 (일 년에 네 번)
-            Group(stringResource(R.string.season_notice)) {
-                var on by remember { mutableStateOf(s.store.seasonNotice) }
-                ChoiceRow(stringResource(R.string.season_notice_row), on) { on = !on; s.store.seasonNotice = on }
             }
             ExactAlarmNote(s)
             }
@@ -351,7 +348,7 @@ private fun Group(title: String, content: @Composable () -> Unit) {
 private fun ChoiceRow(text: String, on: Boolean, onClick: () -> Unit) {
     val c = Theme.c
     Row(
-        Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clickable(role = Role.RadioButton, onClick = onClick)
+        Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).chosen(on).clickable(role = Role.RadioButton, onClick = onClick)
             .drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
         verticalAlignment = Alignment.CenterVertically,
     ) {

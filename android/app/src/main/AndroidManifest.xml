@@ -10,6 +10,8 @@
     <!-- 알림을 정한 시각에 (사용자가 폰 설정에서 허락할 때만; 없으면 10분 창으로) -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- 와이파이에서만 받기: 지금 망이 모바일 데이터인지 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <application

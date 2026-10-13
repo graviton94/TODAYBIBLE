@@ -248,7 +248,7 @@ private fun CalendarPanel(s: AppState, days: Set<Long>) {
         Row(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
             listOf(false to R.string.cal_month, true to R.string.cal_year).forEach { (y, id) ->
                 val on = yearView == y
-                Box(Modifier.weight(1f).heightIn(min = Tokens.Size.tab).clickable(role = Role.Tab) { yearView = y }.drawBehind {
+                Box(Modifier.weight(1f).heightIn(min = Tokens.Size.tab).chosen(on).clickable(role = Role.Tab) { yearView = y }.drawBehind {
                     if (on) drawRect(c.rubric, Offset(0f, size.height - Tokens.Stroke.rule.toPx()), androidx.compose.ui.geometry.Size(size.width, Tokens.Stroke.rule.toPx()))
                 }, contentAlignment = Alignment.Center) { Text(stringResource(id), style = Theme.label().copy(color = if (on) c.ink else c.inkSoft)) }
             }

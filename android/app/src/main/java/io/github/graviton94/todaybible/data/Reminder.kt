@@ -53,11 +53,18 @@ object Reminder {
     const val SEASON_ID = 41
     private val NOTICE = setOf(io.github.graviton94.todaybible.core.Season.ADVENT, io.github.graviton94.todaybible.core.Season.LENT, io.github.graviton94.todaybible.core.Season.EASTER, io.github.graviton94.todaybible.core.Season.PENTECOST)
 
-    /** 절기 시작 알림: 대림 · 사순 · 부활 · 성령강림 첫날에만. 절기 판화 · 절기 말씀 · ‘계획 시작’ · ‘오늘 말씀’. 설정 › 알림에서 끌 수 있어요. */
+    /** 오늘이 큰 절기 (대림 · 사순 · 부활 · 성령강림) 의 첫날인지. */
+    fun seasonBegins(day: LocalDate): Boolean {
+        val S = io.github.graviton94.todaybible.core.Seasons
+        val now = S.at(day).season
+        return now in NOTICE && S.at(day.minusDays(1)).season != now
+    }
+
+    /** 절기 시작 알림: 대림 · 사순 · 부활 · 성령강림 첫날에만. 절기 판화 · 절기 말씀 · ‘계획 시작’ · ‘오늘 말씀’. 매일 알림이 그날은 이것으로 와요. */
     fun seasonNotice(ctx0: Context, store: Store, day: LocalDate, force: Boolean = false) {
         val S = io.github.graviton94.todaybible.core.Seasons
         val now = S.at(day).season
-        if (!force && (!store.seasonNotice || now !in NOTICE || S.at(day.minusDays(1)).season == now)) return
+        if (!force && !seasonBegins(day)) return
         val ctx = io.github.graviton94.todaybible.ui.Lang.wrap(ctx0)
         val tr = store.translation
         val (b, c, v) = S.verse(now)
@@ -95,8 +102,8 @@ object Reminder {
         if (store.reminderDay == today) return
         store.reminderDay = today
         if (LocalDateTime.now().isAfter(LocalDate.now().atTime(store.reminderHour, store.reminderMinute).plusHours(2))) return
-        // 절기가 시작되는 날 (일 년에 네 번): 오늘 썼어도 따로 한 번
-        seasonNotice(ctx, store, LocalDate.now())
+        // 절기가 시작되는 날 (일 년에 네 번): 그날의 매일 알림은 절기 알림 하나로 (오늘 썼어도)
+        if (seasonBegins(LocalDate.now())) { store.postedDay = today; seasonNotice(ctx, store, LocalDate.now()); return }
         val fills = store.loadFills()
         if (fills.any { it.epochDay == today }) return
         store.postedDay = today

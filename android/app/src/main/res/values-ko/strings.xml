@@ -815,6 +815,7 @@
     <string name="lifetime_card_go">한 번 결제로 평생 · %1$s ›</string>
     <string name="lifetime_price_hint">가격 보기</string>
     <string name="type_fix_hint">빨간 글자를 지우고 다시 써 주세요</string>
+    <string name="type_one_by_one">한 글자씩 쳐 주세요. 자동 완성 · 음성 입력은 받지 않아요</string>
     <string name="lang_ko_short">한국어</string>
     <string name="lang_en_short">English</string>
     <string name="set_write_sum">하루 분량 · 이름 · 펜</string>
@@ -962,7 +963,7 @@
     <string name="season_plan_start">계획 시작</string>
     <string name="season_word">오늘 말씀</string>
     <string name="season_notice">절기</string>
-    <string name="season_notice_row">대림 · 사순 · 부활 · 성령강림이 시작되는 날 알림</string>
+    <string name="season_notice_row">대림 · 사순 · 부활 · 성령강림이 시작되는 날에는 이 알림이 절기 판화와 함께 와요</string>
     <string name="folio_verses">%1$d절</string>
     <string name="ms_VERSE7_name">책을 펴다</string>
     <string name="ms_VERSE7_rule">말씀 7절을 외우다</string>

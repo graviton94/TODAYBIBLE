@@ -288,10 +288,24 @@ class SeasonsTest {
         assertEquals(Seasons.Now(Season.CHRISTMAS, 1, 0, null), at(2026, 12, 25))
         assertEquals(Season.CHRISTMAS, at(2027, 1, 3).season)
         assertEquals(Season.EPIPHANY, at(2027, 1, 20).season)
-        assertEquals(Seasons.Now(Season.LENT, 4, 24, Season.EASTER), at(2027, 3, 4))
+        // 사순: 재의 수요일 (2027-02-10) ~ 첫 주일 전은 첫째 주, 3/4 (목) 는 셋째 주일 (2/28) 다음 주중
+        assertEquals(1, at(2027, 2, 11).week)
+        assertEquals(1, at(2027, 2, 14).week)
+        assertEquals(Seasons.Now(Season.LENT, 3, 24, Season.EASTER), at(2027, 3, 4))
+        assertEquals(4, at(2027, 3, 7).week)
         assertEquals(Seasons.Now(Season.EASTER, 1, 0, null), at(2027, 3, 28))
         assertEquals(Seasons.Now(Season.EASTER, 2, 41, Season.PENTECOST), at(2027, 4, 5))
         assertEquals(Seasons.Now(Season.PENTECOST, 1, 0, null), at(2027, 5, 16))
-        assertEquals(Seasons.Now(Season.ORDINARY, 21, 48, Season.ADVENT), at(2026, 10, 12))
+        // 성령강림 (2026-05-24) 후 첫째 주일 = 삼위일체 주일 5/31, 10/11 은 제20주일
+        assertEquals(Seasons.Now(Season.ORDINARY, 1, 182, Season.ADVENT), at(2026, 5, 31))
+        assertEquals(Seasons.Now(Season.ORDINARY, 20, 48, Season.ADVENT), at(2026, 10, 12))
+        assertEquals(21, at(2026, 10, 18).week)
+        // 주현 후 첫째 주일 = 1월 6일 다음 주일 (2027-01-10), 그 전 평일도 첫째 주
+        assertEquals(1, at(2027, 1, 8).week)
+        assertEquals(2, at(2027, 1, 17).week)
+        // 대림 · 부활은 주일에 시작: 그날이 첫째 주
+        assertEquals(1, at(2026, 11, 29).week)
+        assertEquals(1, at(2027, 3, 28).week)
+        assertEquals(2, at(2027, 4, 4).week)
     }
 }

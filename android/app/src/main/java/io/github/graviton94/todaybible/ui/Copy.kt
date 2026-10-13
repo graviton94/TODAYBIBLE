@@ -87,6 +87,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -228,6 +229,9 @@ private fun WritePage(s: AppState, verse: Int?) {
     fun write() { focus.requestFocus(); keyboard?.show() }
     // 틀린 글자 뒤에 더 치려 하면: 빨간 칸을 지우라는 한 줄
     var fixHint by remember(s.book, s.chapter, verse) { mutableStateOf(false) }
+    // 한꺼번에 들어온 글 (예측 입력 · 음성 입력 · 붙여넣기) 을 받지 않았을 때: 한 글자씩 치라는 한 줄
+    var bulkHint by remember(s.book, s.chapter, verse) { mutableStateOf(false) }
+    val typeSay = stringResource(R.string.grid_hint)
 
     Box(Modifier.fillMaxSize()) {
         if (shown == null) Box(Modifier.padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) { ChapterDoneNote(s) }
@@ -243,7 +247,9 @@ private fun WritePage(s: AppState, verse: Int?) {
         BasicTextField(
             value = value,
             onValueChange = { nv ->
+                if (sealing == null && nv.text.length - value.text.length > 3) { haptic.performHapticFeedback(HapticFeedbackType.LongPress); bulkHint = true }
                 if (sealing == null && nv.text.length - value.text.length <= 3) {
+                    if (nv.text != value.text) bulkHint = false
                     // 틀린 글자가 있으면 그 뒤로는 더 받지 않아요: 바로 그 자리에서 지우고 고치게 (지우기 · 띄어쓰기는 받음)
                     val wrongNow = TypeJudge.marks(source, value.text).any { it == TypeJudge.Mark.WRONG }
                     val adding = TypeJudge.letters(nv.text).length > TypeJudge.letters(value.text).length
@@ -252,13 +258,13 @@ private fun WritePage(s: AppState, verse: Int?) {
                 }
             },
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None),
-            modifier = Modifier.size(Tokens.Size.hiddenField).alpha(0f).focusRequester(focus).onFocusChanged { focused = it.isFocused },
+            modifier = Modifier.size(Tokens.Size.hiddenField).alpha(0f).focusRequester(focus).onFocusChanged { focused = it.isFocused }.semantics { contentDescription = typeSay },
         )
         // 아래 띠 (세 방식 공통): 안내 한 줄 · 쓰기 시작 / 키보드 내리기. 틀린 글자가 있으면 진홍 점 한 줄로 바뀌어요.
         if (shown != null) CopyBand(Modifier.align(Alignment.BottomCenter)) {
             val wrong = fixHint && marks.any { it == TypeJudge.Mark.WRONG }
             if (wrong) Box(Modifier.size(Tokens.Size.hintDot).background(Theme.c.wrong, androidx.compose.foundation.shape.CircleShape))
-            Text(stringResource(if (wrong) R.string.type_fix_hint else R.string.grid_hint), style = Theme.small().copy(color = if (wrong) Theme.c.wrong else Theme.c.ink), maxLines = 2, modifier = Modifier.weight(1f))
+            Text(stringResource(if (wrong) R.string.type_fix_hint else if (bulkHint) R.string.type_one_by_one else R.string.grid_hint), style = Theme.small().copy(color = if (wrong) Theme.c.wrong else Theme.c.ink), maxLines = 2, modifier = Modifier.weight(1f))
             if (focused) Text(stringResource(R.string.kb_hide), style = Theme.small().copy(color = Theme.c.giltText, textDecoration = TextDecoration.Underline), maxLines = 1,
                 modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { keyboard?.hide(); focusManager.clearFocus() })
             else BookButton(stringResource(R.string.tap_to_write), Modifier.coach("type_start")) { write() }
@@ -295,7 +301,9 @@ private fun Manuscript(s: AppState, verse: Int, source: String, typed: String, m
             Text(stringResource(if (on) R.string.mark_off else R.string.mark_on), style = Theme.small().copy(color = if (on) c.rubric else c.inkSoft, background = if (on) c.mark else androidx.compose.ui.graphics.Color.Unspecified), maxLines = 1,
                 modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.toggleMark(key) })
         }
-        BoxWithConstraints(Modifier.fillMaxWidth().coach("type_grid")) {
+        // 화면 읽기: 칸마다 한 글자씩이 아니라 ‘14절 · 말씀 · 몇 자 썼는지’ 한 번에
+        val gridSay = stringResource(R.string.grid_verse, verse) + ". " + plain + ". " + ok + " / " + plain.count { it != ' ' }
+        BoxWithConstraints(Modifier.fillMaxWidth().coach("type_grid").clearAndSetSemantics { contentDescription = gridSay }) {
             val cols = (maxWidth / (Tokens.Size.gridCell * s.scale)).toInt().coerceAtLeast(6)
             val cell = maxWidth / cols
             val rows = plain.indices.chunked(cols)

@@ -119,9 +119,11 @@ fun PlateThumb(s: AppState, p: Plate, modifier: Modifier = Modifier, index: Int?
                     for (i in 0 until Pieces.COUNT) if (i !in shown) drawRect(c.leaf.copy(alpha = Tokens.Alpha.veilPiece), Offset((i % Pieces.COLS) * w, (i / Pieces.COLS) * h), Size(w + 1f, h + 1f))
                     if (n >= Pieces.COUNT) drawRect(c.gilt, Offset(0f, size.height - Tokens.Stroke.rule.toPx()), Size(size.width, Tokens.Stroke.rule.toPx()))
                 }, contentScale = ContentScale.Crop)
-            } else Column(Modifier.padding(Tokens.Space.s1), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                Text(stringResource(R.string.plate_when), style = Theme.small().copy(color = c.unwritten, textAlign = androidx.compose.ui.text.style.TextAlign.Center), maxLines = 1)
-                Text(s.chapterRef(p.book, p.chapter), style = Theme.small().copy(color = c.inkSoft, textAlign = androidx.compose.ui.text.style.TextAlign.Center), maxLines = 1)
+            } else {
+                // 아직 빈 칸: 어느 장인지만 옅게 (칸마다 같은 안내 글을 되풀이하지 않게). 화면 읽기에는 ‘이 장을 다 쓰면 ○○ ○장’
+                val ref = s.chapterRef(p.book, p.chapter); val say = stringResource(R.string.plate_when) + " " + ref
+                Text(ref, style = Theme.small().copy(color = c.unwritten, textAlign = androidx.compose.ui.text.style.TextAlign.Center), maxLines = 2,
+                    modifier = Modifier.padding(Tokens.Space.s1).semantics { contentDescription = say })
             }
         }
         if (!bare) Text(if (n >= Pieces.COUNT) (index?.let { io.github.graviton94.todaybible.core.Latin.roman(it) } ?: s.plateName(p)) else if (n > 0) "${(f * 100).toInt()}%" else "",
@@ -156,7 +158,7 @@ fun GalleryPage(s: AppState) {
             Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s4).drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
                 groups.forEachIndexed { i, (name, range) ->
                     val inG = all.filter { it.book in range }
-                    Column(Modifier.weight(1f).clickable(role = Role.Tab) { tab = i }.drawBehind {
+                    Column(Modifier.weight(1f).chosen(tab == i).clickable(role = Role.Tab) { tab = i }.drawBehind {
                         if (i == tab) drawRect(c.gilt, Offset(0f, size.height - Tokens.Stroke.rule.toPx()), Size(size.width * 0.8f, Tokens.Stroke.rule.toPx()))
                     }.padding(bottom = Tokens.Space.s2)) {
                         Text(stringResource(name), style = Theme.body().copy(color = if (i == tab) c.ink else c.unwritten), maxLines = 1)

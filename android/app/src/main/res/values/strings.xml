@@ -815,6 +815,7 @@
     <string name="lifetime_card_go">One payment, for good · %1$s ›</string>
     <string name="lifetime_price_hint">see price</string>
     <string name="type_fix_hint">Red letter: delete it and type it again</string>
+    <string name="type_one_by_one">Type one letter at a time. Predictive text and voice typing aren\'t taken</string>
     <string name="lang_ko_short">한국어</string>
     <string name="lang_en_short">English</string>
     <string name="set_write_sum">Daily amount · name · pen</string>
@@ -962,7 +963,7 @@
     <string name="season_plan_start">Start a plan</string>
     <string name="season_word">Today\'s word</string>
     <string name="season_notice">Church year</string>
-    <string name="season_notice_row">Tell me when Advent, Lent, Easter and Pentecost begin</string>
+    <string name="season_notice_row">On the first day of Advent, Lent, Easter and Pentecost, this reminder brings the season and its engraving</string>
     <string name="folio_verses">%1$d vv.</string>
     <string name="ms_VERSE7_name">The Book Opened</string>
     <string name="ms_VERSE7_rule">Learn 7 verses by heart</string>

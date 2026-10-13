@@ -222,7 +222,7 @@ fun GoalChooser(s: AppState, title: Boolean) {
             Goal.choices.forEach { g ->
                 val on = g == s.dailyGoal
                 Column(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).border(Tokens.Stroke.hair, if (on) c.gilt else c.hair).drawBehind { if (on) drawRect(c.gilt, Offset(0f, size.height - Tokens.Stroke.rule.toPx() * 2), Size(size.width, Tokens.Stroke.rule.toPx() * 2)) }
-                    .clickable(role = Role.RadioButton) { s.setGoal(g) }.padding(vertical = Tokens.Space.s2),
+                    .chosen(on).clickable(role = Role.RadioButton) { s.setGoal(g) }.padding(vertical = Tokens.Space.s2),
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                     Text(if (g < 0) "${-g}" else "$g", style = Theme.big(Tokens.Text.gridNum).copy(color = if (on) c.giltText else c.ink), maxLines = 1)
                     Text(stringResource(if (g < 0) R.string.unit_chapter else R.string.unit_verses), style = Theme.small().copy(color = if (on) c.giltText else c.inkSoft), maxLines = 1)
@@ -250,7 +250,7 @@ private fun ChoiceCard(title: String, note: String, on: Boolean, onClick: () -> 
         .drawBehind {
             drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx())
             if (on) drawRect(c.gilt, Offset.Zero, Size(Tokens.Stroke.rule.toPx() * 2, size.height))
-        }.clickable(role = Role.RadioButton, onClick = onClick).padding(horizontal = Tokens.Space.s4),
+        }.chosen(on).clickable(role = Role.RadioButton, onClick = onClick).padding(horizontal = Tokens.Space.s4),
         verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = Theme.body(), maxLines = 1, modifier = Modifier.weight(1f))
         Text(note, style = Theme.small(), maxLines = 1)

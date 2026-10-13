@@ -112,10 +112,14 @@ object Narration {
      * 권 통째로 받아 두기 (I3): 인터넷 없는 곳에서도 듣게. 받아 둔 권은 자동 정리에서 빠져요.
      * progress(받은 장, 전체 장). 하나라도 못 받으면 false (받은 장은 남겨요).
      */
-    fun keepBook(ctx: Context, voice: String, book: Int, chapters: Int, progress: (Int, Int) -> Unit): Boolean {
+    fun keepBook(ctx: Context, voice: String, book: Int, chapters: Int, allowed: () -> Boolean = { true }, progress: (Int, Int) -> Unit): Boolean {
         val d = dir(ctx, voice, book); d.mkdirs(); File(d, KEEP).writeText("ok")
         var ok = true
-        for (ch in 1..chapters) { if (!fetch(ctx, voice, book, ch)) ok = false; progress(ch, chapters) }
+        for (ch in 1..chapters) {
+            // 받는 도중에 와이파이가 끊기면 (와이파이에서만 받기) 그 자리에서 멈춰요. 받은 장은 남아요.
+            if (!allowed()) return false
+            if (!fetch(ctx, voice, book, ch)) ok = false; progress(ch, chapters)
+        }
         return ok
     }
     fun kept(ctx: Context, voice: String, book: Int) = File(dir(ctx, voice, book), KEEP).exists()

@@ -315,7 +315,7 @@ private fun PageTabs(current: Int, onSelect: (Int) -> Unit) {
         names.forEachIndexed { i, n ->
             val on = i == current
             Box(
-                Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Tab) { onSelect(i) }.drawBehind {
+                Modifier.weight(1f).heightIn(min = Tokens.Size.touch).chosen(on).clickable(role = Role.Tab) { onSelect(i) }.drawBehind {
                     // 지금 칸: 글자 아래 짧은 금빛 선 (하루의 편지)
                     if (on) { val w = Tokens.Size.tabMark.toPx(); drawRect(c.gilt, Offset((size.width - w) / 2, size.height * 0.74f), Size(w, Tokens.Stroke.rule.toPx())) }
                 },

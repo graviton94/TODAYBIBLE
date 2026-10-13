@@ -23,17 +23,23 @@ object Seasons {
         val advent = adventStart(y); val xmas = ChurchYear.christmas(y)
         val easter = ChurchYear.easter(y); val ash = ChurchYear.ashWednesday(y); val pent = ChurchYear.pentecost(y)
         val epiphany = LocalDate.of(y, 1, 6)
-        fun wk(from: LocalDate) = (ChronoUnit.DAYS.between(from, d) / 7).toInt() + 1
+        // 몇째 주: 그 절기가 시작된 뒤 지난 주일 수 (교회 달력처럼 주일마다 하나씩, 첫 주일 전 평일은 첫째 주)
+        fun wk(from: LocalDate): Int {
+            val firstSunday = from.plusDays(((7 - from.dayOfWeek.value % 7) % 7).toLong())
+            return if (d.isBefore(firstSunday)) 1 else (ChronoUnit.DAYS.between(firstSunday, d) / 7).toInt() + 1
+        }
         fun to(t: LocalDate) = ChronoUnit.DAYS.between(d, t).toInt()
         return when {
             !d.isBefore(xmas) -> Now(Season.CHRISTMAS, 1, if (d == xmas) 0 else null, null)
             !d.isBefore(advent) -> Now(Season.ADVENT, wk(advent), to(xmas), Season.CHRISTMAS)
             d.isBefore(epiphany) -> Now(Season.CHRISTMAS, 2, null, null)
-            d.isBefore(ash) -> Now(Season.EPIPHANY, wk(epiphany), to(ash), Season.LENT)
+            // 주현 후 첫째 주일 = 1월 6일 다음 주일 (주님의 세례 주일)
+            d.isBefore(ash) -> Now(Season.EPIPHANY, wk(epiphany.plusDays(1)), to(ash), Season.LENT)
             d.isBefore(easter) -> Now(Season.LENT, wk(ash), to(easter), Season.EASTER)
             d.isBefore(pent) -> Now(Season.EASTER, wk(easter), if (d == easter) 0 else to(pent), if (d == easter) null else Season.PENTECOST)
             d.isBefore(pent.plusDays(7)) -> Now(Season.PENTECOST, 1, if (d == pent) 0 else null, null)
-            else -> Now(Season.ORDINARY, wk(pent), to(advent), Season.ADVENT)
+            // 성령강림 후 첫째 주일 = 삼위일체 주일 (성령강림 다음 주일)
+            else -> Now(Season.ORDINARY, wk(pent.plusDays(7)), to(advent), Season.ADVENT)
         }
     }
 

@@ -57,7 +57,7 @@ fun CoverPlatePicker(s: AppState) {
             Box(Modifier.size(Tokens.Size.decoThumb).semantics { contentDescription = name }
                 .border(if (on) Tokens.Stroke.rule * 2 else Tokens.Stroke.hair, if (on) c.gilt else c.hair)
                 .padding(if (on) Tokens.Stroke.rule * 2 else Tokens.Stroke.hair)
-                .background(c.paper).clickable(role = Role.RadioButton) { s.chooseCoverPlate(p.id) }) {
+                .background(c.paper).chosen(on).clickable(role = Role.RadioButton) { s.chooseCoverPlate(p.id) }) {
                 if (img != null) Image(img, null, Modifier.fillMaxWidth(), contentScale = ContentScale.Crop)
             }
         }
@@ -83,7 +83,7 @@ fun InkPicker(s: AppState) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         listOf("ink" to R.string.ink_ink, "navy" to R.string.ink_navy, "sepia" to R.string.ink_sepia, "gilt" to R.string.ink_gilt).forEach { (id, name) ->
             val on = s.ink == id
-            Column(Modifier.clickable(role = Role.RadioButton) { s.chooseInk(id) }.padding(vertical = Tokens.Space.s1), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+            Column(Modifier.chosen(on).clickable(role = Role.RadioButton) { s.chooseInk(id) }.padding(vertical = Tokens.Space.s1), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                 Box(Modifier.size(Tokens.Size.decoInk).then(if (on) Modifier.border(Tokens.Stroke.hair, c.gilt, CircleShape).padding(Tokens.Space.s1) else Modifier.padding(Tokens.Space.s1)).clip(CircleShape).background(inkColor(id, dark)))
                 Text(stringResource(name), style = Theme.small().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1)
             }
@@ -106,7 +106,7 @@ fun IconPicker(s: AppState) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         icons.forEach { (id, v) ->
             val (res, name) = v; val on = s.appIcon == id; val locked = id != "light" && s.gated()
-            Column(Modifier.width(Tokens.Size.decoIcon + Tokens.Space.s3).clickable(role = Role.RadioButton) { if (locked) s.purchaseOpen = true else s.chooseAppIcon(id) },
+            Column(Modifier.width(Tokens.Size.decoIcon + Tokens.Space.s3).chosen(on).clickable(role = Role.RadioButton) { if (locked) s.purchaseOpen = true else s.chooseAppIcon(id) },
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                 Box(Modifier.size(Tokens.Size.decoIcon).then(if (on) Modifier.border(Tokens.Stroke.rule * 2, c.gilt, CircleShape) else Modifier).padding(Tokens.Stroke.rule * 2).clip(CircleShape), contentAlignment = Alignment.Center) {
                     val full = Modifier.requiredSize(Tokens.Size.decoIcon * 1.5f)

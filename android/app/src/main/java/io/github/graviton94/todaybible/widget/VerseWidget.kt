@@ -65,9 +65,19 @@ class VerseWidget : AppWidgetProvider() {
             val hDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 150).coerceAtLeast(110)
             val views = RemoteViews(ctx.packageName, R.layout.widget_verse)
             views.setImageViewBitmap(R.id.widget_image, runCatching { bitmap(ctx, wDp, hDp, dark(ctx)) }.getOrNull())
+            // 그림 위젯이라 화면 읽기 (TalkBack) 에는 글로: 다음에 옮겨 쓸 절
+            runCatching { views.setContentDescription(R.id.widget_image, describe(ctx)) }
             val open = Intent(ctx, MainActivity::class.java).putExtra("page", io.github.graviton94.todaybible.ui.AppState.COPY).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             views.setOnClickPendingIntent(R.id.widget_image, PendingIntent.getActivity(ctx, 1, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             runCatching { m.updateAppWidget(id, views) }
+        }
+
+        /** 화면 읽기용 한 줄: ‘오늘의 한 절 · 창세기 1:3 · 말씀’. */
+        fun describe(ctx: Context): String {
+            val store = Store(ctx); val tr = store.translation; val (b, ch) = store.bookmark(tr)
+            val text = store.book(tr, b); val v = Progress(store.loadFills()).nextVerse(tr, text, ch)
+            val name = Canon.books[b].let { if (tr == Translation.KRV) it.ko else it.en }
+            return ctx.getString(R.string.widget_name) + " · " + if (v == null) ctx.getString(R.string.chapter_done, name, ch) else "$name $ch:$v · " + Markup.plain(text.verse(ch, v))
         }
 
         fun dark(ctx: Context): Boolean = when (Store(ctx).theme) {

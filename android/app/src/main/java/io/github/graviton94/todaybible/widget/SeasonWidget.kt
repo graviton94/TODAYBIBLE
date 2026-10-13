@@ -57,6 +57,7 @@ class SeasonWidget : AppWidgetProvider() {
             val hDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 160).coerceAtLeast(110)
             val views = RemoteViews(ctx.packageName, R.layout.widget_verse)
             views.setImageViewBitmap(R.id.widget_image, runCatching { bitmap(ctx, wDp, hDp) }.getOrNull())
+            runCatching { views.setContentDescription(R.id.widget_image, describe(ctx)) }
             val open = Intent(ctx, MainActivity::class.java).putExtra("page", io.github.graviton94.todaybible.ui.AppState.TODAY).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             views.setOnClickPendingIntent(R.id.widget_image, PendingIntent.getActivity(ctx, 3, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             runCatching { m.updateAppWidget(id, views) }
@@ -70,6 +71,16 @@ class SeasonWidget : AppWidgetProvider() {
             Season.ADVENT -> R.string.season_ADVENT; Season.CHRISTMAS -> R.string.season_CHRISTMAS; Season.EPIPHANY -> R.string.season_EPIPHANY; Season.LENT -> R.string.season_LENT
             Season.EASTER -> R.string.season_EASTER; Season.PENTECOST -> R.string.season_PENTECOST; Season.ORDINARY -> R.string.season_ORDINARY
         })
+
+        /** 화면 읽기용: ‘절기 · 성령강림 후 · 제20주 · 대림절까지 48일 · 시편 1:3 말씀’. */
+        fun describe(ctx: Context, today: LocalDate = LocalDate.now()): String {
+            val store = Store(ctx); val tr = store.translation; val now = Seasons.at(today)
+            val (vb, vc, vv) = Seasons.verse(now.season)
+            val ref = Canon.books[vb].let { if (tr == Translation.KRV) it.ko else it.en } + " $vc:$vv"
+            return listOfNotNull(ctx.getString(R.string.season_widget_name), nameOf(ctx, now.season), ctx.getString(R.string.season_week, now.week),
+                now.daysTo?.takeIf { it > 0 }?.let { n -> now.next?.let { ctx.getString(R.string.season_to, nameOf(ctx, it), n) } },
+                ref + " " + runCatching { Markup.plain(store.book(tr, vb).verse(vc, vv)) }.getOrDefault("")).joinToString(" · ")
+        }
 
         /** 위젯 그림 (dp 크기). 캡처 · 미리보기도 씀. */
         fun bitmap(ctx: Context, wDp: Int, hDp: Int, today: LocalDate = LocalDate.now()): Bitmap {

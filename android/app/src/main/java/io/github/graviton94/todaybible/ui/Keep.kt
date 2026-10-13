@@ -121,7 +121,7 @@ private fun KeepRow(s: AppState, b: Int, have: Int) {
 @Composable
 private fun ChoiceRowLite(text: String, on: Boolean, onClick: () -> Unit) {
     val c = Theme.c
-    Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).clickable(role = Role.Switch, onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).switched(on).clickable(role = Role.Switch, onClick = onClick), verticalAlignment = Alignment.CenterVertically) {
         Text(text, style = Theme.body(), modifier = Modifier.weight(1f))
         Text(if (on) "✓" else "–", style = Theme.body().copy(color = if (on) c.gilt else c.unwritten), modifier = Modifier.width(Tokens.Size.touch).padding(start = Tokens.Space.s3))
     }

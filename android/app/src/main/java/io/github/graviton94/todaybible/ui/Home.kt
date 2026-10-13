@@ -358,7 +358,7 @@ fun PlanSheet(s: AppState) {
             val on = s.planId == pl.id
             Hair()
             Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch)
-                .clickable(role = Role.RadioButton) { s.choosePlan(pl.id) }.padding(vertical = Tokens.Space.s2),
+                .chosen(on).clickable(role = Role.RadioButton) { s.choosePlan(pl.id) }.padding(vertical = Tokens.Space.s2),
                 verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(planName(ctx, pl.id), style = Theme.body().copy(color = if (on) c.giltText else c.ink), maxLines = 1)
