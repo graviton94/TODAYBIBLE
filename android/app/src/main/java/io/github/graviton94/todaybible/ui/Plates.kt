@@ -180,7 +180,6 @@ fun GalleryPage(s: AppState) {
                             Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                                 row.forEach { pl -> Column(Modifier.weight(1f).clickable(role = Role.Button) { s.plateView = pl }, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                                     PlateThumb(s, pl, Modifier.fillMaxWidth())
-                                    Text(s.plateName(pl), style = Theme.small().copy(color = c.ink), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                                     Text(s.chapterRef(pl.book, pl.chapter), style = Theme.small(), maxLines = 1)
                                 } }
                                 repeat(2 - row.size) { Box(Modifier.weight(1f)) }

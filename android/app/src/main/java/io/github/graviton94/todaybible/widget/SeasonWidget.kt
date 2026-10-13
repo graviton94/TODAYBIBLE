@@ -79,7 +79,7 @@ class SeasonWidget : AppWidgetProvider() {
             val now = Seasons.at(today)
             val name = nameOf(ctx, now.season)
             val sub = listOfNotNull(ctx.getString(R.string.season_week, now.week).takeIf { now.season != Season.CHRISTMAS || now.week > 1 },
-                now.daysTo?.takeIf { it > 0 }?.let { n -> now.next?.let { ctx.getString(R.string.season_to, nameOf(ctx, it), n) } }).joinToString(" · ")
+                now.daysTo?.takeIf { it > 0 }?.let { n -> now.next?.let { ctx.getString(R.string.season_to, nameOf(ctx, it), n) } }).joinToString("\n")
             val (vb, vc, vv) = Seasons.verse(now.season)
             val verse = runCatching { Markup.plain(store.book(tr, vb).verse(vc, vv)) }.getOrDefault("")
             val ref = Canon.books[vb].let { if (korean) it.ko else it.en } + " $vc:$vv"
@@ -115,7 +115,9 @@ class SeasonWidget : AppWidgetProvider() {
                     y -= Tokens.Space.s2.toPx()
                 }
                 if (sub.isNotEmpty()) {
-                    val sl = m.measure(sub, TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = gold), maxLines = 2, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w.toInt()))
+                    // 주 · 남은 날은 줄을 나눠서 (숫자와 '일'이 갈라지지 않게), 넓으면 한 줄로
+                    val text = if (tall) sub.replace("\n", " · ") else sub
+                    val sl = m.measure(text, TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = gold), maxLines = 2, overflow = TextOverflow.Ellipsis, softWrap = false, constraints = Constraints(maxWidth = w.toInt()))
                     y -= sl.size.height; drawText(sl, topLeft = Offset(pad, y))
                 }
                 val nl = m.measure(name, TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.garamond, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.label, color = paper), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w.toInt()))
