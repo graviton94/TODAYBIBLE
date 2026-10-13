@@ -45,6 +45,7 @@ object Tokens {
         val legend = 10.dp
         val spine = 122.dp
         val seasonBand = 8.dp
+        val seasonWideMin = 240.dp
         val spineBand = 2.dp
         val liberArt = 220.dp
         val scrollTrack = 64.dp

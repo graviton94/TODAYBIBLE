@@ -84,7 +84,8 @@ class SeasonWidget : AppWidgetProvider() {
             val verse = runCatching { Markup.plain(store.book(tr, vb).verse(vc, vv)) }.getOrDefault("")
             val ref = Canon.books[vb].let { if (korean) it.ko else it.en } + " $vc:$vv"
             val img = runCatching { ctx.assets.open("plates/${Seasons.plate(now.season)}.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull()?.asImageBitmap()
-            val tall = hDp >= Tokens.Size.widgetPlateMinH.value
+            // 4×2 (넓으면): 절기 말씀까지 · 2×2: 이름 · 주 · 남은 날만
+            val tall = wDp >= Tokens.Size.seasonWideMin.value && hDp >= Tokens.Size.widgetPlateMinH.value
             return Cards.render(ctx, (wDp * d).toInt(), (hDp * d).toInt(), density) { m ->
                 val pad = Tokens.Size.widgetPad.toPx(); val w = size.width - 2 * pad
                 val r = CornerRadius(Tokens.Radius.page.toPx())
