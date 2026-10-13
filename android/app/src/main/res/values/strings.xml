@@ -1024,4 +1024,6 @@
     <string name="rit_later">Later</string>
     <string name="fmt_md_short">M/d</string>
     <string name="medal_left_verses">%1$d more verses to learn</string>
+    <string name="season_widget_name">Church year</string>
+    <string name="season_widget_desc">Today\'s season with its engraving, week and verse</string>
 </resources>

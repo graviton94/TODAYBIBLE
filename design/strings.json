@@ -1021,5 +1021,7 @@
   "rit_next_go": {"en": "Begin %1$s", "ko": "%1$s 시작"},
   "rit_later": {"en": "Later", "ko": "나중에"},
   "fmt_md_short": {"en": "M/d", "ko": "M.dd"},
-  "medal_left_verses": {"en": "%1$d more verses to learn", "ko": "%1$d절 더 외우면 돼요"}
+  "medal_left_verses": {"en": "%1$d more verses to learn", "ko": "외운 절 %1$d절 더"},
+  "season_widget_name": {"en": "Church year", "ko": "절기"},
+  "season_widget_desc": {"en": "Today's season with its engraving, week and verse", "ko": "오늘의 절기 · 판화 · 주 · 절기 말씀"}
 }

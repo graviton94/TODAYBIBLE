@@ -71,6 +71,10 @@
         <!-- 낭독 미리 받기: 앱을 닫아도 끝까지 받아요 -->
         <service android:name=".data.KeepService" android:exported="false" android:foregroundServiceType="dataSync" />
         <service android:name=".data.ListenService" android:exported="false" android:foregroundServiceType="mediaPlayback" />
+        <receiver android:name=".widget.SeasonWidget" android:exported="false" android:label="@string/season_widget_name">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_season" />
+        </receiver>
         <receiver android:name=".widget.HandWidget" android:exported="false" android:label="@string/hand_widget_name">
             <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_hand" />

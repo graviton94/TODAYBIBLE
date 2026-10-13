@@ -20,6 +20,7 @@ class WidgetTick : BroadcastReceiver() {
             runCatching { VerseWidget.refresh(ctx) }
             runCatching { SmallWidget.refreshAll(ctx) }
             runCatching { HandWidget.refresh(ctx) }
+            runCatching { SeasonWidget.refresh(ctx) }
             runCatching { previews(ctx) }
         }
 
@@ -40,6 +41,7 @@ class WidgetTick : BroadcastReceiver() {
             runCatching { put(VerseWidget::class.java, VerseWidget.bitmap(ctx, 160, 160, dark)) }
             runCatching { put(HandWidget::class.java, if (HandWidget.hasInk(ctx)) HandWidget.bitmap(ctx, 160, 160, dark) else HandWidget.sample(ctx, 160, 160, dark)) }
             runCatching { put(GoalWidget::class.java, GoalWidget().draw(ctx, 160, 160, dark)) }
+            runCatching { put(SeasonWidget::class.java, SeasonWidget.bitmap(ctx, 160, 160)) }
             p.edit().putLong("widget_preview_day", day).apply()
         }
 
@@ -51,6 +53,11 @@ class WidgetTick : BroadcastReceiver() {
             runCatching { save("widget_preview_verse", VerseWidget.bitmap(ctx, 160, 160, false)) }
             runCatching { save("widget_preview_hand", HandWidget.sample(ctx, 160, 160, false)) }
             runCatching { save("widget_preview_today", GoalWidget().paint(ctx, 160, 160, false, 6, 10, 12)) }
+            // 절기 위젯: 오늘 · 대림 사흘 전 · 대림 첫날 · 성탄 · 사순 (2×2 · 4×2)
+            listOf("now" to LocalDate.now(), "before_advent" to LocalDate.of(2026, 11, 26), "advent" to LocalDate.of(2026, 11, 29), "christmas" to LocalDate.of(2026, 12, 25), "lent" to LocalDate.of(2027, 2, 10)).forEach { (n, d) ->
+                runCatching { save("widget_season_${n}_22", SeasonWidget.bitmap(ctx, 160, 160, d)) }
+                runCatching { save("widget_season_${n}_42", SeasonWidget.bitmap(ctx, 320, 170, d)) }
+            }
             java.io.File(dir, "done").writeText("ok")
         }
 

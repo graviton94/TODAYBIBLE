@@ -44,6 +44,7 @@ object Tokens {
         val folioOrn = 7.dp
         val legend = 10.dp
         val spine = 122.dp
+        val seasonBand = 8.dp
         val spineBand = 2.dp
         val liberArt = 220.dp
         val scrollTrack = 64.dp
@@ -126,7 +127,6 @@ object Tokens {
         val widgetPlateMinH = 110.dp
         val marginDate = 34.dp
         val readRibbon = 64.dp
-        val seasonBand = 8.dp
         val inkFeather = 30.dp
         val pathNode = 18.dp
         val hintDot = 6.dp
@@ -257,6 +257,7 @@ object Tokens {
         const val foldTail = 0.7f
         const val folio = 0.75f
         const val spineLine = 1.08f
+        const val seasonWidgetPlate = 0.62f
         const val systemFontMax = 1.15f
         const val veilInset = 0.06f
         const val veilMark = 0.16f
