@@ -38,7 +38,7 @@ jobs:
                   open(out,"wb").write(data)
                   art=re.sub("<[^>]+>","",md.get("Artist",{}).get("value",""))
                   man.write("\t".join([f"{key}_{n}",p["title"],lic,art.replace("\t"," ").replace("\n"," ")[:160],ii["descriptionurl"]])+"\n")
-                  print(key,n,p["title"],lic); time.sleep(1)
+                  print(key,n,p["title"],lic); time.sleep(0.3)
                   if n>=lim: break
           PY
       - name: Push to ui-art branch
