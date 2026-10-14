@@ -2,6 +2,10 @@ package io.github.graviton94.todaybible.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -66,8 +70,8 @@ fun prayerHead(p: Prayer): String = when (p.hour) {
 }
 
 /**
- * 기도문 한 편: 말씀을 크게, 범위마다 장절. [들으며 기도] [따라 쓰기] [아멘].
- * 아래에 다른 기도문들. 모두 성경 본문 그대로예요.
+ * 기도문 한 편: 위에 기도문 고르는 리본 (누르면 목록 시트), 그 아래 고른 기도. 말씀을 크게, 범위마다 장절. [들으며 기도] [따라 쓰기] [아멘].
+ * 모두 성경 본문 그대로예요.
  */
 @Composable
 fun PrayerPage(s: AppState, id: String) {
@@ -77,13 +81,28 @@ fun PrayerPage(s: AppState, id: String) {
     val now by ListenService.now.collectAsState()
     val origin by ListenService.origin.collectAsState()
     LeaveGuard(s, now != null && origin == "prayer:${p.id}", recording = false, onStop = { ListenService.stop(ctx); s.prayerOpen = null }, onKeep = { s.prayerOpen = null })
+    // 기도문 고르기: 위에 리본 한 줄 (지금 기도 ▾), 누르면 목록 시트. 목록이 화면을 차지하지 않게
+    var choosing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().background(c.leaf).verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.prayer_back), style = Theme.small().copy(color = c.inkSoft), maxLines = 1,
                 modifier = Modifier.weight(1f).heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.prayerOpen = null })
-            PrayerBell(s, p.id, Modifier.coach("prayer_bell"))
+            PrayerBell(s, p.id, Modifier.coach("prayer_bell"), big = true)
             HelpButton(s, "prayer")
+        }
+        // 리본: 금빛 띠 + ORATIONES · 지금 기도 ▾ · 몇째 / 모두
+        val idx = Prayers.all.indexOfFirst { it.id == p.id } + 1
+        val pickLabel = stringResource(R.string.prayer_title)
+        Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper)
+            .drawBehind { drawRect(c.gilt, size = androidx.compose.ui.geometry.Size(Tokens.Stroke.rule.toPx() * 2, size.height)) }
+            .clickable(role = Role.Button, onClickLabel = pickLabel) { choosing = true }.padding(horizontal = Tokens.Space.s4),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            Text("ORATIONES", style = Theme.caps(), maxLines = 1)
+            Text(prayerName(p), style = Theme.body(), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            Text("$idx / ${Prayers.all.size}", style = Theme.small().copy(fontFeatureSettings = "lnum"), maxLines = 1)
+            Text("▾", style = Theme.body().copy(color = c.giltText))
         }
         Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             Text(prayerHead(p), style = Theme.caps(), maxLines = 1)
@@ -115,25 +134,29 @@ fun PrayerPage(s: AppState, id: String) {
         BookButton(stringResource(if (s.prayed(p.id)) R.string.prayer_prayed else R.string.prayer_amen), Modifier.fillMaxWidth().coach("prayer_amen"), quiet = s.prayed(p.id)) {
             s.markPrayed(p.id); s.prayerOpen = null
         }
-        // 다른 기도문
-        Column(Modifier.padding(top = Tokens.Space.s4)) {
+    }
+    if (choosing) BookSheet({ choosing = false }) {
+        Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid * 2).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             Text("ORATIONES", style = Theme.caps(), maxLines = 1)
-            Text(stringResource(R.string.prayer_title), style = Theme.title(k), modifier = Modifier.padding(top = Tokens.Space.s1, bottom = Tokens.Space.s2))
-            PrayerList(s, except = p.id)
+            Text(stringResource(R.string.prayer_title), style = Theme.title(k, Tokens.Text.display))
+            PrayerList(s, current = p.id) { choosing = false }
         }
+    }
     }
 }
 
 /** 기도문 목록: 이름 · 장절 · 오늘 드렸으면 금빛. */
 @Composable
-fun PrayerList(s: AppState, except: String? = null) {
+fun PrayerList(s: AppState, current: String? = null, onPick: () -> Unit = {}) {
     val c = Theme.c
-    Prayers.all.filter { it.id != except }.forEach { p ->
+    Prayers.all.forEach { p ->
         Hair()
-        Row(Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s1), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f).heightIn(min = Tokens.Size.row).clickable(role = Role.Button) { s.prayersOpen = false; s.prayerOpen = p.id }.padding(vertical = Tokens.Space.s1),
+        val here = p.id == current
+        Row(Modifier.fillMaxWidth().then(if (here) Modifier.drawBehind { drawRect(c.gilt, size = androidx.compose.ui.geometry.Size(Tokens.Stroke.rule.toPx() * 2, size.height)) } else Modifier)
+            .chosen(here).padding(vertical = Tokens.Space.s1, horizontal = if (here) Tokens.Space.s2 else 0.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f).heightIn(min = Tokens.Size.row).clickable(role = Role.Button) { s.prayersOpen = false; s.prayerOpen = p.id; onPick() }.padding(vertical = Tokens.Space.s1),
                 verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                Text(prayerName(p) + if (s.prayed(p.id)) " · " + stringResource(R.string.prayer_prayed_short) else "", style = Theme.body().copy(color = if (s.prayed(p.id)) c.giltText else c.ink), maxLines = 2)
+                Text(prayerName(p) + if (s.prayed(p.id)) " · " + stringResource(R.string.prayer_prayed_short) else "", style = Theme.body().copy(color = if (here || s.prayed(p.id)) c.giltText else c.ink), maxLines = 2)
                 Text(s.prayerRefShort(p), style = Theme.small(), maxLines = 1)
             }
             PrayerBell(s, p.id)
@@ -163,15 +186,19 @@ fun prayerTime(minutes: Int): String = java.time.LocalTime.of(minutes / 60, minu
 
 /** 기도문 옆 종: 켜졌으면 붉은 종 + 시각, 누르면 시각 고르는 창. */
 @Composable
-fun PrayerBell(s: AppState, id: String, modifier: Modifier = Modifier) {
-    val c = Theme.c; val ctx = LocalContext.current
+fun PrayerBell(s: AppState, id: String, modifier: Modifier = Modifier, big: Boolean = false) {
+    val c = Theme.c
     val at = s.prayerTimes[id]
     val label = stringResource(R.string.prayer_bell)
-    Row(modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).clickable(role = Role.Button) { s.prayerBell = id }
-        .semantics { contentDescription = label }.padding(horizontal = Tokens.Space.s2),
-        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-        BellMark(if (at != null) c.rubric else c.inkSoft, at != null, Modifier.size(Tokens.Size.iconSm))
-        if (at != null) Text(prayerTime(at), style = Theme.small().copy(color = c.rubric), maxLines = 1)
+    // big: 기도문 머리의 알림 단추 (테두리 있는 넓은 칩, 꺼져 있으면 ‘알림’ 글자도)
+    Row(modifier.heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip))
+        .then(if (big) Modifier.border(Tokens.Stroke.hair, if (at != null) c.rubric else c.hair, RoundedCornerShape(Tokens.Radius.chip)) else Modifier)
+        .clickable(role = Role.Button) { s.prayerBell = id }
+        .semantics { contentDescription = label }.padding(horizontal = if (big) Tokens.Space.s3 else Tokens.Space.s2),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (big) Tokens.Space.s2 else Tokens.Space.s1)) {
+        BellMark(if (at != null) c.rubric else c.inkSoft, at != null, Modifier.size(if (big) Tokens.Size.icon else Tokens.Size.iconSm))
+        if (at != null) Text(prayerTime(at), style = (if (big) Theme.body() else Theme.small()).copy(color = c.rubric), maxLines = 1)
+        else if (big) Text(label, style = Theme.body().copy(color = c.inkSoft), maxLines = 1)
     }
 }
 

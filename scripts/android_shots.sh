@@ -443,6 +443,12 @@ open --es tb.setsMonth 2027-11 --ez tb.gallery true;               shot rm7_gall
 open --ez tb.seed true --es tb.setsMonth 2028-04 --es tb.today 2028-04-10 --ez tb.gallery true; shot rm8_gallery_2028_04 6
 open --es tb.setsMonth "" --ez tb.gallery false
 # @end
+# @scene pr
+# 기도문: 위 리본 (지금 기도 ▾) · 큰 알림 단추, 리본을 누르면 기도문 목록 시트
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --es tb.prayer morning; shot pr1_morning 5
+adb shell input tap 540 400; sleep 2;                              shot pr2_pick 1
+open --es tb.prayerTimes morning=360 --es tb.prayer morning;       shot pr3_bell_on 4
+# @end
 # @scene hp
 # 도움말: (?) · 기도 · 듣기 첫 안내 · 설정 도움 · 소개 다시 보기 · 교독 안내
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 0; shot hp1_topbar 5
