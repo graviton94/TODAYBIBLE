@@ -26,3 +26,11 @@ internal fun fitText(m: TextMeasurer, text: String, style: TextStyle, maxW: Int,
         sp -= 0.5f
     }
 }
+
+/** 한 줄 제목: 칸 너비에 들어갈 때까지 글자를 줄이고 (최소 크기까지), 그래도 넘치면 말줄임. */
+internal fun fitLine(m: TextMeasurer, text: String, style: TextStyle, maxW: Int, minSp: Float): TextLayoutResult {
+    var sp = style.fontSize.value
+    while (sp > minSp && m.measure(text, style.copy(fontSize = sp.sp), maxLines = 1, softWrap = false).size.width > maxW) sp -= 0.5f
+    return m.measure(text, style.copy(fontSize = sp.sp), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = maxW.coerceAtLeast(1)))
+}
+

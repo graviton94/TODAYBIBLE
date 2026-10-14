@@ -144,7 +144,8 @@ class GoalWidget : SmallWidget() {
             drawText(fitText(m, ctx.getString(R.string.prayer_reminder_none), hint, w, size.height - pad - y, Tokens.Text.widgetMin.value), topLeft = Offset(pad, y))
             return@frame
         }
-        val title = m.measure(n.name, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.body * 1.25f, color = c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w))
+        // 이름은 한 줄에: 길면 (Evening prayer 등) 글자를 줄여서
+        val title = fitLine(m, n.name, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.body * 1.25f, color = c.ink), w, Tokens.Text.widgetMin.value)
         drawText(title, topLeft = Offset(pad, y)); y += title.size.height
         val time = m.measure((if (n.tomorrow) ctx.getString(R.string.widget_tomorrow) + " " else "") + n.time, TextStyle(fontFamily = Fonts.display, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.body, color = c.giltText), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w))
         drawText(time, topLeft = Offset(pad, y)); y += time.size.height + Tokens.Space.s1.toPx()
