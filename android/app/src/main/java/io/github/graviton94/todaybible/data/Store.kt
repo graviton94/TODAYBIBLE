@@ -11,7 +11,7 @@ import io.github.graviton94.todaybible.design.ThemeChoice
 import java.io.File
 
 /** 판화 하나: 그 장면이 나오는 장. */
-/** 판화 한 점. set = 달마다 판화 세트 ("2026-11", 구독), 비면 도레 기본 판화. */
+/** 판화 한 점. set = 달마다 판화 세트 ("2026-11", 무료 · 그 달이 되어야 걸림), 비면 도레 기본 판화. */
 data class Plate(val id: String, val book: Int, val chapter: Int, val ko: String, val en: String, val verse: Int, val byKo: String, val byEn: String, val set: String = "")
 
 /**
@@ -29,10 +29,17 @@ class Store(val context: Context) {
     }
 
     val plates: List<Plate> by lazy {
-        context.assets.open("plates/plates.tsv").bufferedReader().readLines().filter { it.isNotBlank() && !it.startsWith("#") }.mapNotNull { l ->
-            val p = l.split('\t'); val b = io.github.graviton94.todaybible.core.Canon.byOsis(p[1]) ?: return@mapNotNull null
-            Plate(p[0], b.index, p[2].toInt(), p[3], p[4], p.getOrNull(5)?.toIntOrNull() ?: 1, p.getOrElse(6) { "" }, p.getOrElse(7) { "" }, p.getOrElse(8) { "" }.trim())
+        fun parse(lines: List<String>) = lines.filter { it.isNotBlank() && !it.startsWith("#") }.mapNotNull { l ->
+            val p = l.split('\t'); val b = io.github.graviton94.todaybible.core.Canon.byOsis(p.getOrElse(1) { "" }) ?: return@mapNotNull null
+            Plate(p[0], b.index, p.getOrNull(2)?.toIntOrNull() ?: return@mapNotNull null, p.getOrElse(3) { "" }, p.getOrElse(4) { "" }, p.getOrNull(5)?.toIntOrNull() ?: 1, p.getOrElse(6) { "" }, p.getOrElse(7) { "" }, p.getOrElse(8) { "" }.trim())
         }
+        val inApp = parse(context.assets.open("plates/plates.tsv").bufferedReader().readLines())
+        // 이달의 판화 (원격, C8): 받아 둔 세트 가운데 그 달이 된 것만 (다음 달 것은 미리 받아 두기만)
+        val month = (if (io.github.graviton94.todaybible.BuildConfig.DEV_TOOLS) prefs.getString("debug_month", null)?.takeIf { it.isNotBlank() } else null) ?: java.time.YearMonth.now().toString()
+        val have = inApp.map { it.id }.toSet()
+        // 달마다 세트 (해-달) 는 앱 안에 든 것이든 받은 것이든 그 달이 되어야 걸려요 (사료 "src" 는 늘)
+        fun due(p: Plate) = p.set.isEmpty() || p.set == History.SOURCE || p.set <= month
+        inApp.filter(::due) + parse(RemoteSets.lines(context, "sets.tsv")).filter { it.id !in have && it.set.isNotEmpty() && due(it) }
     }
     /** 그 장의 판화: 도레 기본 판화가 먼저, 없으면 달마다 세트. */
     fun plateFor(book: Int, chapter: Int): Plate? = plates.firstOrNull { it.book == book && it.chapter == chapter && it.set.isEmpty() } ?: plates.firstOrNull { it.book == book && it.chapter == chapter }
@@ -104,10 +111,6 @@ class Store(val context: Context) {
     var reminderMinute: Int
         get() = prefs.getInt("reminder_min", 0)
         set(v) = prefs.edit().putInt("reminder_min", v).apply()
-    /** 절기 시작 알림 (대림 · 사순 · 부활 · 성령강림 첫날 아침). */
-    var seasonNotice: Boolean
-        get() = prefs.getBoolean("season_notice", true)
-        set(v) = prefs.edit().putBoolean("season_notice", v).apply()
     /** 오늘의 분량 (절 수, -1 = 하루 한 장). */
     var dailyGoal: Int
         get() = prefs.getInt("goal", io.github.graviton94.todaybible.core.Goal.CHAPTER)
@@ -237,6 +240,10 @@ class Store(val context: Context) {
     var handGuide: Boolean
         get() = prefs.getBoolean("hand_guide", true)
         set(v) = prefs.edit().putBoolean("hand_guide", v).apply()
+    /** 효과음 (1.5): 한 절 · 장 마침 · 판화 · 메달 · 권 다 씀. */
+    var effects: Boolean
+        get() = prefs.getBoolean("effects", true)
+        set(v) = prefs.edit().putBoolean("effects", v).apply()
     var penSound: Boolean
         get() = prefs.getBoolean("pen_sound", true)
         set(v) = prefs.edit().putBoolean("pen_sound", v).apply()
@@ -254,6 +261,10 @@ class Store(val context: Context) {
         set(v) = prefs.edit().putBoolean("skip_intro", v).commit().let { }
     /** 바로 디스크에 (앱을 곧 닫을 때: apply 로 미뤄 둔 것까지). */
     fun flush() { prefs.edit().commit() }
+    /** 앱을 다시 그린 뒤 보여 줄 한 줄 (되살리기 뒤 등). 한 번 읽으면 지워요. */
+    var pendingToast: String
+        get() = prefs.getString("pending_toast", "")!!
+        set(v) = prefs.edit().putString("pending_toast", v).commit().let { }
     fun consumeSkipIntro(): Boolean = skipIntroOnce.also { if (it) skipIntroOnce = false }
     /** 앱 언어: system · ko · en. */
     var language: String

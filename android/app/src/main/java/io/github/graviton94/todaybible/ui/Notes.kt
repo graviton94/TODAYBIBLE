@@ -82,7 +82,7 @@ fun MemorySheet(s: AppState) {
         FlowRow(Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             Memorize.words(plain, level).forEachIndexed { i, w ->
                 val open = !w.hidden || i in peek
-                Text(if (open) w.text else w.shown, style = Theme.verse(k).copy(color = if (w.hidden && !open) c.unwritten else c.ink),
+                Text(if (open) w.text else w.shown, style = Theme.verse(s.bibleKorean).copy(color = if (w.hidden && !open) c.unwritten else c.ink),
                     modifier = if (w.hidden) Modifier.clip(RoundedCornerShape(Tokens.Radius.chip)).clickable(role = Role.Button) { peek = if (i in peek) peek - i else peek + i } else Modifier)
             }
         }
@@ -139,6 +139,14 @@ fun SermonSheet(s: AppState) {
             p?.book ?: 0, p?.chapter ?: 1, p?.from ?: 0, p?.to ?: 0, day, text.trim()))
     }
     fun close() { save(); s.sermonOpen = null }
+    // 예배 중에 적다가 화면이 꺼지거나 앱이 내려가도 남게: 멈추고 1.5초 뒤 · 앱을 떠날 때 저장
+    androidx.compose.runtime.LaunchedEffect(ref, text) { kotlinx.coroutines.delay(1500); if (ref != (old?.takeIf { it.from > 0 }?.let { s.passageLabel(it) } ?: "") || text != (old?.text ?: "")) save() }
+    val owner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+    val latest = androidx.compose.runtime.rememberUpdatedState { save() }
+    androidx.compose.runtime.DisposableEffect(owner) {
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e -> if (e == androidx.lifecycle.Lifecycle.Event.ON_STOP) latest.value() }
+        owner.lifecycle.addObserver(obs); onDispose { owner.lifecycle.removeObserver(obs) }
+    }
     BookSheet({ close() }) {
         Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid * 2).verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             Text(stringResource(R.string.sermon_title), style = Theme.title(k))
@@ -148,7 +156,7 @@ fun SermonSheet(s: AppState) {
             if (p != null) {
                 val t = s.store.book(s.translation, p.book)
                 val verses = t.fillable(p.chapter).filter { it >= p.from && (p.to == 0 || it <= p.to) }
-                Text(Lang.passage(s.store.context, s.translation, s.bookName(p.book), p.chapter, p.from, p.to), style = Theme.label())
+                Text(Lang.passage(s.store.context, s.uiTr, s.bookName(p.book), p.chapter, p.from, p.to), style = Theme.label())
                 verses.take(3).forEach { v -> Text("$v  " + Markup.plain(t.verse(p.chapter, v)), style = Theme.body().copy(color = c.inkSoft), maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                     BookButton(stringResource(R.string.sermon_copy), Modifier.weight(1f)) { close(); s.open(p.book, p.chapter); if (!s.locked(p.book)) s.target = verses.firstOrNull { !s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(p.book, p.chapter, it)) } ?: p.from }

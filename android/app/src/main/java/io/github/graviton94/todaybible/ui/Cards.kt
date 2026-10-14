@@ -60,12 +60,12 @@ object Cards {
     private fun shareDensity() = Density(Tokens.Px.shareDensity, 1f)
     /** 카드의 날짜 · 앱 이름은 본문(번역)의 언어로. */
     private fun stamp(ctx: Context, korean: Boolean, now: LocalDateTime): String =
-        Lang.date(Lang.content(ctx, korean), io.github.graviton94.todaybible.R.string.fmt_card_time, now)
+        Lang.date(Lang.content(ctx, Lang.uiKorean(ctx)), io.github.graviton94.todaybible.R.string.fmt_card_time, now)
 
     /** 판화를 카드 위쪽에 꽉 채워 (세피아 먹빛), 아래로 어둠에 녹아들게. */
     private fun DrawScope.art(ctx: Context, plateId: String?, h: Float, leaf: androidx.compose.ui.graphics.Color) {
         val id = plateId ?: return
-        val bmp = runCatching { ctx.assets.open("plates/$id.jpg").use { BitmapFactory.decodeStream(it) } }.getOrNull() ?: return
+        val bmp = runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, id).use { BitmapFactory.decodeStream(it) } }.getOrNull() ?: return
         val img = bmp.asImageBitmap()
         val scale = maxOf(size.width / img.width, h / img.height)
         val dw = (img.width * scale).toInt(); val dh = (img.height * scale).toInt()
@@ -95,7 +95,7 @@ object Cards {
             val pad = Tokens.Size.cardPad.toPx(); val width = (size.width - 2 * pad).toInt(); val gap = Tokens.Size.cardGap.toPx()
             // 아래부터 쌓을 것들을 먼저 재요
             val foot = m.measure(buildAnnotatedString { append(stamp(ctx, korean, now)) }, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardFoot, color = c.inkSoft), maxLines = 1)
-            val app = m.measure(Lang.content(ctx, korean).getString(R.string.app_name), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardFoot, color = c.inkSoft), maxLines = 1)
+            val app = m.measure(Lang.content(ctx, Lang.uiKorean(ctx)).getString(R.string.app_name), TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardFoot, color = c.inkSoft), maxLines = 1)
             val refL = ref?.let { m.measure(it, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardRef, color = c.gilt), maxLines = 1) }
             val credL = credit?.let { m.measure(it, TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.cardFoot, color = c.inkSoft), constraints = Constraints(maxWidth = (width - (refL?.size?.width ?: 0) - gap).toInt().coerceAtLeast(1)), maxLines = 1, overflow = TextOverflow.Ellipsis) }
             val cap = m.measure(eyebrow, TextStyle(fontFamily = Fonts.caps, fontWeight = FontWeight.SemiBold, fontSize = Tokens.Text.cardCaps, letterSpacing = Tokens.Tracking.caps.em, color = c.gilt), maxLines = 1, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = width))
@@ -142,8 +142,10 @@ object Cards {
     /** 판화 이름 줄: 〈이름〉 화가 (화가 이름은 판화 표기의 ‘·’ 앞까지). */
     fun credit(ctx: Context, korean: Boolean, plateId: String?): String? {
         val p = io.github.graviton94.todaybible.data.Store(ctx).plates.firstOrNull { it.id == plateId } ?: return null
-        val by = (if (korean) p.byKo else p.byEn).substringBefore('·').trim()
-        return Lang.content(ctx, korean).getString(R.string.card_credit, if (korean) p.ko else p.en, by)
+        // 판화 이름 · 화가 · 날짜 · 앱 이름은 앱 언어로, 말씀 글만 번역의 언어로
+        val ui = Lang.uiKorean(ctx)
+        val by = (if (ui) p.byKo else p.byEn).substringBefore('·').trim()
+        return Lang.content(ctx, ui).getString(R.string.card_credit, if (ui) p.ko else p.en, by)
     }
 
     /** 말씀 한 절 카드: 머리글 (라틴 장) · 말씀 · 장절 · 그림 이름 · 나눈 날짜와 시각. */

@@ -31,6 +31,7 @@ class ListenService : Service() {
 
     companion object {
         private const val CHANNEL = "listen"; private const val ID = 11
+        private const val IDLE_MS = 30 * 60_000L
         private val _now = MutableStateFlow<Now?>(null)
         val now: StateFlow<Now?> = _now
         /** 듣기를 시작한 화면: "read" (성경 읽기) · "prayer:아이디" (기도문). 듣는 중 띠 · 알림이 그리로 데려가요. */
@@ -73,8 +74,18 @@ class ListenService : Service() {
     private var to = 0
     private val queue = ArrayDeque<IntArray>()
     // 화면이 꺼져도 절 사이 쉼 · 다음 장 받기 동안 멈추지 않게
+    // 멈춘 동안은 풀어 둬요 (밤새 멈춰 두어도 배터리를 붙잡지 않게)
     private var wake: android.os.PowerManager.WakeLock? = null
     private var wifi: android.net.wifi.WifiManager.WifiLock? = null
+    private fun hold() {
+        if (wake == null) wake = getSystemService(android.os.PowerManager::class.java)?.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "harubible:listen")?.apply { setReferenceCounted(false) }
+        runCatching { wake?.acquire(3 * 60 * 60 * 1000L) }
+        if (wifi == null) wifi = runCatching { applicationContext.getSystemService(android.net.wifi.WifiManager::class.java)?.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "harubible:listen")?.apply { setReferenceCounted(false) } }.getOrNull()
+        runCatching { wifi?.acquire() }
+    }
+    private fun letGo() { runCatching { if (wake?.isHeld == true) wake?.release() }; runCatching { if (wifi?.isHeld == true) wifi?.release() } }
+    /** 오래 멈춰 두면 (30분) 듣기를 끝내요. 이어 듣기 줄은 오늘 화면에 남아요. */
+    private val idleStop = Runnable { if (paused) finish() }
 
     // 오디오 포커스: 다른 앱이 소리를 내면 멈추고 (화면 버튼도 ‘이어 듣기’로), 잠깐 빼앗긴 거면 돌아올 때 다시
     private val audio by lazy { getSystemService(android.media.AudioManager::class.java) }
@@ -139,8 +150,7 @@ class ListenService : Service() {
         requestFocus()
         if (!noisyOn) { noisyOn = true; androidx.core.content.ContextCompat.registerReceiver(this, noisy, android.content.IntentFilter(android.media.AudioManager.ACTION_AUDIO_BECOMING_NOISY), androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED) }
         foreground()
-        if (wake == null) wake = getSystemService(android.os.PowerManager::class.java)?.newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "harubible:listen")?.apply { setReferenceCounted(false); acquire(3 * 60 * 60 * 1000L) }
-        if (wifi == null) wifi = runCatching { applicationContext.getSystemService(android.net.wifi.WifiManager::class.java)?.createWifiLock(android.net.wifi.WifiManager.WIFI_MODE_FULL_HIGH_PERF, "harubible:listen")?.apply { setReferenceCounted(false); acquire() } }.getOrNull()
+        ui.removeCallbacks(idleStop); hold()
         token++
         play(token)
         return START_NOT_STICKY
@@ -164,7 +174,7 @@ class ListenService : Service() {
         if (id == artKey) return art
         artKey = id
         art = runCatching {
-            val src = assets.open("plates/$id.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) }!!
+            val src = io.github.graviton94.todaybible.data.RemoteSets.open(this, id).use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) }!!
             val side = minOf(src.width, src.height); val out = android.graphics.Bitmap.createBitmap(512, 512, android.graphics.Bitmap.Config.ARGB_8888)
             val sepia = android.graphics.ColorMatrix(floatArrayOf(0.30f, 0.59f, 0.11f, 0f, 0f, 0.28f, 0.55f, 0.10f, 0f, 0f, 0.24f, 0.47f, 0.09f, 0f, 0f, 0f, 0f, 0f, 1f, 0f))
             android.graphics.Canvas(out).drawBitmap(src, android.graphics.Rect((src.width - side) / 2, ((src.height - side) * 0.3f).toInt(), (src.width + side) / 2, ((src.height - side) * 0.3f).toInt() + side),
@@ -237,11 +247,13 @@ class ListenService : Service() {
         else guide?.stop()
         _now.value = _now.value?.copy(playing = false)
         foreground()
+        letGo(); ui.removeCallbacks(idleStop); ui.postDelayed(idleStop, IDLE_MS)
     }
 
     private fun resume() {
         if (!paused) return
         requestFocus()
+        ui.removeCallbacks(idleStop); hold()
         paused = false
         _now.value = _now.value?.copy(playing = true)
         foreground()
@@ -255,7 +267,8 @@ class ListenService : Service() {
         val list = store.book(store.translation, book).fillable(chapter).filter { to == 0 || it <= to }
         val i = list.indexOf(verse).let { if (it < 0) 0 else it }
         token++; val t = token
-        runCatching { player?.release() }; player = null; guide?.stop(); resumeStep = null; paused = false
+        runCatching { player?.release() }; player = null; guide?.stop(); resumeStep = null
+        if (paused) { paused = false; ui.removeCallbacks(idleStop); hold() }
         val j = i + dir
         when {
             j in list.indices -> { verse = list[j]; foreground(); play(t) }
@@ -297,7 +310,7 @@ class ListenService : Service() {
                                 if (rate != 1f) playbackParams = playbackParams.setSpeed(rate)
                                 setOnCompletionListener { after() }
                                 // 소리가 끊기면 (다른 앱 · 장치 문제) 멈춘 상태로 두어 화면이 ‘이어 듣기’를 보여요
-                                setOnErrorListener { _, _, _ -> ui.post { if (t == token) { resumeStep = { step(i) }; paused = true; _now.value = _now.value?.copy(playing = false); foreground() } }; true }
+                                setOnErrorListener { _, _, _ -> ui.post { if (t == token) { resumeStep = { step(i) }; paused = true; _now.value = _now.value?.copy(playing = false); foreground(); letGo(); ui.removeCallbacks(idleStop); ui.postDelayed(idleStop, IDLE_MS) } }; true }
                                 start()
                             }
                         }.getOrNull() ?: run { after(); null }
@@ -335,7 +348,8 @@ class ListenService : Service() {
         abandonFocus()
         if (noisyOn) { noisyOn = false; runCatching { unregisterReceiver(noisy) } }
         runCatching { session?.isActive = false; session?.release() }; session = null; started = false
-        runCatching { wake?.release() }; wake = null; runCatching { wifi?.release() }; wifi = null
+        ui.removeCallbacks(idleStop)
+        letGo(); wake = null; wifi = null
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE) else @Suppress("DEPRECATION") stopForeground(true)
         stopSelf()
     }

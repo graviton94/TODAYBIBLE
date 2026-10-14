@@ -51,10 +51,10 @@ fun prayerName(p: Prayer): String {
 /** 짧게: 첫 말씀 하나 (+ 외 n). */
 fun AppState.prayerRefShort(p: Prayer): String {
     val f = p.passages.firstOrNull() ?: return ""
-    val one = Lang.passage(store.context, translation, bookName(f.book), f.chapter, f.from, f.to)
+    val one = Lang.passage(store.context, uiTr, bookName(f.book), f.chapter, f.from, f.to)
     return if (p.passages.size > 1) store.context.getString(io.github.graviton94.todaybible.R.string.prayer_ref_more, one, p.passages.size - 1) else one
 }
-fun AppState.prayerRefs(p: Prayer): String = p.passages.joinToString(" · ") { Lang.passage(store.context, translation, bookName(it.book), it.chapter, it.from, it.to) }
+fun AppState.prayerRefs(p: Prayer): String = p.passages.joinToString(" · ") { Lang.passage(store.context, uiTr, bookName(it.book), it.chapter, it.from, it.to) }
 
 /** 기도의 때 머리글 (라틴 성무일과 이름). */
 fun prayerHead(p: Prayer): String = when (p.hour) {
@@ -94,13 +94,13 @@ fun PrayerPage(s: AppState, id: String) {
             val t = s.store.book(s.translation, ps.book)
             Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                 Hair()
-                Text(Lang.passage(s.store.context, s.translation, s.bookName(ps.book), ps.chapter, ps.from, ps.to), style = Theme.small().copy(color = c.giltText), modifier = Modifier.padding(top = Tokens.Space.s2))
+                Text(Lang.passage(s.store.context, s.uiTr, s.bookName(ps.book), ps.chapter, ps.from, ps.to), style = Theme.small().copy(color = c.giltText), modifier = Modifier.padding(top = Tokens.Space.s2))
                 Text(buildAnnotatedString {
                     for (v in ps.from..ps.to) {
                         if (ps.to > ps.from) withStyle(SpanStyle(color = c.rubric, fontSize = Theme.small().fontSize)) { append("$v ") }
                         append(Markup.plain(t.verse(ps.chapter, v))); append(" ")
                     }
-                }, style = Theme.verse(k))
+                }, style = Theme.verse(s.bibleKorean))
             }
         }
         Text(stringResource(R.string.prayer_note), style = Theme.small())

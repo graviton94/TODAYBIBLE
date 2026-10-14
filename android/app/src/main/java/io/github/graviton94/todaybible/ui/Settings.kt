@@ -157,6 +157,8 @@ fun SettingsPage(s: AppState) {
                     .forEach { (id, name) -> ChoiceRow(stringResource(name) + if (id != io.github.graviton94.todaybible.data.Ink.FOUNTAIN && s.premiumOn) " · " + stringResource(R.string.premium_tag) else "", s.pen == id) { s.choosePen(id) } }
                 ChoiceRow(stringResource(R.string.guide_setting), s.handGuide) { s.flipGuide() }
                 ChoiceRow(stringResource(R.string.pen_sound), s.penSound) { s.flipPenSound() }
+                // 효과음 (1.5): 보상 순간에만 (무음 · 진동 모드에서는 저절로 조용)
+                run { var on by remember { mutableStateOf(s.store.effects) }; ChoiceRow(stringResource(R.string.effects), on) { on = !on; s.store.effects = on; if (on) io.github.graviton94.todaybible.data.Effects.play(ctx0, io.github.graviton94.todaybible.data.Effects.Fx.VERSE) } }
                 ChoiceRow(stringResource(R.string.paper_haptic), s.paperHaptic) { s.flipPaperHaptic() }
             }
             }
@@ -173,7 +175,7 @@ fun SettingsPage(s: AppState) {
                         Box(
                             Modifier.weight(1f).heightIn(min = Tokens.Size.touch)
                                 .drawBehind { if (on) drawLine(c.gilt, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.rule.toPx() * 2) }
-                                .clickable(role = Role.RadioButton) { s.setStampMark(m) },
+                                .chosen(on).clickable(role = Role.RadioButton) { s.setStampMark(m) },
                             contentAlignment = Alignment.Center,
                         ) { StampMark(m, if (on) c.rubric else c.inkSoft, Modifier.size(Tokens.Size.iconMd)) }
                     }
@@ -197,17 +199,14 @@ fun SettingsPage(s: AppState) {
                 ChoiceRow(stringResource(R.string.turn_on), on) { if (on) s.setReminder(-1) else turnOn(s.store.lastReminderHour) }
                 // 시각: 누르면 휠 (오전/오후 · 시 · 분)
                 if (on) ListRow(stringResource(R.string.reminder_time), prayerTime(s.reminderHour * 60 + s.reminderMinute)) { s.prayerBell = AppState.MORNING_BELL }
+                // 절기 시작 (일 년에 네 번): 따로 켜고 끄지 않고 매일 알림이 그날은 절기 알림으로
+                if (on) Text(stringResource(R.string.season_notice_row), style = Theme.small())
             }
             Group(stringResource(R.string.prayer_reminder)) {
                 // 기도 알림은 기도문마다 (종): 여기서는 켜진 것만 한눈에
                 val on = io.github.graviton94.todaybible.core.Prayers.all.mapNotNull { p -> s.prayerTimes[p.id]?.let { prayerName(p) + " " + prayerTime(it) } }
                 Text(if (on.isEmpty()) stringResource(R.string.prayer_reminder_none) else on.joinToString(" · "), style = Theme.small())
                 BookButton(stringResource(R.string.prayer_reminder_manage), Modifier.fillMaxWidth(), quiet = true) { s.prayersOpen = true }
-            }
-            // 절기 시작 알림 (일 년에 네 번)
-            Group(stringResource(R.string.season_notice)) {
-                var on by remember { mutableStateOf(s.store.seasonNotice) }
-                ChoiceRow(stringResource(R.string.season_notice_row), on) { on = !on; s.store.seasonNotice = on }
             }
             ExactAlarmNote(s)
             }
@@ -229,9 +228,13 @@ fun SettingsPage(s: AppState) {
                 val ctx = androidx.compose.ui.platform.LocalContext.current
                 val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                     if (uri != null) {
-                        val ok = io.github.graviton94.todaybible.data.Backup.read(ctx, uri)
-                        s.toast = ctx.getString(if (ok) R.string.backup_done else R.string.backup_bad)
-                        if (ok) (ctx as? android.app.Activity)?.recreate()
+                val r = io.github.graviton94.todaybible.data.Backup.read(ctx, uri)
+                if (r == null) s.toast = ctx.getString(R.string.backup_bad)
+                else {
+                    // 다시 그린 뒤에도 보이게 한 줄을 맡겨 둠
+                    s.store.pendingToast = if (r.merged) ctx.getString(R.string.backup_merged, r.added) else ctx.getString(R.string.backup_done)
+                    (ctx as? android.app.Activity)?.recreate()
+                }
                     }
                 }
                 var where by remember { mutableStateOf(s.store.backupUri) }
@@ -351,7 +354,7 @@ private fun Group(title: String, content: @Composable () -> Unit) {
 private fun ChoiceRow(text: String, on: Boolean, onClick: () -> Unit) {
     val c = Theme.c
     Row(
-        Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).clickable(role = Role.RadioButton, onClick = onClick)
+        Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).chosen(on).clickable(role = Role.RadioButton, onClick = onClick)
             .drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) },
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -399,7 +402,7 @@ fun NameField(s: AppState, modifier: Modifier = Modifier, onDone: (() -> Unit)? 
 private fun GuideVoiceSettings(s: AppState) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val main = remember { android.os.Handler(android.os.Looper.getMainLooper()) }
-    val guide = remember(s.korean) { io.github.graviton94.todaybible.data.GuideVoice(ctx, s.korean, s.guideVoice) }
+    val guide = remember(s.bibleKorean) { io.github.graviton94.todaybible.data.GuideVoice(ctx, s.bibleKorean, s.guideVoice) }
     androidx.compose.runtime.DisposableEffect(guide) { onDispose { guide.release() } }
     var list by remember(guide) { mutableStateOf<List<android.speech.tts.Voice>>(emptyList()) }
     var ready by remember(guide) { mutableStateOf(false) }

@@ -87,6 +87,8 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
     // 마음에 남은 한 줄: 닫거나 다음 장으로 갈 때 남겨요
     var line by remember(book, chapter) { mutableStateOf(s.reflection(book, chapter)?.text ?: "") }
     fun close() { s.setReflection(book, chapter, line); s.finished = null }
+    // 적다가 앱이 내려가도 남게: 멈추고 1.5초 뒤 저장 (같으면 그대로)
+    LaunchedEffect(line) { kotlinx.coroutines.delay(1500); s.setReflection(book, chapter, line) }
     BackHandler { close() }
     val ctx = LocalContext.current
     val verses = remember(book, chapter) { s.store.book(s.translation, book).fillable(chapter).size }
@@ -134,7 +136,7 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
         if (nb != book || nc != chapter) BookButton(stringResource(R.string.next_chapter, s.bookName(nb), nc), Modifier.fillMaxWidth().padding(top = Tokens.Space.s2)) { close(); s.open(nb, nc) }
         if (plate != null) BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
             // 판화 장면의 절 + 그 판화 (하나의 카드 틀)
-            Cards.share(s, ctx, Cards.verse(ctx, k, s.head(book, chapter), ctx.getString(R.string.ref_verse, s.bookName(book), chapter, plate.verse), s.text(book).verse(chapter, plate.verse), plate.id), "verse")
+            Cards.share(s, ctx, Cards.verse(ctx, s.bibleKorean, s.head(book, chapter), ctx.getString(R.string.ref_verse, s.bookName(book), chapter, plate.verse), s.text(book).verse(chapter, plate.verse), plate.id), "verse")
         }
         BookButton(stringResource(R.string.close), Modifier.fillMaxWidth(), quiet = true) { close() }
     }

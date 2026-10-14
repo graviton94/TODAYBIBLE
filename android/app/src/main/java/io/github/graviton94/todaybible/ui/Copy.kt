@@ -87,6 +87,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
@@ -228,6 +229,9 @@ private fun WritePage(s: AppState, verse: Int?) {
     fun write() { focus.requestFocus(); keyboard?.show() }
     // 틀린 글자 뒤에 더 치려 하면: 빨간 칸을 지우라는 한 줄
     var fixHint by remember(s.book, s.chapter, verse) { mutableStateOf(false) }
+    // 한꺼번에 들어온 글 (예측 입력 · 음성 입력 · 붙여넣기) 을 받지 않았을 때: 한 글자씩 치라는 한 줄
+    var bulkHint by remember(s.book, s.chapter, verse) { mutableStateOf(false) }
+    val typeSay = stringResource(R.string.grid_hint)
 
     Box(Modifier.fillMaxSize()) {
         if (shown == null) Box(Modifier.padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3)) { ChapterDoneNote(s) }
@@ -243,7 +247,9 @@ private fun WritePage(s: AppState, verse: Int?) {
         BasicTextField(
             value = value,
             onValueChange = { nv ->
+                if (sealing == null && nv.text.length - value.text.length > 3) { haptic.performHapticFeedback(HapticFeedbackType.LongPress); bulkHint = true }
                 if (sealing == null && nv.text.length - value.text.length <= 3) {
+                    if (nv.text != value.text) bulkHint = false
                     // 틀린 글자가 있으면 그 뒤로는 더 받지 않아요: 바로 그 자리에서 지우고 고치게 (지우기 · 띄어쓰기는 받음)
                     val wrongNow = TypeJudge.marks(source, value.text).any { it == TypeJudge.Mark.WRONG }
                     val adding = TypeJudge.letters(nv.text).length > TypeJudge.letters(value.text).length
@@ -252,13 +258,13 @@ private fun WritePage(s: AppState, verse: Int?) {
                 }
             },
             keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, capitalization = KeyboardCapitalization.None),
-            modifier = Modifier.size(Tokens.Size.hiddenField).alpha(0f).focusRequester(focus).onFocusChanged { focused = it.isFocused },
+            modifier = Modifier.size(Tokens.Size.hiddenField).alpha(0f).focusRequester(focus).onFocusChanged { focused = it.isFocused }.semantics { contentDescription = typeSay },
         )
         // 아래 띠 (세 방식 공통): 안내 한 줄 · 쓰기 시작 / 키보드 내리기. 틀린 글자가 있으면 진홍 점 한 줄로 바뀌어요.
         if (shown != null) CopyBand(Modifier.align(Alignment.BottomCenter)) {
             val wrong = fixHint && marks.any { it == TypeJudge.Mark.WRONG }
             if (wrong) Box(Modifier.size(Tokens.Size.hintDot).background(Theme.c.wrong, androidx.compose.foundation.shape.CircleShape))
-            Text(stringResource(if (wrong) R.string.type_fix_hint else R.string.grid_hint), style = Theme.small().copy(color = if (wrong) Theme.c.wrong else Theme.c.ink), maxLines = 2, modifier = Modifier.weight(1f))
+            Text(stringResource(if (wrong) R.string.type_fix_hint else if (bulkHint) R.string.type_one_by_one else R.string.grid_hint), style = Theme.small().copy(color = if (wrong) Theme.c.wrong else Theme.c.ink), maxLines = 2, modifier = Modifier.weight(1f))
             if (focused) Text(stringResource(R.string.kb_hide), style = Theme.small().copy(color = Theme.c.giltText, textDecoration = TextDecoration.Underline), maxLines = 1,
                 modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { keyboard?.hide(); focusManager.clearFocus() })
             else BookButton(stringResource(R.string.tap_to_write), Modifier.coach("type_start")) { write() }
@@ -295,7 +301,9 @@ private fun Manuscript(s: AppState, verse: Int, source: String, typed: String, m
             Text(stringResource(if (on) R.string.mark_off else R.string.mark_on), style = Theme.small().copy(color = if (on) c.rubric else c.inkSoft, background = if (on) c.mark else androidx.compose.ui.graphics.Color.Unspecified), maxLines = 1,
                 modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.toggleMark(key) })
         }
-        BoxWithConstraints(Modifier.fillMaxWidth().coach("type_grid")) {
+        // 화면 읽기: 칸마다 한 글자씩이 아니라 ‘14절 · 말씀 · 몇 자 썼는지’ 한 번에
+        val gridSay = stringResource(R.string.grid_verse, verse) + ". " + plain + ". " + ok + " / " + plain.count { it != ' ' }
+        BoxWithConstraints(Modifier.fillMaxWidth().coach("type_grid").clearAndSetSemantics { contentDescription = gridSay }) {
             val cols = (maxWidth / (Tokens.Size.gridCell * s.scale)).toInt().coerceAtLeast(6)
             val cell = maxWidth / cols
             val rows = plain.indices.chunked(cols)
@@ -333,7 +341,7 @@ private fun Manuscript(s: AppState, verse: Int, source: String, typed: String, m
                                         m == TypeJudge.Mark.COMPOSING -> c.inkSoft
                                         else -> c.ink.copy(alpha = Tokens.Alpha.hintChar)   // 밑글씨
                                     }
-                                    Text(ch.toString(), style = Theme.verse(s.korean).copy(fontSize = Tokens.Text.gridChar * s.scale, lineHeight = Tokens.Text.gridChar * s.scale, color = color, textAlign = TextAlign.Center), maxLines = 1)
+                                    Text(ch.toString(), style = Theme.verse(s.bibleKorean).copy(fontSize = Tokens.Text.gridChar * s.scale, lineHeight = Tokens.Text.gridChar * s.scale, color = color, textAlign = TextAlign.Center), maxLines = 1)
                                 }
                             }
                         }
@@ -428,7 +436,7 @@ private fun PrayerDoneNote(s: AppState, id: String, i: Int) {
     Column(Modifier.padding(top = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         Text(stringResource(R.string.prayer_written), style = Theme.title(s.korean))
         pr.passages.getOrNull(i + 1)?.let { n ->
-            BookButton(stringResource(R.string.prayer_next_passage, Lang.passage(s.store.context, s.translation, s.bookName(n.book), n.chapter, n.from, n.to)), Modifier.fillMaxWidth()) { s.writePrayer(id, i + 1) }
+            BookButton(stringResource(R.string.prayer_next_passage, Lang.passage(s.store.context, s.uiTr, s.bookName(n.book), n.chapter, n.from, n.to)), Modifier.fillMaxWidth()) { s.writePrayer(id, i + 1) }
         }
         BookButton(stringResource(R.string.prayer_return), Modifier.fillMaxWidth(), quiet = pr.passages.size > i + 1) { s.prayerWrite = null; s.prayerOpen = id }
         if (!s.locked(s.book)) BookButton(stringResource(R.string.prayer_keep_chapter), Modifier.fillMaxWidth(), quiet = true) { s.open(s.book, s.chapter) }
@@ -484,7 +492,7 @@ fun VerseText(s: AppState, number: Int, text: String, lit: Int? = null, marks: L
     val line = remember(sealed) { Animatable(if (sealed) 0f else 1f) }
     LaunchedEffect(sealed) { if (sealed) line.animateTo(1f, tween(Tokens.Motion.sealMs)) }
     Column {
-        Text(body, style = Theme.verse(k), inlineContent = sealInline(c.rubric))
+        Text(body, style = Theme.verse(s.bibleKorean), inlineContent = sealInline(c.rubric))
         if (sealed) Box(Modifier.fillMaxWidth(line.value).height(Tokens.Stroke.rule).background(c.gilt))
     }
 }
@@ -561,7 +569,7 @@ private fun AloudControls(s: AppState, guideReady: Boolean) {
 @Composable
 private fun AloudLines(s: AppState, verse: Int, plain: String, at: Int, missed: List<IntRange>, guiding: Boolean) {
     val c = Theme.c; val k = s.korean
-    val measurer = rememberTextMeasurer(); val base = Theme.verse(k)
+    val measurer = rememberTextMeasurer(); val base = Theme.verse(s.bibleKorean)
     BoxWithConstraints(Modifier.fillMaxWidth()) {
     val maxW = constraints.maxWidth
     // 큰 글씨가 줄어들지 않게: 한 줄에 안 들어가는 토막은 더 잘게 나눠요
@@ -918,7 +926,7 @@ fun ShareVerseSheet(s: AppState, at: VerseKey) {
     val ref = "${s.bookName(b)} $ch:$v"
     val plate = s.cardPlate(b, ch)
     val text = s.text(b).verse(ch, v)
-    val bmp = remember(b, ch, v) { Cards.verse(ctx, k, s.head(b, ch), ref, text, plate) }
+    val bmp = remember(b, ch, v) { Cards.verse(ctx, s.bibleKorean, s.head(b, ch), ref, text, plate) }
     BookSheet({ s.shareVerse = null }) {
         Image(bmp.asImageBitmap(), ref, Modifier.fillMaxWidth(Tokens.Ratio.plateWidth).aspectRatio(Tokens.Px.shareW / Tokens.Px.shareH).clip(RoundedCornerShape(Tokens.Radius.chip)))
         Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
@@ -987,7 +995,7 @@ private fun VoiceRow(s: AppState) {
                     val t = s.text(b)
                     val who = if (s.ownerName.isNotBlank()) ctx.getString(R.string.film_by, s.ownerName) else ctx.getString(R.string.film_by_me)
                     val end = Lang.date(ctx, R.string.fmt_ymd, s.today()) + " · " + ctx.getString(R.string.film_end)
-                    io.github.graviton94.todaybible.data.Film.export(ctx, k, plate, s.head(b, chN), s.chapterRef(b, chN), who, end,
+                    io.github.graviton94.todaybible.data.Film.export(ctx, s.bibleKorean, plate, s.head(b, chN), s.chapterRef(b, chN), who, end,
                         parts.map { (v, f) -> io.github.graviton94.todaybible.data.Film.Scene(v, io.github.graviton94.todaybible.core.Markup.plain(t.verse(chN, v)), f) }, out) { p ->
                         android.os.Handler(android.os.Looper.getMainLooper()).post { s.gateProgress(title, p) }
                     }

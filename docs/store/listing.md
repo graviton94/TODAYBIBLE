@@ -42,6 +42,11 @@
 · 주일 설교 노트: 본문을 적으면 바로 필사, 설교에서 남은 말 몇 줄.
 · 한 장을 마치면 마음에 남은 한 줄. 모두 ‘나의 성경’ PDF에 함께 묶여요.
 
+■ 역사 속의 성경
+· 도레 · 슈노르의 판화마다 그림 · 장면 · 역사 이야기. 밑줄을 누르면 시나이 사본 같은 사료 · 다른 판화가 떠요.
+· 이달의 판화: 달마다 새 판화 넉 점이 화첩 맨 위에 걸려요.
+· 한 권 · 구약 · 신약 · 66권을 다 쓰면 필사 완성 증서 (A4 PDF · 카드).
+
 ■ 나만의 성경
 · 하루 한 장 목표, 이번 주 도장, 한 달 · 한 해 달력.
 · 장을 다 쓰면 도레의 판화가 한 조각씩 드러나는 화첩.
@@ -56,7 +61,7 @@
 ■ 내 기록은 내 폰에만
 · 계정 · 광고 · 분석 도구가 없어요. 필사 · 손글씨 · 녹음은 폰 안에만 있고, 원하시면 내 Google 드라이브에 백업해요.
 
-본문: 개역한글(1961) · World English Bible (공개 도메인) · KJV(1611) · 판화: 귀스타브 도레(1866)
+본문: 개역한글(1961) · World English Bible (공개 도메인) · KJV(1611) · 판화: 귀스타브 도레(1866) · 율리우스 슈노르 폰 카롤스펠트(1860)
 
 ## English (United States, and other English-speaking countries except the UK)
 
@@ -92,6 +97,11 @@ Protestant 66-book Bible · World English Bible (modern English) · King James V
 · Sermon notes: write the passage and copy it at once, plus a few lines you want to keep.
 · One line that stayed with you after each chapter. All of it is bound into your My Bible PDF.
 
+■ The Bible in history
+· Every engraving by Doré and Schnorr tells its picture, scene and history; tap an underlined word to see a source such as the Codex Sinaiticus.
+· Engravings of the month: four new ones hang at the top of the gallery each month.
+· Finish a book, a Testament or the whole Bible to receive a certificate of completion (A4 PDF and card).
+
 ■ Your own Bible
 · One chapter a day, weekly stamps, month and year calendars.
 · Finish a chapter and a Gustave Doré engraving appears piece by piece.
@@ -106,7 +116,7 @@ Protestant 66-book Bible · World English Bible (modern English) · King James V
 ■ Your record stays on your phone
 · No account, no ads, no analytics. Copies, handwriting and recordings stay on your phone, with optional backup to your own Google Drive.
 
-Texts: World English Bible (public domain), King James Version (1611), Korean Revised Version (1961). Engravings: Gustave Doré (1866).
+Texts: World English Bible (public domain), King James Version (1611), Korean Revised Version (1961). Engravings: Gustave Doré (1866), Julius Schnorr von Carolsfeld (1860).
 
 ## 데이터 보안 양식 답 (Play Console)
 

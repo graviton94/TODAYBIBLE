@@ -53,6 +53,7 @@ class HandWidget : AppWidgetProvider() {
             val hDp = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, 150).coerceAtLeast(110)
             val views = RemoteViews(ctx.packageName, R.layout.widget_verse)
             views.setImageViewBitmap(R.id.widget_image, runCatching { bitmap(ctx, wDp, hDp, VerseWidget.dark(ctx)) }.getOrNull())
+            views.setContentDescription(R.id.widget_image, ctx.getString(R.string.hand_widget_name))
             val open = Intent(ctx, MainActivity::class.java).putExtra("page", io.github.graviton94.todaybible.ui.AppState.COPY).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
             views.setOnClickPendingIntent(R.id.widget_image, PendingIntent.getActivity(ctx, 4, open, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             runCatching { m.updateAppWidget(id, views) }
@@ -74,7 +75,7 @@ class HandWidget : AppWidgetProvider() {
             val c = if (dark) Tokens.dark else Tokens.light
             val store = Store(ctx); val tr = store.translation
             val verse = io.github.graviton94.todaybible.core.Markup.plain(store.book(tr, 18).verse(23, 1))
-            val name = if (tr == Translation.KRV) Canon.books[18].ko else Canon.books[18].en
+            val name = if (io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx)) Canon.books[18].ko else Canon.books[18].en
             return Cards.render(ctx, (wDp * d).toInt(), (hDp * d).toInt(), Density(d, 1f)) { m ->
                 val pad = Tokens.Size.widgetPad.toPx(); val w = size.width - 2 * pad
                 drawRoundRect(c.leaf, cornerRadius = CornerRadius(Tokens.Radius.page.toPx()))
@@ -106,7 +107,7 @@ class HandWidget : AppWidgetProvider() {
                     return@render
                 }
                 val (tr, at, _) = pick; val (b, ch, v) = at
-                val name = if (tr == Translation.KRV) Canon.books[b].ko else Canon.books[b].en
+                val name = if (io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx)) Canon.books[b].ko else Canon.books[b].en
                 val ref = m.measure("$name $ch:$v", TextStyle(fontFamily = Fonts.serifKr, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.small, color = c.giltText))
                 val bottom = size.height - pad - ref.size.height
                 drawText(ref, topLeft = Offset(pad, bottom))

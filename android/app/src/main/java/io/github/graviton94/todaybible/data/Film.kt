@@ -55,11 +55,13 @@ object Film {
         val total = voiceEnd + END_US
 
         // 재료: 판화 (먹빛, 화면보다 조금 크게), 글꼴, 아이콘
-        val art = plateId?.let { id -> runCatching { ctx.assets.open("plates/$id.jpg").use { BitmapFactory.decodeStream(it) } }.getOrNull() }
+        val art = plateId?.let { id -> runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, id).use { BitmapFactory.decodeStream(it) } }.getOrNull() }
         val sepia = ColorMatrixColorFilter(ColorMatrix(floatArrayOf(0.30f, 0.59f, 0.11f, 0f, 0f, 0.28f, 0.55f, 0.10f, 0f, 0f, 0.24f, 0.47f, 0.09f, 0f, 0f, 0f, 0f, 0f, 1f, 0f)))
         val artPaint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG).apply { colorFilter = sepia }
-        val serif = ResourcesCompat.getFont(ctx, if (korean) R.font.serif_kr_semibold else R.font.garamond_semibold)
-        val serifM = ResourcesCompat.getFont(ctx, if (korean) R.font.serif_kr_medium else R.font.garamond_medium)
+        // 제목 · 장절은 앱 언어, 말씀은 번역: 한글이 섞이면 한글 글꼴 (라틴도 들어 있어요)
+        val kr = korean || io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx)
+        val serif = ResourcesCompat.getFont(ctx, if (kr) R.font.serif_kr_semibold else R.font.garamond_semibold)
+        val serifM = ResourcesCompat.getFont(ctx, if (kr) R.font.serif_kr_medium else R.font.garamond_medium)
         val caps = ResourcesCompat.getFont(ctx, R.font.caps)
         val display = ResourcesCompat.getFont(ctx, R.font.display)
         val icon = runCatching {

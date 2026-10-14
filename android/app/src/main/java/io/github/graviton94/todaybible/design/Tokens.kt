@@ -185,6 +185,7 @@ object Tokens {
         val emptyMark = 15.sp
         val seal = 6.5.sp
         val widgetPlateVerse = 14.sp
+        val widgetMin = 11.sp
         val marginDate = 11.sp
     }
     /** 잉크 (꾸미기 1.2): 쓴 글자 · 손글씨 색. Light 는 종이 위, Dark 는 밤빛 위. */

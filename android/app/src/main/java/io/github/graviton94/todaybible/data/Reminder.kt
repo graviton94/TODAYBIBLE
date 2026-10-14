@@ -53,17 +53,24 @@ object Reminder {
     const val SEASON_ID = 41
     private val NOTICE = setOf(io.github.graviton94.todaybible.core.Season.ADVENT, io.github.graviton94.todaybible.core.Season.LENT, io.github.graviton94.todaybible.core.Season.EASTER, io.github.graviton94.todaybible.core.Season.PENTECOST)
 
-    /** 절기 시작 알림: 대림 · 사순 · 부활 · 성령강림 첫날에만. 절기 판화 · 절기 말씀 · ‘계획 시작’ · ‘오늘 말씀’. 설정 › 알림에서 끌 수 있어요. */
+    /** 오늘이 큰 절기 (대림 · 사순 · 부활 · 성령강림) 의 첫날인지. */
+    fun seasonBegins(day: LocalDate): Boolean {
+        val S = io.github.graviton94.todaybible.core.Seasons
+        val now = S.at(day).season
+        return now in NOTICE && S.at(day.minusDays(1)).season != now
+    }
+
+    /** 절기 시작 알림: 대림 · 사순 · 부활 · 성령강림 첫날에만. 절기 판화 · 절기 말씀 · ‘계획 시작’ · ‘오늘 말씀’. 매일 알림이 그날은 이것으로 와요. */
     fun seasonNotice(ctx0: Context, store: Store, day: LocalDate, force: Boolean = false) {
         val S = io.github.graviton94.todaybible.core.Seasons
         val now = S.at(day).season
-        if (!force && (!store.seasonNotice || now !in NOTICE || S.at(day.minusDays(1)).season == now)) return
+        if (!force && !seasonBegins(day)) return
         val ctx = io.github.graviton94.todaybible.ui.Lang.wrap(ctx0)
         val tr = store.translation
         val (b, c, v) = S.verse(now)
         val book = Canon.books[b]
-        val cc = io.github.graviton94.todaybible.ui.Lang.content(ctx, tr)
-        val ref = cc.getString(R.string.ref_verse, if (tr == Translation.KRV) book.ko else book.en, c, v)
+        // 장절 표기는 화면 (앱) 언어로, 말씀은 고른 번역으로
+        val ref = ctx.getString(R.string.ref_verse, if (ctx.resources.configuration.locales[0].language == "ko") book.ko else book.en, c, v)
         val name = ctx.getString(when (now) {
             io.github.graviton94.todaybible.core.Season.ADVENT -> R.string.season_ADVENT; io.github.graviton94.todaybible.core.Season.LENT -> R.string.season_LENT
             io.github.graviton94.todaybible.core.Season.EASTER -> R.string.season_EASTER; io.github.graviton94.todaybible.core.Season.PENTECOST -> R.string.season_PENTECOST
@@ -95,8 +102,8 @@ object Reminder {
         if (store.reminderDay == today) return
         store.reminderDay = today
         if (LocalDateTime.now().isAfter(LocalDate.now().atTime(store.reminderHour, store.reminderMinute).plusHours(2))) return
-        // 절기가 시작되는 날 (일 년에 네 번): 오늘 썼어도 따로 한 번
-        seasonNotice(ctx, store, LocalDate.now())
+        // 절기가 시작되는 날 (일 년에 네 번): 그날의 매일 알림은 절기 알림 하나로 (오늘 썼어도)
+        if (seasonBegins(LocalDate.now())) { store.postedDay = today; seasonNotice(ctx, store, LocalDate.now()); return }
         val fills = store.loadFills()
         if (fills.any { it.epochDay == today }) return
         store.postedDay = today
@@ -108,7 +115,7 @@ object Reminder {
         val text = store.book(tr, b)
         val v = planNext?.third ?: p.nextVerse(tr, text, ch) ?: text.fillable(ch).first()
         val book = Canon.books[b]
-        val ref = io.github.graviton94.todaybible.ui.Lang.content(ctx, tr).getString(R.string.ref_verse, if (tr == Translation.KRV) book.ko else book.en, ch, v)
+        val ref = ctx.getString(R.string.ref_verse, if (ctx.resources.configuration.locales[0].language == "ko") book.ko else book.en, ch, v)
         val title = if (store.ownerName.isNotBlank()) ctx.getString(R.string.reminder_named, store.ownerName, ref) else ref
         val nm = ctx.getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, ctx.getString(R.string.reminder_channel), NotificationManager.IMPORTANCE_DEFAULT))
@@ -130,13 +137,13 @@ object Reminder {
 }
 
 /** 판화 한 점 (알림용, 반으로 줄여 읽음). */
-private fun plateBitmap(ctx: Context, id: String) = runCatching { ctx.assets.open("plates/$id.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull()
+private fun plateBitmap(ctx: Context, id: String) = runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, id).use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull()
 
 /** 펼치면 그 장(없으면 오늘)의 판화가 크게. 그림을 못 읽으면 글만. */
 private fun plateStyle(ctx: Context, store: Store, b: Int, ch: Int, body: String): android.app.Notification.Style? {
     val plates = store.plates
     val id = store.plateFor(b, ch)?.id ?: plates.takeIf { it.isNotEmpty() }?.let { it[Math.floorMod(LocalDate.now().toEpochDay(), it.size.toLong()).toInt()].id } ?: return null
-    val bmp = runCatching { ctx.assets.open("plates/$id.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull() ?: return null
+    val bmp = runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, id).use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull() ?: return null
     return android.app.Notification.BigPictureStyle().bigPicture(bmp).setSummaryText(body)
 }
 

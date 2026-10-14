@@ -36,6 +36,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.text.withLink
 import io.github.graviton94.todaybible.R
 import io.github.graviton94.todaybible.core.Markup
 import io.github.graviton94.todaybible.core.Pieces
@@ -92,9 +95,11 @@ private fun PlateDark(s: AppState, p: Plate) {
                 Text(ref, style = Theme.small().copy(color = c.rubric))
             }
             Text(s.plateBy(p), style = Theme.small())
+            // 역사 속의 성경 (1.5): 그림 · 장면 · 역사. 글 속 링크는 그 사료로
+            StoryPanel(s, p)
             if (n < Pieces.COUNT) BookButton(stringResource(R.string.continue_at, s.bookName(p.book), p.chapter), Modifier.fillMaxWidth()) { s.plateView = null; s.open(p.book, p.chapter) }
             else BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
-                Cards.share(s, ctx, Cards.verse(ctx, k, s.head(p.book, p.chapter), ctx.getString(R.string.ref_verse, s.bookName(p.book), p.chapter, p.verse), s.text(p.book).verse(p.chapter, p.verse), p.id), "verse")
+                Cards.share(s, ctx, Cards.verse(ctx, s.bibleKorean, s.head(p.book, p.chapter), ctx.getString(R.string.ref_verse, s.bookName(p.book), p.chapter, p.verse), s.text(p.book).verse(p.chapter, p.verse), p.id), "verse")
             }
         }
     }
@@ -119,9 +124,11 @@ fun PlateThumb(s: AppState, p: Plate, modifier: Modifier = Modifier, index: Int?
                     for (i in 0 until Pieces.COUNT) if (i !in shown) drawRect(c.leaf.copy(alpha = Tokens.Alpha.veilPiece), Offset((i % Pieces.COLS) * w, (i / Pieces.COLS) * h), Size(w + 1f, h + 1f))
                     if (n >= Pieces.COUNT) drawRect(c.gilt, Offset(0f, size.height - Tokens.Stroke.rule.toPx()), Size(size.width, Tokens.Stroke.rule.toPx()))
                 }, contentScale = ContentScale.Crop)
-            } else Column(Modifier.padding(Tokens.Space.s1), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                Text(stringResource(R.string.plate_when), style = Theme.small().copy(color = c.unwritten, textAlign = androidx.compose.ui.text.style.TextAlign.Center), maxLines = 1)
-                Text(s.chapterRef(p.book, p.chapter), style = Theme.small().copy(color = c.inkSoft, textAlign = androidx.compose.ui.text.style.TextAlign.Center), maxLines = 1)
+            } else {
+                // 아직 빈 칸: 어느 장인지만 옅게 (칸마다 같은 안내 글을 되풀이하지 않게). 화면 읽기에는 ‘이 장을 다 쓰면 ○○ ○장’
+                val ref = s.chapterRef(p.book, p.chapter); val say = stringResource(R.string.plate_when) + " " + ref
+                Text(ref, style = Theme.small().copy(color = c.unwritten, textAlign = androidx.compose.ui.text.style.TextAlign.Center), maxLines = 2,
+                    modifier = Modifier.padding(Tokens.Space.s1).semantics { contentDescription = say })
             }
         }
         if (!bare) Text(if (n >= Pieces.COUNT) (index?.let { io.github.graviton94.todaybible.core.Latin.roman(it) } ?: s.plateName(p)) else if (n > 0) "${(f * 100).toInt()}%" else "",
@@ -156,7 +163,7 @@ fun GalleryPage(s: AppState) {
             Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s4).drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
                 groups.forEachIndexed { i, (name, range) ->
                     val inG = all.filter { it.book in range }
-                    Column(Modifier.weight(1f).clickable(role = Role.Tab) { tab = i }.drawBehind {
+                    Column(Modifier.weight(1f).chosen(tab == i).clickable(role = Role.Tab) { tab = i }.drawBehind {
                         if (i == tab) drawRect(c.gilt, Offset(0f, size.height - Tokens.Stroke.rule.toPx()), Size(size.width * 0.8f, Tokens.Stroke.rule.toPx()))
                     }.padding(bottom = Tokens.Space.s2)) {
                         Text(stringResource(name), style = Theme.body().copy(color = if (i == tab) c.ink else c.unwritten), maxLines = 1)
@@ -164,11 +171,14 @@ fun GalleryPage(s: AppState) {
                     }
                 }
             }
-            val list = all.filter { it.book in groups[tab].second && it.set.isEmpty() }.sortedWith(compareBy({ it.book }, { it.chapter }))
-            // 이달의 판화 (구독 세트): 가장 최근 세트 한 줄 위에. 잠금은 결제가 열리면 (1.4.x)
-            val sets = all.filter { it.set.isNotEmpty() }.groupBy { it.set }
+            val list = all.filter { it.book in groups[tab].second && (it.set.isEmpty() || it.set == io.github.graviton94.todaybible.data.History.SOURCE) }.sortedWith(compareBy({ it.book }, { it.chapter }))
+            // 이달의 판화 (무료, 10/14 결정): 달마다 한 묶음, 새 달이 위에
+            val sets = all.filter { it.set.isNotEmpty() && it.set != io.github.graviton94.todaybible.data.History.SOURCE }.groupBy { it.set }
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                sets.keys.maxOrNull()?.let { key ->
+                // 1년 주기: 맨 위는 올해 이 달의 세트 (해마다 같은 달에 다시 위로), 그 아래는 지난 달 순서.
+                // 한 번 걸린 판화는 그대로 남아요. 같은 달 세트가 둘이면 (2026-11 · 2027-11) 최근 것이 먼저
+                val now = s.today()
+                sets.keys.sortedWith(compareBy<String>({ k -> Math.floorMod(now.monthValue - (k.substringAfter('-').toIntOrNull() ?: 1), 12) }, { k -> -(k.substringBefore('-').toIntOrNull() ?: 0) })).forEach { key ->
                     val set = sets.getValue(key)
                     val month = key.substringAfter('-').toIntOrNull() ?: 1
                     Column(Modifier.fillMaxWidth().drawBehind { drawLine(c.gilt, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }.padding(bottom = Tokens.Space.s4),
@@ -272,3 +282,61 @@ fun ChapterOpener(s: AppState, b: Int, ch: Int) {
 
 @Composable
 private fun Modifier.statusBarsPaddingCompat(): Modifier = this.then(Modifier.padding(androidx.compose.foundation.layout.WindowInsets.systemBars.asPaddingValues()))
+
+/** 역사 속의 성경 (1.5 C6): PICTURA 그림 · SCAENA 장면 · HISTORIA 역사. 링크 [[id|글]] 를 누르면 그 사료 · 판화를 크게. */
+@Composable
+private fun StoryPanel(s: AppState, p: Plate) {
+    val ctx = LocalContext.current; val c = Theme.c
+    // 이야기 글은 화면 (앱) 언어로
+    val st = remember(p.id) { io.github.graviton94.todaybible.data.History.story(ctx, p.id, s.korean) } ?: return
+    val linkStyle = androidx.compose.ui.text.TextLinkStyles(androidx.compose.ui.text.SpanStyle(color = c.giltText, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline))
+    listOf(Triple("PICTURA", R.string.story_pictura, st.pictura), Triple("SCAENA", R.string.story_scaena, st.scaena), Triple("HISTORIA", R.string.story_historia, st.historia)).forEachIndexed { i, (lat, label, body) ->
+        Column(Modifier.fillMaxWidth().drawBehind { drawLine(if (i == 0) c.ink else c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(top = Tokens.Space.s3),
+            verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                Text(lat, style = Theme.caps().copy(color = c.ink), maxLines = 1, modifier = Modifier.clearAndSetSemantics { })
+                Text(stringResource(label), style = Theme.small(), maxLines = 1, modifier = Modifier.weight(1f).semantics { heading() })
+                Text(io.github.graviton94.todaybible.core.Latin.roman(i + 1), style = Theme.big(Tokens.Text.sectionNum).copy(color = c.gilt), maxLines = 1, modifier = Modifier.clearAndSetSemantics { })
+            }
+            val text = androidx.compose.ui.text.buildAnnotatedString {
+                io.github.graviton94.todaybible.data.History.parts(body).forEach { part ->
+                    val target = part.link?.let { id -> s.store.plates.firstOrNull { it.id == id } }
+                    // 링크는 이 페이지를 떠나지 않고 그 그림만 띄워요
+                    if (target == null) append(part.text)
+                    else withLink(androidx.compose.ui.text.LinkAnnotation.Clickable(target.id, linkStyle) { s.platePeek = target }) { append(part.text) }
+                }
+            }
+            Text(text, style = Theme.body())
+        }
+    }
+    // 판화 페이지를 닫으면 띄운 그림도 함께
+    androidx.compose.runtime.DisposableEffect(p.id) { onDispose { s.platePeek = null } }
+    s.platePeek?.let { PlatePeek(s, it) { s.platePeek = null } }
+}
+
+/** 이야기 속 링크: 그 판화 · 사료 그림만 크게 (드러난 조각만), 제목 · 장절 · 출처 한 줄. 아무 데나 누르거나 뒤로 가면 닫혀요. */
+@Composable
+private fun PlatePeek(s: AppState, p: Plate, close: () -> Unit) {
+    val c = Theme.c; val k = s.korean
+    val n = Pieces.revealed(s.plateFraction(p)); val shown = remember(p.id) { Pieces.order(p.id.hashCode()) }.take(n).toSet()
+    val img = rememberPlate(p.id)
+    val closeLabel = stringResource(R.string.close)
+    androidx.compose.ui.window.Dialog(close, androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
+        Column(Modifier.fillMaxSize().background(c.scrim).clickable(role = Role.Button, onClickLabel = closeLabel, onClick = close)
+            .padding(horizontal = Tokens.Space.s4), verticalArrangement = Arrangement.Center) {
+          // 그림과 제목을 불투명한 카드에 (뒤 페이지 글자가 비치지 않게)
+          Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.leaf).padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).drawWithContent {
+                drawContent()
+                val w = size.width / Pieces.COLS; val h = size.height / Pieces.ROWS
+                for (i in 0 until Pieces.COUNT) if (i !in shown) drawRect(c.paper.copy(alpha = Tokens.Alpha.veilPiece), Offset((i % Pieces.COLS) * w, (i / Pieces.COLS) * h), Size(w + 1f, h + 1f))
+            }, contentAlignment = Alignment.Center) {
+                if (img != null) Image(img, s.plateName(p), Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                if (n == 0) Text(stringResource(R.string.plate_locked), style = Theme.small())
+            }
+            Text(s.plateName(p), style = Theme.title(k))
+            Text("${s.bookName(p.book)} ${p.chapter}:${p.verse} · ${s.plateBy(p)}", style = Theme.small())
+          }
+        }
+    }
+}

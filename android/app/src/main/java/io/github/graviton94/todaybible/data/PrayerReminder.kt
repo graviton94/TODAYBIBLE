@@ -65,7 +65,10 @@ class PrayerReceiver : BroadcastReceiver() {
         val r = goAsync()
         Thread {
             runCatching { intent.getStringExtra("p")?.let { PrayerReminder.post(ctx, it) } }
-            PrayerReminder.schedule(ctx); r.finish()
+            PrayerReminder.schedule(ctx)
+            // 다음 기도 위젯: 이 기도 시간이 지났으니 다음 것으로
+            runCatching { io.github.graviton94.todaybible.widget.SmallWidget.refreshAll(ctx) }
+            r.finish()
         }.start()
     }
 }

@@ -195,6 +195,8 @@ private fun KeepActions(s: AppState, b: Int) {
     }
     val hand = remember(b) { io.github.graviton94.todaybible.data.Ink.chapters(ctx, s.translation.id, b).isNotEmpty() }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        // 필사 완성 증서 (1.5): 다 쓴 권이면 누구나
+        if (s.progress.bookDone(s.translation, s.store.book(s.translation, b))) BookButton(stringResource(R.string.cert_open), Modifier.fillMaxWidth()) { s.certFor = b }
         BookButton(stringResource(R.string.liber_pdf), Modifier.fillMaxWidth(), locked = s.premiumOn) { s.requestPdf(b) }
         BookButton(stringResource(R.string.liber_card), Modifier.fillMaxWidth(), quiet = true) {
             val t = tally(s, b)
@@ -340,7 +342,7 @@ fun ReflectionSheet(s: AppState, n: io.github.graviton94.todaybible.data.Store.N
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             Text("NOTAE CORDIS · " + fmtDay(ctx, n.epochDay), style = Theme.caps(), maxLines = 1)
             Text(s.chapterRef(n.book, n.chapter), style = Theme.title(s.korean), maxLines = 1)
-            Text(n.text, style = Theme.verse(s.korean))
+            Text(n.text, style = Theme.verse(s.bibleKorean))
             BookButton(stringResource(R.string.note_read), Modifier.fillMaxWidth(), quiet = true) { s.noteOpen = null; s.read(n.book, n.chapter) }
         }
     }

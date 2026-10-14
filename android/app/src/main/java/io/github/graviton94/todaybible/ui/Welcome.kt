@@ -80,9 +80,13 @@ fun Welcome(s: AppState) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
-            val ok = io.github.graviton94.todaybible.data.Backup.read(ctx, uri)
-            s.toast = ctx.getString(if (ok) R.string.backup_done else R.string.backup_bad)
-            if (ok) (ctx as? android.app.Activity)?.recreate()
+            val r = io.github.graviton94.todaybible.data.Backup.read(ctx, uri)
+            if (r == null) s.toast = ctx.getString(R.string.backup_bad)
+            else {
+                // 다시 그린 뒤에도 보이게 한 줄을 맡겨 둠
+                s.store.pendingToast = if (r.merged) ctx.getString(R.string.backup_merged, r.added) else ctx.getString(R.string.backup_done)
+                (ctx as? android.app.Activity)?.recreate()
+            }
         }
     }
     // 처음은 시편 23편: 첫 절을 소리 내어 읽고 시작해요
@@ -194,7 +198,7 @@ private fun FirstReading(s: AppState, onRead: () -> Unit) {
     Text(androidx.compose.ui.text.buildAnnotatedString {
         withStyle(androidx.compose.ui.text.SpanStyle(color = c.ink)) { append(plain.substring(0, lit)) }
         withStyle(androidx.compose.ui.text.SpanStyle(color = c.unwritten)) { append(plain.substring(lit)) }
-    }, style = Theme.verse(k).copy(fontSize = Tokens.Text.aloudBig * s.scale, lineHeight = Tokens.Text.aloudBig * s.scale * Tokens.Leading.title))
+    }, style = Theme.verse(s.bibleKorean).copy(fontSize = Tokens.Text.aloudBig * s.scale, lineHeight = Tokens.Text.aloudBig * s.scale * Tokens.Leading.title))
     Text("${s.bookName(18)} 23:1", style = Theme.small().copy(color = c.rubric))
     if (done) Text(stringResource(R.string.ob_read_done), style = Theme.body().copy(color = c.giltText))
     else {
@@ -222,7 +226,7 @@ fun GoalChooser(s: AppState, title: Boolean) {
             Goal.choices.forEach { g ->
                 val on = g == s.dailyGoal
                 Column(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).border(Tokens.Stroke.hair, if (on) c.gilt else c.hair).drawBehind { if (on) drawRect(c.gilt, Offset(0f, size.height - Tokens.Stroke.rule.toPx() * 2), Size(size.width, Tokens.Stroke.rule.toPx() * 2)) }
-                    .clickable(role = Role.RadioButton) { s.setGoal(g) }.padding(vertical = Tokens.Space.s2),
+                    .chosen(on).clickable(role = Role.RadioButton) { s.setGoal(g) }.padding(vertical = Tokens.Space.s2),
                     horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                     Text(if (g < 0) "${-g}" else "$g", style = Theme.big(Tokens.Text.gridNum).copy(color = if (on) c.giltText else c.ink), maxLines = 1)
                     Text(stringResource(if (g < 0) R.string.unit_chapter else R.string.unit_verses), style = Theme.small().copy(color = if (on) c.giltText else c.inkSoft), maxLines = 1)
@@ -250,7 +254,7 @@ private fun ChoiceCard(title: String, note: String, on: Boolean, onClick: () -> 
         .drawBehind {
             drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx())
             if (on) drawRect(c.gilt, Offset.Zero, Size(Tokens.Stroke.rule.toPx() * 2, size.height))
-        }.clickable(role = Role.RadioButton, onClick = onClick).padding(horizontal = Tokens.Space.s4),
+        }.chosen(on).clickable(role = Role.RadioButton, onClick = onClick).padding(horizontal = Tokens.Space.s4),
         verticalAlignment = Alignment.CenterVertically) {
         Text(title, style = Theme.body(), maxLines = 1, modifier = Modifier.weight(1f))
         Text(note, style = Theme.small(), maxLines = 1)
@@ -278,7 +282,7 @@ private fun WelcomeArt(s: AppState, i: Int) {
             Text(androidx.compose.ui.text.buildAnnotatedString {
                 pushStyle(androidx.compose.ui.text.SpanStyle(color = c.ink)); append(plain.substring(0, cut)); pop()
                 pushStyle(androidx.compose.ui.text.SpanStyle(color = c.unwritten, textDecoration = androidx.compose.ui.text.style.TextDecoration.None)); append(plain.substring(cut)); pop()
-            }, style = Theme.verse(k), modifier = Modifier.padding(Tokens.Space.s5))
+            }, style = Theme.verse(s.bibleKorean), modifier = Modifier.padding(Tokens.Space.s5))
         }
         2 -> {
             val img = rememberPlate("noah"); val shown = remember { io.github.graviton94.todaybible.core.Pieces.order("noah".hashCode()).take(7).toSet() }

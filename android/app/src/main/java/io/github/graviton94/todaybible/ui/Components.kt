@@ -45,6 +45,11 @@ import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.toggleableState
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -188,7 +193,7 @@ fun UnderlineTabs(items: List<String>, selected: Int, modifier: Modifier = Modif
         items.forEachIndexed { i, s ->
             val on = i == selected
             Box(
-                Modifier.weight(1f).heightIn(min = Tokens.Size.tab).clickable(role = Role.Tab) { onSelect(i) }.drawBehind {
+                Modifier.weight(1f).heightIn(min = Tokens.Size.tab).chosen(on).clickable(role = Role.Tab) { onSelect(i) }.drawBehind {
                     val h = if (on) Tokens.Stroke.rule.toPx() else Tokens.Stroke.hair.toPx()
                     drawRect(if (on) c.gilt else c.hair, Offset(0f, size.height - h), androidx.compose.ui.geometry.Size(size.width, h))
                 },
@@ -205,7 +210,7 @@ fun Chips(items: List<String>, selected: Int, modifier: Modifier = Modifier, onS
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
         items.forEachIndexed { i, label ->
             val on = i == selected
-            Box(Modifier.heightIn(min = Tokens.Size.tab).clickable(role = Role.Tab) { onSelect(i) }, contentAlignment = Alignment.Center) {
+            Box(Modifier.heightIn(min = Tokens.Size.tab).chosen(on).clickable(role = Role.Tab) { onSelect(i) }, contentAlignment = Alignment.Center) {
                 Text(label, style = Theme.small().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1,
                     modifier = Modifier.clip(RoundedCornerShape(Tokens.Radius.pill)).background(if (on) c.ink.copy(alpha = Tokens.Alpha.chipOn) else Color.Transparent)
                         .border(Tokens.Stroke.hair, if (on) c.ink else c.hair, RoundedCornerShape(Tokens.Radius.pill)).padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s1))
@@ -338,6 +343,11 @@ fun ChapterInitial(chapter: Int, done: Boolean, modifier: Modifier = Modifier, b
 }
 
 
+/** 화면 읽기 (TalkBack): 고른 칸 · 탭이면 ‘선택됨’. clickable(role = Tab · RadioButton) 앞에. */
+fun Modifier.chosen(on: Boolean): Modifier = this.semantics { selected = on }
+/** 화면 읽기: 켜고 끄는 줄이면 ‘켜짐 · 꺼짐’. clickable(role = Switch) 앞에. */
+fun Modifier.switched(on: Boolean): Modifier = this.semantics { toggleableState = ToggleableState(on) }
+
 /** 가는 선 한 줄 (상자 대신 나누는 것). */
 @Composable
 fun Hair(modifier: Modifier = Modifier) { val c = Theme.c; Box(modifier.fillMaxWidth().height(Tokens.Stroke.hair).background(c.hair)) }
@@ -352,7 +362,7 @@ fun SectionHead(latin: String, title: String, n: Int, modifier: Modifier = Modif
     Row(modifier.fillMaxWidth().drawBehind { drawLine(c.ink, Offset(0f, 0f), Offset(size.width, 0f), Tokens.Stroke.hair.toPx() * 1.5f) }
         .padding(top = Tokens.Space.s3, bottom = Tokens.Space.s1), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
         Text(latin, style = Theme.caps().copy(color = c.ink), maxLines = 1, modifier = Modifier.clearAndSetSemantics { })
-        Text(title, style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Text(title, style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).semantics { heading() })
         Text(io.github.graviton94.todaybible.core.Latin.roman(n), style = Theme.big(Tokens.Text.sectionNum).copy(color = c.gilt), maxLines = 1, modifier = Modifier.clearAndSetSemantics { })
     }
 }

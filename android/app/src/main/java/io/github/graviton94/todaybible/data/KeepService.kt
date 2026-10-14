@@ -60,8 +60,10 @@ class KeepService : Service() {
             _queue.value = _queue.value.drop(1)
             val n = Canon.books[b].chapters
             _running.value = Triple(b, 0, n); notify(_running.value)
-            val ok = Narration.keepBook(this, voice, b, n) { done, all -> _running.value = Triple(b, done, all); notify(_running.value) }
+            val ok = Narration.keepBook(this, voice, b, n, allowed = { allowed() }) { done, all -> _running.value = Triple(b, done, all); notify(_running.value) }
             _running.value = null
+            // 와이파이가 끊겼으면 남은 권도 받지 않아요 (알림: 와이파이에서 다시)
+            if (!allowed()) _queue.value = emptyList()
             finished.value = b to ok
             // 다 받은 권은 따로 한 줄 (지울 수 있는 알림)
             getSystemService(NotificationManager::class.java).notify(DONE_ID + b, Notification.Builder(this, CHANNEL).setSmallIcon(R.drawable.ic_stat_cross)
@@ -70,6 +72,13 @@ class KeepService : Service() {
         runCatching { wake?.release() }
         if (Build.VERSION.SDK_INT >= 24) stopForeground(STOP_FOREGROUND_REMOVE) else @Suppress("DEPRECATION") stopForeground(true)
         stopSelf()
+    }
+
+    /** 와이파이에서만 받기를 켰으면, 지금 요금이 붙는 망 (모바일 데이터) 이 아닐 때만. */
+    private fun allowed(): Boolean {
+        if (!Store(this).keepWifiOnly) return true
+        val cm = getSystemService(android.net.ConnectivityManager::class.java) ?: return true
+        return runCatching { !cm.isActiveNetworkMetered }.getOrDefault(true)
     }
 
     private fun open() = PendingIntent.getActivity(this, 31, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP), PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)

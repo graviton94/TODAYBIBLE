@@ -10,5 +10,5 @@
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen"
-    android:previewImage="@drawable/widget_preview_verse"
+    android:previewImage="@drawable/widget_preview_season"
     android:initialLayout="@layout/widget_verse" />

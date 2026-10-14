@@ -13,8 +13,9 @@ import java.util.Locale
 
 /**
  * 말 두 겹 (코드에 언어별 글을 두지 않아요 — 모두 strings.json):
- *  · 화면 말 (단추 · 안내 · 날짜): 폰 언어 설정을 따라요 → 보통의 stringResource / [date].
- *  · 본문 말 (권 이름과 장 표기 · 음성 인식 언어 · 카드의 앱 이름): 고른 번역 (개역한글 · KJV) 을 따라요 → [content].
+ *  · 화면 말 (단추 · 안내 · 날짜 · 권 이름 · 장절 표기 · 판화 이름 · 이야기 · 위젯 · 알림): 앱 언어 (고른 언어, 없으면 폰 언어) → stringResource / [date] / [uiKorean].
+ *    라틴 머리 · 로마 숫자 같은 장식 글만 언어와 상관없이 그대로.
+ *  · 본문 말 (성경 글과 그 글꼴 · 음성 인식 · 읽어 주는 목소리 · 내보내는 PDF · 나누기 카드 · 증서): 고른 번역 (개역한글 · KJV · WEB) 을 따라요 → [content].
  */
 object Lang {
     fun locale(tr: Translation): Locale = if (tr == Translation.KRV) Locale.KOREAN else Locale.ENGLISH
@@ -43,6 +44,8 @@ object Lang {
             else -> c.getString(R.string.ref_range, book, chapter, from, to)
         }
     }
+    /** 화면 말이 한국어인지 (고른 앱 언어, 없으면 폰 언어): 권 이름 · 판화 이름 · 장절 표기 · 위젯 글. */
+    fun uiKorean(ctx: Context): Boolean = (uiLocale(ctx) ?: ctx.applicationContext.resources.configuration.locales[0] ?: Locale.getDefault()).language == "ko"
     /** 고른 앱 언어 (없으면 시스템). */
     fun uiLocale(ctx: Context): Locale? = when (ctx.getSharedPreferences("today", Context.MODE_PRIVATE).getString("language", "system")) { "ko" -> Locale.KOREAN; "en" -> Locale.ENGLISH; else -> null }
     /** 화면 글을 고른 언어로 (Activity · 알림 · 위젯이 쓰는 컨텍스트에). */

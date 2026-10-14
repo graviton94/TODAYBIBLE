@@ -23,7 +23,7 @@ jobs:
           ok=re.compile(r"(public domain|^pd|cc0|cc-zero)",re.I)
           for line in open("art/ui-search.tsv"):
               if line.startswith("#") or not line.strip(): continue
-              key,q=line.rstrip("\n").split("\t")
+              f=line.rstrip("\n").split("\t"); key,q=f[0],f[1]; lim=int(f[2]) if len(f)>2 and f[2].strip() else 6
               r=get("https://commons.wikimedia.org/w/api.php?"+urllib.parse.urlencode({"action":"query","format":"json","generator":"search","gsrnamespace":6,"gsrsearch":q,"gsrlimit":25,"prop":"imageinfo","iiprop":"url|extmetadata|mime|size","iiurlwidth":1000}))
               pages=sorted(r.get("query",{}).get("pages",{}).values(),key=lambda p:p.get("index",99))
               n=0
@@ -38,8 +38,8 @@ jobs:
                   open(out,"wb").write(data)
                   art=re.sub("<[^>]+>","",md.get("Artist",{}).get("value",""))
                   man.write("\t".join([f"{key}_{n}",p["title"],lic,art.replace("\t"," ").replace("\n"," ")[:160],ii["descriptionurl"]])+"\n")
-                  print(key,n,p["title"],lic); time.sleep(1)
-                  if n>=6: break
+                  print(key,n,p["title"],lic); time.sleep(0.3)
+                  if n>=lim: break
           PY
       - name: Push to ui-art branch
         run: |

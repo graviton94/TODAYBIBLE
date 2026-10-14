@@ -1,5 +1,5 @@
 name: Monthly plates to R2
-# 이달의 판화 (1.5 C8): 저장소의 remote/plates/ (sets.tsv · stories.tsv · <id>.jpg) 를 Cloudflare R2 의 plates/ 로 올리고
+# 이달의 판화 (1.5 C8): 저장소의 remote/plates/ (sets.tsv · stories.tsv · <id>.webp 또는 .jpg) 를 Cloudflare R2 의 plates/ 로 올리고
 # 공개 주소로 목록 하나를 받아 확인해요. 앱은 하루 두 번까지 이 목록을 보고, 그 달이 된 세트를 화첩에 걸어요.
 # 키는 낭독과 같은 GitHub Secrets (CF_ACCOUNT_ID · CF_R2_ACCESS_KEY_ID · CF_R2_SECRET_ACCESS_KEY · CF_R2_BUCKET), 공개 주소는 Variables (CF_R2_PUBLIC_URL).
 on:
@@ -43,7 +43,7 @@ jobs:
               if l.startswith("#") or not l.strip(): continue
               p = l.rstrip("\n").split("\t")
               if len(p) < 9 or not p[8]: bad.append(f"columns: {p[0]}")
-              if not os.path.isfile(f"{d}/{p[0]}.jpg"): bad.append(f"picture: {p[0]}")
+              if not any(os.path.isfile(f"{d}/{p[0]}.{e}") for e in ("webp", "jpg")): bad.append(f"picture: {p[0]}")
           if bad: print("::error::" + ", ".join(bad)); sys.exit(1)
           print("set ok")
           PY
@@ -52,6 +52,7 @@ jobs:
         run: |
           E="https://$ACCOUNT.r2.cloudflarestorage.com"
           aws s3 cp remote/plates "s3://$BUCKET/plates/" --recursive --exclude "*" --include "*.jpg" --content-type image/jpeg --only-show-errors --endpoint-url "$E"
+          aws s3 cp remote/plates "s3://$BUCKET/plates/" --recursive --exclude "*" --include "*.webp" --content-type image/webp --only-show-errors --endpoint-url "$E"
           aws s3 cp remote/plates "s3://$BUCKET/plates/" --recursive --exclude "*" --include "*.tsv" --content-type "text/tab-separated-values; charset=utf-8" --cache-control "max-age=3600" --only-show-errors --endpoint-url "$E"
           aws s3 ls "s3://$BUCKET/plates/" --endpoint-url "$E"
       - name: Check public download

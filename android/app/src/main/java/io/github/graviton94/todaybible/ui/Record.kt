@@ -108,6 +108,12 @@ private fun Collection(s: AppState) {
     }
     Box(Modifier.coach("rec_plates")) { ShelfRows(s, recent, fr) }
     Text(stringResource(R.string.shelf_legend), style = Theme.small())
+    // 완성 증서 (1.5): 구약 · 신약 · 66권을 다 썼으면 (권 하나의 증서는 책장에서 그 권을 열어)
+    val big = listOf(Certificate.OT to (0..38), Certificate.NT to (39..65), Certificate.ALL to (0..65)).filter { (_, r) -> r.all { (fr[it] ?: 0f) >= 1f } }
+    if (big.isNotEmpty()) {
+        SubHead("CERTIFICATA", stringResource(R.string.cert_open), "")
+        big.forEach { (w, _) -> BookButton(stringResource(when (w) { Certificate.OT -> R.string.cert_title_ot; Certificate.NT -> R.string.cert_title_nt; else -> R.string.cert_title_all }), Modifier.fillMaxWidth(), quiet = true) { s.certFor = w } }
+    }
     // 화첩: 세 점 미리보기
     SubHead("TABULAE", stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size} ›") { s.galleryOpen = true }
     Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.galleryOpen = true }, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
@@ -172,7 +178,7 @@ private fun NotesTab(s: AppState) {
         SubHead("CONCIONES", stringResource(R.string.sermons_title), "${sermons.size}")
         Column {
             (if (allS) sermons else sermons.take(NOTES_FOLDED)).forEach { n ->
-                val where = if (n.from > 0) Lang.passage(ctx, s.translation, s.bookName(n.book), n.chapter, n.from, n.to) else stringResource(R.string.sermon_title)
+                val where = if (n.from > 0) Lang.passage(ctx, s.uiTr, s.bookName(n.book), n.chapter, n.from, n.to) else stringResource(R.string.sermon_title)
                 NoteRow(day(n.epochDay), where, n.text.lineSequence().firstOrNull { it.isNotBlank() }.orEmpty()) { s.sermonOpen = n.epochDay }
             }
             if (sermons.size > NOTES_FOLDED) BookButton(stringResource(if (allS) R.string.fold else R.string.unfold_all, sermons.size), Modifier.fillMaxWidth(), quiet = true) { allS = !allS }
@@ -248,7 +254,7 @@ private fun CalendarPanel(s: AppState, days: Set<Long>) {
         Row(Modifier.fillMaxWidth().drawBehind { drawLine(c.hair, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }) {
             listOf(false to R.string.cal_month, true to R.string.cal_year).forEach { (y, id) ->
                 val on = yearView == y
-                Box(Modifier.weight(1f).heightIn(min = Tokens.Size.tab).clickable(role = Role.Tab) { yearView = y }.drawBehind {
+                Box(Modifier.weight(1f).heightIn(min = Tokens.Size.tab).chosen(on).clickable(role = Role.Tab) { yearView = y }.drawBehind {
                     if (on) drawRect(c.rubric, Offset(0f, size.height - Tokens.Stroke.rule.toPx()), androidx.compose.ui.geometry.Size(size.width, Tokens.Stroke.rule.toPx()))
                 }, contentAlignment = Alignment.Center) { Text(stringResource(id), style = Theme.label().copy(color = if (on) c.ink else c.inkSoft)) }
             }
@@ -411,7 +417,7 @@ fun rememberPlate(id: String, small: Boolean = false): ImageBitmap? {
     // 그림 읽기는 뒤에서 (화첩을 넘길 때 멈칫하지 않게)
     return androidx.compose.runtime.produceState<ImageBitmap?>(null, id, small) {
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            runCatching { ctx.assets.open("plates/$id.jpg").use { BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = if (small) 4 else 2 })?.asImageBitmap() } }.getOrNull()
+            runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, id).use { BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = if (small) 4 else 2 })?.asImageBitmap() } }.getOrNull()
         }
     }.value
 }

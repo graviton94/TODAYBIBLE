@@ -28,12 +28,19 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         io.github.graviton94.todaybible.data.CrashLog.install(this)
+        io.github.graviton94.todaybible.data.Effects.warm(applicationContext)
         // 볼륨 버튼은 언제나 앱 소리 (미디어) 크기를: 낭독 · 펜 · 녹음이 같은 볼륨을 따라요
         volumeControlStream = android.media.AudioManager.STREAM_MUSIC
         val store = Store(applicationContext)
         if (BuildConfig.DEV_TOOLS && intent.getBooleanExtra("tb.reset", false)) store.reset()
+        // 캡처 · 시험: 이달의 판화를 원격에서 바로 받기 (tb.syncSets) · 그 달인 것처럼 보기 (tb.setsMonth 2026-12)
+        if (BuildConfig.DEV_TOOLS) {
+            intent.getStringExtra("tb.setsMonth")?.let { getSharedPreferences("today", MODE_PRIVATE).edit().putString("debug_month", it).commit() }
+            if (intent.getBooleanExtra("tb.syncSets", false)) { val app = applicationContext; Thread { io.github.graviton94.todaybible.data.RemoteSets.sync(app, force = true) }.start() }
+        }
         val s = AppState(store).also { state = it }
         s.lifetime.connect()
+        store.pendingToast.takeIf { it.isNotEmpty() }?.let { s.toast = it; store.pendingToast = "" }
         s.updates = io.github.graviton94.todaybible.data.Updates(this)
         // 업데이트 뒤 처음: 새로 바뀐 것 한 번 (처음 설치면 건너뜀 · 캡처는 tb.news 일 때만)
         if (store.newsSeen != NEWS) { if (store.onboarded && !BuildConfig.DEV_TOOLS) s.news = true else store.newsSeen = NEWS }
@@ -78,7 +85,7 @@ class MainActivity : ComponentActivity() {
             }
             val out = java.io.File(dir, "film.mp4")
             val k = s.korean
-            val ok = io.github.graviton94.todaybible.data.Film.export(this, k, "moses_sea", s.head(1, 14), s.chapterRef(1, 14), getString(R.string.film_by, "은혜"),
+            val ok = io.github.graviton94.todaybible.data.Film.export(this, s.bibleKorean, "moses_sea", s.head(1, 14), s.chapterRef(1, 14), getString(R.string.film_by, "은혜"),
                 io.github.graviton94.todaybible.ui.Lang.date(this, R.string.fmt_ymd, s.today()) + " · " + getString(R.string.film_end), scenes, out) {}
             if (!ok) error("export failed")
             val r = android.media.MediaMetadataRetriever(); r.setDataSource(out.path)
@@ -103,9 +110,9 @@ class MainActivity : ComponentActivity() {
             save("widget_hand", io.github.graviton94.todaybible.widget.HandWidget.bitmap(this, 360, 170, false, day))
             val k = s.korean; val now = day.atTime(7, 12)
             val ref = "${s.bookName(0)} 1:3"
-            save("card_verse", io.github.graviton94.todaybible.ui.Cards.verse(this, k, s.head(0, 1), ref, s.store.book(s.translation, 0).verse(1, 3), "creation", now))
+            save("card_verse", io.github.graviton94.todaybible.ui.Cards.verse(this, s.bibleKorean, s.head(0, 1), ref, s.store.book(s.translation, 0).verse(1, 3), "creation", now))
             val long = s.store.book(s.translation, 1).verse(14, 21)
-            save("card_verse_long", io.github.graviton94.todaybible.ui.Cards.verse(this, k, s.head(1, 14), "${s.bookName(1)} 14:21", long, "moses_sea", now))
+            save("card_verse_long", io.github.graviton94.todaybible.ui.Cards.verse(this, s.bibleKorean, s.head(1, 14), "${s.bookName(1)} 14:21", long, "moses_sea", now))
             save("card_milestone", io.github.graviton94.todaybible.ui.Cards.year(this, k, io.github.graviton94.todaybible.ui.milestoneName(this, Milestone.OLIVE), "III", listOf(io.github.graviton94.todaybible.ui.milestoneRule(this, Milestone.OLIVE)), "noah", "VESTIGIUM", now))
             // 나의 성경 PDF (창세기, 쓴 절만 날짜)
             val pdf = io.github.graviton94.todaybible.ui.MyBible.make(this, s.store, s.translation, 0).copyTo(java.io.File(dir, "my_bible.pdf"), overwrite = true)
@@ -135,6 +142,10 @@ class MainActivity : ComponentActivity() {
         // 화면 줄을 붙잡지 않게 뒤에서
         val app = applicationContext
         Thread { runCatching { io.github.graviton94.todaybible.data.Backup.auto(app) } }.start()
+        // 이달의 판화 (원격): 다음에 열 때 화첩에 걸리도록 뒤에서 받아 둠 (하루 두 번까지만 확인)
+        Thread { runCatching { io.github.graviton94.todaybible.data.RemoteSets.sync(app) } }.start()
+        // 위젯은 홈 화면으로 나갈 때 한 번 (쓰는 동안 절마다 그리지 않게)
+        state?.widgets()
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -152,7 +163,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         /** 지금 버전의 ‘새로 바뀐 것’ 이름. 새 노트 (news_body) 를 쓸 때 함께 바꿔요. */
-        const val NEWS = "1.4"
+        const val NEWS = "1.5"
     }
 
     /** 아침 알림의 ‘함께 읽기’: 그 절로 열고 낭독을 곧바로. */
@@ -214,6 +225,7 @@ class MainActivity : ComponentActivity() {
         if (i.extras?.keySet()?.any { it.startsWith("tb.") } == true) s.store.copyTab = i.getIntExtra("tb.copyTab", 1)
         if (i.hasExtra("tb.notebook")) { if (s.notebook != i.getBooleanExtra("tb.notebook", false)) s.toggleNotebook() }
         s.plateView = i.getStringExtra("tb.plate")?.let { id -> s.store.plates.firstOrNull { it.id == id } }
+        s.platePeek = i.getStringExtra("tb.platePeek")?.let { id -> s.store.plates.firstOrNull { it.id == id } }
         s.peekBook = i.getIntExtra("tb.peek", 0).takeIf { it > 0 }?.minus(1)?.also { s.purchaseOpen = true }
         i.getStringExtra("tb.plan")?.let { s.choosePlan(it); s.store.planStart = s.today().toEpochDay() - 2 }
         if (i.getBooleanExtra("tb.planSheet", false)) s.planOpen = true

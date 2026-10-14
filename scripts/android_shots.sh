@@ -108,10 +108,16 @@ open --ef tb.scale 1.0 --ez tb.contrast false
 open --ei tb.page 3;                                               shot r00_record_stats 5
 open --ei tb.page 0 --ei tb.toast 5;                               shot t01_toast 1.5
 # @scene wp
-open --ez tb.seed true --ez tb.widgetPreviews true
+# 위젯 고르는 화면의 그림: 한국어 (drawable-ko-nodpi) · 영어 (drawable-nodpi, 그 밖의 언어)
 W=/sdcard/Android/data/$P/files/previews
-for i in $(seq 1 30); do adb shell ls $W/done >/dev/null 2>&1 && break; sleep 2; done
-mkdir -p "$OUT/previews"; adb pull $W/. "$OUT/previews/" >/dev/null 2>&1; rm -f "$OUT/previews/done"; ls "$OUT/previews"
+for L in ko en; do
+  if [ $L = ko ]; then adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null; TR=KRV; else adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null; TR=WEB; fi
+  adb shell rm -rf $W
+  open --ez tb.seed true --es tb.tr $TR --ez tb.widgetPreviews true
+  for i in $(seq 1 30); do adb shell ls $W/done >/dev/null 2>&1 && break; sleep 2; done
+  mkdir -p "$OUT/previews/$L"; adb pull $W/. "$OUT/previews/$L/" >/dev/null 2>&1; rm -f "$OUT/previews/$L/done"; ls "$OUT/previews/$L"
+done
+adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null; open --es tb.tr KRV
 # @end
 # @scene dc
 # 꾸미기: 표지 판화 · 헌사 · 잉크 · 머리글 · 도장 · 앱 아이콘
@@ -364,6 +370,79 @@ open --ez tb.news true;                                            shot gt9_news
 open --es tb.update available --ei tb.page 0;                      shot gu1_update_bar 4
 open --es tb.update ready;                                         shot gu2_update_ready 3
 # @end
+# @scene hs
+# 역사 속의 성경 (1.5 C6): 판화 아래 그림 · 장면 · 역사, 사료 링크, 화첩의 사료 (한국어 · 영어)
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --es tb.plate creation; shot hs1_creation 5
+swipe_up;                                                          shot hs1_creation_story 2
+swipe_up;                                                          shot hs1_creation_end 2
+open --es tb.plate cross; swipe_up; swipe_up;                      shot hs2_cross_link 3
+open --es tb.plate codex_sinaiticus;                               shot hs3_codex 4
+swipe_up;                                                          shot hs3_codex_story 2
+open --es tb.plate schnorr_solomon; swipe_up;                      shot hs4_solomon 3
+open --es tb.plate moses_sea; swipe_up;                            shot hs5_sea 3
+open --es tb.plate none --ez tb.gallery true;                      shot hs6_gallery 5
+swipe_up;                                                          shot hs6_gallery2 2
+open --ez tb.gallery false --ez tb.night true --es tb.plate creation; swipe_up; shot hs7_night 4
+# 묶음 ② (창세기 · 출애굽기): 슈노르 · 시나이 사본 링크, 긴 글
+open --ez tb.night false --es tb.plate eden; swipe_up; swipe_up;   shot hs9_eden 3
+open --es tb.plate noah_curse; swipe_up; swipe_up;                 shot hs9_noah_curse 3
+open --es tb.plate sinai; swipe_up; swipe_up;                      shot hs9_sinai 3
+open --es tb.plate radiant; swipe_up; swipe_up;                    shot hs9_radiant 3
+# 묶음 ③ (나머지 구약)
+open --es tb.plate goliath; swipe_up; swipe_up;                    shot hs11_goliath 3
+open --es tb.plate carmel; swipe_up; swipe_up;                     shot hs11_carmel 3
+open --es tb.plate esther; swipe_up; swipe_up;                     shot hs11_esther 3
+open --es tb.plate lions; swipe_up; swipe_up;                      shot hs11_lions 3
+# 묶음 ④ (복음서)
+open --es tb.plate nativity; swipe_up; swipe_up;                   shot hs12_nativity 3
+open --es tb.plate prodigal; swipe_up; swipe_up;                   shot hs12_prodigal 3
+open --es tb.plate adulteress; swipe_up; swipe_up;                 shot hs12_adulteress 3
+# 묶음 ⑤ (사도행전 · 계시록 · 이달의 판화)
+open --es tb.plate stephen; swipe_up; swipe_up;                    shot hs13_stephen 3
+open --es tb.plate pale_horse; swipe_up;                           shot hs13_pale_horse 3
+open --es tb.plate schnorr_pentecost; swipe_up; swipe_up;          shot hs13_pentecost 3
+# 글 속 링크: 페이지는 그대로, 그 그림만 띄움 (드러난 조각만)
+open --es tb.plate eden --es tb.platePeek schnorr_eden;            shot hs10_peek_schnorr 4
+open --es tb.plate sinai --es tb.platePeek codex_sinaiticus;       shot hs10_peek_codex 4
+adb shell input tap 540 300; sleep 1;                              shot hs10_peek_closed 1
+adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
+open --ez tb.night false --es tb.tr WEB --es tb.plate creation; swipe_up; shot hs8_en_creation 5
+open --es tb.plate cross; swipe_up; swipe_up;                      shot hs8_en_cross 3
+open --es tb.plate codex_sinaiticus; swipe_up;                     shot hs8_en_codex 3
+open --es tb.plate radiant; swipe_up; swipe_up;                    shot hs8_en_radiant 3
+open --es tb.plate rebekah; swipe_up; swipe_up;                    shot hs8_en_rebekah 3
+open --es tb.plate jonah; swipe_up; swipe_up;                      shot hs11_en_jonah 3
+open --es tb.plate sennacherib; swipe_up; swipe_up;                shot hs11_en_sennacherib 3
+adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
+# @end
+# @scene lx
+# 화면은 앱 언어, 성경 글만 고른 번역: 영어 화면 + 개역한글, 한국어 화면 + WEB
+adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 0; shot lx1_en_krv_today 5
+open --ei tb.page 1;                                               shot lx2_en_krv_bible 4
+open --ei tb.page 2 --ei tb.copyTab 1;                             shot lx3_en_krv_type 4
+open --ei tb.page 3;                                               shot lx4_en_krv_record 4
+open --es tb.plate creation; swipe_up;                             shot lx5_en_krv_plate 4
+adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
+open --es tb.plate none --es tb.tr WEB --ei tb.page 0;             shot lx6_ko_web_today 5
+open --ei tb.page 2 --ei tb.copyTab 1;                             shot lx7_ko_web_type 4
+open --es tb.plate creation; swipe_up;                             shot lx8_ko_web_plate 4
+open --es tb.plate none --es tb.tr KRV
+# @end
+# @scene rm
+# 이달의 판화 원격 (C8): R2 에서 받아 두고 → 12월인 것처럼 화첩 · 판화 이야기
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ez tb.syncSets true; sleep 20
+adb shell run-as $P ls files/plates > "$OUT/rm_files.txt" 2>&1
+open --es tb.setsMonth 2026-12 --ez tb.gallery true;               shot rm1_gallery_december 5
+open --ez tb.gallery false --es tb.plate schnorr_magi;             shot rm2_magi 4
+swipe_up; swipe_up;                                                shot rm3_magi_story 2
+open --es tb.setsMonth 2026-11 --ez tb.gallery true;               shot rm4_gallery_november 5
+open --es tb.setsMonth 2027-04 --ez tb.gallery true;               shot rm5_gallery_2027_04 5
+open --ez tb.gallery false --es tb.plate schnorr_resurrection; swipe_up; shot rm6_resurrection 3
+open --es tb.setsMonth 2027-11 --ez tb.gallery true;               shot rm7_gallery_2027_11 5
+open --ez tb.seed true --es tb.setsMonth 2028-04 --es tb.today 2028-04-10 --ez tb.gallery true; shot rm8_gallery_2028_04 6
+open --es tb.setsMonth "" --ez tb.gallery false
+# @end
 # @scene hp
 # 도움말: (?) · 기도 · 듣기 첫 안내 · 설정 도움 · 소개 다시 보기 · 교독 안내
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 0; shot hp1_topbar 5
@@ -396,7 +475,7 @@ adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 
 adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 >/dev/null
 adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false >/dev/null
 stsnap() { sleep "$2"; adb shell cmd statusbar collapse >/dev/null 2>&1; sleep 1; snap "$1"; }
-# 1.1 틀: 여는 판화 · 오늘 · 장 여는 화면 · 타자 · 교독 · 화첩 · 기도 · 나의 성경
+# 1.5: 여는 판화 · 오늘 · 장 여는 화면 · 타자 · 교독 · 화첩 · 역사 속의 성경 · 나의 성경
 for L in ko en; do
   if [ $L = ko ]; then adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null; TR=KRV; OWN=은혜; PR=morning
   else adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null; TR=WEB; OWN="''"; PR=lords; fi
@@ -408,7 +487,8 @@ for L in ko en; do
   open --ei tb.page 2 --ei tb.copyTab 1;                             stsnap st_${L}_4_type 4
   open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0;         stsnap st_${L}_5_aloud 6
   open --ez tb.gallery true;                                         stsnap st_${L}_6_gallery 6
-  open --es tb.prayer $PR;                                           stsnap st_${L}_7_prayer 4
+  open --es tb.plate creation; swipe_up;                            stsnap st_${L}_7_story 4
+  open --es tb.plate none
   open --ei tb.page 3;                                               stsnap st_${L}_8_record 5
 done
 adb shell am broadcast -a com.android.systemui.demo -e command exit >/dev/null
