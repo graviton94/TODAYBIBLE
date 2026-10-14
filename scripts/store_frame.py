@@ -7,12 +7,12 @@ R='/home/user/todaybible'; F=R+'/.cache/'; OUT=R+'/docs/store/graphics'
 SRC=sys.argv[1]
 LIGHT=dict(bg=(0xF4,0xEF,0xE6), ink=(0x1F,0x1A,0x15), gilt=(0x9A,0x6B,0x1F), hair=(0xD6,0xCF,0xC2))
 DARK=dict(bg=(0x17,0x11,0x0C), ink=(0xEA,0xDF,0xC8), gilt=(0xC7,0xA3,0x5D), hair=(0x3A,0x32,0x2A))
-NAMES=['intro','today','opener','type','aloud','gallery','prayer','record']
-DARKS={'intro','opener','gallery'}
-CAPS=['BIBLIA · MANU SCRIPTA','HODIE','EXODUS · XIV','SCRIBERE','RESPONSORIUM','COLLECTIO','ORATIO','BIBLIA MEA']
+NAMES=['intro','today','opener','type','aloud','gallery','story','record']
+DARKS={'intro','opener','gallery','story'}
+CAPS=['BIBLIA · MANU SCRIPTA','HODIE','EXODUS · XIV','SCRIBERE','RESPONSORIUM','COLLECTIO','HISTORIA','BIBLIA MEA']
 CAP={
- 'ko':["하루 한 장, 판화와 함께 여는 말씀","오늘 쓸 자리와 기도를 한눈에","장을 펼치면 도레의 판화가 먼저","한 글자씩, 타자로 옮겨 쓰기","인도 목소리와 한 절씩 교독","다 쓴 장마다 판화 한 점이 걸려요","아침부터 밤까지, 말씀으로 기도","쓸수록 채워지는 나만의 성경"],
- 'en':["One chapter a day, opened with an engraving","Today's place and prayer at a glance","Each chapter opens with a Doré engraving","Type it, letter by letter","Read responsively with a narrator","Finish a chapter, hang an engraving","Pray with Scripture, morning to night","Your own Bible, filling up as you write"],
+ 'ko':["하루 한 장, 판화와 함께 여는 말씀","오늘 쓸 자리와 기도를 한눈에","장을 펼치면 도레의 판화가 먼저","한 글자씩, 타자로 옮겨 쓰기","인도 목소리와 한 절씩 교독","다 쓴 장마다 판화 한 점이 걸려요","판화마다 그림 · 장면 · 역사 이야기","쓸수록 채워지는 나만의 성경"],
+ 'en':["One chapter a day, opened with an engraving","Today's place and prayer at a glance","Each chapter opens with a Doré engraving","Type it, letter by letter","Read responsively with a narrator","Finish a chapter, hang an engraving","Every engraving tells its history","Your own Bible, filling up as you write"],
 }
 def var(name, size, w):
     f=ImageFont.truetype(F+name, size)

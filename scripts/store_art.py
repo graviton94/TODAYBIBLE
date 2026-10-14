@@ -27,6 +27,6 @@ def feature(caps, title, sub, tfont, sfont, path):
     d.line([(x,300*S),(x+64*S,300*S)],fill=GILT,width=S)
     d.text((x,322*S),sub,font=font(*sfont),fill=MUTED)
     im.resize((1024,500),Image.LANCZOS).save(path)
-feature('BIBLIA · MANU SCRIPTA','하루의 성경','소리 내어 읽고, 손으로 옮겨 쓰는 성경',('NotoSerifKR[wght].ttf',76*S,600),('NotoSerifKR[wght].ttf',24*S,500),OUT+'/feature_ko.png')
-feature('BIBLIA · MANU SCRIPTA','Bible by Hand','Read it aloud. Write it by hand.',('CormorantGaramond[wght].ttf',88*S,600),('EBGaramond[wght].ttf',28*S,500),OUT+'/feature_en.png')
+feature('BIBLIA · MANU SCRIPTA','하루의 성경','손으로 옮겨 쓰고, 판화로 만나는 역사 속의 성경',('NotoSerifKR[wght].ttf',76*S,600),('NotoSerifKR[wght].ttf',24*S,500),OUT+'/feature_ko.png')
+feature('BIBLIA · MANU SCRIPTA','Bible by Hand','Write it by hand. Meet the Bible in history.',('CormorantGaramond[wght].ttf',88*S,600),('EBGaramond[wght].ttf',28*S,500),OUT+'/feature_en.png')
 print(sorted(os.listdir(OUT)))
