@@ -385,6 +385,7 @@
   "hand_settings": {"en": "Writing by hand", "ko": "손글씨"},
   "guide_setting": {"en": "Show the verse faintly on the lines to trace", "ko": "줄 위에 밑글씨를 흐리게 깔기"},
   "pen_sound": {"en": "Pen-on-paper sound", "ko": "펜 소리 (종이에 긋는 소리)"},
+  "effects": {"en": "Sound effects (a verse, a chapter, an engraving, a medal)", "ko": "효과음 (한 절 · 한 장 · 판화 · 메달을 마칠 때)"},
   "paper_haptic": {"en": "Feel the paper grain", "ko": "종이 결 진동"},
   "candle_setting": {"en": "Candlelight after 9 p.m.", "ko": "밤 9시부터 촛불빛 화면"},
   "cmp_pens": {"en": "Pens", "ko": "손글씨 펜"},

@@ -233,6 +233,10 @@ class Store(val context: Context) {
     var handGuide: Boolean
         get() = prefs.getBoolean("hand_guide", true)
         set(v) = prefs.edit().putBoolean("hand_guide", v).apply()
+    /** 효과음 (1.5): 한 절 · 장 마침 · 판화 · 메달 · 권 다 씀. */
+    var effects: Boolean
+        get() = prefs.getBoolean("effects", true)
+        set(v) = prefs.edit().putBoolean("effects", v).apply()
     var penSound: Boolean
         get() = prefs.getBoolean("pen_sound", true)
         set(v) = prefs.edit().putBoolean("pen_sound", v).apply()

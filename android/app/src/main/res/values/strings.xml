@@ -387,6 +387,7 @@
     <string name="hand_settings">Writing by hand</string>
     <string name="guide_setting">Show the verse faintly on the lines to trace</string>
     <string name="pen_sound">Pen-on-paper sound</string>
+    <string name="effects">Sound effects (a verse, a chapter, an engraving, a medal)</string>
     <string name="paper_haptic">Feel the paper grain</string>
     <string name="candle_setting">Candlelight after 9 p.m.</string>
     <string name="cmp_pens">Pens</string>

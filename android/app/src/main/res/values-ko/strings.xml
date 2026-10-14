@@ -387,6 +387,7 @@
     <string name="hand_settings">손글씨</string>
     <string name="guide_setting">줄 위에 밑글씨를 흐리게 깔기</string>
     <string name="pen_sound">펜 소리 (종이에 긋는 소리)</string>
+    <string name="effects">효과음 (한 절 · 한 장 · 판화 · 메달을 마칠 때)</string>
     <string name="paper_haptic">종이 결 진동</string>
     <string name="candle_setting">밤 9시부터 촛불빛 화면</string>
     <string name="cmp_pens">손글씨 펜</string>

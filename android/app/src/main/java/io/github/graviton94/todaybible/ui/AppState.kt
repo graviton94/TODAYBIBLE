@@ -600,13 +600,19 @@ class AppState(val store: Store) {
         "${tr.id}:$book:$chapter".let { k -> if (k in store.hiddenPaused) { store.hiddenPaused = store.hiddenPaused - k; pausedRev++ } }
         val t = text()
         val wasMet = io.github.graviton94.todaybible.core.Goal.met(effectiveGoal(), todayVerses() - new.size, 0)
+        val fx = io.github.graviton94.todaybible.data.Effects
         if (progress.chapterDone(tr, t, chapter)) {
+            // 효과음: 그 장에 판화가 있으면 화첩에 걸리는 종, 없으면 COMPLETUM 인장 (권 다 씀은 의식이 열릴 때)
+            fx.play(store.context, if (store.plateFor(book, chapter) != null) io.github.graviton94.todaybible.data.Effects.Fx.PLATE else io.github.graviton94.todaybible.data.Effects.Fx.SEAL)
             finished = book to chapter; store.finishedCount = store.finishedCount + 1
             // 권의 마지막 장까지: 장 마침 다음에 권 다 쓰기 의식 (권마다 한 번)
             if (progress.bookDone(tr, t) && "${tr.id}:$book" !in store.ritualSeen) pendingRitual = book
         }
-        else if (!wasMet && goalMet()) toast = store.context.getString(io.github.graviton94.todaybible.R.string.goal_done)
-        else if (mode != Mode.TYPE) toast = store.context.getString(io.github.graviton94.todaybible.R.string.filled_n, new.size)
+        else {
+            fx.play(store.context, io.github.graviton94.todaybible.data.Effects.Fx.VERSE)
+            if (!wasMet && goalMet()) toast = store.context.getString(io.github.graviton94.todaybible.R.string.goal_done)
+            else if (mode != Mode.TYPE) toast = store.context.getString(io.github.graviton94.todaybible.R.string.filled_n, new.size)
+        }
         checkMilestones()
     }
 
@@ -625,6 +631,8 @@ class AppState(val store: Store) {
             earned = earned + fresh.associateWith { got[it] ?: today().toEpochDay() }
             store.saveEarned(earned)
             award = fresh.first()
+            // 메달 소리는 장 · 절 소리가 지나간 뒤에
+            io.github.graviton94.todaybible.data.Effects.play(store.context, io.github.graviton94.todaybible.data.Effects.Fx.MEDAL, 1400)
         }
     }
 

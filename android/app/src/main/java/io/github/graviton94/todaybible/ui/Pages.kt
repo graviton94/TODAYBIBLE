@@ -180,7 +180,7 @@ fun Root(s: AppState) {
         s.noteOpen?.let { ReflectionSheet(s, it) }
         s.liber?.let { LiberPage(s, it) }
         // 권 다 쓰기 의식: 장 마침 · 발자취가 닫힌 다음
-        LaunchedEffect(s.finished, s.award) { if (s.finished == null && s.award == null) s.pendingRitual?.let { s.pendingRitual = null; s.ritual = it } }
+        LaunchedEffect(s.finished, s.award) { if (s.finished == null && s.award == null) s.pendingRitual?.let { s.pendingRitual = null; s.ritual = it; io.github.graviton94.todaybible.data.Effects.play(s.store.context, io.github.graviton94.todaybible.data.Effects.Fx.BOOK) } }
         s.ritual?.let { BookRitual(s, it) }
         if (s.planOpen) PlanSheet(s)
         // 내 목소리 한 권: 장마다 절 녹음을 차례로 이어 소리 파일 하나 + 표지 카드

@@ -48,7 +48,7 @@ def seal(img, cx, cy, r, color, bg, lines=('COMPLETUM', 'MMXXVII')):
     c = r + 20
     ld.ellipse([c - r, c - r, c + r, c + r], outline=color, width=5)
     ld.ellipse([c - r + 12, c - r + 12, c + r - 12, c + r - 12], outline=color, width=2)
-    f1 = F('caps', int(r * 0.205)); f2 = F('caps', int(r * 0.17))
+    f1 = F('caps', int(r * 0.19)); f2 = F('caps', int(r * 0.155))
     for i, (t, f) in enumerate(zip(lines, (f1, f2))):
         w = ld.textlength(t, font=f); ld.text((c - w / 2, c - r * 0.30 + i * r * 0.36), t, font=f, fill=color)
     layer = layer.rotate(-12, resample=Image.BICUBIC)
@@ -97,7 +97,7 @@ def variant_a():
     center(d, 1420, '“태초에 하나님이 천지를 창조하시니라”  창세기 1:1', F('serif_kr_medium', 28), SOFT)
     d.text((170, 1530), '2027. 3. 14.', font=F('display', 40), fill=INK)
     d.text((170, 1585), '하루의 성경 · BIBLE BY HAND', font=F('serif_kr_medium', 22), fill=SOFT)
-    seal(img, W - 260, 1585, 100, GILT, PAPER, ('COMPLETUM', 'GENESIS'))
+    seal(img, W - 250, 1590, 82, GILT, PAPER, ('COMPLETUM', 'GENESIS'))
     return img
 
 
@@ -138,7 +138,7 @@ def variant_b():
     center(d, 1440, '사랑하는 어머니께 바칩니다', F('serif_kr_medium', 26), D_SOFT)
     d.text((150, 1540), '2029. 12. 24.', font=F('display', 40), fill=D_INK)
     d.text((150, 1595), '하루의 성경 · BIBLE BY HAND', font=F('serif_kr_medium', 22), fill=D_SOFT)
-    seal(img, W - 260, 1570, 115, D_GILT, D_LEAF, ('COMPLETUM', 'OMNIA'))
+    seal(img, W - 250, 1575, 94, D_GILT, D_LEAF, ('COMPLETUM', 'OMNIA'))
     return img
 
 

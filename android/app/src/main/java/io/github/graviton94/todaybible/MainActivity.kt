@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         io.github.graviton94.todaybible.data.CrashLog.install(this)
+        io.github.graviton94.todaybible.data.Effects.warm(applicationContext)
         // 볼륨 버튼은 언제나 앱 소리 (미디어) 크기를: 낭독 · 펜 · 녹음이 같은 볼륨을 따라요
         volumeControlStream = android.media.AudioManager.STREAM_MUSIC
         val store = Store(applicationContext)

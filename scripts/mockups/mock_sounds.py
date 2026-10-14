@@ -1,7 +1,12 @@
-"""효과음 시안 (1.5 C7): 직접 합성 (저작권 걱정 없음). 출력: docs/mockups/sounds/*.wav (44.1kHz mono 16bit)"""
-import math, random, struct, wave, os
-SR = 44100
-OUT = '/home/user/TODAYBIBLE/docs/mockups/sounds'
+"""효과음 (1.5 C7): 직접 합성 (저작권 걱정 없음).
+python3 scripts/mockups/mock_sounds.py          → docs/mockups/sounds/*.wav (44.1kHz, 들어 보기용)
+python3 scripts/mockups/mock_sounds.py --app    → android/app/src/main/res/raw/fx_*.wav (32kHz, 앱에 들어가는 것)"""
+import math, random, struct, wave, os, sys
+APP = '--app' in sys.argv
+ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+SR = 32000 if APP else 44100
+OUT = os.path.join(ROOT, 'android/app/src/main/res/raw') if APP else os.path.join(ROOT, 'docs/mockups/sounds')
+NAMES = {'1_verse_gold': 'fx_verse', '2_chapter_seal': 'fx_seal', '3_plate_hung': 'fx_plate', '4_medal': 'fx_medal', '5_book_done': 'fx_book'}
 os.makedirs(OUT, exist_ok=True)
 random.seed(7)
 
@@ -39,6 +44,7 @@ def mix(*tracks, offsets=None):
 def save(name, x, peak):
     m = max(abs(v) for v in x) or 1
     fade = int(SR * 0.02)
+    if APP: name = NAMES[name]
     with wave.open(f'{OUT}/{name}.wav', 'w') as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR)
         frames = bytearray()
@@ -62,7 +68,8 @@ save('3_plate_hung', mix(bell(659, 1.6, 0.55), bell(988, 1.4, 0.5), offsets=[0, 
 save('4_medal', mix(bell(784, 1.2, 0.45), bell(988, 1.2, 0.45), bell(1175, 1.5, 0.6), offsets=[0, 0.12, 0.24]), 0.5)
 # 5 권 다 쓰기 의식: 낮은 교회 종 한 번, 오래 울림 (3.5초)
 save('5_book_done', mix(bell(196, 3.6, 1.4, partials=((0.5, .6), (1, 1), (1.19, .45), (1.5, .35), (2.0, .3), (2.5, .15), (3.0, .1))), noise(0.05, 0.01, lp=0.3)), 0.6)
-# 미리 듣기: 다섯을 차례로 한 파일에
+# 미리 듣기: 다섯을 차례로 한 파일에 (앱용은 만들지 않음)
+if APP: print('ok'); sys.exit(0)
 seq = []
 for nm in ['1_verse_gold', '2_chapter_seal', '3_plate_hung', '4_medal', '5_book_done']:
     with wave.open(f'{OUT}/{nm}.wav') as w: data = w.readframes(w.getnframes())

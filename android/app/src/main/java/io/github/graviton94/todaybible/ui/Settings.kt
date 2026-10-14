@@ -157,6 +157,8 @@ fun SettingsPage(s: AppState) {
                     .forEach { (id, name) -> ChoiceRow(stringResource(name) + if (id != io.github.graviton94.todaybible.data.Ink.FOUNTAIN && s.premiumOn) " · " + stringResource(R.string.premium_tag) else "", s.pen == id) { s.choosePen(id) } }
                 ChoiceRow(stringResource(R.string.guide_setting), s.handGuide) { s.flipGuide() }
                 ChoiceRow(stringResource(R.string.pen_sound), s.penSound) { s.flipPenSound() }
+                // 효과음 (1.5): 보상 순간에만 (무음 · 진동 모드에서는 저절로 조용)
+                run { var on by remember { mutableStateOf(s.store.effects) }; ChoiceRow(stringResource(R.string.effects), on) { on = !on; s.store.effects = on; if (on) io.github.graviton94.todaybible.data.Effects.play(ctx0, io.github.graviton94.todaybible.data.Effects.Fx.VERSE) } }
                 ChoiceRow(stringResource(R.string.paper_haptic), s.paperHaptic) { s.flipPaperHaptic() }
             }
             }
