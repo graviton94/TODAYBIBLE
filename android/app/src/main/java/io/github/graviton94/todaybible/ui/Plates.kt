@@ -283,8 +283,10 @@ private fun Modifier.statusBarsPaddingCompat(): Modifier = this.then(Modifier.pa
 /** 역사 속의 성경 (1.5 C6): PICTURA 그림 · SCAENA 장면 · HISTORIA 역사. 링크 [[id|글]] 를 누르면 그 사료 · 판화를 크게. */
 @Composable
 private fun StoryPanel(s: AppState, p: Plate) {
-    val ctx = LocalContext.current; val c = Theme.c; val k = s.korean
-    val st = remember(p.id, k) { io.github.graviton94.todaybible.data.History.story(ctx, p.id, k) } ?: return
+    val ctx = LocalContext.current; val c = Theme.c
+    // 이야기 글은 성경 번역이 아니라 앱 화면 언어를 따라요 (영어 화면이면 개역한글로 읽어도 영어 이야기)
+    val uiKo = androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language == "ko"
+    val st = remember(p.id, uiKo) { io.github.graviton94.todaybible.data.History.story(ctx, p.id, uiKo) } ?: return
     val linkStyle = androidx.compose.ui.text.TextLinkStyles(androidx.compose.ui.text.SpanStyle(color = c.giltText, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline))
     listOf(Triple("PICTURA", R.string.story_pictura, st.pictura), Triple("SCAENA", R.string.story_scaena, st.scaena), Triple("HISTORIA", R.string.story_historia, st.historia)).forEachIndexed { i, (lat, label, body) ->
         Column(Modifier.fillMaxWidth().drawBehind { drawLine(if (i == 0) c.ink else c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(top = Tokens.Space.s3),
