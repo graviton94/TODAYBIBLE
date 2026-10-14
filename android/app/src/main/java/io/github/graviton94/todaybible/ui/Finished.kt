@@ -136,7 +136,7 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
         if (nb != book || nc != chapter) BookButton(stringResource(R.string.next_chapter, s.bookName(nb), nc), Modifier.fillMaxWidth().padding(top = Tokens.Space.s2)) { close(); s.open(nb, nc) }
         if (plate != null) BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
             // 판화 장면의 절 + 그 판화 (하나의 카드 틀)
-            Cards.share(s, ctx, Cards.verse(ctx, k, s.head(book, chapter), ctx.getString(R.string.ref_verse, s.bookName(book), chapter, plate.verse), s.text(book).verse(chapter, plate.verse), plate.id), "verse")
+            Cards.share(s, ctx, Cards.verse(ctx, s.bibleKorean, s.head(book, chapter), ctx.getString(R.string.ref_verse, s.bookName(book), chapter, plate.verse), s.text(book).verse(chapter, plate.verse), plate.id), "verse")
         }
         BookButton(stringResource(R.string.close), Modifier.fillMaxWidth(), quiet = true) { close() }
     }

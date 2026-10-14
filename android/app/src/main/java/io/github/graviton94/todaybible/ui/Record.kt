@@ -178,7 +178,7 @@ private fun NotesTab(s: AppState) {
         SubHead("CONCIONES", stringResource(R.string.sermons_title), "${sermons.size}")
         Column {
             (if (allS) sermons else sermons.take(NOTES_FOLDED)).forEach { n ->
-                val where = if (n.from > 0) Lang.passage(ctx, s.translation, s.bookName(n.book), n.chapter, n.from, n.to) else stringResource(R.string.sermon_title)
+                val where = if (n.from > 0) Lang.passage(ctx, s.uiTr, s.bookName(n.book), n.chapter, n.from, n.to) else stringResource(R.string.sermon_title)
                 NoteRow(day(n.epochDay), where, n.text.lineSequence().firstOrNull { it.isNotBlank() }.orEmpty()) { s.sermonOpen = n.epochDay }
             }
             if (sermons.size > NOTES_FOLDED) BookButton(stringResource(if (allS) R.string.fold else R.string.unfold_all, sermons.size), Modifier.fillMaxWidth(), quiet = true) { allS = !allS }

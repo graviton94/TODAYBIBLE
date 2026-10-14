@@ -97,7 +97,7 @@ class GoalWidget : SmallWidget() {
             val p = io.github.graviton94.todaybible.core.Prayers.byId(id)!!
             val first = p.passages.first()
             val name = runCatching { ctx.getString(ctx.resources.getIdentifier("prayer_$id", "string", ctx.packageName)) }.getOrDefault(id)
-            val bookName = io.github.graviton94.todaybible.core.Canon.books[first.book].let { if (tr == Translation.KRV) it.ko else it.en }
+            val bookName = io.github.graviton94.todaybible.core.Canon.books[first.book].let { if (io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx)) it.ko else it.en }
             val verse = runCatching { io.github.graviton94.todaybible.core.Markup.plain(st.book(tr, first.book).verse(first.chapter, first.from)) }.getOrDefault("")
             return Next(id, name, clock(ctx, min), tomorrow, verse, "$bookName ${first.chapter}:${first.from}")
         }

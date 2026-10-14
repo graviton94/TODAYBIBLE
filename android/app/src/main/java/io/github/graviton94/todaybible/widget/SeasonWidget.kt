@@ -76,7 +76,7 @@ class SeasonWidget : AppWidgetProvider() {
         fun describe(ctx: Context, today: LocalDate = LocalDate.now()): String {
             val store = Store(ctx); val tr = store.translation; val now = Seasons.at(today)
             val (vb, vc, vv) = Seasons.verse(now.season)
-            val ref = Canon.books[vb].let { if (tr == Translation.KRV) it.ko else it.en } + " $vc:$vv"
+            val ref = Canon.books[vb].let { if (io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx)) it.ko else it.en } + " $vc:$vv"
             return listOfNotNull(ctx.getString(R.string.season_widget_name), nameOf(ctx, now.season), ctx.getString(R.string.season_week, now.week),
                 now.daysTo?.takeIf { it > 0 }?.let { n -> now.next?.let { ctx.getString(R.string.season_to, nameOf(ctx, it), n) } },
                 ref + " " + runCatching { Markup.plain(store.book(tr, vb).verse(vc, vv)) }.getOrDefault("")).joinToString(" · ")
@@ -86,14 +86,14 @@ class SeasonWidget : AppWidgetProvider() {
         fun bitmap(ctx: Context, wDp: Int, hDp: Int, today: LocalDate = LocalDate.now()): Bitmap {
             val d = ctx.resources.displayMetrics.density
             val density = Density(d, 1f)
-            val store = Store(ctx); val tr = store.translation; val korean = tr == Translation.KRV
+            val store = Store(ctx); val tr = store.translation; val ui = io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx); val korean = tr == Translation.KRV || ui
             val now = Seasons.at(today)
             val name = nameOf(ctx, now.season)
             val sub = listOfNotNull(ctx.getString(R.string.season_week, now.week).takeIf { now.season != Season.CHRISTMAS || now.week > 1 },
                 now.daysTo?.takeIf { it > 0 }?.let { n -> now.next?.let { ctx.getString(R.string.season_to, nameOf(ctx, it), n) } }).joinToString("\n")
             val (vb, vc, vv) = Seasons.verse(now.season)
             val verse = runCatching { Markup.plain(store.book(tr, vb).verse(vc, vv)) }.getOrDefault("")
-            val ref = Canon.books[vb].let { if (korean) it.ko else it.en } + " $vc:$vv"
+            val ref = Canon.books[vb].let { if (ui) it.ko else it.en } + " $vc:$vv"
             val img = runCatching { ctx.assets.open("plates/${Seasons.plate(now.season)}.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull()?.asImageBitmap()
             // 4×2 (넓으면): 절기 말씀까지 · 2×2: 이름 · 주 · 남은 날만
             val tall = wDp >= Tokens.Size.seasonWideMin.value && hDp >= Tokens.Size.widgetPlateMinH.value

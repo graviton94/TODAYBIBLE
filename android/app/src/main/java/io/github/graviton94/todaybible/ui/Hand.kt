@@ -113,14 +113,14 @@ fun HandTab(s: AppState, verse: Int) {
     Row(Modifier.fillMaxSize()) {
     if (wide) Box(Modifier.weight(1f).fillMaxHeight().padding(start = Tokens.Space.s5, top = Tokens.Space.s3, bottom = Tokens.Space.s3).clip(RoundedCornerShape(Tokens.Radius.card))
         .background(c.leaf).verticalScroll(rememberScrollState()).padding(Tokens.Space.s5)) {
-        Text(buildAnnotatedString { withStyle(SpanStyle(color = c.rubric)) { append("$verse ") }; append(plain) }, style = Theme.verse(k).copy(fontSize = Theme.verse(k).fontSize * Tokens.Ratio.wideVerse))
+        Text(buildAnnotatedString { withStyle(SpanStyle(color = c.rubric)) { append("$verse ") }; append(plain) }, style = Theme.verse(s.bibleKorean).copy(fontSize = Theme.verse(s.bibleKorean).fontSize * Tokens.Ratio.wideVerse))
     }
     Column(Modifier.weight(1f).fillMaxHeight()) {
     Column(Modifier.weight(1f).fillMaxWidth().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         // 펜 · 밑글씨는 설정 ‘손글씨’에서. 여기에는 지금 절과 쪽만.
         if (s.handGuide) Text(stringResource(R.string.hand_where, verse, sheet + 1, maxOf(sheetsNeeded, sheet + 1)), style = Theme.small().copy(color = c.rubric), maxLines = 1)
         else Box(Modifier.fillMaxWidth().heightIn(max = Tokens.Size.handModel).verticalScroll(rememberScrollState())) {
-            Text(buildAnnotatedString { withStyle(SpanStyle(color = c.rubric)) { append("$verse ") }; append(plain) }, style = Theme.verse(k))
+            Text(buildAnnotatedString { withStyle(SpanStyle(color = c.rubric)) { append("$verse ") }; append(plain) }, style = Theme.verse(s.bibleKorean))
         }
         // 줄 공책
         Box(Modifier.weight(1f).fillMaxWidth().coach("hand_sheet").clip(RoundedCornerShape(Tokens.Radius.card)).background(c.paper)

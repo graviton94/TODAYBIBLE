@@ -69,8 +69,8 @@ object Reminder {
         val tr = store.translation
         val (b, c, v) = S.verse(now)
         val book = Canon.books[b]
-        val cc = io.github.graviton94.todaybible.ui.Lang.content(ctx, tr)
-        val ref = cc.getString(R.string.ref_verse, if (tr == Translation.KRV) book.ko else book.en, c, v)
+        // 장절 표기는 화면 (앱) 언어로, 말씀은 고른 번역으로
+        val ref = ctx.getString(R.string.ref_verse, if (ctx.resources.configuration.locales[0].language == "ko") book.ko else book.en, c, v)
         val name = ctx.getString(when (now) {
             io.github.graviton94.todaybible.core.Season.ADVENT -> R.string.season_ADVENT; io.github.graviton94.todaybible.core.Season.LENT -> R.string.season_LENT
             io.github.graviton94.todaybible.core.Season.EASTER -> R.string.season_EASTER; io.github.graviton94.todaybible.core.Season.PENTECOST -> R.string.season_PENTECOST
@@ -115,7 +115,7 @@ object Reminder {
         val text = store.book(tr, b)
         val v = planNext?.third ?: p.nextVerse(tr, text, ch) ?: text.fillable(ch).first()
         val book = Canon.books[b]
-        val ref = io.github.graviton94.todaybible.ui.Lang.content(ctx, tr).getString(R.string.ref_verse, if (tr == Translation.KRV) book.ko else book.en, ch, v)
+        val ref = ctx.getString(R.string.ref_verse, if (ctx.resources.configuration.locales[0].language == "ko") book.ko else book.en, ch, v)
         val title = if (store.ownerName.isNotBlank()) ctx.getString(R.string.reminder_named, store.ownerName, ref) else ref
         val nm = ctx.getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, ctx.getString(R.string.reminder_channel), NotificationManager.IMPORTANCE_DEFAULT))

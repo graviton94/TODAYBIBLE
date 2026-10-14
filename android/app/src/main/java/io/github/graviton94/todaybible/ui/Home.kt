@@ -103,7 +103,7 @@ fun HomePage(s: AppState) {
             style = Theme.small().copy(color = if (met) c.giltText else c.inkSoft), maxLines = 1)
         if (v != null) InkText(androidx.compose.ui.text.buildAnnotatedString {
             withStyle(androidx.compose.ui.text.SpanStyle(color = accent)) { append("$v ") }; append(Markup.plain(ct.verse(cc, v)))
-        }, Theme.verse(k), play = remember(today) { s.store.inkDay != today.toEpochDay() }.also { if (it) s.store.inkDay = today.toEpochDay() })
+        }, Theme.verse(s.bibleKorean), play = remember(today) { s.store.inkDay != today.toEpochDay() }.also { if (it) s.store.inkDay = today.toEpochDay() })
         Column(Modifier.fillMaxWidth()) {
             BookButton(if (v != null) stringResource(R.string.continue_at_verse, v) else stringResource(R.string.continue_now), Modifier.fillMaxWidth().coach("today_go")) { s.open(cb, cc) }
             BookButton(stringResource(R.string.read_short), Modifier.fillMaxWidth().coach("today_read"), quiet = true) { s.read(cb, cc) }

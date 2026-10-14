@@ -88,13 +88,13 @@ class VerseWidget : AppWidgetProvider() {
             val store = Store(ctx); val tr = store.translation; val p = plateOf(store, day)
             val b = p?.book ?: 18; val ch = p?.chapter ?: 23
             val t = store.book(tr, b); val v = (p?.verse ?: 1).takeIf { it in t.fillable(ch) } ?: t.fillable(ch).firstOrNull() ?: 1
-            val name = Canon.books[b].let { if (tr == Translation.KRV) it.ko else it.en }
+            val name = Canon.books[b].let { if (io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx)) it.ko else it.en }
             return Word(b, ch, v, Markup.plain(t.verse(ch, v)), "$name $ch:$v", p)
         }
 
         /** 화면 읽기용 한 줄: ‘오늘의 말씀 · 창세기 1:3 · 말씀 · 판화 이름’. */
         fun describe(ctx: Context): String {
-            val w = word(ctx, LocalDate.now()); val k = Store(ctx).translation == Translation.KRV
+            val w = word(ctx, LocalDate.now()); val k = io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx)
             return listOfNotNull(ctx.getString(R.string.widget_name), w.ref, w.text, w.plate?.let { if (k) it.ko else it.en }).joinToString(" · ")
         }
 
@@ -108,9 +108,9 @@ class VerseWidget : AppWidgetProvider() {
             val d = ctx.resources.displayMetrics.density
             val density = Density(d, 1f)
             val c = if (dark) Tokens.dark else Tokens.light
-            val store = Store(ctx); val korean = store.translation == Translation.KRV
+            val store = Store(ctx); val ui = io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx); val korean = store.translation == Translation.KRV || ui
             val w = word(ctx, today)
-            val by = w.plate?.let { (if (korean) it.ko else it.en) + " · " + (if (korean) it.byKo else it.byEn) }.orEmpty()
+            val by = w.plate?.let { (if (ui) it.ko else it.en) + " · " + (if (ui) it.byKo else it.byEn) }.orEmpty()
             val phrase = LineBreak.Paragraph.copy(wordBreak = LineBreak.WordBreak.Phrase)
             if (store.widgetPlate && hDp >= Tokens.Size.widgetPlateMinH.value && w.plate != null) {
                 val img = runCatching { ctx.assets.open("plates/${w.plate.id}.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull()

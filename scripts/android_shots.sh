@@ -401,6 +401,20 @@ open --es tb.plate jonah; swipe_up; swipe_up;                      shot hs11_en_
 open --es tb.plate sennacherib; swipe_up; swipe_up;                shot hs11_en_sennacherib 3
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # @end
+# @scene lx
+# 화면은 앱 언어, 성경 글만 고른 번역: 영어 화면 + 개역한글, 한국어 화면 + WEB
+adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 0; shot lx1_en_krv_today 5
+open --ei tb.page 1;                                               shot lx2_en_krv_bible 4
+open --ei tb.page 2 --ei tb.copyTab 1;                             shot lx3_en_krv_type 4
+open --ei tb.page 3;                                               shot lx4_en_krv_record 4
+open --es tb.plate creation; swipe_up;                             shot lx5_en_krv_plate 4
+adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
+open --es tb.plate none --es tb.tr WEB --ei tb.page 0;             shot lx6_ko_web_today 5
+open --ei tb.page 2 --ei tb.copyTab 1;                             shot lx7_ko_web_type 4
+open --es tb.plate creation; swipe_up;                             shot lx8_ko_web_plate 4
+open --es tb.plate none --es tb.tr KRV
+# @end
 # @scene hp
 # 도움말: (?) · 기도 · 듣기 첫 안내 · 설정 도움 · 소개 다시 보기 · 교독 안내
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 0; shot hp1_topbar 5

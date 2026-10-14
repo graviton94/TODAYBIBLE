@@ -198,7 +198,7 @@ private fun FirstReading(s: AppState, onRead: () -> Unit) {
     Text(androidx.compose.ui.text.buildAnnotatedString {
         withStyle(androidx.compose.ui.text.SpanStyle(color = c.ink)) { append(plain.substring(0, lit)) }
         withStyle(androidx.compose.ui.text.SpanStyle(color = c.unwritten)) { append(plain.substring(lit)) }
-    }, style = Theme.verse(k).copy(fontSize = Tokens.Text.aloudBig * s.scale, lineHeight = Tokens.Text.aloudBig * s.scale * Tokens.Leading.title))
+    }, style = Theme.verse(s.bibleKorean).copy(fontSize = Tokens.Text.aloudBig * s.scale, lineHeight = Tokens.Text.aloudBig * s.scale * Tokens.Leading.title))
     Text("${s.bookName(18)} 23:1", style = Theme.small().copy(color = c.rubric))
     if (done) Text(stringResource(R.string.ob_read_done), style = Theme.body().copy(color = c.giltText))
     else {
@@ -282,7 +282,7 @@ private fun WelcomeArt(s: AppState, i: Int) {
             Text(androidx.compose.ui.text.buildAnnotatedString {
                 pushStyle(androidx.compose.ui.text.SpanStyle(color = c.ink)); append(plain.substring(0, cut)); pop()
                 pushStyle(androidx.compose.ui.text.SpanStyle(color = c.unwritten, textDecoration = androidx.compose.ui.text.style.TextDecoration.None)); append(plain.substring(cut)); pop()
-            }, style = Theme.verse(k), modifier = Modifier.padding(Tokens.Space.s5))
+            }, style = Theme.verse(s.bibleKorean), modifier = Modifier.padding(Tokens.Space.s5))
         }
         2 -> {
             val img = rememberPlate("noah"); val shown = remember { io.github.graviton94.todaybible.core.Pieces.order("noah".hashCode()).take(7).toSet() }

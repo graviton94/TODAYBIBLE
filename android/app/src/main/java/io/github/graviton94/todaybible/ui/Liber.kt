@@ -342,7 +342,7 @@ fun ReflectionSheet(s: AppState, n: io.github.graviton94.todaybible.data.Store.N
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             Text("NOTAE CORDIS · " + fmtDay(ctx, n.epochDay), style = Theme.caps(), maxLines = 1)
             Text(s.chapterRef(n.book, n.chapter), style = Theme.title(s.korean), maxLines = 1)
-            Text(n.text, style = Theme.verse(s.korean))
+            Text(n.text, style = Theme.verse(s.bibleKorean))
             BookButton(stringResource(R.string.note_read), Modifier.fillMaxWidth(), quiet = true) { s.noteOpen = null; s.read(n.book, n.chapter) }
         }
     }

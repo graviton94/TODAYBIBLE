@@ -220,7 +220,7 @@ private fun ChapterText(s: AppState, book: Int, ch: Int, voiceAt: Int?, picked: 
                             append(body.substring(1))
                         } else append(body)
                     }
-                }, style = Theme.verse(k), modifier = Modifier.weight(1f)
+                }, style = Theme.verse(s.bibleKorean), modifier = Modifier.weight(1f)
                     .drawBehind {
                         // 고른 절 · 듣는 절: 왼쪽 붉은 줄 / 쓰다 멈춘 절: 왼쪽 금빛 줄 + 오른쪽 위 리본
                         if (v == picked || v == voiceAt) drawRect(c.rubric, Offset(-Tokens.Space.s2.toPx(), 0f), Size(Tokens.Stroke.rule.toPx(), size.height))
@@ -236,7 +236,7 @@ private fun ChapterText(s: AppState, book: Int, ch: Int, voiceAt: Int?, picked: 
                     .clickable(role = Role.Button) { onTap(v) })
             }
             other?.takeIf { ch <= it.chapterCount && v <= it.verseCount(ch) }?.verse(ch, v)?.takeIf { it.isNotBlank() }?.let { o ->
-                Text(Markup.plain(o), style = Theme.verse(!k).copy(fontSize = Theme.body().fontSize, color = c.inkSoft), modifier = Modifier.fillMaxWidth().padding(start = Tokens.Size.marginDate, bottom = Tokens.Space.s2))
+                Text(Markup.plain(o), style = Theme.verse(!s.bibleKorean).copy(fontSize = Theme.body().fontSize, color = c.inkSoft), modifier = Modifier.fillMaxWidth().padding(start = Tokens.Size.marginDate, bottom = Tokens.Space.s2))
             }
         }
         item { Text(stringResource(R.string.read_hint), style = Theme.small(), modifier = Modifier.padding(start = Tokens.Size.marginDate, top = Tokens.Space.s4)) }

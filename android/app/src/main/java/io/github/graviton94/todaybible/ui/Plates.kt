@@ -99,7 +99,7 @@ private fun PlateDark(s: AppState, p: Plate) {
             StoryPanel(s, p)
             if (n < Pieces.COUNT) BookButton(stringResource(R.string.continue_at, s.bookName(p.book), p.chapter), Modifier.fillMaxWidth()) { s.plateView = null; s.open(p.book, p.chapter) }
             else BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
-                Cards.share(s, ctx, Cards.verse(ctx, k, s.head(p.book, p.chapter), ctx.getString(R.string.ref_verse, s.bookName(p.book), p.chapter, p.verse), s.text(p.book).verse(p.chapter, p.verse), p.id), "verse")
+                Cards.share(s, ctx, Cards.verse(ctx, s.bibleKorean, s.head(p.book, p.chapter), ctx.getString(R.string.ref_verse, s.bookName(p.book), p.chapter, p.verse), s.text(p.book).verse(p.chapter, p.verse), p.id), "verse")
             }
         }
     }
@@ -284,9 +284,8 @@ private fun Modifier.statusBarsPaddingCompat(): Modifier = this.then(Modifier.pa
 @Composable
 private fun StoryPanel(s: AppState, p: Plate) {
     val ctx = LocalContext.current; val c = Theme.c
-    // 이야기 글은 성경 번역이 아니라 앱 화면 언어를 따라요 (영어 화면이면 개역한글로 읽어도 영어 이야기)
-    val uiKo = androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language == "ko"
-    val st = remember(p.id, uiKo) { io.github.graviton94.todaybible.data.History.story(ctx, p.id, uiKo) } ?: return
+    // 이야기 글은 화면 (앱) 언어로
+    val st = remember(p.id) { io.github.graviton94.todaybible.data.History.story(ctx, p.id, s.korean) } ?: return
     val linkStyle = androidx.compose.ui.text.TextLinkStyles(androidx.compose.ui.text.SpanStyle(color = c.giltText, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline))
     listOf(Triple("PICTURA", R.string.story_pictura, st.pictura), Triple("SCAENA", R.string.story_scaena, st.scaena), Triple("HISTORIA", R.string.story_historia, st.historia)).forEachIndexed { i, (lat, label, body) ->
         Column(Modifier.fillMaxWidth().drawBehind { drawLine(if (i == 0) c.ink else c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(top = Tokens.Space.s3),

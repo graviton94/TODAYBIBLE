@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
             }
             val out = java.io.File(dir, "film.mp4")
             val k = s.korean
-            val ok = io.github.graviton94.todaybible.data.Film.export(this, k, "moses_sea", s.head(1, 14), s.chapterRef(1, 14), getString(R.string.film_by, "은혜"),
+            val ok = io.github.graviton94.todaybible.data.Film.export(this, s.bibleKorean, "moses_sea", s.head(1, 14), s.chapterRef(1, 14), getString(R.string.film_by, "은혜"),
                 io.github.graviton94.todaybible.ui.Lang.date(this, R.string.fmt_ymd, s.today()) + " · " + getString(R.string.film_end), scenes, out) {}
             if (!ok) error("export failed")
             val r = android.media.MediaMetadataRetriever(); r.setDataSource(out.path)
@@ -105,9 +105,9 @@ class MainActivity : ComponentActivity() {
             save("widget_hand", io.github.graviton94.todaybible.widget.HandWidget.bitmap(this, 360, 170, false, day))
             val k = s.korean; val now = day.atTime(7, 12)
             val ref = "${s.bookName(0)} 1:3"
-            save("card_verse", io.github.graviton94.todaybible.ui.Cards.verse(this, k, s.head(0, 1), ref, s.store.book(s.translation, 0).verse(1, 3), "creation", now))
+            save("card_verse", io.github.graviton94.todaybible.ui.Cards.verse(this, s.bibleKorean, s.head(0, 1), ref, s.store.book(s.translation, 0).verse(1, 3), "creation", now))
             val long = s.store.book(s.translation, 1).verse(14, 21)
-            save("card_verse_long", io.github.graviton94.todaybible.ui.Cards.verse(this, k, s.head(1, 14), "${s.bookName(1)} 14:21", long, "moses_sea", now))
+            save("card_verse_long", io.github.graviton94.todaybible.ui.Cards.verse(this, s.bibleKorean, s.head(1, 14), "${s.bookName(1)} 14:21", long, "moses_sea", now))
             save("card_milestone", io.github.graviton94.todaybible.ui.Cards.year(this, k, io.github.graviton94.todaybible.ui.milestoneName(this, Milestone.OLIVE), "III", listOf(io.github.graviton94.todaybible.ui.milestoneRule(this, Milestone.OLIVE)), "noah", "VESTIGIUM", now))
             // 나의 성경 PDF (창세기, 쓴 절만 날짜)
             val pdf = io.github.graviton94.todaybible.ui.MyBible.make(this, s.store, s.translation, 0).copyTo(java.io.File(dir, "my_bible.pdf"), overwrite = true)

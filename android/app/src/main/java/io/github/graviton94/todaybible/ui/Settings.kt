@@ -402,7 +402,7 @@ fun NameField(s: AppState, modifier: Modifier = Modifier, onDone: (() -> Unit)? 
 private fun GuideVoiceSettings(s: AppState) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val main = remember { android.os.Handler(android.os.Looper.getMainLooper()) }
-    val guide = remember(s.korean) { io.github.graviton94.todaybible.data.GuideVoice(ctx, s.korean, s.guideVoice) }
+    val guide = remember(s.bibleKorean) { io.github.graviton94.todaybible.data.GuideVoice(ctx, s.bibleKorean, s.guideVoice) }
     androidx.compose.runtime.DisposableEffect(guide) { onDispose { guide.release() } }
     var list by remember(guide) { mutableStateOf<List<android.speech.tts.Voice>>(emptyList()) }
     var ready by remember(guide) { mutableStateOf(false) }

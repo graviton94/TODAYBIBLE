@@ -333,7 +333,7 @@ class AppState(val store: Store) {
         saveNotes(if (n.text.isBlank() && n.from == 0) rest else rest + n)
     }
     var sermonOpen by mutableStateOf<Long?>(null)
-    fun passageLabel(n: io.github.graviton94.todaybible.data.Store.Note) = Lang.passage(store.context, n.translation, bookName(n.book), n.chapter, n.from, n.to)
+    fun passageLabel(n: io.github.graviton94.todaybible.data.Store.Note) = Lang.passage(store.context, uiTr, bookName(n.book), n.chapter, n.from, n.to)
 
     fun isMarked(k: io.github.graviton94.todaybible.core.VerseKey) = marks.any { it.translation == translation && it.key == k }
     fun toggleMark(k: io.github.graviton94.todaybible.core.VerseKey) {
@@ -354,7 +354,12 @@ class AppState(val store: Store) {
     /** 캡처용 고정 날짜 (개발자 도구). */
     var fixedToday: LocalDate? = null
 
-    val korean: Boolean get() = translation == Translation.KRV
+    /** 화면 말 (권 이름 · 판화 이름 · 장 표기 · 제목 글꼴): 앱 언어 (고른 언어, 없으면 폰 언어). 언어를 바꾸면 앱이 다시 열려요. */
+    val korean: Boolean = (Lang.uiLocale(store.context) ?: android.content.res.Resources.getSystem().configuration.locales[0]).language == "ko"
+    /** 본문 말 (성경 글 · 글꼴 · 읽어 주는 목소리): 고른 번역. */
+    val bibleKorean: Boolean get() = translation == Translation.KRV
+    /** 화면 언어로 장 · 절을 적을 때 쓰는 번역 (언어만 봐요). */
+    val uiTr: Translation get() = if (korean) Translation.KRV else Translation.KJV
     // 기록은 덧붙이기만 하므로 개수가 같으면 다시 셀 필요 없음 (화면마다 수백 번 부름)
     private var cachedProgress: Progress? = null
     private var cachedSize = -1
@@ -683,7 +688,7 @@ class AppState(val store: Store) {
     fun plateName(p: io.github.graviton94.todaybible.data.Plate) = if (korean) p.ko else p.en
     fun plateBy(p: io.github.graviton94.todaybible.data.Plate) = if (korean) p.byKo else p.byEn
     /** 권 · 장 표기 (번역의 언어로, strings.json 의 ref_chapter). */
-    fun chapterRef(b: Int = book, ch: Int = chapter) = Lang.chapterRef(store.context, translation, bookName(b), ch)
+    fun chapterRef(b: Int = book, ch: Int = chapter) = Lang.chapterRef(store.context, uiTr, bookName(b), ch)
     /** 음성 인식 언어 (번역을 따라). */
     val speechTag: String get() = Lang.speechTag(store.context, translation)
 }

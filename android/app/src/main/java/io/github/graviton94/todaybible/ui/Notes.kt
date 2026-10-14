@@ -82,7 +82,7 @@ fun MemorySheet(s: AppState) {
         FlowRow(Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             Memorize.words(plain, level).forEachIndexed { i, w ->
                 val open = !w.hidden || i in peek
-                Text(if (open) w.text else w.shown, style = Theme.verse(k).copy(color = if (w.hidden && !open) c.unwritten else c.ink),
+                Text(if (open) w.text else w.shown, style = Theme.verse(s.bibleKorean).copy(color = if (w.hidden && !open) c.unwritten else c.ink),
                     modifier = if (w.hidden) Modifier.clip(RoundedCornerShape(Tokens.Radius.chip)).clickable(role = Role.Button) { peek = if (i in peek) peek - i else peek + i } else Modifier)
             }
         }
@@ -156,7 +156,7 @@ fun SermonSheet(s: AppState) {
             if (p != null) {
                 val t = s.store.book(s.translation, p.book)
                 val verses = t.fillable(p.chapter).filter { it >= p.from && (p.to == 0 || it <= p.to) }
-                Text(Lang.passage(s.store.context, s.translation, s.bookName(p.book), p.chapter, p.from, p.to), style = Theme.label())
+                Text(Lang.passage(s.store.context, s.uiTr, s.bookName(p.book), p.chapter, p.from, p.to), style = Theme.label())
                 verses.take(3).forEach { v -> Text("$v  " + Markup.plain(t.verse(p.chapter, v)), style = Theme.body().copy(color = c.inkSoft), maxLines = 3, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) }
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                     BookButton(stringResource(R.string.sermon_copy), Modifier.weight(1f)) { close(); s.open(p.book, p.chapter); if (!s.locked(p.book)) s.target = verses.firstOrNull { !s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(p.book, p.chapter, it)) } ?: p.from }
