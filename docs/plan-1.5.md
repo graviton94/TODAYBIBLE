@@ -133,7 +133,7 @@ CI: Android #182 (455e87f) 통과 · def111a 통과. core 테스트는 로컬에
 
 ## D2. 남은 일 (구현 전 메모)
 
-- 위젯 고르는 화면의 정적 미리보기 그림 (`res/drawable/widget_preview_verse.png` · `widget_preview_today.png`, 안드로이드 14 이하) 이 옛 모습. 캡처 (`[shots:wp]`) 로 새로 뽑아 바꾸기.
+- ✅ (10/14) 위젯 고르는 화면의 미리보기 그림을 새로 뽑음: 오늘의 말씀 · 다음 기도 · 손글씨 · 절기 (절기 위젯도 제 그림), 한국어 (drawable-ko-nodpi) · 영어 (drawable-nodpi). 다시 뽑기는 `[shots:wp]` → previews/ko · en 을 복사.
 - `design/strings.json` 의 `widget_streak_unit` · `widget_today` 는 이제 안 씀 (지워도 됨).
 - 효과음 구현 시: `USAGE_ASSISTANCE_SONIFICATION`, 무음 · 진동 모드면 내지 않음, 설정 › 소리에 켜기/끄기.
 
