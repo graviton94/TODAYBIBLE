@@ -172,7 +172,7 @@ fun GalleryPage(s: AppState) {
                 }
             }
             val list = all.filter { it.book in groups[tab].second && (it.set.isEmpty() || it.set == io.github.graviton94.todaybible.data.History.SOURCE) }.sortedWith(compareBy({ it.book }, { it.chapter }))
-            // 이달의 판화 (구독 세트): 달마다 한 묶음, 새 달이 위에. 잠금은 결제가 열리면 (1.4.x)
+            // 이달의 판화 (무료, 10/14 결정): 달마다 한 묶음, 새 달이 위에
             val sets = all.filter { it.set.isNotEmpty() && it.set != io.github.graviton94.todaybible.data.History.SOURCE }.groupBy { it.set }
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 // 새 달 세트가 맨 위, 지난 달 세트도 그 아래 그대로 (받은 판화는 남아요)

@@ -11,7 +11,7 @@ import io.github.graviton94.todaybible.design.ThemeChoice
 import java.io.File
 
 /** 판화 하나: 그 장면이 나오는 장. */
-/** 판화 한 점. set = 달마다 판화 세트 ("2026-11", 구독), 비면 도레 기본 판화. */
+/** 판화 한 점. set = 달마다 판화 세트 ("2026-11", 무료 · 그 달이 되어야 걸림), 비면 도레 기본 판화. */
 data class Plate(val id: String, val book: Int, val chapter: Int, val ko: String, val en: String, val verse: Int, val byKo: String, val byEn: String, val set: String = "")
 
 /**
