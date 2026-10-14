@@ -64,31 +64,34 @@ CI: Android #182 (455e87f) 통과 · def111a 통과. core 테스트는 로컬에
 - "마이크는 이 폰 안에서만" → "폰의 음성 인식 서비스가 듣고, 앱은 소리를 어디에도 보내지 않아요" 처럼 사실대로.
 - 고칠 곳: 앱 안 글 (`design/strings.json` 의 마이크 · 낭독 안내), `docs/testers.md`, 개인정보 처리방침 (graviton94.github.io `todaybible/privacy/`).
 
-### C5 🔧 필사 완성 증서 — 시안 확정 (10/14), 구현 중
+### C5 ✅ 필사 완성 증서 (fa8ce6e, CI 통과)
 - 확정: **권 하나 = A 종이** (그 권의 판화 아치 창), **구약 · 신약 · 66권 = B 흑단 금박** (판화 넷 · 숫자 셋 · 헌사). 시안: `docs/mockups/certificate_*.png`.
 - 고칠 점 (10/14): **COMPLETUM 인장과 그 안 글자를 조금 작게** (시안도 함께 고침).
 - 내용: 이름 (부를 이름, 없으면 줄 빼기) · 권 이름 · 장 · 절 수 · 시작한 날 ~ 마친 날 (그 권 첫 기록 ~ 마지막 기록) · 쓴 방식 비율 (낭독 · 타자 · 손글씨) · 그 권 첫 절 (B: 시 119:105) · 헌사 (B) · COMPLETUM 인장 (권 라틴 이름).
 - 나오는 곳: 권 다 쓰기 의식 끝, 책장의 다 쓴 권, 기록 › 모음 (구약 · 신약 · 66권은 다 썼을 때만). PDF (A4 인쇄) · 카드 (나누기).
 - 영어 모드: 같은 틀에 영어 글 (CERTIFICATE OF COMPLETION 등).
 
-### C6 🔧 역사 속의 성경 — 형식 확정 (10/14), 구현 중
+### C6 🔧 역사 속의 성경 — 묶음 ① 구현 (dde5084), ② 부터 차례로
 - 확정: 세 칸 **PICTURA 그림 · SCAENA 장면 · HISTORIA 역사**, 칸마다 2~4문장, 라틴 머리 + 그 언어 이름 함께.
 - **영어 모드 필수**: 모든 글 ko · en 둘 다 (앱이 영어면 영어 글, 라틴 머리 옆은 Picture · Scene · History).
 - **사료 링크**: 글 속 낱말 · 구절에 링크를 걸어 누르면 그 사료 (사본 · 지도 · 유물 · 다른 판화) 를 크게 보기. 사료도 같은 세 칸 글.
 - **화첩에 사료를 섞음**: 화첩 갈래에 "사료" 가 아니라 판화 사이에 그 장의 사료가 함께 (그 장을 다 쓰면 걸림). 앱 = 성경 필사 + 역사 학습 + 갤러리.
 - 자료: 공개 도메인 · CC0 로 확인된 것만 (`art/sources.tsv` 에 라이선스 · 출처). 사진 라이선스가 불확실하면 넣지 않음.
 - 글 쓰기는 **차례대로 묶음별**: ① 시안 4점 (이번) → ② 창세기 · 출애굽 판화 → ③ 나머지 구약 → ④ 복음서 → ⑤ 사도 · 계시 · 이달의 판화. 묶음마다 확인받기. 진행 표는 아래 C6 표.
-- 자료 형식: `android/app/src/main/assets/history/stories.tsv` (id · 칸 · ko · en), 사료는 `history/sources.tsv` (id · 권 · 장 · 이름 ko/en · 출처 · 라이선스) + `history/<id>.jpg`. 링크 표기: `[[사료id|보일 글]]`.
+- 자료 형식 (구현): 글 `assets/history/stories.tsv` (id · ko|en · 그림 · 장면 · 역사). 사료는 판화 목록에 함께 (`data/plates.tsv` · `assets/plates/plates.tsv`, 9번째 칸 `src`), 그림 `assets/plates/<id>.jpg` (흑백 820px). 링크 표기 `[[id|보일 글]]` (사료든 판화든). 코드: `data/History.kt`, `ui/Plates.kt` `StoryPanel`.
+- 사료 그림 구하기: 이 컨테이너는 위키미디어가 막혀 있어 **Actions 의 Fetch art** 로 (`art/search.tsv` 에 검색어 → 브랜치에서 실행 → `art/raw/` + `manifest.tsv` 에 라이선스). 검색어는 짧게 (두세 낱말). 라이선스가 Public domain · CC0 인 것만 앱에 (CC BY-SA 는 넣지 않음).
+- 이사야 두루마리: 공용에 쓸 만한 PD 사진이 없음 (전체 파노라마 1920×75 뿐, 큰 너비 요청은 막힘) → 다른 사진을 찾으면 넣기. 글 시안은 `docs/mockups/history-stories.md` 에 남김.
+- 글꼴: 이야기 글자는 `scripts/build_fonts.py` 가 stories.tsv 에서 모아요. 새 글을 넣으면 `python3 scripts/build_fonts.py` → 라틴 글꼴은 `git checkout` 으로 되돌리고 한글 넷 (serif_kr_* · title_kr) 만 커밋.
 
 | 묶음 | 대상 | 상태 |
 |---|---|---|
-| ① | creation · moses_sea · schnorr_solomon · 사료 isaiah_scroll | 🔧 |
+| ① | creation · moses_sea · schnorr_solomon · cross · 사료 codex_sinaiticus (마태 6장, 주기도문) | ✅ dde5084 |
 | ② | 창세기 · 출애굽 나머지 판화 | ⏳ |
 | ③ | 나머지 구약 | ⏳ |
 | ④ | 복음서 | ⏳ |
 | ⑤ | 사도 · 계시 · 이달의 판화 | ⏳ |
 
-### C7 🔧 효과음 — 시안 확정 (10/14), 구현 중
+### C7 ✅ 효과음 (0b70bdc, CI 통과)
 - 확정: 다섯 다 넣음 (**한 절 마침도 넣음**: 한 절이 1~2분이라 잦지 않음). 소리: `docs/mockups/sounds/` 그대로 (`scripts/mockups/mock_sounds.py`).
 - 순서 (한 번에 하나만): 권 다 씀 > 판화가 걸림 (그 장에 판화) > 장 마침 > 한 절 마침. 메달은 그 뒤 잠깐 있다가.
 - 설정 › 소리에 "효과음" 켜기/끄기 (기본 켬). 무음 · 진동 모드면 내지 않음. `USAGE_ASSISTANCE_SONIFICATION`, SoundPool.
@@ -132,4 +135,5 @@ CI: Android #182 (455e87f) 통과 · def111a 통과. core 테스트는 로컬에
 - 10/13 감사 1차 → 피드백: 개역개정 · 찬송가 · 서버 기능 · iOS 빼고, 결함 1~7 고치기, 여는 화면 유지.
 - 10/13 감사 2차 → 피드백: "역사 속의 성경" 으로, 합쳐서 되살리기 구현, 서버 없음 확정, 효과음 검토, 증서는 시안 먼저, 위젯 바꾸기 (말씀 · 다음 기도), 새 기능 순서는 판화 이야기 → 증서 → 원격 판화 → 관주.
 - 10/14 C1~C4 구현 (def111a, CI 통과), C5~C7 시안 (docs/mockups) → 확인 기다림.
+- 10/14 구현: 효과음 (0b70bdc) · 증서 (fa8ce6e) · 역사 속의 성경 ① (dde5084). 사료는 시나이 사본으로 (이사야 두루마리는 사진 없음).
 - 10/14 시안 확정: 증서 A/B (인장 · 인장 글자 조금 작게), 효과음 다섯 (한 절 마침 포함), 역사 속의 성경 세 칸 · 영어 필수 · 사료 링크 · 화첩에 사료 섞기 · 글은 묶음별 차례로.
