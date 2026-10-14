@@ -437,6 +437,9 @@ open --es tb.setsMonth 2026-12 --ez tb.gallery true;               shot rm1_gall
 open --ez tb.gallery false --es tb.plate schnorr_magi;             shot rm2_magi 4
 swipe_up; swipe_up;                                                shot rm3_magi_story 2
 open --es tb.setsMonth 2026-11 --ez tb.gallery true;               shot rm4_gallery_november 5
+open --es tb.setsMonth 2027-04 --ez tb.gallery true;               shot rm5_gallery_2027_04 5
+open --ez tb.gallery false --es tb.plate schnorr_resurrection; swipe_up; shot rm6_resurrection 3
+open --es tb.setsMonth 2027-11 --ez tb.gallery true;               shot rm7_gallery_2027_11 5
 open --es tb.setsMonth "" --ez tb.gallery false
 # @end
 # @scene hp
