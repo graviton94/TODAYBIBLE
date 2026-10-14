@@ -175,8 +175,10 @@ fun GalleryPage(s: AppState) {
             // 이달의 판화 (무료, 10/14 결정): 달마다 한 묶음, 새 달이 위에
             val sets = all.filter { it.set.isNotEmpty() && it.set != io.github.graviton94.todaybible.data.History.SOURCE }.groupBy { it.set }
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                // 새 달 세트가 맨 위, 지난 달 세트도 그 아래 그대로 (받은 판화는 남아요)
-                sets.keys.sortedDescending().forEach { key ->
+                // 1년 주기: 맨 위는 올해 이 달의 세트 (해마다 같은 달에 다시 위로), 그 아래는 지난 달 순서.
+                // 한 번 걸린 판화는 그대로 남아요. 같은 달 세트가 둘이면 (2026-11 · 2027-11) 최근 것이 먼저
+                val now = s.today()
+                sets.keys.sortedWith(compareBy<String>({ k -> Math.floorMod(now.monthValue - (k.substringAfter('-').toIntOrNull() ?: 1), 12) }, { k -> -(k.substringBefore('-').toIntOrNull() ?: 0) })).forEach { key ->
                     val set = sets.getValue(key)
                     val month = key.substringAfter('-').toIntOrNull() ?: 1
                     Column(Modifier.fillMaxWidth().drawBehind { drawLine(c.gilt, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }.padding(bottom = Tokens.Space.s4),
