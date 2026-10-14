@@ -201,6 +201,8 @@ class AppState(val store: Store) {
     fun coachAgain(screen: String) { coachShowing = null; coachSeen = coachSeen - screen; store.coachSeen = coachSeen }
     /** 처음 소개 다시 보기 (이름 · 분량 · 알림은 묻지 않고 소개 두 장만). */
     var tour by mutableStateOf(false)
+    /** 판화 이야기 속 링크로 띄운 그림 (판화 페이지 위에 잠깐). */
+    var platePeek by mutableStateOf<io.github.graviton94.todaybible.data.Plate?>(null)
     /** 화첩 (어두운 갤러리 화면). */
     var galleryOpen by mutableStateOf(false)
     /** 장 여는 화면 (판화가 있는 장을 처음 펼칠 때 한 번). */

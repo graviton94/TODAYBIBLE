@@ -297,11 +297,39 @@ private fun StoryPanel(s: AppState, p: Plate) {
             val text = androidx.compose.ui.text.buildAnnotatedString {
                 io.github.graviton94.todaybible.data.History.parts(body).forEach { part ->
                     val target = part.link?.let { id -> s.store.plates.firstOrNull { it.id == id } }
+                    // 링크는 이 페이지를 떠나지 않고 그 그림만 띄워요
                     if (target == null) append(part.text)
-                    else withLink(androidx.compose.ui.text.LinkAnnotation.Clickable(target.id, linkStyle) { s.plateView = target }) { append(part.text) }
+                    else withLink(androidx.compose.ui.text.LinkAnnotation.Clickable(target.id, linkStyle) { s.platePeek = target }) { append(part.text) }
                 }
             }
             Text(text, style = Theme.body())
+        }
+    }
+    // 판화 페이지를 닫으면 띄운 그림도 함께
+    androidx.compose.runtime.DisposableEffect(p.id) { onDispose { s.platePeek = null } }
+    s.platePeek?.let { PlatePeek(s, it) { s.platePeek = null } }
+}
+
+/** 이야기 속 링크: 그 판화 · 사료 그림만 크게 (드러난 조각만), 제목 · 장절 · 출처 한 줄. 아무 데나 누르거나 뒤로 가면 닫혀요. */
+@Composable
+private fun PlatePeek(s: AppState, p: Plate, close: () -> Unit) {
+    val c = Theme.c; val k = s.korean
+    val n = Pieces.revealed(s.plateFraction(p)); val shown = remember(p.id) { Pieces.order(p.id.hashCode()) }.take(n).toSet()
+    val img = rememberPlate(p.id)
+    val closeLabel = stringResource(R.string.close)
+    androidx.compose.ui.window.Dialog(close, androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
+        Column(Modifier.fillMaxSize().background(c.scrim).clickable(role = Role.Button, onClickLabel = closeLabel, onClick = close)
+            .padding(horizontal = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3, Alignment.CenterVertically)) {
+            Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).drawWithContent {
+                drawContent()
+                val w = size.width / Pieces.COLS; val h = size.height / Pieces.ROWS
+                for (i in 0 until Pieces.COUNT) if (i !in shown) drawRect(c.paper.copy(alpha = Tokens.Alpha.veilPiece), Offset((i % Pieces.COLS) * w, (i / Pieces.COLS) * h), Size(w + 1f, h + 1f))
+            }, contentAlignment = Alignment.Center) {
+                if (img != null) Image(img, s.plateName(p), Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                if (n == 0) Text(stringResource(R.string.plate_locked), style = Theme.small())
+            }
+            Text(s.plateName(p), style = Theme.title(k))
+            Text("${s.bookName(p.book)} ${p.chapter}:${p.verse} · ${s.plateBy(p)}", style = Theme.small())
         }
     }
 }

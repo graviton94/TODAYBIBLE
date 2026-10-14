@@ -382,6 +382,10 @@ open --ez tb.night false --es tb.plate eden; swipe_up; swipe_up;   shot hs9_eden
 open --es tb.plate noah_curse; swipe_up; swipe_up;                 shot hs9_noah_curse 3
 open --es tb.plate sinai; swipe_up; swipe_up;                      shot hs9_sinai 3
 open --es tb.plate radiant; swipe_up; swipe_up;                    shot hs9_radiant 3
+# 글 속 링크: 페이지는 그대로, 그 그림만 띄움 (드러난 조각만)
+open --es tb.plate eden --es tb.platePeek schnorr_eden;            shot hs10_peek_schnorr 4
+open --es tb.plate sinai --es tb.platePeek codex_sinaiticus;       shot hs10_peek_codex 4
+adb shell input tap 540 300; sleep 1;                              shot hs10_peek_closed 1
 adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
 open --ez tb.night false --es tb.tr WEB --es tb.plate creation; swipe_up; shot hs8_en_creation 5
 open --es tb.plate cross; swipe_up; swipe_up;                      shot hs8_en_cross 3

@@ -218,6 +218,7 @@ class MainActivity : ComponentActivity() {
         if (i.extras?.keySet()?.any { it.startsWith("tb.") } == true) s.store.copyTab = i.getIntExtra("tb.copyTab", 1)
         if (i.hasExtra("tb.notebook")) { if (s.notebook != i.getBooleanExtra("tb.notebook", false)) s.toggleNotebook() }
         s.plateView = i.getStringExtra("tb.plate")?.let { id -> s.store.plates.firstOrNull { it.id == id } }
+        s.platePeek = i.getStringExtra("tb.platePeek")?.let { id -> s.store.plates.firstOrNull { it.id == id } }
         s.peekBook = i.getIntExtra("tb.peek", 0).takeIf { it > 0 }?.minus(1)?.also { s.purchaseOpen = true }
         i.getStringExtra("tb.plan")?.let { s.choosePlan(it); s.store.planStart = s.today().toEpochDay() - 2 }
         if (i.getBooleanExtra("tb.planSheet", false)) s.planOpen = true
