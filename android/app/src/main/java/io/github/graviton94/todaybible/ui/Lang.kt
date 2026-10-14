@@ -45,7 +45,7 @@ object Lang {
         }
     }
     /** 화면 말이 한국어인지 (고른 앱 언어, 없으면 폰 언어): 권 이름 · 판화 이름 · 장절 표기 · 위젯 글. */
-    fun uiKorean(ctx: Context): Boolean = (uiLocale(ctx) ?: android.content.res.Resources.getSystem().configuration.locales[0]).language == "ko"
+    fun uiKorean(ctx: Context): Boolean = (uiLocale(ctx) ?: ctx.applicationContext.resources.configuration.locales[0] ?: Locale.getDefault()).language == "ko"
     /** 고른 앱 언어 (없으면 시스템). */
     fun uiLocale(ctx: Context): Locale? = when (ctx.getSharedPreferences("today", Context.MODE_PRIVATE).getString("language", "system")) { "ko" -> Locale.KOREAN; "en" -> Locale.ENGLISH; else -> null }
     /** 화면 글을 고른 언어로 (Activity · 알림 · 위젯이 쓰는 컨텍스트에). */

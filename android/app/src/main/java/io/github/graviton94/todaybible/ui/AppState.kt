@@ -355,7 +355,7 @@ class AppState(val store: Store) {
     var fixedToday: LocalDate? = null
 
     /** 화면 말 (권 이름 · 판화 이름 · 장 표기 · 제목 글꼴): 앱 언어 (고른 언어, 없으면 폰 언어). 언어를 바꾸면 앱이 다시 열려요. */
-    val korean: Boolean = (Lang.uiLocale(store.context) ?: android.content.res.Resources.getSystem().configuration.locales[0]).language == "ko"
+    val korean: Boolean = Lang.uiKorean(store.context)
     /** 본문 말 (성경 글 · 글꼴 · 읽어 주는 목소리): 고른 번역. */
     val bibleKorean: Boolean get() = translation == Translation.KRV
     /** 화면 언어로 장 · 절을 적을 때 쓰는 번역 (언어만 봐요). */

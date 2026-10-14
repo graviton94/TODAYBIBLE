@@ -53,6 +53,8 @@ class WidgetTick : BroadcastReceiver() {
             runCatching { save("widget_preview_verse", VerseWidget.bitmap(ctx, 160, 160, false)) }
             runCatching { save("widget_preview_hand", HandWidget.sample(ctx, 160, 160, false)) }
             runCatching { save("widget_preview_today", GoalWidget().paint(ctx, 160, 160, false, GoalWidget.sample(ctx))) }
+            // 위젯 고르는 화면의 절기 위젯 그림 (2×2, 오늘 기준)
+            runCatching { save("widget_preview_season", SeasonWidget.bitmap(ctx, 160, 160)) }
             // 절기 위젯: 오늘 · 대림 사흘 전 · 대림 첫날 · 성탄 · 사순 (2×2 · 4×2)
             listOf("now" to LocalDate.now(), "before_advent" to LocalDate.of(2026, 11, 26), "advent" to LocalDate.of(2026, 11, 29), "christmas" to LocalDate.of(2026, 12, 25), "lent" to LocalDate.of(2027, 2, 10)).forEach { (n, d) ->
                 runCatching { save("widget_season_${n}_22", SeasonWidget.bitmap(ctx, 160, 160, d)) }

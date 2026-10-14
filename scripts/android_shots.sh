@@ -108,10 +108,16 @@ open --ef tb.scale 1.0 --ez tb.contrast false
 open --ei tb.page 3;                                               shot r00_record_stats 5
 open --ei tb.page 0 --ei tb.toast 5;                               shot t01_toast 1.5
 # @scene wp
-open --ez tb.seed true --ez tb.widgetPreviews true
+# 위젯 고르는 화면의 그림: 한국어 (drawable-ko-nodpi) · 영어 (drawable-nodpi, 그 밖의 언어)
 W=/sdcard/Android/data/$P/files/previews
-for i in $(seq 1 30); do adb shell ls $W/done >/dev/null 2>&1 && break; sleep 2; done
-mkdir -p "$OUT/previews"; adb pull $W/. "$OUT/previews/" >/dev/null 2>&1; rm -f "$OUT/previews/done"; ls "$OUT/previews"
+for L in ko en; do
+  if [ $L = ko ]; then adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null; TR=KRV; else adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null; TR=WEB; fi
+  adb shell rm -rf $W
+  open --ez tb.seed true --es tb.tr $TR --ez tb.widgetPreviews true
+  for i in $(seq 1 30); do adb shell ls $W/done >/dev/null 2>&1 && break; sleep 2; done
+  mkdir -p "$OUT/previews/$L"; adb pull $W/. "$OUT/previews/$L/" >/dev/null 2>&1; rm -f "$OUT/previews/$L/done"; ls "$OUT/previews/$L"
+done
+adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null; open --es tb.tr KRV
 # @end
 # @scene dc
 # 꾸미기: 표지 판화 · 헌사 · 잉크 · 머리글 · 도장 · 앱 아이콘
