@@ -118,7 +118,7 @@ CI: Android #182 (455e87f) 통과 · def111a 통과. core 테스트는 로컬에
 - `docs/store/listing.md`: "역사 속의 성경" (A3) 으로 다시 쓰기, 1.2~1.5 기능, 개역한글(1961) 분명히.
 - 포그라운드 서비스 신고 둘 (미디어 재생 · 데이터 동기화) 확인.
 - 프로덕션 신청서 답 (테스트 동안 받은 의견 → 바꾼 것).
-- `design/strings.json` news_body (1.5), `MainActivity.NEWS = "1.5"`, Play 출시 노트.
+- ✅ `design/strings.json` news_body (1.5, 8줄 ko · en), `MainActivity.NEWS = "1.5"` (10/14). Play 출시 노트는 출시 때.
 
 ### C11 ⏳ 출시 전 QA (실기기)
 - audit-1.5.md 5장 체크리스트 12개 + 이번에 바뀐 것: 합쳐서 되살리기 (두 기기), 새 위젯 둘, 효과음 (무음 모드), 증서 PDF.
