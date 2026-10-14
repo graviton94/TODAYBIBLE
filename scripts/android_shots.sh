@@ -367,7 +367,6 @@ open --es tb.update ready;                                         shot gu2_upda
 # @scene hs
 # 역사 속의 성경 (1.5 C6): 판화 아래 그림 · 장면 · 역사, 사료 링크, 화첩의 사료 (한국어 · 영어)
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --es tb.plate creation; shot hs1_creation 5
-adb shell run-as $P cat shared_prefs/today.xml > "$OUT/hs_prefs.txt" 2>&1; adb shell run-as $P ls shared_prefs >> "$OUT/hs_prefs.txt" 2>&1; adb logcat -b crash -d > "$OUT/hs_crash.txt" 2>&1
 swipe_up;                                                          shot hs1_creation_story 2
 swipe_up;                                                          shot hs1_creation_end 2
 open --es tb.plate cross; swipe_up; swipe_up;                      shot hs2_cross_link 3
@@ -378,10 +377,17 @@ open --es tb.plate moses_sea; swipe_up;                            shot hs5_sea 
 open --es tb.plate none --ez tb.gallery true;                      shot hs6_gallery 5
 swipe_up;                                                          shot hs6_gallery2 2
 open --ez tb.gallery false --ez tb.night true --es tb.plate creation; swipe_up; shot hs7_night 4
+# 묶음 ② (창세기 · 출애굽기): 슈노르 · 시나이 사본 링크, 긴 글
+open --ez tb.night false --es tb.plate eden; swipe_up; swipe_up;   shot hs9_eden 3
+open --es tb.plate noah_curse; swipe_up; swipe_up;                 shot hs9_noah_curse 3
+open --es tb.plate sinai; swipe_up; swipe_up;                      shot hs9_sinai 3
+open --es tb.plate radiant; swipe_up; swipe_up;                    shot hs9_radiant 3
 adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
 open --ez tb.night false --es tb.tr WEB --es tb.plate creation; swipe_up; shot hs8_en_creation 5
 open --es tb.plate cross; swipe_up; swipe_up;                      shot hs8_en_cross 3
 open --es tb.plate codex_sinaiticus; swipe_up;                     shot hs8_en_codex 3
+open --es tb.plate radiant; swipe_up; swipe_up;                    shot hs8_en_radiant 3
+open --es tb.plate rebekah; swipe_up; swipe_up;                    shot hs8_en_rebekah 3
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # @end
 # @scene hp

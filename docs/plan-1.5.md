@@ -71,7 +71,7 @@ CI: Android #182 (455e87f) 통과 · def111a 통과. core 테스트는 로컬에
 - 나오는 곳: 권 다 쓰기 의식 끝, 책장의 다 쓴 권, 기록 › 모음 (구약 · 신약 · 66권은 다 썼을 때만). PDF (A4 인쇄) · 카드 (나누기).
 - 영어 모드: 같은 틀에 영어 글 (CERTIFICATE OF COMPLETION 등).
 
-### C6 🔧 역사 속의 성경 — 묶음 ① 구현 (dde5084), ② 부터 차례로
+### C6 🔧 역사 속의 성경 — 묶음 ① 구현 (dde5084), ② 글 들어감 (확인 기다림)
 - 확정: 세 칸 **PICTURA 그림 · SCAENA 장면 · HISTORIA 역사**, 칸마다 2~4문장, 라틴 머리 + 그 언어 이름 함께.
 - **영어 모드 필수**: 모든 글 ko · en 둘 다 (앱이 영어면 영어 글, 라틴 머리 옆은 Picture · Scene · History).
 - **사료 링크**: 글 속 낱말 · 구절에 링크를 걸어 누르면 그 사료 (사본 · 지도 · 유물 · 다른 판화) 를 크게 보기. 사료도 같은 세 칸 글.
@@ -81,12 +81,13 @@ CI: Android #182 (455e87f) 통과 · def111a 통과. core 테스트는 로컬에
 - 자료 형식 (구현): 글 `assets/history/stories.tsv` (id · ko|en · 그림 · 장면 · 역사). 사료는 판화 목록에 함께 (`data/plates.tsv` · `assets/plates/plates.tsv`, 9번째 칸 `src`), 그림 `assets/plates/<id>.jpg` (흑백 820px). 링크 표기 `[[id|보일 글]]` (사료든 판화든). 코드: `data/History.kt`, `ui/Plates.kt` `StoryPanel`.
 - 사료 그림 구하기: 이 컨테이너는 위키미디어가 막혀 있어 **Actions 의 Fetch art** 로 (`art/search.tsv` 에 검색어 → 브랜치에서 실행 → `art/raw/` + `manifest.tsv` 에 라이선스). 검색어는 짧게 (두세 낱말). 라이선스가 Public domain · CC0 인 것만 앱에 (CC BY-SA 는 넣지 않음).
 - 이사야 두루마리: 공용에 쓸 만한 PD 사진이 없음 (전체 파노라마 1920×75 뿐, 큰 너비 요청은 막힘) → 다른 사진을 찾으면 넣기. 글 시안은 `docs/mockups/history-stories.md` 에 남김.
+- 검사: 글 속 큰따옴표 인용은 개역한글 · WEB 본문에 그대로 있어야 해요 (말줄임 … 으로 나눈 조각마다). 캡처 장면 `hs` (판화 아래 이야기 · 링크 · 화첩 · 밤 · 영어).
 - 글꼴: 이야기 글자는 `scripts/build_fonts.py` 가 stories.tsv 에서 모아요. 새 글을 넣으면 `python3 scripts/build_fonts.py` → 라틴 글꼴은 `git checkout` 으로 되돌리고 한글 넷 (serif_kr_* · title_kr) 만 커밋.
 
 | 묶음 | 대상 | 상태 |
 |---|---|---|
 | ① | creation · moses_sea · schnorr_solomon · cross · 사료 codex_sinaiticus (마태 6장, 주기도문) | ✅ dde5084 |
-| ② | 창세기 · 출애굽 나머지 판화 | ⏳ |
+| ② | 창세기 · 출애굽 나머지 도레 판화 32점 (eve … radiant). 인용은 본문 파일과 대조 (KRV · WEB), 판화끼리 링크 (eden → schnorr_eden · cain → schnorr_cain · sinai → codex_sinaiticus) | 🎨 글 들어감, 확인 기다림 |
 | ③ | 나머지 구약 | ⏳ |
 | ④ | 복음서 | ⏳ |
 | ⑤ | 사도 · 계시 · 이달의 판화 | ⏳ |
