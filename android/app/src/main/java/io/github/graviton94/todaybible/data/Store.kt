@@ -37,7 +37,9 @@ class Store(val context: Context) {
         // 이달의 판화 (원격, C8): 받아 둔 세트 가운데 그 달이 된 것만 (다음 달 것은 미리 받아 두기만)
         val month = (if (io.github.graviton94.todaybible.BuildConfig.DEV_TOOLS) prefs.getString("debug_month", null)?.takeIf { it.isNotBlank() } else null) ?: java.time.YearMonth.now().toString()
         val have = inApp.map { it.id }.toSet()
-        inApp + parse(RemoteSets.lines(context, "sets.tsv")).filter { it.id !in have && it.set.isNotEmpty() && it.set <= month }
+        // 달마다 세트 (해-달) 는 앱 안에 든 것이든 받은 것이든 그 달이 되어야 걸려요 (사료 "src" 는 늘)
+        fun due(p: Plate) = p.set.isEmpty() || p.set == History.SOURCE || p.set <= month
+        inApp.filter(::due) + parse(RemoteSets.lines(context, "sets.tsv")).filter { it.id !in have && it.set.isNotEmpty() && due(it) }
     }
     /** 그 장의 판화: 도레 기본 판화가 먼저, 없으면 달마다 세트. */
     fun plateFor(book: Int, chapter: Int): Plate? = plates.firstOrNull { it.book == book && it.chapter == chapter && it.set.isEmpty() } ?: plates.firstOrNull { it.book == book && it.chapter == chapter }

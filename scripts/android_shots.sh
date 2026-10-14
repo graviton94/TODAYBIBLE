@@ -436,7 +436,7 @@ adb shell run-as $P ls files/plates > "$OUT/rm_files.txt" 2>&1
 open --es tb.setsMonth 2026-12 --ez tb.gallery true;               shot rm1_gallery_december 5
 open --ez tb.gallery false --es tb.plate schnorr_magi;             shot rm2_magi 4
 swipe_up; swipe_up;                                                shot rm3_magi_story 2
-open --es tb.setsMonth 2026-10 --ez tb.gallery true;               shot rm4_gallery_october 5
+open --es tb.setsMonth 2026-11 --ez tb.gallery true;               shot rm4_gallery_november 5
 open --es tb.setsMonth "" --ez tb.gallery false
 # @end
 # @scene hp
