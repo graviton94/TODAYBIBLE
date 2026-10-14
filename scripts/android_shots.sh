@@ -367,6 +367,7 @@ open --es tb.update ready;                                         shot gu2_upda
 # @scene hs
 # 역사 속의 성경 (1.5 C6): 판화 아래 그림 · 장면 · 역사, 사료 링크, 화첩의 사료 (한국어 · 영어)
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --es tb.plate creation; shot hs1_creation 5
+adb shell run-as $P cat shared_prefs/today.xml > "$OUT/hs_prefs.txt" 2>&1; adb shell run-as $P ls shared_prefs >> "$OUT/hs_prefs.txt" 2>&1; adb logcat -b crash -d > "$OUT/hs_crash.txt" 2>&1
 swipe_up;                                                          shot hs1_creation_story 2
 swipe_up;                                                          shot hs1_creation_end 2
 open --es tb.plate cross; swipe_up; swipe_up;                      shot hs2_cross_link 3
