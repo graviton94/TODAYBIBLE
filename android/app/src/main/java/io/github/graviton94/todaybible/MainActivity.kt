@@ -33,6 +33,11 @@ class MainActivity : ComponentActivity() {
         volumeControlStream = android.media.AudioManager.STREAM_MUSIC
         val store = Store(applicationContext)
         if (BuildConfig.DEV_TOOLS && intent.getBooleanExtra("tb.reset", false)) store.reset()
+        // 캡처 · 시험: 이달의 판화를 원격에서 바로 받기 (tb.syncSets) · 그 달인 것처럼 보기 (tb.setsMonth 2026-12)
+        if (BuildConfig.DEV_TOOLS) {
+            intent.getStringExtra("tb.setsMonth")?.let { getSharedPreferences("today", MODE_PRIVATE).edit().putString("debug_month", it).commit() }
+            if (intent.getBooleanExtra("tb.syncSets", false)) { val app = applicationContext; Thread { io.github.graviton94.todaybible.data.RemoteSets.sync(app, force = true) }.start() }
+        }
         val s = AppState(store).also { state = it }
         s.lifetime.connect()
         store.pendingToast.takeIf { it.isNotEmpty() }?.let { s.toast = it; store.pendingToast = "" }
@@ -137,6 +142,8 @@ class MainActivity : ComponentActivity() {
         // 화면 줄을 붙잡지 않게 뒤에서
         val app = applicationContext
         Thread { runCatching { io.github.graviton94.todaybible.data.Backup.auto(app) } }.start()
+        // 이달의 판화 (원격): 다음에 열 때 화첩에 걸리도록 뒤에서 받아 둠 (하루 두 번까지만 확인)
+        Thread { runCatching { io.github.graviton94.todaybible.data.RemoteSets.sync(app) } }.start()
         // 위젯은 홈 화면으로 나갈 때 한 번 (쓰는 동안 절마다 그리지 않게)
         state?.widgets()
     }

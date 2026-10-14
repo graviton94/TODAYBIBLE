@@ -108,7 +108,7 @@ object Certificate {
         val serifBold = font(ctx, if (d.korean) R.font.serif_kr_semibold else R.font.garamond_semibold)
         fun tp(face: android.graphics.Typeface?, size: Float, color: Int, track: Float = 0f) = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = face; textSize = size; this.color = color; letterSpacing = track; textAlign = Paint.Align.CENTER }
         fun plate(id: String, box: RectF, dim: Float = 1f) {
-            val bmp = runCatching { ctx.assets.open("plates/$id.jpg").use { android.graphics.BitmapFactory.decodeStream(it) } }.getOrNull() ?: return
+            val bmp = runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, id).use { android.graphics.BitmapFactory.decodeStream(it) } }.getOrNull() ?: return
             val sc = maxOf(box.width() / bmp.width, box.height() / bmp.height); val sw = box.width() / sc; val sh = box.height() / sc
             val src = android.graphics.Rect(((bmp.width - sw) / 2).toInt(), ((bmp.height - sh) * 0.35f).toInt(), ((bmp.width + sw) / 2).toInt(), ((bmp.height - sh) * 0.35f + sh).toInt())
             val k = dim

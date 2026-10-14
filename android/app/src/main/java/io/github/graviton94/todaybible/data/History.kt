@@ -17,7 +17,8 @@ object History {
     @Volatile private var cache: Map<String, Story>? = null
 
     private fun load(ctx: Context): Map<String, Story> = cache ?: runCatching {
-        ctx.assets.open("history/stories.tsv").bufferedReader().readLines().filter { it.isNotBlank() && !it.startsWith("#") }.mapNotNull { l ->
+        // 앱 안의 글 + 원격으로 받은 이달의 판화 글 (C8)
+        (ctx.assets.open("history/stories.tsv").bufferedReader().readLines() + RemoteSets.lines(ctx, "stories.tsv")).filter { it.isNotBlank() && !it.startsWith("#") }.mapNotNull { l ->
             val p = l.split('\t'); if (p.size < 5) null else "${p[0]}:${p[1]}" to Story(p[2], p[3], p[4])
         }.toMap()
     }.getOrDefault(emptyMap()).also { cache = it }

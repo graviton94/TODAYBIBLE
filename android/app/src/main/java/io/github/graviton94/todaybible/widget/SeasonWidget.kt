@@ -94,7 +94,7 @@ class SeasonWidget : AppWidgetProvider() {
             val (vb, vc, vv) = Seasons.verse(now.season)
             val verse = runCatching { Markup.plain(store.book(tr, vb).verse(vc, vv)) }.getOrDefault("")
             val ref = Canon.books[vb].let { if (ui) it.ko else it.en } + " $vc:$vv"
-            val img = runCatching { ctx.assets.open("plates/${Seasons.plate(now.season)}.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull()?.asImageBitmap()
+            val img = runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, Seasons.plate(now.season)).use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull()?.asImageBitmap()
             // 4×2 (넓으면): 절기 말씀까지 · 2×2: 이름 · 주 · 남은 날만
             val tall = wDp >= Tokens.Size.seasonWideMin.value && hDp >= Tokens.Size.widgetPlateMinH.value
             return Cards.render(ctx, (wDp * d).toInt(), (hDp * d).toInt(), density) { m ->

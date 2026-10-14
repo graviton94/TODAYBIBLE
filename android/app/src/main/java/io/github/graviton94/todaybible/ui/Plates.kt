@@ -172,10 +172,11 @@ fun GalleryPage(s: AppState) {
                 }
             }
             val list = all.filter { it.book in groups[tab].second && (it.set.isEmpty() || it.set == io.github.graviton94.todaybible.data.History.SOURCE) }.sortedWith(compareBy({ it.book }, { it.chapter }))
-            // 이달의 판화 (구독 세트): 가장 최근 세트 한 줄 위에. 잠금은 결제가 열리면 (1.4.x)
+            // 이달의 판화 (구독 세트): 달마다 한 묶음, 새 달이 위에. 잠금은 결제가 열리면 (1.4.x)
             val sets = all.filter { it.set.isNotEmpty() && it.set != io.github.graviton94.todaybible.data.History.SOURCE }.groupBy { it.set }
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                sets.keys.maxOrNull()?.let { key ->
+                // 새 달 세트가 맨 위, 지난 달 세트도 그 아래 그대로 (받은 판화는 남아요)
+                sets.keys.sortedDescending().forEach { key ->
                     val set = sets.getValue(key)
                     val month = key.substringAfter('-').toIntOrNull() ?: 1
                     Column(Modifier.fillMaxWidth().drawBehind { drawLine(c.gilt, Offset(0f, size.height), Offset(size.width, size.height), Tokens.Stroke.hair.toPx()) }.padding(bottom = Tokens.Space.s4),

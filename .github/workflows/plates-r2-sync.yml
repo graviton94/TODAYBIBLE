@@ -1,0 +1,55 @@
+name: Monthly plates to R2
+# 이달의 판화 (1.5 C8): 저장소의 remote/plates/ (sets.tsv · stories.tsv · <id>.jpg) 를 Cloudflare R2 의 plates/ 로 올리고
+# 공개 주소로 목록 하나를 받아 확인해요. 앱은 하루 두 번까지 이 목록을 보고, 그 달이 된 세트를 화첩에 걸어요.
+# 키는 낭독과 같은 GitHub Secrets (CF_ACCOUNT_ID · CF_R2_ACCESS_KEY_ID · CF_R2_SECRET_ACCESS_KEY · CF_R2_BUCKET), 공개 주소는 Variables (CF_R2_PUBLIC_URL).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["remote/plates/**", ".github/workflows/plates-r2-sync.yml"]
+permissions: { contents: read }
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.CF_R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.CF_R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+      AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
+      ACCOUNT: ${{ secrets.CF_ACCOUNT_ID }}
+      BUCKET: ${{ secrets.CF_R2_BUCKET }}
+      PUBLIC: ${{ vars.CF_R2_PUBLIC_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check settings (names only)
+        run: |
+          ok=1
+          for n in ACCOUNT BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY PUBLIC; do
+            if [ -z "${!n}" ]; then echo "::error::$n is empty"; ok=0; else echo "$n is set"; fi
+          done
+          [ $ok = 1 ]
+      - name: Check the set (every row has a picture, 9 columns)
+        run: |
+          python3 - <<'PY'
+          import os, sys
+          d = "remote/plates"; bad = []
+          for l in open(f"{d}/sets.tsv", encoding="utf-8"):
+              if l.startswith("#") or not l.strip(): continue
+              p = l.rstrip("\n").split("\t")
+              if len(p) < 9 or not p[8]: bad.append(f"columns: {p[0]}")
+              if not os.path.isfile(f"{d}/{p[0]}.jpg"): bad.append(f"picture: {p[0]}")
+          if bad: print("::error::" + ", ".join(bad)); sys.exit(1)
+          print("set ok")
+          PY
+      - name: Upload to R2 (plates/)
+        run: |
+          E="https://$ACCOUNT.r2.cloudflarestorage.com"
+          aws s3 cp remote/plates "s3://$BUCKET/plates/" --recursive --exclude "*" --include "*.jpg" --content-type image/jpeg --only-show-errors --endpoint-url "$E"
+          aws s3 cp remote/plates "s3://$BUCKET/plates/" --recursive --exclude "*" --include "*.tsv" --content-type "text/tab-separated-values; charset=utf-8" --cache-control "max-age=3600" --only-show-errors --endpoint-url "$E"
+          aws s3 ls "s3://$BUCKET/plates/" --endpoint-url "$E"
+      - name: Check public download
+        run: |
+          code=$(curl -s -o /tmp/s.tsv -w "%{http_code}" "${PUBLIC%/}/plates/sets.tsv")
+          echo "GET sets.tsv → $code"
+          [ "$code" = 200 ] && cmp -s /tmp/s.tsv remote/plates/sets.tsv && echo "same file ✓"

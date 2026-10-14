@@ -174,7 +174,7 @@ class ListenService : Service() {
         if (id == artKey) return art
         artKey = id
         art = runCatching {
-            val src = assets.open("plates/$id.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) }!!
+            val src = io.github.graviton94.todaybible.data.RemoteSets.open(this, id).use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) }!!
             val side = minOf(src.width, src.height); val out = android.graphics.Bitmap.createBitmap(512, 512, android.graphics.Bitmap.Config.ARGB_8888)
             val sepia = android.graphics.ColorMatrix(floatArrayOf(0.30f, 0.59f, 0.11f, 0f, 0f, 0.28f, 0.55f, 0.10f, 0f, 0f, 0.24f, 0.47f, 0.09f, 0f, 0f, 0f, 0f, 0f, 1f, 0f))
             android.graphics.Canvas(out).drawBitmap(src, android.graphics.Rect((src.width - side) / 2, ((src.height - side) * 0.3f).toInt(), (src.width + side) / 2, ((src.height - side) * 0.3f).toInt() + side),

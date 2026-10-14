@@ -113,7 +113,7 @@ class VerseWidget : AppWidgetProvider() {
             val by = w.plate?.let { (if (ui) it.ko else it.en) + " · " + (if (ui) it.byKo else it.byEn) }.orEmpty()
             val phrase = LineBreak.Paragraph.copy(wordBreak = LineBreak.WordBreak.Phrase)
             if (store.widgetPlate && hDp >= Tokens.Size.widgetPlateMinH.value && w.plate != null) {
-                val img = runCatching { ctx.assets.open("plates/${w.plate.id}.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull()
+                val img = runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, w.plate.id).use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull()
                 if (img != null) return platedBitmap(ctx, (wDp * d).toInt(), (hDp * d).toInt(), density, img.asImageBitmap(), korean, w.ref, w.text, by)
             }
             return Cards.render(ctx, (wDp * d).toInt(), (hDp * d).toInt(), density) { m ->

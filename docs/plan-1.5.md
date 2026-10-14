@@ -98,10 +98,15 @@ CI: Android #182 (455e87f) 통과 · def111a 통과. core 테스트는 로컬에
 - 순서 (한 번에 하나만): 권 다 씀 > 판화가 걸림 (그 장에 판화) > 장 마침 > 한 절 마침. 메달은 그 뒤 잠깐 있다가.
 - 설정 › 소리에 "효과음" 켜기/끄기 (기본 켬). 무음 · 진동 모드면 내지 않음. `USAGE_ASSISTANCE_SONIFICATION`, SoundPool.
 
-### C8 ⏳ 이달의 판화 원격 받기
+### C8 🔧 이달의 판화 원격 받기 (구현 · 12월 세트 준비, R2 올리기 확인 중)
 - 12월 세트 (대림 · 성탄) 부터 R2 (`CF_R2_PUBLIC_URL`) 에서 받기. 지금 11월 세트는 APK 안에 그대로.
 - 목록 파일 하나 (`plates/sets.tsv`: 달 · id · 권 · 장 · 이름 · 화가 · 출처) + 그림. 받은 것은 filesDir 에, 못 받으면 그 달 세트는 안 보임.
 - 올리는 쪽: 워크플로 (narration-r2-sync 처럼).
+- 구현 (10/14): `data/RemoteSets.kt` (하루 두 번까지 `plates/sets.tsv` 확인 → 없는 그림 받기 → `stories.tsv`), 앱을 떠날 때 뒤에서. 받은 것은 filesDir/plates.
+  `Store.plates` 는 앱 안 판화 + 받은 세트 가운데 **그 달이 된 것** (다음 달 것은 미리 받아 두기만). 화첩은 달마다 한 묶음씩, 새 달이 위 · 지난 달도 남음.
+  저장소 `remote/plates/` (sets.tsv · stories.tsv · 그림) → `.github/workflows/plates-r2-sync.yml` 이 R2 `plates/` 로 (main 푸시 또는 직접 실행).
+  새 달 세트 더하는 법: 그림 4장 (흑백 · 긴 변 820px) + sets.tsv 4줄 (세트 칸 = 해-달) + stories.tsv 8줄 (ko · en, 인용은 본문 대조) → `python3 scripts/build_fonts.py` (원격 글 글자도 넣어요) → main 에 푸시.
+  12월 (대림 · 성탄): 슈노르 162 수태고지 · 165 목자들 · 166 구유 · 169 동방 박사.
 
 ### C9 ⏳ 관주 · 사전
 - 관주: Treasury of Scripture Knowledge (PD). 읽기 화면에서 절을 길게 눌러 관련 구절.

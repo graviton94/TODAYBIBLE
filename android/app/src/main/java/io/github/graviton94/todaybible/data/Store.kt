@@ -29,10 +29,15 @@ class Store(val context: Context) {
     }
 
     val plates: List<Plate> by lazy {
-        context.assets.open("plates/plates.tsv").bufferedReader().readLines().filter { it.isNotBlank() && !it.startsWith("#") }.mapNotNull { l ->
-            val p = l.split('\t'); val b = io.github.graviton94.todaybible.core.Canon.byOsis(p[1]) ?: return@mapNotNull null
-            Plate(p[0], b.index, p[2].toInt(), p[3], p[4], p.getOrNull(5)?.toIntOrNull() ?: 1, p.getOrElse(6) { "" }, p.getOrElse(7) { "" }, p.getOrElse(8) { "" }.trim())
+        fun parse(lines: List<String>) = lines.filter { it.isNotBlank() && !it.startsWith("#") }.mapNotNull { l ->
+            val p = l.split('\t'); val b = io.github.graviton94.todaybible.core.Canon.byOsis(p.getOrElse(1) { "" }) ?: return@mapNotNull null
+            Plate(p[0], b.index, p.getOrNull(2)?.toIntOrNull() ?: return@mapNotNull null, p.getOrElse(3) { "" }, p.getOrElse(4) { "" }, p.getOrNull(5)?.toIntOrNull() ?: 1, p.getOrElse(6) { "" }, p.getOrElse(7) { "" }, p.getOrElse(8) { "" }.trim())
         }
+        val inApp = parse(context.assets.open("plates/plates.tsv").bufferedReader().readLines())
+        // 이달의 판화 (원격, C8): 받아 둔 세트 가운데 그 달이 된 것만 (다음 달 것은 미리 받아 두기만)
+        val month = (if (io.github.graviton94.todaybible.BuildConfig.DEV_TOOLS) prefs.getString("debug_month", null)?.takeIf { it.isNotBlank() } else null) ?: java.time.YearMonth.now().toString()
+        val have = inApp.map { it.id }.toSet()
+        inApp + parse(RemoteSets.lines(context, "sets.tsv")).filter { it.id !in have && it.set.isNotEmpty() && it.set <= month }
     }
     /** 그 장의 판화: 도레 기본 판화가 먼저, 없으면 달마다 세트. */
     fun plateFor(book: Int, chapter: Int): Plate? = plates.firstOrNull { it.book == book && it.chapter == chapter && it.set.isEmpty() } ?: plates.firstOrNull { it.book == book && it.chapter == chapter }

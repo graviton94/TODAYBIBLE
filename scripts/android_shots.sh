@@ -423,6 +423,16 @@ open --ei tb.page 2 --ei tb.copyTab 1;                             shot lx7_ko_w
 open --es tb.plate creation; swipe_up;                             shot lx8_ko_web_plate 4
 open --es tb.plate none --es tb.tr KRV
 # @end
+# @scene rm
+# 이달의 판화 원격 (C8): R2 에서 받아 두고 → 12월인 것처럼 화첩 · 판화 이야기
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ez tb.syncSets true; sleep 20
+adb shell run-as $P ls files/plates > "$OUT/rm_files.txt" 2>&1
+open --es tb.setsMonth 2026-12 --ez tb.gallery true;               shot rm1_gallery_december 5
+open --ez tb.gallery false --es tb.plate schnorr_magi;             shot rm2_magi 4
+swipe_up; swipe_up;                                                shot rm3_magi_story 2
+open --es tb.setsMonth 2026-10 --ez tb.gallery true;               shot rm4_gallery_october 5
+open --es tb.setsMonth "" --ez tb.gallery false
+# @end
 # @scene hp
 # 도움말: (?) · 기도 · 듣기 첫 안내 · 설정 도움 · 소개 다시 보기 · 교독 안내
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 0; shot hp1_topbar 5

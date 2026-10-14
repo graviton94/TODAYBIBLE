@@ -65,7 +65,7 @@ object Cards {
     /** 판화를 카드 위쪽에 꽉 채워 (세피아 먹빛), 아래로 어둠에 녹아들게. */
     private fun DrawScope.art(ctx: Context, plateId: String?, h: Float, leaf: androidx.compose.ui.graphics.Color) {
         val id = plateId ?: return
-        val bmp = runCatching { ctx.assets.open("plates/$id.jpg").use { BitmapFactory.decodeStream(it) } }.getOrNull() ?: return
+        val bmp = runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, id).use { BitmapFactory.decodeStream(it) } }.getOrNull() ?: return
         val img = bmp.asImageBitmap()
         val scale = maxOf(size.width / img.width, h / img.height)
         val dw = (img.width * scale).toInt(); val dh = (img.height * scale).toInt()

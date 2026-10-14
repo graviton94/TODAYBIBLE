@@ -35,7 +35,7 @@ object MyBible {
         val d = Tokens.dark
         cv.drawColor(d.leaf.toArgb())
         val artH = H * 0.6f
-        plateId?.let { id -> runCatching { ctx.assets.open("plates/$id.jpg").use { android.graphics.BitmapFactory.decodeStream(it) } }.getOrNull() }?.let { bmp ->
+        plateId?.let { id -> runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, id).use { android.graphics.BitmapFactory.decodeStream(it) } }.getOrNull() }?.let { bmp ->
             val sc = maxOf(W / bmp.width.toFloat(), artH / bmp.height); val dw = bmp.width * sc; val dh = bmp.height * sc
             val sepia = android.graphics.ColorMatrix(floatArrayOf(0.30f, 0.59f, 0.11f, 0f, 0f, 0.28f, 0.55f, 0.10f, 0f, 0f, 0.24f, 0.47f, 0.09f, 0f, 0f, 0f, 0f, 0f, 1f, 0f))
             cv.save(); cv.clipRect(0f, 0f, W.toFloat(), artH)

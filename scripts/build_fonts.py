@@ -42,6 +42,10 @@ def korean_text():
     chars |= set(open(os.path.join(ROOT, "data", "plates.tsv"), encoding="utf-8").read())
     # 역사 속의 성경 (1.5): 판화 · 사료 이야기
     chars |= set(open(os.path.join(ROOT, "android", "app", "src", "main", "assets", "history", "stories.tsv"), encoding="utf-8").read())
+    # 이달의 판화 (원격) 의 이름과 글도: 앱이 나간 뒤 받는 글자가 글꼴에 있도록 (remote/plates)
+    for f in ("sets.tsv", "stories.tsv"):
+        rp = os.path.join(ROOT, "remote", "plates", f)
+        if os.path.exists(rp): chars |= set(open(rp, encoding="utf-8").read())
     chars |= set("0123456789년월일주시분오전후 ")
     return "".join(sorted(c for c in chars if c >= " " and c not in "\t\n"))
 

@@ -137,13 +137,13 @@ object Reminder {
 }
 
 /** 판화 한 점 (알림용, 반으로 줄여 읽음). */
-private fun plateBitmap(ctx: Context, id: String) = runCatching { ctx.assets.open("plates/$id.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull()
+private fun plateBitmap(ctx: Context, id: String) = runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, id).use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull()
 
 /** 펼치면 그 장(없으면 오늘)의 판화가 크게. 그림을 못 읽으면 글만. */
 private fun plateStyle(ctx: Context, store: Store, b: Int, ch: Int, body: String): android.app.Notification.Style? {
     val plates = store.plates
     val id = store.plateFor(b, ch)?.id ?: plates.takeIf { it.isNotEmpty() }?.let { it[Math.floorMod(LocalDate.now().toEpochDay(), it.size.toLong()).toInt()].id } ?: return null
-    val bmp = runCatching { ctx.assets.open("plates/$id.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull() ?: return null
+    val bmp = runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, id).use { android.graphics.BitmapFactory.decodeStream(it, null, android.graphics.BitmapFactory.Options().apply { inSampleSize = 2 }) } }.getOrNull() ?: return null
     return android.app.Notification.BigPictureStyle().bigPicture(bmp).setSummaryText(body)
 }
 
