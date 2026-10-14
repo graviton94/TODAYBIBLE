@@ -43,16 +43,18 @@ object Certificate {
                        val quote: String, val dedication: String, val date: String, val seal: String, val plates: List<String>, val plateLine: String, val nums: List<Pair<String, String>>)
 
     private fun data(ctx0: Context, store: Store, tr: Translation, which: Int): Data {
-        val korean = tr == Translation.KRV
-        val ctx = Lang.content(ctx0, tr)
+        // 증서의 글 (이름 · 날짜 · 권 이름 · 판화) 은 앱 언어로, 인용한 말씀만 번역으로. 글꼴은 한글이 섞이면 한글 글꼴
+        val ui = Lang.uiKorean(ctx0); val ut = if (ui) Translation.KRV else Translation.KJV
+        val korean = tr == Translation.KRV || ui
+        val ctx = Lang.content(ctx0, ut)
         val bs = books(which).toSet()
         val fills = store.loadFills().filter { it.translation == tr && it.key.book in bs }
         val first = fills.minOfOrNull { it.epochDay } ?: LocalDate.now().toEpochDay(); val last = fills.maxOfOrNull { it.epochDay } ?: first
-        val fmt = DateTimeFormatter.ofPattern(ctx.getString(R.string.fmt_ymd), Lang.locale(tr))
-        val long = DateTimeFormatter.ofPattern(ctx.getString(R.string.cert_date), Lang.locale(tr))
+        val fmt = DateTimeFormatter.ofPattern(ctx.getString(R.string.fmt_ymd), Lang.locale(ut))
+        val long = DateTimeFormatter.ofPattern(ctx.getString(R.string.cert_date), Lang.locale(ut))
         val verses = fills.map { it.key.raw }.toSet().size
         val chapters = bs.sumOf { store.book(tr, it).chapterCount }
-        val bookName = { b: Int -> Canon.books[b].let { if (korean) it.ko else it.en } }
+        val bookName = { b: Int -> Canon.books[b].let { if (ui) it.ko else it.en } }
         val owner = store.ownerName.trim()
         val single = which >= 0
         val what = if (single) bookName(which) else ctx.getString(when (which) { OT -> R.string.cert_ot; NT -> R.string.cert_nt; else -> R.string.cert_all })
@@ -71,7 +73,7 @@ object Certificate {
         val plates = if (single) listOfNotNull(store.coverPlate.takeIf { id -> id.isNotEmpty() && store.plates.any { it.id == id && it.book == which } } ?: store.plates.firstOrNull { it.book == which && it.set.isEmpty() }?.id ?: "creation")
             else when (which) { OT -> listOf("creation", "noah", "moses_sea", "daniel"); NT -> listOf("nativity", "sermon", "cross", "ascension"); else -> listOf("creation", "moses_sea", "cross", "ascension") }
                 .filter { id -> store.plates.any { it.id == id } }
-        val plateLine = if (single) store.plates.firstOrNull { it.id == plates.firstOrNull() }?.let { "〈" + (if (korean) it.ko else it.en) + "〉 " + (if (korean) it.byKo else it.byEn) }.orEmpty() else ""
+        val plateLine = if (single) store.plates.firstOrNull { it.id == plates.firstOrNull() }?.let { "〈" + (if (ui) it.ko else it.en) + "〉 " + (if (ui) it.byKo else it.byEn) }.orEmpty() else ""
         val nums = if (single) emptyList() else {
             val p = io.github.graviton94.todaybible.core.Progress(store.loadFills())
             val hung = store.plates.count { pl -> pl.book in bs && p.chapterFraction(tr, store.book(tr, pl.book), pl.chapter) >= 1f }

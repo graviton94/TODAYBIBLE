@@ -57,11 +57,13 @@ object MyBible {
     }
 
     fun make(ctx: Context, store: Store, tr: Translation, book: Int, owner: String = store.ownerName): File {
-        val korean = tr == Translation.KRV
+        // 화면 말 (권 이름 · 날짜 · 장절 · 제목) 은 앱 언어로, 말씀 글만 번역으로. 글꼴은 한글이 섞이면 한글 글꼴 (라틴도 들어 있어요)
+        val ui = Lang.uiKorean(ctx); val ut = if (ui) Translation.KRV else Translation.KJV
+        val korean = tr == Translation.KRV || ui
         val text = store.book(tr, book)
         val firstDay = HashMap<Int, Long>()
         store.loadFills().filter { it.translation == tr && it.key.book == book }.forEach { f -> firstDay.merge(f.key.raw, f.epochDay) { a, b -> minOf(a, b) } }
-        val name = if (korean) io.github.graviton94.todaybible.core.Canon.books[book].ko else io.github.graviton94.todaybible.core.Canon.books[book].en
+        val name = if (ui) io.github.graviton94.todaybible.core.Canon.books[book].ko else io.github.graviton94.todaybible.core.Canon.books[book].en
         val c = Tokens.light
         val serif = ResourcesCompat.getFont(ctx, if (korean) R.font.serif_kr_medium else R.font.garamond_medium)
         val title = ResourcesCompat.getFont(ctx, if (korean) R.font.title_kr else R.font.garamond_semibold)
@@ -73,7 +75,7 @@ object MyBible {
         run {
             val pg = newPage()
             val days = firstDay.values
-            val fmt = DateTimeFormatter.ofPattern(Lang.content(ctx, tr).getString(R.string.fmt_ymd), Lang.locale(tr))
+            val fmt = DateTimeFormatter.ofPattern(Lang.content(ctx, ut).getString(R.string.fmt_ymd), Lang.locale(ut))
             val plate = store.coverPlate.takeIf { it.isNotEmpty() } ?: store.plates.firstOrNull { it.book == book }?.id ?: "creation"
             val who = if (owner.isNotBlank()) ctx.getString(R.string.mybook_named, owner) else ctx.getString(R.string.mybook)
             val chDone = (1..text.chapterCount).count { ch -> text.fillable(ch).let { f -> f.isNotEmpty() && f.all { v -> firstDay.containsKey(VerseKey(book, ch, v).raw) } } }
@@ -94,7 +96,7 @@ object MyBible {
         val head = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = if (store.latinHeads) ResourcesCompat.getFont(ctx, R.font.caps) else serif; textSize = 6.5f; color = c.giltText.toArgb(); letterSpacing = 0.2f }
         val folio = TextPaint(head).apply { textAlign = Paint.Align.CENTER }
         val chap = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = display; textSize = 32f; color = c.giltText.toArgb() }
-        val md = DateTimeFormatter.ofPattern(Lang.content(ctx, tr).getString(R.string.fmt_margin_md), Lang.locale(tr))
+        val md = DateTimeFormatter.ofPattern(Lang.content(ctx, ut).getString(R.string.fmt_margin_md), Lang.locale(ut))
         val wb = W - BIND
         val gutter = 16f; val colW = (wb - 2 * M - gutter - 26).toInt()
         fun open(): PdfDocument.Page { val p = newPage(); p.canvas.drawColor(c.leaf.toArgb()); p.canvas.translate(if (pageNo % 2 == 1) BIND.toFloat() else 0f, 0f); return p }
@@ -147,11 +149,11 @@ object MyBible {
         val sermons = store.loadNotes().filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.SERMON && it.book == book && it.from > 0 }.sortedBy { it.epochDay }
         if (sermons.isNotEmpty()) {
             pg = open(); y = M.toFloat() + 14f
-            val cc = Lang.content(ctx, tr)
+            val cc = Lang.content(ctx, ut)
             pg.canvas.drawText(cc.getString(R.string.sermon_title), M.toFloat(), y + 12f, TextPaint(body).apply { textSize = 15f; color = c.giltText.toArgb() }); y += 34f
-            val day = DateTimeFormatter.ofPattern(cc.getString(R.string.fmt_ymd), Lang.locale(tr))
+            val day = DateTimeFormatter.ofPattern(cc.getString(R.string.fmt_ymd), Lang.locale(ut))
             for (n in sermons) {
-                val headLine = LocalDate.ofEpochDay(n.epochDay).format(day) + "  ·  " + Lang.passage(ctx, tr, name, n.chapter, n.from, n.to)
+                val headLine = LocalDate.ofEpochDay(n.epochDay).format(day) + "  ·  " + Lang.passage(ctx, ut, name, n.chapter, n.from, n.to)
                 val lay = StaticLayout.Builder.obtain(n.text, 0, n.text.length, body, colW + gutter.toInt()).setLineSpacing(0f, 1.25f).setIncludePad(false).build()
                 if (y + 16f + lay.height > H - M) { close(pg); pg = open(); y = M.toFloat() + 14f }
                 pg.canvas.drawText(headLine, M.toFloat(), y + 8f, TextPaint(body).apply { textSize = 8f; color = c.giltText.toArgb() }); y += 16f
@@ -164,7 +166,7 @@ object MyBible {
         run {
             val p = open(); val cv = p.canvas
             val days = firstDay.values
-            val fmt = DateTimeFormatter.ofPattern(Lang.content(ctx, tr).getString(R.string.fmt_ymd), Lang.locale(tr))
+            val fmt = DateTimeFormatter.ofPattern(Lang.content(ctx, ut).getString(R.string.fmt_ymd), Lang.locale(ut))
             val tp = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 10f; color = c.inkSoft.toArgb(); textAlign = Paint.Align.CENTER }
             if (days.isNotEmpty()) {
                 val who = if (owner.isBlank()) ctx.getString(R.string.colophon_me) else ctx.getString(R.string.colophon_named, owner)
@@ -181,14 +183,16 @@ object MyBible {
 
     /** 손글씨 PDF: 이 권(또는 전체)에 손으로 쓴 절들을 획 그대로 (어떤 크기로 뽑아도 선명). 장마다 머리 · 절마다 여백에 번호와 날짜. */
     fun notes(ctx: Context, store: Store, tr: Translation, book: Int?): File? {
-        val korean = tr == Translation.KRV
+        // 화면 말 (권 이름 · 날짜 · 장절 · 제목) 은 앱 언어로, 말씀 글만 번역으로. 글꼴은 한글이 섞이면 한글 글꼴 (라틴도 들어 있어요)
+        val ui = Lang.uiKorean(ctx); val ut = if (ui) Translation.KRV else Translation.KJV
+        val korean = tr == Translation.KRV || ui
         val books = if (book != null) listOf(book) else io.github.graviton94.todaybible.core.Canon.books.indices.toList()
         val chapters = books.flatMap { b -> io.github.graviton94.todaybible.data.Ink.chapters(ctx, tr.id, b).map { b to it } }
         if (chapters.isEmpty()) return null
         val c = Tokens.light
         val serif = ResourcesCompat.getFont(ctx, if (korean) R.font.serif_kr_medium else R.font.garamond_medium)
         val title = ResourcesCompat.getFont(ctx, if (korean) R.font.title_kr else R.font.garamond_semibold)
-        fun name(b: Int) = if (korean) io.github.graviton94.todaybible.core.Canon.books[b].ko else io.github.graviton94.todaybible.core.Canon.books[b].en
+        fun name(b: Int) = if (ui) io.github.graviton94.todaybible.core.Canon.books[b].ko else io.github.graviton94.todaybible.core.Canon.books[b].en
         val firstDay = HashMap<Int, Long>()
         store.loadFills().filter { it.translation == tr }.forEach { f -> firstDay.merge(f.key.raw, f.epochDay) { a, b -> minOf(a, b) } }
         val doc = PdfDocument(); var no = 0
@@ -202,12 +206,12 @@ object MyBible {
         val head = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = serif; textSize = 8f; color = c.inkSoft.toArgb() }
         val num = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = ResourcesCompat.getFont(ctx, R.font.display); textSize = 10f; color = c.gilt.toArgb() }
         val rule = Paint().apply { color = c.noteLine.toArgb(); strokeWidth = 0.4f }
-        val md = DateTimeFormatter.ofPattern(Lang.content(ctx, tr).getString(R.string.fmt_margin_md), Lang.locale(tr))
+        val md = DateTimeFormatter.ofPattern(Lang.content(ctx, ut).getString(R.string.fmt_margin_md), Lang.locale(ut))
         val gutter = 30f; val left = M + gutter; val w = W - M - left
         var pg = page(); var y = M.toFloat()
         for ((b, ch) in chapters) {
             if (y > M + 1f) { doc.finishPage(pg); pg = page(); y = M.toFloat() }
-            pg.canvas.drawText(Lang.chapterRef(ctx, tr, name(b), ch), M.toFloat(), y, head); y += 14f
+            pg.canvas.drawText(Lang.chapterRef(ctx, ut, name(b), ch), M.toFloat(), y, head); y += 14f
             for (v in io.github.graviton94.todaybible.data.Ink.verses(ctx, tr.id, b, ch)) {
                 val ink = io.github.graviton94.todaybible.data.Ink.load(io.github.graviton94.todaybible.data.Ink.file(ctx, tr.id, b, ch, v)) ?: continue
                 val line = ink.line * w
@@ -236,13 +240,15 @@ object MyBible {
 
     /** 묵상 노트 PDF (1.3): 한 해 동안 장을 마치며 남긴 한 줄을 달마다 날짜순으로. 표지는 고른 표지 판화. */
     fun reflections(ctx: Context, store: Store, tr: Translation, year: Int): File? {
-        val korean = tr == Translation.KRV
+        // 화면 말 (권 이름 · 날짜 · 장절 · 제목) 은 앱 언어로, 말씀 글만 번역으로. 글꼴은 한글이 섞이면 한글 글꼴 (라틴도 들어 있어요)
+        val ui = Lang.uiKorean(ctx); val ut = if (ui) Translation.KRV else Translation.KJV
+        val korean = tr == Translation.KRV || ui
         val notes = store.loadNotes().filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.REFLECTION && it.translation == tr && LocalDate.ofEpochDay(it.epochDay).year == year }.sortedBy { it.epochDay }
         if (notes.isEmpty()) return null
         val c = Tokens.light
-        val cc = Lang.content(ctx, tr)
+        val cc = Lang.content(ctx, ut)
         val serif = ResourcesCompat.getFont(ctx, if (korean) R.font.serif_kr_medium else R.font.garamond_medium)
-        fun name(b: Int) = if (korean) io.github.graviton94.todaybible.core.Canon.books[b].ko else io.github.graviton94.todaybible.core.Canon.books[b].en
+        fun name(b: Int) = if (ui) io.github.graviton94.todaybible.core.Canon.books[b].ko else io.github.graviton94.todaybible.core.Canon.books[b].en
         val doc = PdfDocument(); var no = 0
         fun page(): PdfDocument.Page { no++; return doc.startPage(PdfDocument.PageInfo.Builder(W, H, no).create()).also { it.canvas.drawColor(c.leaf.toArgb()) } }
         run {
@@ -257,7 +263,7 @@ object MyBible {
         val day = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = ResourcesCompat.getFont(ctx, R.font.display); textSize = 18f; color = c.gilt.toArgb() }
         val month = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = ResourcesCompat.getFont(ctx, R.font.caps); textSize = 7.5f; letterSpacing = 0.2f; color = c.giltText.toArgb() }
         val rule = Paint().apply { color = c.hair.toArgb(); strokeWidth = 0.4f }
-        val mfmt = DateTimeFormatter.ofPattern(cc.getString(R.string.fmt_month), Lang.locale(tr))
+        val mfmt = DateTimeFormatter.ofPattern(cc.getString(R.string.fmt_month), Lang.locale(ut))
         val gutter = 34f; val colW = (W - 2 * M - gutter).toInt()
         var pg = page(); var y = M.toFloat(); var lastMonth = -1
         for (n in notes) {
@@ -268,7 +274,7 @@ object MyBible {
             val cv = pg.canvas
             if (d.monthValue != lastMonth) { lastMonth = d.monthValue; cv.drawText(d.format(mfmt).uppercase(), M.toFloat(), y + 8f, month); y += 22f }
             cv.drawText("${d.dayOfMonth}", M.toFloat(), y + 16f, day)
-            cv.drawText(Lang.chapterRef(ctx, tr, name(n.book), n.chapter), M + gutter, y + 7f, small)
+            cv.drawText(Lang.chapterRef(ctx, ut, name(n.book), n.chapter), M + gutter, y + 7f, small)
             cv.save(); cv.translate(M + gutter, y + 13f); lay.draw(cv); cv.restore()
             y += lay.height + 22f
             cv.drawLine(M + gutter, y - 6f, (W - M).toFloat(), y - 6f, rule)
