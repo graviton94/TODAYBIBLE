@@ -303,7 +303,7 @@ class AppState(val store: Store) {
     fun setPrayerTime(id: String, minutes: Int?) {
         prayerTimes = if (minutes == null) prayerTimes - id else prayerTimes + (id to minutes)
         store.prayerTimes = prayerTimes
-        Thread { io.github.graviton94.todaybible.data.PrayerReminder.schedule(store.context) }.start()
+        Thread { io.github.graviton94.todaybible.data.PrayerReminder.schedule(store.context); runCatching { io.github.graviton94.todaybible.widget.SmallWidget.refreshAll(store.context) } }.start()
     }
     private var prayedIds by mutableStateOf(store.prayedOn(java.time.LocalDate.now().toEpochDay()))
     fun prayed(id: String) = id in prayedIds && store.prayedOn(today().toEpochDay()).contains(id)

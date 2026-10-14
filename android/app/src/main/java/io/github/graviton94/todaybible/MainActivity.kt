@@ -34,6 +34,7 @@ class MainActivity : ComponentActivity() {
         if (BuildConfig.DEV_TOOLS && intent.getBooleanExtra("tb.reset", false)) store.reset()
         val s = AppState(store).also { state = it }
         s.lifetime.connect()
+        store.pendingToast.takeIf { it.isNotEmpty() }?.let { s.toast = it; store.pendingToast = "" }
         s.updates = io.github.graviton94.todaybible.data.Updates(this)
         // 업데이트 뒤 처음: 새로 바뀐 것 한 번 (처음 설치면 건너뜀 · 캡처는 tb.news 일 때만)
         if (store.newsSeen != NEWS) { if (store.onboarded && !BuildConfig.DEV_TOOLS) s.news = true else store.newsSeen = NEWS }

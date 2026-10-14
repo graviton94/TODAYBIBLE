@@ -250,6 +250,10 @@ class Store(val context: Context) {
         set(v) = prefs.edit().putBoolean("skip_intro", v).commit().let { }
     /** 바로 디스크에 (앱을 곧 닫을 때: apply 로 미뤄 둔 것까지). */
     fun flush() { prefs.edit().commit() }
+    /** 앱을 다시 그린 뒤 보여 줄 한 줄 (되살리기 뒤 등). 한 번 읽으면 지워요. */
+    var pendingToast: String
+        get() = prefs.getString("pending_toast", "")!!
+        set(v) = prefs.edit().putString("pending_toast", v).commit().let { }
     fun consumeSkipIntro(): Boolean = skipIntroOnce.also { if (it) skipIntroOnce = false }
     /** 앱 언어: system · ko · en. */
     var language: String

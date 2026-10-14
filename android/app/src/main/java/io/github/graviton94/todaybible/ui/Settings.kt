@@ -226,9 +226,13 @@ fun SettingsPage(s: AppState) {
                 val ctx = androidx.compose.ui.platform.LocalContext.current
                 val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
                     if (uri != null) {
-                        val ok = io.github.graviton94.todaybible.data.Backup.read(ctx, uri)
-                        s.toast = ctx.getString(if (ok) R.string.backup_done else R.string.backup_bad)
-                        if (ok) (ctx as? android.app.Activity)?.recreate()
+                val r = io.github.graviton94.todaybible.data.Backup.read(ctx, uri)
+                if (r == null) s.toast = ctx.getString(R.string.backup_bad)
+                else {
+                    // 다시 그린 뒤에도 보이게 한 줄을 맡겨 둠
+                    s.store.pendingToast = if (r.merged) ctx.getString(R.string.backup_merged, r.added) else ctx.getString(R.string.backup_done)
+                    (ctx as? android.app.Activity)?.recreate()
+                }
                     }
                 }
                 var where by remember { mutableStateOf(s.store.backupUri) }

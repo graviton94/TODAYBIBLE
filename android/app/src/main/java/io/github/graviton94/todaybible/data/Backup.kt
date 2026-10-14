@@ -6,6 +6,7 @@ import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import io.github.graviton94.todaybible.core.Merge
 
 /**
  * 기록 보관: 필사 기록 · 발자취 · 설정 · 노트 사진 · 내 목소리를 zip 하나로 (내가 고른 곳에).
@@ -44,8 +45,15 @@ object Backup {
         Thread { keep(app, Uri.parse(u)) }.apply { name = "backup"; isDaemon = false }.start()
     }
 
-    /** 되살리기: 기록 파일이 들어 있어야 함. 성공하면 true (앱을 다시 그려야 함). */
-    fun read(ctx: Context, uri: Uri): Boolean = runCatching {
+    /** 되살린 결과: 이 기기에 기록이 있었으면 합친 것 (merged), 새로 더해진 절 수. */
+    data class Restored(val merged: Boolean, val added: Int)
+
+    /**
+     * 되살리기 (1.5 합치기): 기록 파일이 들어 있어야 함. 덮어쓰지 않고 지금 기록과 합쳐요 (폰 ↔ 태블릿 번갈아 써도 사라지지 않게).
+     * 손글씨 · 목소리는 이 기기에 없는 것만 더하고, 설정은 이 기기에 기록이 없을 때 (처음 되살리기) 만 옮겨요.
+     * 실패면 null (앱을 다시 그려야 함).
+     */
+    fun read(ctx: Context, uri: Uri): Restored? = runCatching {
         var ok = false
         val tmp = File(ctx.cacheDir, "restore").apply { deleteRecursively(); mkdirs() }
         ctx.contentResolver.openInputStream(uri)!!.use { input ->
@@ -60,10 +68,27 @@ object Backup {
                 }
             }
         }
-        if (!ok) return false
-        files.forEach { n -> File(tmp, n).takeIf { it.exists() }?.copyTo(File(ctx.filesDir, n), overwrite = true) }
-        dirs.forEach { d -> File(tmp, d).takeIf { it.exists() }?.copyRecursively(File(ctx.filesDir, d), overwrite = true) }
-        File(tmp, "prefs/today.xml").takeIf { it.exists() }?.let { p ->
+        if (!ok) return null
+        val had = File(ctx.filesDir, "fills.tsv").let { it.exists() && it.length() > 0 }
+        fun lines(f: File) = if (f.exists()) f.readLines().filter { it.isNotBlank() } else emptyList()
+        val rule: Map<String, (List<String>, List<String>) -> List<String>> = mapOf(
+            "fills.tsv" to Merge::fills, "earned.tsv" to Merge::earned, "aloud.tsv" to Merge::aloud, "notes.tsv" to Merge::notes,
+            "marks.tsv" to Merge::marks, "bookmarks.tsv" to Merge::marks, "memory.tsv" to Merge::marks)
+        var added = 0
+        files.forEach { n ->
+            val inc = File(tmp, n).takeIf { it.exists() } ?: return@forEach
+            val dst = File(ctx.filesDir, n); val mine = lines(dst)
+            val merged = rule[n]?.invoke(mine, lines(inc)) ?: lines(inc)
+            if (n == "fills.tsv") added = Merge.added(mine, merged)
+            // 임시 파일에 다 쓴 뒤 바꿔 끼움 (도중에 꺼져도 반쪽 파일이 남지 않게)
+            val part = File(ctx.filesDir, "$n.restore"); part.writeText(merged.joinToString("") { it + "\n" })
+            if (!part.renameTo(dst)) { dst.writeText(part.readText()); part.delete() }
+        }
+        dirs.forEach { d ->
+            val src = File(tmp, d).takeIf { it.isDirectory } ?: return@forEach
+            src.walkTopDown().filter { it.isFile }.forEach { f -> val to = File(File(ctx.filesDir, d), f.relativeTo(src).path); if (!to.exists()) { to.parentFile?.mkdirs(); f.copyTo(to) } }
+        }
+        if (!had) File(tmp, "prefs/today.xml").takeIf { it.exists() }?.let { p ->
             // 설정은 SharedPreferences 로 다시 읽어 옮김 (파일을 직접 덮지 않음)
             val doc = javax.xml.parsers.DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(p)
             val ed = ctx.getSharedPreferences("today", Context.MODE_PRIVATE).edit()
@@ -82,6 +107,6 @@ object Backup {
             }
             ed.commit()
         }
-        tmp.deleteRecursively(); true
-    }.getOrDefault(false)
+        tmp.deleteRecursively(); Restored(had, added)
+    }.getOrNull()
 }

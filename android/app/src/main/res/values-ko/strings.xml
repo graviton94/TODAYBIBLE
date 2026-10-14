@@ -73,6 +73,7 @@
     <string name="icon_golgotha">골고다</string>
     <string name="icon_ascension">승천</string>
     <string name="widget_streak_unit">일째 이어 쓰기</string>
+    <string name="widget_tomorrow">내일</string>
     <string name="widget_today">오늘 %1$d / %2$d절</string>
     <string name="card_credit">〈%1$s〉 %2$s</string>
     <string name="update_available">새 버전이 나왔어요</string>
@@ -211,8 +212,8 @@
     <string name="owned">평생권을 쓰고 있어요</string>
     <string name="pay_note">Google Play로 결제해요</string>
     <string name="share_verse">이 절 나누기</string>
-    <string name="widget_name">오늘의 한 절</string>
-    <string name="widget_desc">다음에 옮겨 쓸 한 절과 이번 주 도장</string>
+    <string name="widget_name">오늘의 말씀</string>
+    <string name="widget_desc">날마다 바뀌는 말씀 한 절과 그 장면의 판화</string>
     <string name="widget_empty">앱을 열어 시작해요</string>
     <string name="page_today">오늘</string>
     <string name="day_n">%1$d일째</string>
@@ -308,8 +309,8 @@
     <string name="aloud_listening">듣고 있어요</string>
     <string name="aloud_hint">기기 안에서 알아듣고, 글자만 채워요</string>
     <string name="aloud_no_mic">마이크 없이 읽는 빠르기로 밝아져요</string>
-    <string name="widget_goal">오늘의 분량</string>
-    <string name="widget_goal_desc">오늘 쓴 절 고리와 며칠째 이어 쓰는지</string>
+    <string name="widget_goal">다음 기도</string>
+    <string name="widget_goal_desc">다음 기도 시간과 그 기도의 첫 말씀</string>
     <string name="run_label">일째 이어 씀</string>
     <string name="voice_keep">내 목소리</string>
     <string name="voice_keep_hint">녹음은 이 폰에만 남고, 언제든 지울 수 있어요</string>
@@ -331,6 +332,7 @@
     <string name="backup">기록 보관</string>
     <string name="backup_import">드라이브나 파일에서 되살리기</string>
     <string name="backup_done">기록을 되살렸어요</string>
+    <string name="backup_merged">이 기기의 기록과 합쳤어요 · %1$d절 더해짐</string>
     <string name="backup_bad">읽을 수 없는 파일이에요</string>
     <string name="find_hint">찾기 · 요 3:16 또는 낱말</string>
     <string name="find_go">찾기</string>
@@ -343,7 +345,7 @@
     <string name="hi_day">%1$s님, 평안한 오후예요</string>
     <string name="hi_evening">%1$s님, 평안한 저녁이에요</string>
     <string name="reminder_named">%1$s님, 오늘 쓸 절 · %2$s</string>
-    <string name="backup_hint">쓴 글자 · 손글씨 · 목소리를 파일 하나로. 구글 드라이브에 두면 폰을 바꿔도 그대로 이어 써요.</string>
+    <string name="backup_hint">쓴 글자 · 손글씨 · 목소리를 파일 하나로. 구글 드라이브에 두면 폰을 바꿔도 그대로 이어 써요. 기록이 있는 폰 · 태블릿에서 되살리면 두 기록을 합쳐요 (사라지지 않아요).</string>
     <string name="hand_hint">줄 위에 따라 써요</string>
     <string name="hand_sheet">%1$d장째</string>
     <string name="hand_undo">되돌리기</string>
@@ -451,7 +453,7 @@
     <string name="ob_read_done">첫 절이 먹으로 채워졌어요.</string>
     <string name="ob_skip_read">나중에 할게요</string>
     <string name="mic_why_h">마이크를 쓰는 까닭</string>
-    <string name="mic_why">소리 내어 읽은 말씀이 맞는지 폰 안에서만 알아들어요. 읽은 목소리는 이 폰에만 남고, 언제든 지울 수 있어요.</string>
+    <string name="mic_why">소리 내어 읽은 말씀이 맞는지 폰의 음성 인식이 알아들어요 (되도록 폰 안에서). 앱은 목소리를 어디에도 보내지 않고, 읽은 목소리는 이 폰에만 남아요. 언제든 지울 수 있어요.</string>
     <string name="mic_allow">마이크 허락하기</string>
     <string name="contrast_setting">또렷하게 (흐린 글자를 진하게, 줄을 또렷하게)</string>
     <string name="feedback">의견 보내기</string>

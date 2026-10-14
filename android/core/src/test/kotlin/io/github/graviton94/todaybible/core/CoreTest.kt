@@ -309,3 +309,25 @@ class SeasonsTest {
         assertEquals(2, at(2027, 4, 4).week)
     }
 }
+
+class MergeTest {
+    @Test fun fillsKeepEarliestPerVerseAndUnion() {
+        val phone = listOf("KRV\t1001001\tTYPE\t100\t5000", "KRV\t1001002\tTYPE\t100\t6000")
+        val tablet = listOf("KRV\t1001002\tPAPER\t99\t4000", "KRV\t1001003\tPAPER\t101\t7000", "broken line")
+        val m = Merge.fills(phone, tablet)
+        assertEquals(listOf("KRV\t1001002\tPAPER\t99\t4000", "KRV\t1001001\tTYPE\t100\t5000", "KRV\t1001003\tPAPER\t101\t7000"), m)
+        assertEquals(1, Merge.added(phone, m))
+        // 같은 번역이 아니면 다른 기록
+        assertEquals(2, Merge.fills(listOf("KRV\t1001001\tTYPE\t1\t1"), listOf("KJV\t1001001\tTYPE\t1\t1")).size)
+    }
+    @Test fun earnedMarksAloudNotes() {
+        assertEquals(listOf("FIRST\t10", "WEEK\t30"), Merge.earned(listOf("FIRST\t12", "WEEK\t30"), listOf("FIRST\t10")))
+        assertEquals(listOf("KRV\t1001001\t5", "KRV\t1001002\t9"), Merge.marks(listOf("KRV\t1001001\t7"), listOf("KRV\t1001001\t5", "KRV\t1001002\t9")))
+        assertEquals(listOf("1\t300", "2\t60"), Merge.aloud(listOf("1\t100", "2\t60"), listOf("1\t300")))
+        val r1 = "REFLECTION\tKRV\t0\t1\t0\t0\t10\tlight"
+        val r2 = "REFLECTION\tKRV\t0\t1\t0\t0\t12\tlight again"
+        val s1 = "SERMON\tKRV\t40\t3\t1\t5\t20\tnotes"
+        val s2 = "SERMON\tKRV\t40\t3\t1\t5\t20\tnotes, longer"
+        assertEquals(listOf(r2, s2), Merge.notes(listOf(r1, s1), listOf(r2, s2)))
+    }
+}

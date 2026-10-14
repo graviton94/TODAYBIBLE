@@ -120,8 +120,11 @@ class SeasonWidget : AppWidgetProvider() {
                 if (tall && verse.isNotEmpty()) {
                     val refL = m.measure(ref, TextStyle(fontFamily = Fonts.serifKr, fontSize = Tokens.Text.small, color = gold), maxLines = 1)
                     y -= refL.size.height; drawText(refL, topLeft = Offset(pad, y))
-                    val vs = m.measure(verse, TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.garamond, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.widgetPlateVerse,
-                        lineHeight = Tokens.Leading.body.em, color = paper, lineBreak = LineBreak.Paragraph.copy(wordBreak = LineBreak.WordBreak.Phrase)), maxLines = 2, overflow = TextOverflow.Ellipsis, constraints = Constraints(maxWidth = w.toInt()))
+                    // 말씀은 두 줄 자리 안에: 길면 글자를 줄여 다 보이게 (가장 작아도 넘칠 때만 말줄임)
+                    val vStyle = TextStyle(fontFamily = if (korean) Fonts.serifKr else Fonts.garamond, fontWeight = FontWeight.Medium, fontSize = Tokens.Text.widgetPlateVerse,
+                        lineHeight = Tokens.Leading.body.em, color = paper, lineBreak = LineBreak.Paragraph.copy(wordBreak = LineBreak.WordBreak.Phrase))
+                    val twoLines = m.measure("가\n가", vStyle).size.height.toFloat()
+                    val vs = fitText(m, verse, vStyle, w.toInt(), twoLines, Tokens.Text.widgetMin.value)
                     y -= vs.size.height + Tokens.Space.s1.toPx(); drawText(vs, topLeft = Offset(pad, y))
                     y -= Tokens.Space.s2.toPx()
                 }
