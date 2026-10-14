@@ -364,6 +364,25 @@ open --ez tb.news true;                                            shot gt9_news
 open --es tb.update available --ei tb.page 0;                      shot gu1_update_bar 4
 open --es tb.update ready;                                         shot gu2_update_ready 3
 # @end
+# @scene hs
+# 역사 속의 성경 (1.5 C6): 판화 아래 그림 · 장면 · 역사, 사료 링크, 화첩의 사료 (한국어 · 영어)
+open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --es tb.plate creation; shot hs1_creation 5
+swipe_up;                                                          shot hs1_creation_story 2
+swipe_up;                                                          shot hs1_creation_end 2
+open --es tb.plate cross; swipe_up; swipe_up;                      shot hs2_cross_link 3
+open --es tb.plate codex_sinaiticus;                               shot hs3_codex 4
+swipe_up;                                                          shot hs3_codex_story 2
+open --es tb.plate schnorr_solomon; swipe_up;                      shot hs4_solomon 3
+open --es tb.plate moses_sea; swipe_up;                            shot hs5_sea 3
+open --es tb.plate none --ez tb.gallery true;                      shot hs6_gallery 5
+swipe_up;                                                          shot hs6_gallery2 2
+open --ez tb.gallery false --ez tb.night true --es tb.plate creation; swipe_up; shot hs7_night 4
+adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null
+open --ez tb.night false --es tb.tr WEB --es tb.plate creation; swipe_up; shot hs8_en_creation 5
+open --es tb.plate cross; swipe_up; swipe_up;                      shot hs8_en_cross 3
+open --es tb.plate codex_sinaiticus; swipe_up;                     shot hs8_en_codex 3
+adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
+# @end
 # @scene hp
 # 도움말: (?) · 기도 · 듣기 첫 안내 · 설정 도움 · 소개 다시 보기 · 교독 안내
 open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 0; shot hp1_topbar 5
