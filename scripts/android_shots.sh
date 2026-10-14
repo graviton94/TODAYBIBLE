@@ -382,6 +382,11 @@ open --ez tb.night false --es tb.plate eden; swipe_up; swipe_up;   shot hs9_eden
 open --es tb.plate noah_curse; swipe_up; swipe_up;                 shot hs9_noah_curse 3
 open --es tb.plate sinai; swipe_up; swipe_up;                      shot hs9_sinai 3
 open --es tb.plate radiant; swipe_up; swipe_up;                    shot hs9_radiant 3
+# 묶음 ③ (나머지 구약)
+open --es tb.plate goliath; swipe_up; swipe_up;                    shot hs11_goliath 3
+open --es tb.plate carmel; swipe_up; swipe_up;                     shot hs11_carmel 3
+open --es tb.plate esther; swipe_up; swipe_up;                     shot hs11_esther 3
+open --es tb.plate lions; swipe_up; swipe_up;                      shot hs11_lions 3
 # 글 속 링크: 페이지는 그대로, 그 그림만 띄움 (드러난 조각만)
 open --es tb.plate eden --es tb.platePeek schnorr_eden;            shot hs10_peek_schnorr 4
 open --es tb.plate sinai --es tb.platePeek codex_sinaiticus;       shot hs10_peek_codex 4
@@ -392,6 +397,8 @@ open --es tb.plate cross; swipe_up; swipe_up;                      shot hs8_en_c
 open --es tb.plate codex_sinaiticus; swipe_up;                     shot hs8_en_codex 3
 open --es tb.plate radiant; swipe_up; swipe_up;                    shot hs8_en_radiant 3
 open --es tb.plate rebekah; swipe_up; swipe_up;                    shot hs8_en_rebekah 3
+open --es tb.plate jonah; swipe_up; swipe_up;                      shot hs11_en_jonah 3
+open --es tb.plate sennacherib; swipe_up; swipe_up;                shot hs11_en_sennacherib 3
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # @end
 # @scene hp

@@ -88,8 +88,8 @@ CI: Android #182 (455e87f) 통과 · def111a 통과. core 테스트는 로컬에
 | 묶음 | 대상 | 상태 |
 |---|---|---|
 | ① | creation · moses_sea · schnorr_solomon · cross · 사료 codex_sinaiticus (마태 6장, 주기도문) | ✅ dde5084 |
-| ② | 창세기 · 출애굽 나머지 도레 판화 32점 (eve … radiant). 인용은 본문 파일과 대조 (KRV · WEB), 판화끼리 링크 (eden → schnorr_eden · cain → schnorr_cain · sinai → codex_sinaiticus) | 🎨 글 들어감, 확인 기다림 |
-| ③ | 나머지 구약 | ⏳ |
+| ② | 창세기 · 출애굽 나머지 도레 판화 32점 (eve … radiant). 인용은 본문 파일과 대조 (KRV · WEB), 판화끼리 링크 (eden → schnorr_eden · cain → schnorr_cain · sinai → codex_sinaiticus) | ✅ |
+| ③ | 나머지 구약 도레 판화 84점 (민수기 ~ 스가랴). 인용 대조 · 사실 검토 (발굴 · 비문 · 연대는 확실한 것만), 판각공 서명은 읽히는 것만 | 🎨 글 들어감, 확인 기다림 |
 | ④ | 복음서 | ⏳ |
 | ⑤ | 사도 · 계시 · 이달의 판화 | ⏳ |
 
