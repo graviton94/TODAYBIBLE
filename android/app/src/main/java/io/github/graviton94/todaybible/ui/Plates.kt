@@ -319,7 +319,9 @@ private fun PlatePeek(s: AppState, p: Plate, close: () -> Unit) {
     val closeLabel = stringResource(R.string.close)
     androidx.compose.ui.window.Dialog(close, androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)) {
         Column(Modifier.fillMaxSize().background(c.scrim).clickable(role = Role.Button, onClickLabel = closeLabel, onClick = close)
-            .padding(horizontal = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3, Alignment.CenterVertically)) {
+            .padding(horizontal = Tokens.Space.s4), verticalArrangement = Arrangement.Center) {
+          // 그림과 제목을 불투명한 카드에 (뒤 페이지 글자가 비치지 않게)
+          Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.leaf).padding(Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             Box(Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper).drawWithContent {
                 drawContent()
                 val w = size.width / Pieces.COLS; val h = size.height / Pieces.ROWS
@@ -330,6 +332,7 @@ private fun PlatePeek(s: AppState, p: Plate, close: () -> Unit) {
             }
             Text(s.plateName(p), style = Theme.title(k))
             Text("${s.bookName(p.book)} ${p.chapter}:${p.verse} · ${s.plateBy(p)}", style = Theme.small())
+          }
         }
     }
 }
