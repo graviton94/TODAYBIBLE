@@ -22,7 +22,11 @@ jobs:
       PUBLIC: ${{ vars.CF_R2_PUBLIC_URL }}
     steps:
       - uses: actions/checkout@v4
+      - name: Anything to upload?
+        id: has
+        run: if [ -f remote/plates/sets.tsv ]; then echo "go=1" >> "$GITHUB_OUTPUT"; else echo "no remote/plates/sets.tsv on this ref"; fi
       - name: Check settings (names only)
+        if: steps.has.outputs.go == '1'
         run: |
           ok=1
           for n in ACCOUNT BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY PUBLIC; do
@@ -30,6 +34,7 @@ jobs:
           done
           [ $ok = 1 ]
       - name: Check the set (every row has a picture, 9 columns)
+        if: steps.has.outputs.go == '1'
         run: |
           python3 - <<'PY'
           import os, sys
@@ -43,12 +48,14 @@ jobs:
           print("set ok")
           PY
       - name: Upload to R2 (plates/)
+        if: steps.has.outputs.go == '1'
         run: |
           E="https://$ACCOUNT.r2.cloudflarestorage.com"
           aws s3 cp remote/plates "s3://$BUCKET/plates/" --recursive --exclude "*" --include "*.jpg" --content-type image/jpeg --only-show-errors --endpoint-url "$E"
           aws s3 cp remote/plates "s3://$BUCKET/plates/" --recursive --exclude "*" --include "*.tsv" --content-type "text/tab-separated-values; charset=utf-8" --cache-control "max-age=3600" --only-show-errors --endpoint-url "$E"
           aws s3 ls "s3://$BUCKET/plates/" --endpoint-url "$E"
       - name: Check public download
+        if: steps.has.outputs.go == '1'
         run: |
           code=$(curl -s -o /tmp/s.tsv -w "%{http_code}" "${PUBLIC%/}/plates/sets.tsv")
           echo "GET sets.tsv → $code"
