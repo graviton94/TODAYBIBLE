@@ -108,6 +108,12 @@ private fun Collection(s: AppState) {
     }
     Box(Modifier.coach("rec_plates")) { ShelfRows(s, recent, fr) }
     Text(stringResource(R.string.shelf_legend), style = Theme.small())
+    // 완성 증서 (1.5): 구약 · 신약 · 66권을 다 썼으면 (권 하나의 증서는 책장에서 그 권을 열어)
+    val big = listOf(Certificate.OT to (0..38), Certificate.NT to (39..65), Certificate.ALL to (0..65)).filter { (_, r) -> r.all { (fr[it] ?: 0f) >= 1f } }
+    if (big.isNotEmpty()) {
+        SubHead("CERTIFICATA", stringResource(R.string.cert_open), "")
+        big.forEach { (w, _) -> BookButton(stringResource(when (w) { Certificate.OT -> R.string.cert_title_ot; Certificate.NT -> R.string.cert_title_nt; else -> R.string.cert_title_all }), Modifier.fillMaxWidth(), quiet = true) { s.certFor = w } }
+    }
     // 화첩: 세 점 미리보기
     SubHead("TABULAE", stringResource(R.string.plates), "${s.store.plates.count { plateFraction(s, it) >= 1f }} / ${s.store.plates.size} ›") { s.galleryOpen = true }
     Row(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.galleryOpen = true }, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {

@@ -169,6 +169,14 @@ fun Root(s: AppState) {
             val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { MyBible.make(ctx, s.store, s.translation, b) }.getOrNull() }
             s.pdfBook = null; s.gateDone(title, f?.let { ExportJob(listOf(it), "application/pdf", title) })
         }
+        // 필사 완성 증서 (1.5): PDF (A4) + 카드 그림, 나누기 창으로
+        LaunchedEffect(s.certFor) {
+            val w = s.certFor ?: return@LaunchedEffect
+            val what = if (w >= 0) s.bookName(w) else ctx.getString(when (w) { Certificate.OT -> R.string.cert_ot; Certificate.NT -> R.string.cert_nt; else -> R.string.cert_all })
+            val title = ctx.getString(R.string.cert_export, what); s.exportGate = ExportGate(title, eyebrow = "CERTIFICATIO")
+            val files = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { Certificate.make(ctx, s.store, s.translation, w) }.getOrNull() }
+            s.certFor = null; s.gateDone(title, files?.let { ExportJob(it, "*/*", title) })
+        }
         LaunchedEffect(s.reflectYear) {
             val y = s.reflectYear ?: return@LaunchedEffect
             val title = ctx.getString(R.string.reflect_book, y); s.exportGate = ExportGate(title)

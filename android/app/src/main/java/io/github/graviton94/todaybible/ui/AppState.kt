@@ -46,6 +46,8 @@ class AppState(val store: Store) {
     var plateView by mutableStateOf<io.github.graviton94.todaybible.data.Plate?>(null)
     /** 나의 성경 PDF 를 만들 권. */
     var pdfBook by mutableStateOf<Int?>(null)
+    /** 필사 완성 증서를 만들 것: 권 (0..65) 또는 Certificate.OT · NT · ALL. */
+    var certFor by mutableStateOf<Int?>(null)
     /** 평생권 화면에서 미리 보여 줄 잠긴 권. */
     var peekBook by mutableStateOf<Int?>(null)
     /** 처음 소개의 몇째 장. */

@@ -195,6 +195,8 @@ private fun KeepActions(s: AppState, b: Int) {
     }
     val hand = remember(b) { io.github.graviton94.todaybible.data.Ink.chapters(ctx, s.translation.id, b).isNotEmpty() }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        // 필사 완성 증서 (1.5): 다 쓴 권이면 누구나
+        if (s.progress.bookDone(s.translation, s.store.book(s.translation, b))) BookButton(stringResource(R.string.cert_open), Modifier.fillMaxWidth()) { s.certFor = b }
         BookButton(stringResource(R.string.liber_pdf), Modifier.fillMaxWidth(), locked = s.premiumOn) { s.requestPdf(b) }
         BookButton(stringResource(R.string.liber_card), Modifier.fillMaxWidth(), quiet = true) {
             val t = tally(s, b)
