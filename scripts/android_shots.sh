@@ -387,6 +387,10 @@ open --es tb.plate goliath; swipe_up; swipe_up;                    shot hs11_gol
 open --es tb.plate carmel; swipe_up; swipe_up;                     shot hs11_carmel 3
 open --es tb.plate esther; swipe_up; swipe_up;                     shot hs11_esther 3
 open --es tb.plate lions; swipe_up; swipe_up;                      shot hs11_lions 3
+# 묶음 ④ (복음서)
+open --es tb.plate nativity; swipe_up; swipe_up;                   shot hs12_nativity 3
+open --es tb.plate prodigal; swipe_up; swipe_up;                   shot hs12_prodigal 3
+open --es tb.plate adulteress; swipe_up; swipe_up;                 shot hs12_adulteress 3
 # 글 속 링크: 페이지는 그대로, 그 그림만 띄움 (드러난 조각만)
 open --es tb.plate eden --es tb.platePeek schnorr_eden;            shot hs10_peek_schnorr 4
 open --es tb.plate sinai --es tb.platePeek codex_sinaiticus;       shot hs10_peek_codex 4
