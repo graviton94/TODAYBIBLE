@@ -407,6 +407,9 @@
     <string name="cert_file">certificate</string>
     <string name="cert_open">Certificate of completion</string>
     <string name="cert_export">%1$s · certificate</string>
+    <string name="story_pictura">Picture</string>
+    <string name="story_scaena">Scene</string>
+    <string name="story_historia">History</string>
     <string name="pen_sound">Pen-on-paper sound</string>
     <string name="effects">Sound effects (a verse, a chapter, an engraving, a medal)</string>
     <string name="paper_haptic">Feel the paper grain</string>
@@ -704,7 +707,7 @@
     <string name="credit_text">Bible texts</string>
     <string name="credit_text_d">Korean Revised Version (개역한글, 1961) — its copyright term has ended. King James Version (1611) — public domain (Crown patent in the UK). World English Bible Updated — public domain, unchanged ("World English Bible" is a trademark of eBible.org). Texts from the CrossWire SWORD modules and eBible.org.</string>
     <string name="credit_art">Engravings</string>
-    <string name="credit_art_d">Gustave Doré, illustrations for the Bible (1866), and Julius Schnorr von Carolsfeld, Die Bibel in Bildern (1860) — public domain, via Wikimedia Commons.</string>
+    <string name="credit_art_d">Gustave Doré, illustrations for the Bible (1866), and Julius Schnorr von Carolsfeld, Die Bibel in Bildern (1860), and historical sources such as the Codex Sinaiticus (4th century) — public domain, via Wikimedia Commons.</string>
     <string name="credit_voice">Narration</string>
     <string name="credit_voice_d">Made with Supertonic 3 by Supertone, under the OpenRAIL-M license.</string>
     <string name="credit_fonts">Fonts</string>

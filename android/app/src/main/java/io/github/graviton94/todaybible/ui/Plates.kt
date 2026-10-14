@@ -36,6 +36,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.text.withLink
 import io.github.graviton94.todaybible.R
 import io.github.graviton94.todaybible.core.Markup
 import io.github.graviton94.todaybible.core.Pieces
@@ -92,6 +95,8 @@ private fun PlateDark(s: AppState, p: Plate) {
                 Text(ref, style = Theme.small().copy(color = c.rubric))
             }
             Text(s.plateBy(p), style = Theme.small())
+            // 역사 속의 성경 (1.5): 그림 · 장면 · 역사. 글 속 링크는 그 사료로
+            StoryPanel(s, p)
             if (n < Pieces.COUNT) BookButton(stringResource(R.string.continue_at, s.bookName(p.book), p.chapter), Modifier.fillMaxWidth()) { s.plateView = null; s.open(p.book, p.chapter) }
             else BookButton(stringResource(R.string.share), Modifier.fillMaxWidth(), quiet = true) {
                 Cards.share(s, ctx, Cards.verse(ctx, k, s.head(p.book, p.chapter), ctx.getString(R.string.ref_verse, s.bookName(p.book), p.chapter, p.verse), s.text(p.book).verse(p.chapter, p.verse), p.id), "verse")
@@ -166,9 +171,9 @@ fun GalleryPage(s: AppState) {
                     }
                 }
             }
-            val list = all.filter { it.book in groups[tab].second && it.set.isEmpty() }.sortedWith(compareBy({ it.book }, { it.chapter }))
+            val list = all.filter { it.book in groups[tab].second && (it.set.isEmpty() || it.set == io.github.graviton94.todaybible.data.History.SOURCE) }.sortedWith(compareBy({ it.book }, { it.chapter }))
             // 이달의 판화 (구독 세트): 가장 최근 세트 한 줄 위에. 잠금은 결제가 열리면 (1.4.x)
-            val sets = all.filter { it.set.isNotEmpty() }.groupBy { it.set }
+            val sets = all.filter { it.set.isNotEmpty() && it.set != io.github.graviton94.todaybible.data.History.SOURCE }.groupBy { it.set }
             Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 sets.keys.maxOrNull()?.let { key ->
                     val set = sets.getValue(key)
@@ -274,3 +279,29 @@ fun ChapterOpener(s: AppState, b: Int, ch: Int) {
 
 @Composable
 private fun Modifier.statusBarsPaddingCompat(): Modifier = this.then(Modifier.padding(androidx.compose.foundation.layout.WindowInsets.systemBars.asPaddingValues()))
+
+/** 역사 속의 성경 (1.5 C6): PICTURA 그림 · SCAENA 장면 · HISTORIA 역사. 링크 [[id|글]] 를 누르면 그 사료 · 판화를 크게. */
+@Composable
+private fun StoryPanel(s: AppState, p: Plate) {
+    val ctx = LocalContext.current; val c = Theme.c; val k = s.korean
+    val st = remember(p.id, k) { io.github.graviton94.todaybible.data.History.story(ctx, p.id, k) } ?: return
+    val linkStyle = androidx.compose.ui.text.TextLinkStyles(androidx.compose.ui.text.SpanStyle(color = c.giltText, textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline))
+    listOf(Triple("PICTURA", R.string.story_pictura, st.pictura), Triple("SCAENA", R.string.story_scaena, st.scaena), Triple("HISTORIA", R.string.story_historia, st.historia)).forEachIndexed { i, (lat, label, body) ->
+        Column(Modifier.fillMaxWidth().drawBehind { drawLine(if (i == 0) c.ink else c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(top = Tokens.Space.s3),
+            verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                Text(lat, style = Theme.caps().copy(color = c.ink), maxLines = 1, modifier = Modifier.clearAndSetSemantics { })
+                Text(stringResource(label), style = Theme.small(), maxLines = 1, modifier = Modifier.weight(1f).semantics { heading() })
+                Text(io.github.graviton94.todaybible.core.Latin.roman(i + 1), style = Theme.big(Tokens.Text.sectionNum).copy(color = c.gilt), maxLines = 1, modifier = Modifier.clearAndSetSemantics { })
+            }
+            val text = androidx.compose.ui.text.buildAnnotatedString {
+                io.github.graviton94.todaybible.data.History.parts(body).forEach { part ->
+                    val target = part.link?.let { id -> s.store.plates.firstOrNull { it.id == id } }
+                    if (target == null) append(part.text)
+                    else withLink(androidx.compose.ui.text.LinkAnnotation.Clickable(target.id, linkStyle) { s.plateView = target }) { append(part.text) }
+                }
+            }
+            Text(text, style = Theme.body())
+        }
+    }
+}

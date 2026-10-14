@@ -40,6 +40,8 @@ def korean_text():
     for f in glob.glob(os.path.join(ROOT, "android", "core", "src", "main", "kotlin", "**", "*.kt"), recursive=True): chars |= set(open(f, encoding="utf-8").read())
     for f in glob.glob(os.path.join(ROOT, "android", "app", "src", "main", "java", "**", "*.kt"), recursive=True): chars |= set(open(f, encoding="utf-8").read())
     chars |= set(open(os.path.join(ROOT, "data", "plates.tsv"), encoding="utf-8").read())
+    # 역사 속의 성경 (1.5): 판화 · 사료 이야기
+    chars |= set(open(os.path.join(ROOT, "android", "app", "src", "main", "assets", "history", "stories.tsv"), encoding="utf-8").read())
     chars |= set("0123456789년월일주시분오전후 ")
     return "".join(sorted(c for c in chars if c >= " " and c not in "\t\n"))
 
