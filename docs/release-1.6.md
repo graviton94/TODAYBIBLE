@@ -26,7 +26,7 @@
 • Engravings of the month: a new set each month, free
 • A certificate when you finish a book, a Testament or the Bible
 • New widgets: today's word and your next prayer
-• Restore now merges, so phone and tablet keep every record
+• Restore merges records from phone and tablet
 • Small sounds for a finished verse or chapter (can be off)
 </en-US>
 <ko-KR>
