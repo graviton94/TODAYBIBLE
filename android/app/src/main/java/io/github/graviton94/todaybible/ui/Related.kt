@@ -207,12 +207,13 @@ fun DictPage(s: AppState, id: String) {
     plate?.let { PlatePeek(s, it) { plate = null } }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun FactRow(label: String, spans: List<Refs.Span>, s: AppState) {
     val c = Theme.c
     Row(Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s3), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         Text(label, style = Theme.small(), modifier = Modifier.width(Tokens.Size.touch * 2))
-        androidx.compose.foundation.layout.FlowRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        FlowRow(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             spans.forEach { sp ->
                 Text(s.spanLabel(sp), style = Theme.small().copy(color = c.giltText, textDecoration = TextDecoration.Underline), maxLines = 1,
                     modifier = Modifier.clickable(role = Role.Button) { s.versePeek = sp })
@@ -242,6 +243,7 @@ fun VersePeek(s: AppState, sp: Refs.Span) {
 }
 
 /** 판화 이야기 끝: 「이 장면의 관련 구절」 상위 3개 (누르면 그 절만 작게). */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SceneRelated(s: AppState, p: io.github.graviton94.todaybible.data.Plate) {
     val c = Theme.c; val ctx = LocalContext.current
@@ -251,7 +253,7 @@ fun SceneRelated(s: AppState, p: io.github.graviton94.todaybible.data.Plate) {
     Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
         Hair()
         Text("${stringResource(R.string.related_scene)} · ${s.spanLabel(Refs.Span(key, key))}", style = Theme.small(), modifier = Modifier.padding(top = Tokens.Space.s2))
-        androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
             spans.forEach { sp ->
                 Text(s.spanLabel(sp), style = Theme.body().copy(color = c.giltText, textDecoration = TextDecoration.Underline), maxLines = 1,
                     modifier = Modifier.heightIn(min = Tokens.Size.touch * 0.8f).clickable(role = Role.Button) { s.versePeek = sp })
