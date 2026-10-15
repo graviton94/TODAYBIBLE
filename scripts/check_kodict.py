@@ -67,7 +67,7 @@ def main(path, batches):
         if not name: err("이름 없음")
         elif e[1] != "T":
             if not any(name in bible.get(k, "") for k in refs): err("이름이 나오는 절에 없음")
-        elif name not in allt: err("낱말이 본문에 없음")
+        elif name not in allt and name[:-1] not in allt: err("낱말이 본문에 없음")  # 「못 박음」 처럼 본문의 말을 명사로 바꾼 것은 끝 한 글자까지 봐 줘요
         if not line or len(line) > 30: err(f"한 줄 길이 {len(line)}")
         if not 40 <= len(body) <= 450: err(f"풀이 길이 {len(body)}")  # 드문 이름은 1~2문장 (50자 안팎)
         if "\t" in body: err("탭")
