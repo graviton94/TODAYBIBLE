@@ -441,6 +441,8 @@ open --es tb.setsMonth 2027-04 --ez tb.gallery true;               shot rm5_gall
 open --ez tb.gallery false --es tb.plate schnorr_resurrection; swipe_up; shot rm6_resurrection 3
 open --es tb.setsMonth 2027-11 --ez tb.gallery true;               shot rm7_gallery_2027_11 5
 open --ez tb.seed true --es tb.setsMonth 2028-04 --es tb.today 2028-04-10 --ez tb.gallery true; shot rm8_gallery_2028_04 6
+open --es tb.plate schnorr_pentecost; swipe_up;                   shot rm9_webp_pentecost 3
+open --es tb.plate noah;                                           shot rm9_jpg_noah 3
 open --es tb.setsMonth "" --ez tb.gallery false
 # @end
 # @scene pr

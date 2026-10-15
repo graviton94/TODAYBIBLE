@@ -1,0 +1,47 @@
+name: Plates to WebP
+# 1.5: 앱 안의 도레 판화를 위키미디어 원본에서 다시 받아 WebP (흑백 · 긴 변 820px · 품질 50) 로 바꿔요.
+# 같은 화질에 JPEG 보다 약 25% 작아요. 손으로 잘라 낸 판 (thorns: 남의 워터마크, pale_horse: 스페인어판 제목 줄) 은 그대로 JPEG.
+# 앱은 .webp 를 먼저, 없으면 .jpg 를 읽어요 (data/RemoteSets.kt). 한 번 직접 실행.
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  webp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download originals and convert
+        run: |
+          pip install -q pillow
+          python3 - <<'PY'
+          import io, os, time, urllib.parse, urllib.request
+          from PIL import Image, ImageOps
+          UA={"User-Agent":"TodayBible/1.5 (https://github.com/graviton94/TODAYBIBLE)"}
+          out="android/app/src/main/assets/plates"; keep={"thorns","pale_horse"}; bad=[]; before=after=0
+          for line in open("data/plates_source.tsv", encoding="utf-8"):
+              if line.startswith("#") or not line.strip(): continue
+              pid, f = line.rstrip("\n").split("\t")[:2]
+              jpg=f"{out}/{pid}.jpg"
+              if pid in keep or not os.path.exists(jpg): continue
+              url="https://commons.wikimedia.org/wiki/Special:FilePath/"+urllib.parse.quote(f)+"?width=1200"
+              data=None
+              for a in range(4):
+                  try: data=urllib.request.urlopen(urllib.request.Request(url,headers=UA),timeout=90).read(); break
+                  except Exception as e: print(pid, e); time.sleep(6*(a+1))
+              if not data: bad.append(pid); continue
+              im=ImageOps.exif_transpose(Image.open(io.BytesIO(data))).convert("L"); im.thumbnail((820,820), Image.LANCZOS)
+              b=io.BytesIO(); im.save(b,"WEBP",quality=50,method=6); w=b.getvalue()
+              before+=os.path.getsize(jpg); after+=len(w)
+              open(f"{out}/{pid}.webp","wb").write(w); os.remove(jpg)
+              time.sleep(1)
+          print(f"jpg {before//1024}K -> webp {after//1024}K")
+          if bad: print("::warning::kept jpg (download failed): "+" ".join(bad))
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A android/app/src/main/assets/plates && git commit -qm "Plates: Doré engravings as WebP from the originals (smaller, same look)" || { echo "nothing"; exit 0; }
+          git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"

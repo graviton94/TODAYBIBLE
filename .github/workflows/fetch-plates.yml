@@ -24,7 +24,7 @@ jobs:
               if line.startswith("#") or not line.strip(): continue
               p=line.rstrip("\n").split("\t"); pid, f = p[0], p[1]
               dst=f"{out}/{pid}.jpg"
-              if os.path.exists(dst): continue
+              if os.path.exists(dst) or os.path.exists(dst[:-4]+".webp"): continue
               url="https://commons.wikimedia.org/wiki/Special:FilePath/"+urllib.parse.quote(f)+"?width=1200"
               data=None
               for a in range(4):

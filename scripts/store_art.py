@@ -15,7 +15,7 @@ def font(name, size, wght=None):
 def feature(caps, title, sub, tfont, sfont, path):
     W,H=1024*S,500*S
     im=Image.new('RGB',(W,H),DARK)
-    pl=Image.open(R+'/android/app/src/main/assets/plates/creation.jpg').convert('L')
+    pl=Image.open(next(R+'/android/app/src/main/assets/plates/creation.'+e for e in ('webp','jpg') if os.path.exists(R+'/android/app/src/main/assets/plates/creation.'+e))).convert('L')
     pw=int(W*0.62); pl=ImageOps.fit(pl,(pw,H),centering=(0.4,0.3)); pl=ImageOps.colorize(pl,DARK,INK)
     # 왼쪽으로 어둠에 녹아들게
     mask=Image.new('L',(pw,H)); md=ImageDraw.Draw(mask)

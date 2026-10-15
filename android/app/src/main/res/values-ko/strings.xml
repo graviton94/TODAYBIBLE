@@ -72,9 +72,7 @@
     <string name="icon_tablets">돌판</string>
     <string name="icon_golgotha">골고다</string>
     <string name="icon_ascension">승천</string>
-    <string name="widget_streak_unit">일째 이어 쓰기</string>
     <string name="widget_tomorrow">내일</string>
-    <string name="widget_today">오늘 %1$d / %2$d절</string>
     <string name="card_credit">〈%1$s〉 %2$s</string>
     <string name="update_available">새 버전이 나왔어요</string>
     <string name="update_get">업데이트</string>

@@ -72,9 +72,7 @@
     <string name="icon_tablets">Tablets</string>
     <string name="icon_golgotha">Golgotha</string>
     <string name="icon_ascension">Ascension</string>
-    <string name="widget_streak_unit">days in a row</string>
     <string name="widget_tomorrow">Tomorrow</string>
-    <string name="widget_today">%1$d / %2$d verses today</string>
     <string name="card_credit">%1$s · %2$s</string>
     <string name="update_available">A new version is available</string>
     <string name="update_get">Update</string>
