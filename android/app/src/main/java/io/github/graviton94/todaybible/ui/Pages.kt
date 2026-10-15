@@ -136,7 +136,7 @@ fun Root(s: AppState) {
         s.finished?.let { (b, ch) -> FinishedPage(s, b, ch) }
         s.shareVerse?.let { v -> ShareVerseSheet(s, v) }
         s.related?.let { v -> RelatedSheet(s, v) }
-        s.dictEntry?.let { id -> DictPage(s, id) }
+        s.dictEntry?.takeIf { io.github.graviton94.todaybible.data.Refs.hasDictionary(s.korean) }?.let { id -> DictPage(s, id) }
         s.versePeek?.let { sp -> VersePeek(s, sp) }
         s.handBook?.let { b -> HandBookView(s, b) }
         if (s.marksOpen) MarksSheet(s)

@@ -140,7 +140,8 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
                     R.string.listen_here to { ListenService.start(ctx, book, ch, v, s.aloudRate()) },
                 ).forEach { (id, go) ->
                     Box(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Button) { go(); picked = null }, contentAlignment = Alignment.Center) {
-                        Text(stringResource(id), style = Theme.small().copy(color = c.leatherInk, textAlign = androidx.compose.ui.text.style.TextAlign.Center), maxLines = 2)
+                        // 여섯 칸 (1.6 관련 구절): 영어 낱말이 칸 안에서 끊기지 않게 한 단계 작게
+                        Text(stringResource(id), style = Theme.small().copy(color = c.leatherInk, fontSize = Tokens.Text.band * Theme.scale, textAlign = androidx.compose.ui.text.style.TextAlign.Center), maxLines = 2)
                     }
                 }
             }

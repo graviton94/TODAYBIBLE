@@ -35,7 +35,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withLink
@@ -166,7 +165,7 @@ fun DictPage(s: AppState, id: String) {
                 verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 Text(kindLatin(e.kind), style = Theme.caps(), maxLines = 1)
                 Text(e.name, style = Theme.title(k, Tokens.Text.display))
-                if (e.orig.isNotBlank()) Text(e.orig, style = Theme.body().copy(color = c.inkSoft, fontStyle = FontStyle.Italic), maxLines = 1)
+                if (e.orig.isNotBlank()) Text(e.orig, style = Theme.body().copy(color = c.inkSoft), maxLines = 1)
                 if (e.meaning.isNotBlank()) Text(androidx.compose.ui.text.buildAnnotatedString {
                     append(stringResource(R.string.dict_meaning)); append("  ")
                     withStyle(SpanStyle(color = c.giltText, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)) { append(e.meaning) }

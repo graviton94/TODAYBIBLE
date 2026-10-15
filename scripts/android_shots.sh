@@ -481,7 +481,7 @@ for L in ko en; do
   else adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null; TR=WEB; fi
   open --ez tb.reset true --es tb.theme LIGHT; sleep 3
   open --ez tb.seed true --es tb.tr $TR --es tb.theme LIGHT --ei tb.page 0; sleep 3
-  open --es tb.listen 1:14 --ei tb.pick 18;                          shot xr_${L}_1_band 5
+  open --es tb.listen 1:14 --ei tb.pick 18; adb shell cmd statusbar collapse >/dev/null 2>&1; shot xr_${L}_1_band 5
   open --es tb.listen 1:14 --es tb.related 1:14:18;                  shot xr_${L}_2_sheet 5
   open --es tb.listen 1:14 --es tb.related 1:14:18 --ei tb.relatedTab 1; shot xr_${L}_3_dict 5
   open --es tb.dict melchizedek_1014018;                             shot xr_${L}_4_entry 5
