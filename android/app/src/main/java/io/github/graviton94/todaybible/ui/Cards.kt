@@ -165,7 +165,8 @@ object Cards {
         val dir = File(ctx.cacheDir, "share").apply { mkdirs() }
         val f = File(dir, "$name.png")
         f.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
-        s.exportJob = ExportJob(listOf(f), "image/png", ctx.getString(io.github.graviton94.todaybible.R.string.export_title_card))
+        // 그림 한 장 (말씀 카드 · 발자취 · 한 해 …) 은 가벼워서 바로 다른 앱으로. 저장 · 메일 고르는 창은 PDF · 영상처럼 큰 것에만
+        Export.share(ctx, ExportJob(listOf(f), "image/png", ctx.getString(io.github.graviton94.todaybible.R.string.export_title_card)))
     }
 
 }

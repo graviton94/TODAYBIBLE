@@ -52,7 +52,9 @@ object Export {
         val uris = ArrayList(job.files.map { uri(ctx, it) })
         return (if (uris.size == 1) Intent(Intent.ACTION_SEND).putExtra(Intent.EXTRA_STREAM, uris[0])
             else Intent(Intent.ACTION_SEND_MULTIPLE).putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris))
-            .setType(job.mime).putExtra(Intent.EXTRA_SUBJECT, job.title).putExtra(Intent.EXTRA_TEXT, job.title)
+            .setType(job.mime).putExtra(Intent.EXTRA_SUBJECT, job.title)
+            // 그림만 보낼 때는 글을 붙이지 않아요 (메신저에 제목 글이 따로 한 줄 더 가지 않게)
+            .apply { if (!job.mime.startsWith("image/")) putExtra(Intent.EXTRA_TEXT, job.title) }
             .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
 

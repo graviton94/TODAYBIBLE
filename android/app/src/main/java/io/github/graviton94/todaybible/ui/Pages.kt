@@ -146,7 +146,6 @@ fun Root(s: AppState) {
         if (s.prayersOpen) PrayersSheet(s)
         s.prayerOpen?.let { id -> Box(Modifier.fillMaxSize().background(c.leaf).statusBarsPadding().navigationBarsPadding()) { PrayerPage(s, id) } }
         s.prayerBell?.let { if (it == AppState.MORNING_BELL) MorningBellSheet(s) else PrayerBellSheet(s, it) }
-        s.exportJob?.let { ExportSheet(s, it) }
         s.opener?.let { (b, ch) -> ChapterOpener(s, b, ch) }
         if (s.keepOpen) Box(Modifier.fillMaxSize().background(Theme.c.leaf).statusBarsPadding().navigationBarsPadding()) { KeepPage(s) }
         if (s.galleryOpen) Box(Modifier.fillMaxSize().background(Tokens.dark.leaf).statusBarsPadding().navigationBarsPadding()) { GalleryPage(s) }
@@ -224,6 +223,8 @@ fun Root(s: AppState) {
         }
         s.picker?.let { b -> BookSheet({ s.picker = null; s.pickToRead = false }) { ChapterGrid(s, b) { ch -> s.picker = null; if (s.pickToRead) s.read(b, ch) else s.open(b, ch); s.pickToRead = false } } }
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
+        // 내보내기 창은 그것을 연 화면 (발자취 · 장 마침 …) 보다 위에
+        s.exportJob?.let { ExportSheet(s, it) }
         // 첫 안내: 덮개 (설정 · 장 마침 · 판화 …) 가 없을 때 지금 화면의 것
         val calm = s.onboarded && !s.opening && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null &&
             !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && !s.prayersOpen && !s.galleryOpen && !s.keepOpen && s.opener == null && s.narrGate == null && s.exportGate == null && !s.news && s.prayerBell == null && s.leaveAsk == null && s.exportJob == null && !s.exporting && s.shareVerse == null && s.related == null && s.dictEntry == null && !s.planOpen && s.pilgrim == null && s.liber == null && s.ritual == null && !s.shelfOpen && s.noteOpen == null && !typing && !pager.isScrollInProgress
