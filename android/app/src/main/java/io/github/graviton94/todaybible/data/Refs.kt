@@ -72,7 +72,7 @@ object Refs {
     /** 이 절에 나오는 이름 · 땅 · 낱말: 사람 · 땅을 본문에 나오는 차례로, 낱말은 그 뒤 (많아야 8). text 는 화면 언어의 본문 (차례 맞추기). */
     fun inVerse(ctx: Context, key: VerseKey, text: String, ko: Boolean): List<Entry> {
         val all = loadEntries(ctx); val idx = byVerse?.get(key.raw) ?: return emptyList()
-        val list = idx.mapNotNull { local(ctx, all[it], ko) }
+        val list: List<Entry> = idx.toList().mapNotNull { local(ctx, all[it], ko) }
         val low = text.lowercase()
         fun at(e: Entry) = low.indexOf(e.name.lowercase().substringBefore(' ')).let { if (it < 0) Int.MAX_VALUE else it }
         return (list.filter { it.kind != 'T' }.sortedBy(::at) + list.filter { it.kind == 'T' }.sortedBy(::at)).distinctBy { it.id }.take(8)
