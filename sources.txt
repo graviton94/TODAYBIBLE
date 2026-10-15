@@ -1,0 +1,5 @@
+cross-references.zip <- https://a.openbible.info/data/cross-references.zip (1982990 bytes)
+easton.xml <- https://www.ccel.org/ccel/easton/ebd2.xml (7483368 bytes)
+hitchcock.xml <- https://www.ccel.org/ccel/hitchcock/bible_names.xml (224688 bytes)
+Easton.zip <- https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip/Easton.zip (1437674 bytes)
+Hitchcock.zip <- https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip/Hitchcock.zip (91660 bytes)
