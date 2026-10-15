@@ -63,6 +63,9 @@ object Refs {
         }
     }
 
+    /** 앱을 열 때 뒤에서 미리 읽어 둠 (자료 약 3MB: 처음 시트를 열 때 멈칫하지 않게). */
+    fun warm(ctx: Context) { loadRelated(ctx); loadEntries(ctx); loadKorean(ctx) }
+
     /** 그 절의 관련 구절 (관련 높은 순, 많아야 8). */
     fun related(ctx: Context, key: VerseKey): List<Span> = loadRelated(ctx)[key.raw].orEmpty()
 

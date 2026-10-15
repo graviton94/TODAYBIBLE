@@ -26,6 +26,8 @@ class MainActivity : ComponentActivity() {
     private var state: AppState? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // 관련 구절 · 사전 자료는 뒤에서 미리 (1.6)
+        applicationContext.let { app -> Thread { runCatching { io.github.graviton94.todaybible.data.Refs.warm(app) } }.start() }
         super.onCreate(savedInstanceState)
         io.github.graviton94.todaybible.data.CrashLog.install(this)
         io.github.graviton94.todaybible.data.Effects.warm(applicationContext)
@@ -163,7 +165,7 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         /** 지금 버전의 ‘새로 바뀐 것’ 이름. 새 노트 (news_body) 를 쓸 때 함께 바꿔요. */
-        const val NEWS = "1.5"
+        const val NEWS = "1.6"
     }
 
     /** 아침 알림의 ‘함께 읽기’: 그 절로 열고 낭독을 곧바로. */
