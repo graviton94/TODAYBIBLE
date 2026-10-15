@@ -242,6 +242,12 @@ class MainActivity : ComponentActivity() {
             i.getStringExtra("tb.yearPrice"), i.getStringExtra("tb.yearMonth"))
         if (i.getBooleanExtra("tb.purchase", false)) s.purchaseOpen = true
         s.shareVerse = i.getIntExtra("tb.share", 0).takeIf { it > 0 }?.let { io.github.graviton94.todaybible.core.VerseKey(s.book, s.chapter, it) }
+        // 관련 구절 · 사전 (1.6): tb.related=권:장:절 · tb.pick=읽기 화면에서 고른 절 · tb.relatedTab=1 사전 칸 · tb.dict=항목 id · tb.versePeek=BBCCCVVV
+        s.relatedTab = i.getIntExtra("tb.relatedTab", 0)
+        s.related = i.getStringExtra("tb.related")?.split(':')?.let { io.github.graviton94.todaybible.core.VerseKey(it[0].toInt() - 1, it[1].toInt(), it[2].toInt()) }
+        s.pickOnOpen = i.getIntExtra("tb.pick", 0).takeIf { it > 0 }
+        s.dictEntry = i.getStringExtra("tb.dict")
+        s.versePeek = i.getIntExtra("tb.versePeek", 0).takeIf { it > 0 }?.let { io.github.graviton94.todaybible.core.VerseKey(it) }?.let { io.github.graviton94.todaybible.data.Refs.Span(it, it) }
         if (i.getBooleanExtra("tb.cardShots", false)) Thread { cardShots(s) }.start()
         if (i.getBooleanExtra("tb.widgetPreviews", false)) Thread { io.github.graviton94.todaybible.widget.WidgetTick.exportPreviews(this, java.io.File(getExternalFilesDir(null), "previews")) }.start()
         // 마지막 다듬기 캡처: 낱말 찾기 · 마음에 새기기 · 설교 노트 · 묵상 한 줄

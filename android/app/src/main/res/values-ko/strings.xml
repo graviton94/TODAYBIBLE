@@ -1053,4 +1053,23 @@
     <string name="season_widget_name">절기</string>
     <string name="season_widget_desc">오늘의 절기 · 판화 · 주 · 절기 말씀</string>
     <string name="set_title">%1$s의 판화</string>
+    <string name="related">관련 구절</string>
+    <string name="related_title">관련 구절 · %1$s</string>
+    <string name="related_this">이 절의 관련 구절</string>
+    <string name="related_scene">이 장면의 관련 구절</string>
+    <string name="related_none">이 절에는 아직 관련 구절이 없어요.</string>
+    <string name="related_foot">관련 높은 순 · 아래로 밀어 닫기</string>
+    <string name="dict">사전</string>
+    <string name="dict_in_verse">이 절에 나오는 이름 · 땅 · 낱말</string>
+    <string name="dict_none">이 절에는 찾아볼 이름 · 낱말이 없어요.</string>
+    <string name="dict_meaning">이름 뜻</string>
+    <string name="dict_first">처음 나오는 곳</string>
+    <string name="dict_key">주요 장절</string>
+    <string name="dict_count">%1$d절에 나와요</string>
+    <string name="dict_plates">이 이름이 나오는 판화</string>
+    <string name="dict_source">Easton 성경 사전 (1897) · 이름 뜻 Hitchcock (1869) · STEPBible</string>
+    <string name="found_tab_verses">말씀 · %1$d</string>
+    <string name="found_tab_dict">사전 · %1$d</string>
+    <string name="credit_ref">관련 구절 · 사전</string>
+    <string name="credit_ref_d">관련 구절 OpenBible.info (CC BY, 표 순위). 사람 · 땅과 나오는 절 STEPBible TIPNR, Tyndale House Cambridge (CC BY 4.0). 사전 풀이 Easton 성경 사전 (1897) · Hitchcock 인명 사전 (1869), 공개 도메인, CCEL — 줄여서 실음.</string>
 </resources>

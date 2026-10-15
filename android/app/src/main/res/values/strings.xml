@@ -1053,4 +1053,23 @@
     <string name="season_widget_name">Church year</string>
     <string name="season_widget_desc">Today\'s season with its engraving, week and verse</string>
     <string name="set_title">Engravings for %1$s</string>
+    <string name="related">Related</string>
+    <string name="related_title">Related verses · %1$s</string>
+    <string name="related_this">Related verses</string>
+    <string name="related_scene">Related verses for this scene</string>
+    <string name="related_none">No related verses for this verse yet.</string>
+    <string name="related_foot">Most related first · swipe down to close</string>
+    <string name="dict">Dictionary</string>
+    <string name="dict_in_verse">Names, places and words in this verse</string>
+    <string name="dict_none">No names or words to look up in this verse.</string>
+    <string name="dict_meaning">Meaning</string>
+    <string name="dict_first">First appears</string>
+    <string name="dict_key">Key passages</string>
+    <string name="dict_count">Appears in %1$d verses</string>
+    <string name="dict_plates">In the plates</string>
+    <string name="dict_source">Easton\'s Bible Dictionary (1897) · names: Hitchcock (1869), STEPBible</string>
+    <string name="found_tab_verses">Verses · %1$d</string>
+    <string name="found_tab_dict">Dictionary · %1$d</string>
+    <string name="credit_ref">Related verses &amp; dictionary</string>
+    <string name="credit_ref_d">Related verses from OpenBible.info (CC BY), ranked by votes. Names, places and where they appear from STEPBible TIPNR by Tyndale House, Cambridge (CC BY 4.0). Entries from Easton\'s Bible Dictionary (1897) and Hitchcock\'s Bible Names Dictionary (1869), public domain, via CCEL — shortened.</string>
 </resources>

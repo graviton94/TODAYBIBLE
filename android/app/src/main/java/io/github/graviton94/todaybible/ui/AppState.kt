@@ -203,6 +203,14 @@ class AppState(val store: Store) {
     var tour by mutableStateOf(false)
     /** 판화 이야기 속 링크로 띄운 그림 (판화 페이지 위에 잠깐). */
     var platePeek by mutableStateOf<io.github.graviton94.todaybible.data.Plate?>(null)
+    /** 관련 구절 · 사전 (1.6): 시트를 연 절 · 사전 풀이 한 장 (id) · 작게 띄운 장절. */
+    var related by mutableStateOf<io.github.graviton94.todaybible.core.VerseKey?>(null)
+    var dictEntry by mutableStateOf<String?>(null)
+    var versePeek by mutableStateOf<io.github.graviton94.todaybible.data.Refs.Span?>(null)
+    /** 시트를 열 때 처음 보일 칸 (캡처용, 보통 0 = 관련 구절). */
+    var relatedTab = 0
+    /** 읽기 화면을 열 때 골라 둘 절 (캡처용). */
+    var pickOnOpen: Int? = null
     /** 화첩 (어두운 갤러리 화면). */
     var galleryOpen by mutableStateOf(false)
     /** 장 여는 화면 (판화가 있는 장을 처음 펼칠 때 한 번). */
@@ -477,7 +485,7 @@ class AppState(val store: Store) {
     fun closeOverlays() {
         keepOpen = false
         settingsOpen = false; purchaseOpen = false; plateView = null; finished = null; picker = null; marksOpen = false; found = null
-        memoryOpen = null; sermonOpen = null; prayersOpen = false; galleryOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; handBook = null; planOpen = false; pilgrim = null; liber = null; shelfOpen = false; noteOpen = null; award = null; opening = false; leaveAsk = null
+        memoryOpen = null; sermonOpen = null; prayersOpen = false; galleryOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; related = null; dictEntry = null; versePeek = null; handBook = null; planOpen = false; pilgrim = null; liber = null; shelfOpen = false; noteOpen = null; award = null; opening = false; leaveAsk = null
     }
     /** 앱을 처음부터 다시 (언어처럼 화면 전체가 바뀌는 설정 뒤에). 여는 순간은 이번만 건너뛰어요. */
     fun restartApp(a: android.app.Activity) {

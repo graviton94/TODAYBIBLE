@@ -27,6 +27,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -85,9 +86,10 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
     }
     LaunchedEffect(chapter) { if (pager.currentPage != chapter - 1) pager.animateScrollToPage(chapter - 1) }
     LaunchedEffect(pager) { snapshotFlow { pager.settledPage }.collect { if (it + 1 != s.listenAt?.second) s.listenAt = book to it + 1 } }
-    var picked by remember(book) { mutableStateOf<Int?>(null) }
+    var picked by remember(book) { mutableStateOf<Int?>(s.pickOnOpen.also { s.pickOnOpen = null }) }
     val ch = pager.currentPage + 1
-    LaunchedEffect(ch) { picked = null }
+    var pickedCh by remember(book) { mutableIntStateOf(ch) }
+    LaunchedEffect(ch) { if (ch != pickedCh) { picked = null; pickedCh = ch } }
     val playing = now?.let { it.book == book && it.chapter == ch } == true
 
     Column(Modifier.fillMaxSize().background(c.leaf)) {
@@ -122,7 +124,7 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
                 }
             }
         }
-        // 절을 골랐으면: 형광펜 · 책갈피 · 보내기 · 여기부터 듣기
+        // 절을 골랐으면: 형광펜 · 책갈피 · 보내기 · 마음에 새기기 · 관련 구절 · 여기부터 듣기
         picked?.let { v ->
             val key = VerseKey(book, ch, v)
             Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s4, vertical = Tokens.Space.s2).clip(RoundedCornerShape(Tokens.Radius.card)).background(c.leather)) {
@@ -134,6 +136,7 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
                         val adding = !s.isMemory(key); s.toggleMemory(key)
                         s.toast = ctx.getString(if (adding) R.string.memory_added else R.string.memory_removed)
                     },
+                    R.string.related to { s.related = key },
                     R.string.listen_here to { ListenService.start(ctx, book, ch, v, s.aloudRate()) },
                 ).forEach { (id, go) ->
                     Box(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Button) { go(); picked = null }, contentAlignment = Alignment.Center) {

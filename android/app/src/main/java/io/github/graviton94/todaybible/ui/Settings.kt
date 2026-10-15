@@ -536,7 +536,7 @@ private fun Footer(s: AppState) {
                     modifier = Modifier.clickable(role = Role.Button) { open(io.github.graviton94.todaybible.data.Links.SITE) })
             } else {
                 Text(stringResource(R.string.foot_credits), style = Theme.title(s.korean))
-                listOf(R.string.credit_text to R.string.credit_text_d, R.string.credit_art to R.string.credit_art_d, R.string.credit_voice to R.string.credit_voice_d,
+                listOf(R.string.credit_text to R.string.credit_text_d, R.string.credit_art to R.string.credit_art_d, R.string.credit_ref to R.string.credit_ref_d, R.string.credit_voice to R.string.credit_voice_d,
                     R.string.credit_fonts to R.string.credit_fonts_d, R.string.credit_code to R.string.credit_code_d).forEach { (h, d) ->
                     Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                         Text(stringResource(h), style = Theme.label())

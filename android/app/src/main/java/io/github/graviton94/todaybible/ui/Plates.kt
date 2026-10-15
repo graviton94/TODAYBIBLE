@@ -309,6 +309,8 @@ private fun StoryPanel(s: AppState, p: Plate) {
             Text(text, style = Theme.body())
         }
     }
+    // 이 장면의 관련 구절 (1.6): 누르면 그 절만 작게
+    SceneRelated(s, p)
     // 판화 페이지를 닫으면 띄운 그림도 함께
     androidx.compose.runtime.DisposableEffect(p.id) { onDispose { s.platePeek = null } }
     s.platePeek?.let { PlatePeek(s, it) { s.platePeek = null } }
@@ -316,7 +318,7 @@ private fun StoryPanel(s: AppState, p: Plate) {
 
 /** 이야기 속 링크: 그 판화 · 사료 그림만 크게 (드러난 조각만), 제목 · 장절 · 출처 한 줄. 아무 데나 누르거나 뒤로 가면 닫혀요. */
 @Composable
-private fun PlatePeek(s: AppState, p: Plate, close: () -> Unit) {
+internal fun PlatePeek(s: AppState, p: Plate, close: () -> Unit) {
     val c = Theme.c; val k = s.korean
     val n = Pieces.revealed(s.plateFraction(p)); val shown = remember(p.id) { Pieces.order(p.id.hashCode()) }.take(n).toSet()
     val img = rememberPlate(p.id)

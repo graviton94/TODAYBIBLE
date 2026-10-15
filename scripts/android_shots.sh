@@ -474,6 +474,24 @@ for fs in 1.3 2.0; do
 done
 adb shell settings put system font_scale 1.0
 # @end
+# @scene xr
+# 1.6 관련 구절 · 사전: 읽기 띠 · 관련 구절 시트 · 사전 칸 · 풀이 한 장 · 장절 카드 · 판화 이야기 끝 · 찾기 「사전」 칸
+for L in ko en; do
+  if [ $L = ko ]; then adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null; TR=KRV
+  else adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null; TR=WEB; fi
+  open --ez tb.reset true --es tb.theme LIGHT; sleep 3
+  open --ez tb.seed true --es tb.tr $TR --es tb.theme LIGHT --ei tb.page 0; sleep 3
+  open --es tb.listen 1:14 --ei tb.pick 18;                          shot xr_${L}_1_band 5
+  open --es tb.listen 1:14 --es tb.related 1:14:18;                  shot xr_${L}_2_sheet 5
+  open --es tb.listen 1:14 --es tb.related 1:14:18 --ei tb.relatedTab 1; shot xr_${L}_3_dict 5
+  open --es tb.dict melchizedek_1014018;                             shot xr_${L}_4_entry 5
+  open --es tb.dict melchizedek_1014018 --ei tb.versePeek 19110004;  shot xr_${L}_5_peek 5
+  open --es tb.plate abram_canaan; swipe_up; swipe_up;               shot xr_${L}_6_story 4
+  open --es tb.plate none
+  open --ei tb.page 1 --es tb.find Melchi;                           shot xr_${L}_7_find 5
+done
+# @end
+
 # @scene st
 # 스토어 그림 (Play): 상태 표시줄을 깔끔하게 (9:00 · 배터리 가득 · 알림 없음), 알림판은 접고 찍어요
 adb shell settings put global sysui_demo_allowed 1

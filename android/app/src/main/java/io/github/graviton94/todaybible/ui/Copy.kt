@@ -139,7 +139,7 @@ fun CopyPage(s: AppState) {
     Column(Modifier.fillMaxSize()) {
         if (s.focusMode) FocusBar(s, next)
         else {
-            // 머리 한 줄 (세 방식 공통): 제목 ▾ (장 고르기) · 쓴 절 / 전체 · 집중 · 책갈피 · ⋯ (듣기 · 도움말 · 설정)
+            // 머리 한 줄 (세 방식 공통): 제목 ▾ (장 고르기) · 쓴 절 / 전체 · 집중 · 책갈피 · ⋯ (듣기 · 관련 구절 · 도움말 · 설정)
             var more by remember { mutableStateOf(false) }
             Row(Modifier.fillMaxWidth().padding(start = Tokens.Space.s5, end = Tokens.Space.s1).heightIn(min = Tokens.Size.touch), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Button) { s.picker = s.book }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
@@ -168,6 +168,8 @@ fun CopyPage(s: AppState) {
                     if (pass != null) io.github.graviton94.todaybible.data.ListenService.startPassages(ctx0, listOf(pass), s.aloudRate(), s.prayerWrite?.let { "prayer:${it.first}" } ?: "read")
                     else { s.read(s.book, s.chapter); io.github.graviton94.todaybible.data.ListenService.start(ctx0, s.book, s.chapter, s.listenFrom(s.book, s.chapter), s.aloudRate()) }
                 }
+                // 관련 구절 (1.6): 쓰는 흐름을 끊지 않게 ⋯ 안에만
+                ListRow(stringResource(R.string.related_this), "") { more = false; s.related = io.github.graviton94.todaybible.core.VerseKey(s.book, s.chapter, next ?: 1) }
                 ListRow(stringResource(R.string.help), "") { more = false; s.coachAgain("copy$tab") }
                 ListRow(stringResource(R.string.settings), "") { more = false; s.settingsOpen = true }
             }
