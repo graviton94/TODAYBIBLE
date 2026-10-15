@@ -69,7 +69,7 @@ def main(path, batches):
             # 이름 없이 나오는 사람 (「엘리바스의 아내」 처럼) 은 낱말마다 그 절들에 있으면 돼요
             near = " ".join(bible.get(k, "") for k in refs)
             # 성경이 이름을 밝히지 않은 사람 (TIPNR id 가 a_ · daughter_of_ … 로 시작: a_wife_of_ezekiel) 은 「에스겔의 아내」 처럼 풀어 쓴 이름이라 넘어가요
-            if not i.startswith(("a_", "daughter_of_", "son_of_", "wife_of_", "mother_of_")) and not any(name in bible.get(k, "") for k in refs) and not all(w.rstrip("의") in near for w in name.split()): err("이름이 나오는 절에 없음")
+            if not i.startswith(("a_", "daughter_of_", "son_of_", "wife_of_", "mother_of_", "father_of_", "husband_of_")) and not any(name in bible.get(k, "") for k in refs) and not all(w.rstrip("의") in near for w in name.split()): err("이름이 나오는 절에 없음")
         elif name not in allt and name[:-1] not in allt: err("낱말이 본문에 없음")  # 「못 박음」 처럼 본문의 말을 명사로 바꾼 것은 끝 한 글자까지 봐 줘요
         if not line or len(line) > 30: err(f"한 줄 길이 {len(line)}")
         if not 40 <= len(body) <= 450: err(f"풀이 길이 {len(body)}")  # 드문 이름은 1~2문장 (50자 안팎)
