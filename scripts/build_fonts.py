@@ -42,6 +42,9 @@ def korean_text():
     chars |= set(open(os.path.join(ROOT, "data", "plates.tsv"), encoding="utf-8").read())
     # 역사 속의 성경 (1.5): 판화 · 사료 이야기
     chars |= set(open(os.path.join(ROOT, "android", "app", "src", "main", "assets", "history", "stories.tsv"), encoding="utf-8").read())
+    # 한국어 성경 사전 (1.6.x)
+    ko_dict = os.path.join(ROOT, "android", "app", "src", "main", "assets", "ref", "names_ko.tsv")
+    if os.path.exists(ko_dict): chars |= set(open(ko_dict, encoding="utf-8").read())
     # 이달의 판화 (원격) 의 이름과 글도: 앱이 나간 뒤 받는 글자가 글꼴에 있도록 (remote/plates)
     for f in ("sets.tsv", "stories.tsv"):
         rp = os.path.join(ROOT, "remote", "plates", f)
@@ -66,10 +69,17 @@ def check():
         if missing: print(f"{name} 에 없는 글자:", "".join(missing[:40]), "→ python3 scripts/build_fonts.py"); sys.exit(1)
     print("fonts ok")
 
+def dict_titles():
+    """사전 풀이 한 장의 제목 (이름) 은 제목 글꼴로."""
+    p = os.path.join(ROOT, "android", "app", "src", "main", "assets", "ref", "names_ko.tsv")
+    if not os.path.exists(p): return ""
+    return "".join(l.split("\t")[1] for l in open(p, encoding="utf-8") if not l.startswith("#") and "\t" in l)
+
+
 def main():
     fetch(); os.makedirs(OUT, exist_ok=True)
     ko = korean_text() + LATIN
-    titles = "".join(sorted(set("".join(v["ko"] for v in json.load(open(os.path.join(ROOT, "design", "strings.json"), encoding="utf-8")).values() if isinstance(v, dict)) + open(os.path.join(ROOT, "android", "core", "src", "main", "kotlin", "io", "github", "graviton94", "todaybible", "core", "Canon.kt"), encoding="utf-8").read() + open(os.path.join(ROOT, "data", "plates.tsv"), encoding="utf-8").read() + "0123456789장편"))) + LATIN
+    titles = "".join(sorted(set("".join(v["ko"] for v in json.load(open(os.path.join(ROOT, "design", "strings.json"), encoding="utf-8")).values() if isinstance(v, dict)) + open(os.path.join(ROOT, "android", "core", "src", "main", "kotlin", "io", "github", "graviton94", "todaybible", "core", "Canon.kt"), encoding="utf-8").read() + open(os.path.join(ROOT, "data", "plates.tsv"), encoding="utf-8").read() + dict_titles() + "0123456789장편"))) + LATIN
     allLatin = "".join(chr(c) for c in range(0x20, 0x250)) + "‘’“”–—…·¶✠❦✝ΑΩ"
     sizes = {
         "serif_kr_medium.ttf": make("NotoSerifKR[wght].ttf", "serif_kr_medium.ttf", ko, 500),

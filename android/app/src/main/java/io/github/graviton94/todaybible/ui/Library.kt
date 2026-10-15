@@ -221,7 +221,7 @@ fun FoundSheet(s: AppState) {
         Text(stringResource(R.string.found_title, word, hits.size), style = Theme.title(s.korean), maxLines = 2)
         // 「말씀 · 사전」 두 칸 (사전에 걸린 것이 있을 때만)
         val ctx = androidx.compose.ui.platform.LocalContext.current
-        val dict = remember(word) { if (io.github.graviton94.todaybible.data.Refs.hasDictionary(s.korean)) io.github.graviton94.todaybible.data.Refs.search(ctx, word) else emptyList() }
+        val dict = remember(word) { if (io.github.graviton94.todaybible.data.Refs.hasDictionary(ctx, s.korean)) io.github.graviton94.todaybible.data.Refs.search(ctx, word, s.korean) else emptyList() }
         var tab by remember(word) { mutableStateOf(if (hits.isEmpty()) 1 else 0) }
         if (dict.isNotEmpty()) UnderlineTabs(listOf(stringResource(R.string.found_tab_verses, hits.size), stringResource(R.string.found_tab_dict, dict.size)), tab) { tab = it }
         if (tab == 1 && dict.isNotEmpty()) { DictResults(s, dict); return@BookSheet }
@@ -376,7 +376,7 @@ private fun FindBox(s: AppState) {
                 io.github.graviton94.todaybible.core.Search.find((0 until 66).asSequence().map { s.store.book(tr, it) }, word, FOUND_MAX)
             }
             // 사전 (1.6, 영어 화면): 이름 · 땅 · 낱말도 함께. 둘 다 없을 때만 "없어요"
-            val dict = if (io.github.graviton94.todaybible.data.Refs.hasDictionary(s.korean)) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { io.github.graviton94.todaybible.data.Refs.search(ctx, word) } else emptyList()
+            val dict = if (io.github.graviton94.todaybible.data.Refs.hasDictionary(ctx, s.korean)) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { io.github.graviton94.todaybible.data.Refs.search(ctx, word, s.korean) } else emptyList()
             if (s.found?.first == word) { if (hits.isEmpty() && dict.isEmpty()) { s.found = null; s.toast = ctx.getString(R.string.find_none) } else s.found = word to hits }
         }
     }

@@ -77,7 +77,7 @@ private fun AppState.spanText(sp: Refs.Span): List<Pair<Int, String>> {
 fun RelatedSheet(s: AppState, key: VerseKey) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     val spans = remember(key) { Refs.related(ctx, key) }
-    val dict = Refs.hasDictionary(k)
+    val dict = remember(k) { Refs.hasDictionary(ctx, k) }
     var tab by remember(key) { mutableIntStateOf(if (dict) s.relatedTab else 0) }
     BookSheet({ s.related = null }) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -101,8 +101,9 @@ fun RelatedSheet(s: AppState, key: VerseKey) {
                 Text(stringResource(R.string.related_foot), style = Theme.small().copy(color = c.unwritten), maxLines = 1)
             }
         } else {
-            val english = remember(key) { runCatching { s.store.book(Translation.WEB, key.book).verse(key.chapter, key.verse) }.getOrDefault("") }
-            val found = remember(key) { Refs.inVerse(ctx, key, english) }
+            // 차례 맞추기는 화면 언어의 본문으로 (한국어 화면 = 개역한글, 영어 = WEB)
+            val text = remember(key, k) { runCatching { s.store.book(if (k) Translation.KRV else Translation.WEB, key.book).verse(key.chapter, key.verse) }.getOrDefault("") }
+            val found = remember(key, k) { Refs.inVerse(ctx, key, text, k) }
             if (found.isEmpty()) Text(stringResource(R.string.dict_none), style = Theme.small(), modifier = Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s4))
             else {
                 Text(stringResource(R.string.dict_in_verse), style = Theme.small(), maxLines = 1, modifier = Modifier.fillMaxWidth())
@@ -147,7 +148,7 @@ private fun kindLatin(k: Char) = when (k) { 'P' -> "PERSONA"; 'L' -> "LOCVS"; el
 @Composable
 fun DictPage(s: AppState, id: String) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
-    val e = remember(id) { Refs.entry(ctx, id) } ?: run { s.dictEntry = null; return }
+    val e = remember(id, k) { Refs.entry(ctx, id, k) } ?: run { s.dictEntry = null; return }
     BackHandler { s.dictEntry = null }
     val link = SpanStyle(color = c.giltText, textDecoration = TextDecoration.Underline)
     var plate by remember(id) { mutableStateOf<io.github.graviton94.todaybible.data.Plate?>(null) }
@@ -199,7 +200,7 @@ fun DictPage(s: AppState, id: String) {
                         }, style = Theme.body(), modifier = Modifier.fillMaxWidth().clickable(role = Role.Button) { plate = p }.padding(vertical = Tokens.Space.s1))
                     }
                 }
-                Text(stringResource(R.string.dict_source), style = Theme.small().copy(color = c.unwritten), modifier = Modifier.padding(top = Tokens.Space.s4))
+                Text(stringResource(if (k) R.string.dict_source_ko else R.string.dict_source), style = Theme.small().copy(color = c.unwritten), modifier = Modifier.padding(top = Tokens.Space.s4))
             }
         }
     }

@@ -483,12 +483,13 @@ for L in ko en; do
   open --ez tb.seed true --es tb.tr $TR --es tb.theme LIGHT --ei tb.page 0; sleep 3
   open --es tb.listen 1:14 --ei tb.pick 18; adb shell cmd statusbar collapse >/dev/null 2>&1; shot xr_${L}_1_band 5
   open --es tb.listen 1:14 --es tb.related 1:14:18;                  shot xr_${L}_2_sheet 5
-  open --es tb.listen 1:14 --es tb.related 1:14:18 --ei tb.relatedTab 1; shot xr_${L}_3_dict 5
-  open --es tb.dict melchizedek_1014018;                             shot xr_${L}_4_entry 5
-  open --es tb.dict melchizedek_1014018 --ei tb.versePeek 19110004;  shot xr_${L}_5_peek 5
+  open --es tb.listen 1:12 --es tb.related 1:12:5 --ei tb.relatedTab 1; shot xr_${L}_3_dict 5
+  open --es tb.dict abraham_1011026;                                 shot xr_${L}_4_entry 5
+  open --es tb.dict abraham_1011026 --ei tb.versePeek 44007002;      shot xr_${L}_5_peek 5
   open --es tb.plate abram_canaan; swipe_up; swipe_up;               shot xr_${L}_6_story 4
   open --es tb.plate none
-  open --ei tb.page 1 --es tb.find Melchi;                           shot xr_${L}_7_find 5
+  if [ $L = ko ]; then Q=아브라; else Q=Abra; fi
+  open --ei tb.page 1 --es tb.find $Q;                               shot xr_${L}_7_find 5
 done
 # @end
 

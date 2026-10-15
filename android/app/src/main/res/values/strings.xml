@@ -1072,4 +1072,5 @@
     <string name="found_tab_dict">Dictionary · %1$d</string>
     <string name="credit_ref">Related verses &amp; dictionary</string>
     <string name="credit_ref_d">Related verses from OpenBible.info (CC BY), ranked by votes. Names, places and where they appear from STEPBible TIPNR by Tyndale House, Cambridge (CC BY 4.0). Entries from Easton\'s Bible Dictionary (1897) and Hitchcock\'s Bible Names Dictionary (1869), public domain, via CCEL — shortened.</string>
+    <string name="dict_source_ko">Written for this app from the Bible text and Easton\'s Bible Dictionary (1897) · names: Hitchcock (1869), STEPBible</string>
 </resources>

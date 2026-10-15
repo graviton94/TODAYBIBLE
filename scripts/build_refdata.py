@@ -246,6 +246,27 @@ def main(check=False):
                           "# 풀이 Easton's Bible Dictionary (1897, 공개 도메인) · 이름 뜻 Hitchcock (1869, 공개 도메인) · 사람 · 땅과 나오는 절 STEPBible TIPNR (CC BY 4.0) · scripts/build_refdata.py\n"
                           + "\n".join(out) + "\n")
 
+    # 한국어 사전 (1.6.x): data/dict/ko.tsv (우리가 쓰고 scripts/check_kodict.py 로 검사한 글) → 풀이 속 (창 14:18) 을 링크로
+    src = os.path.join(ROOT, "data", "dict", "ko.tsv")
+    if os.path.exists(src):
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import check_kodict as K
+        def link(paren):
+            book = [None]
+            def one(m):
+                if m.group(1): book[0] = K.BOOK[m.group(1)]
+                if book[0] is None: return m.group(0)
+                c, v = int(m.group(2)), int(m.group(3)); a = K.key(book[0], c, v)
+                e = K.key(book[0], int(m.group(4)), int(m.group(5))) if m.group(5) else K.key(book[0], c, int(m.group(4))) if m.group(4) else a
+                return f"[[@{a}-{e}|{m.group(0)}]]" if e != a else f"[[@{a}|{m.group(0)}]]"
+            return "(" + K.REF.sub(one, paren.group(1)) + ")"
+        ko = []
+        for l in open(src, encoding="utf-8"):
+            if not l.strip() or l.startswith("#"): continue
+            r = l.rstrip("\n").split("\t")
+            r[4] = re.sub(r"\(([^()]*)\)", link, r[4]); ko.append("\t".join(r))
+        files["names_ko.tsv"] = "# 사전 (한국어): id · 이름 · 이름 뜻 · 한 줄 · 풀이. 원본 data/dict/ko.tsv (검사 scripts/check_kodict.py) · scripts/build_refdata.py\n" + "\n".join(ko) + "\n"
+
     os.makedirs(OUT, exist_ok=True)
     bad = []
     for n, s in files.items():
