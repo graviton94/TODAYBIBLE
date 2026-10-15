@@ -1,0 +1,49 @@
+name: Fetch reference data
+# 1.6 관련 구절 · 성경 사전 원자료를 받아 ref-data 브랜치에 올린다 (가공은 scripts/build_refdata.py 가 로컬에서).
+#  · OpenBible.info 관련 구절 (CC BY) · Easton 성경 사전 (1897, 공개 도메인) · Hitchcock 인명 사전 (1869, 공개 도메인)
+#  · STEPBible TIPNR 인명 · 지명 (CC BY)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [".github/workflows/fetch-refdata.yml"]
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        run: |
+          mkdir -p out && cd out
+          UA="TodayBible/1.6 (https://github.com/graviton94/TODAYBIBLE)"
+          get() { # name url...
+            n=$1; shift
+            for u in "$@"; do
+              if curl -fsSL -A "$UA" -m 300 -o "$n" "$u" && [ -s "$n" ]; then echo "$n <- $u ($(stat -c%s "$n") bytes)" | tee -a sources.txt; return 0; fi
+              echo "fail $u"
+            done
+            echo "MISSING $n" | tee -a sources.txt
+          }
+          get cross-references.zip https://a.openbible.info/data/cross-references.zip https://www.openbible.info/labs/cross-references/cross-references.zip
+          get easton.xml https://www.ccel.org/ccel/easton/ebd2.xml https://ccel.org/ccel/e/easton/ebd2.xml https://www.ccel.org/ccel/easton/ebd.xml
+          get hitchcock.xml https://www.ccel.org/ccel/hitchcock/bible_names.xml https://ccel.org/ccel/h/hitchcock/bible_names.xml
+          get Easton.zip https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip/Easton.zip
+          get Hitchcock.zip https://www.crosswire.org/ftpmirror/pub/sword/packages/rawzip/Hitchcock.zip
+          # TIPNR: 저장소 목록에서 이름으로 찾기
+          curl -fsSL "https://api.github.com/repos/STEPBible/STEPBible-Data/git/trees/master?recursive=1" -o tree.json || true
+          python3 - <<'PY'
+          import json, urllib.parse
+          t = json.load(open("tree.json")).get("tree", [])
+          hits = [x["path"] for x in t if "TIPNR" in x["path"] and x["path"].endswith(".txt")]
+          open("tipnr_paths.txt", "w").write("\n".join(hits))
+          print(hits)
+          PY
+          while read -r p; do [ -n "$p" ] && get tipnr.txt "https://raw.githubusercontent.com/STEPBible/STEPBible-Data/master/$(python3 -c "import urllib.parse,sys;print(urllib.parse.quote(sys.argv[1]))" "$p")" && break; done < tipnr_paths.txt
+          rm -f tree.json
+          ls -la
+      - name: Push to ref-data branch
+        run: |
+          cd out && git init -q && git checkout -q -b ref-data
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add . && git commit -qm "Reference raw data" && git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" ref-data
