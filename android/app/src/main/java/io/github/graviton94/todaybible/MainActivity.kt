@@ -246,6 +246,7 @@ class MainActivity : ComponentActivity() {
         s.relatedTab = i.getIntExtra("tb.relatedTab", 0)
         s.related = i.getStringExtra("tb.related")?.split(':')?.let { io.github.graviton94.todaybible.core.VerseKey(it[0].toInt() - 1, it[1].toInt(), it[2].toInt()) }
         s.pickOnOpen = i.getIntExtra("tb.pick", 0).takeIf { it > 0 }
+        s.copyMoreOnOpen = i.getBooleanExtra("tb.copyMore", false)
         s.dictEntry = i.getStringExtra("tb.dict")
         s.versePeek = i.getIntExtra("tb.versePeek", 0).takeIf { it > 0 }?.let { io.github.graviton94.todaybible.core.VerseKey(it) }?.let { io.github.graviton94.todaybible.data.Refs.Span(it, it) }
         if (i.getBooleanExtra("tb.cardShots", false)) Thread { cardShots(s) }.start()

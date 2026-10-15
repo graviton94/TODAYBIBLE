@@ -140,7 +140,7 @@ fun CopyPage(s: AppState) {
         if (s.focusMode) FocusBar(s, next)
         else {
             // 머리 한 줄 (세 방식 공통): 제목 ▾ (장 고르기) · 쓴 절 / 전체 · 집중 · 책갈피 · ⋯ (듣기 · 관련 구절 · 도움말 · 설정)
-            var more by remember { mutableStateOf(false) }
+            var more by remember { mutableStateOf(s.copyMoreOnOpen.also { s.copyMoreOnOpen = false }) }
             Row(Modifier.fillMaxWidth().padding(start = Tokens.Space.s5, end = Tokens.Space.s1).heightIn(min = Tokens.Size.touch), verticalAlignment = Alignment.CenterVertically) {
                 Row(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).clickable(role = Role.Button) { s.picker = s.book }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                     Text(s.chapterRef(), style = Theme.title(k, Tokens.Text.head), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))

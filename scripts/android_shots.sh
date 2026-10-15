@@ -493,6 +493,24 @@ for L in ko en; do
 done
 # @end
 
+# @scene xq
+# 1.6 관련 구절 · 사전 더 보기: 족보 절 (이름 많음) · 신약 · 낱말 칩 · 관련 구절 없는 절 · 어두운 화면 · 큰 글씨 · 필사 ⋯ 메뉴
+for L in ko en; do
+  if [ $L = ko ]; then adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null; TR=KRV
+  else adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null; TR=WEB; fi
+  open --ez tb.reset true --es tb.theme LIGHT; sleep 3
+  open --ez tb.seed true --es tb.tr $TR --es tb.theme LIGHT --ei tb.page 0; sleep 3
+  open --es tb.listen 13:1 --es tb.related 13:1:1 --ei tb.relatedTab 1;   shot xq_${L}_1_genealogy 5
+  open --es tb.listen 43:1 --es tb.related 43:1:41 --ei tb.relatedTab 1;  shot xq_${L}_2_nt 5
+  open --es tb.listen 2:25 --es tb.related 2:25:10 --ei tb.relatedTab 1;  shot xq_${L}_3_words 5
+  open --es tb.listen 1:5 --es tb.related 1:5:7;                         shot xq_${L}_4_none 5
+  open --es tb.theme DARK --es tb.listen 1:14 --es tb.related 1:14:18;   shot xq_${L}_5_dark 5
+  open --es tb.theme DARK --es tb.dict moses_2002010;                    shot xq_${L}_6_dict_dark 5
+  open --es tb.theme LIGHT --ef tb.scale 1.3 --es tb.dict moses_2002010; shot xq_${L}_7_large 5
+  open --ef tb.scale 1.0 --ei tb.page 2 --ei tb.copyTab 1 --ez tb.copyMore true; shot xq_${L}_8_copymenu 5
+done
+# @end
+
 # @scene st
 # 스토어 그림 (Play): 상태 표시줄을 깔끔하게 (9:00 · 배터리 가득 · 알림 없음), 알림판은 접고 찍어요
 adb shell settings put global sysui_demo_allowed 1

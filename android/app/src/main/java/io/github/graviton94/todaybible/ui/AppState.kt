@@ -211,6 +211,8 @@ class AppState(val store: Store) {
     var relatedTab = 0
     /** 읽기 화면을 열 때 골라 둘 절 (캡처용). */
     var pickOnOpen: Int? = null
+    /** 필사 화면을 열 때 ⋯ 메뉴를 펴 둠 (캡처용). */
+    var copyMoreOnOpen = false
     /** 화첩 (어두운 갤러리 화면). */
     var galleryOpen by mutableStateOf(false)
     /** 장 여는 화면 (판화가 있는 장을 처음 펼칠 때 한 번). */
