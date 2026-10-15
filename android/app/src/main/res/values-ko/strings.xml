@@ -1067,10 +1067,10 @@
     <string name="dict_key">주요 장절</string>
     <string name="dict_count">%1$d절에 나와요</string>
     <string name="dict_plates">이 이름이 나오는 판화</string>
-    <string name="dict_source">Easton 성경 사전 (1897) · 이름 뜻 Hitchcock (1869) · STEPBible</string>
+    <string name="dict_source">성경 본문과 Easton 성경 사전 (1897) 을 바탕으로 이 앱이 쓴 풀이 · 이름 뜻 Hitchcock (1869) · STEPBible</string>
     <string name="found_tab_verses">말씀 · %1$d</string>
     <string name="found_tab_dict">사전 · %1$d</string>
     <string name="credit_ref">관련 구절 · 사전</string>
-    <string name="credit_ref_d">관련 구절 OpenBible.info (CC BY, 표 순위). 사람 · 땅과 나오는 절 STEPBible TIPNR, Tyndale House Cambridge (CC BY 4.0). 사전 풀이 Easton 성경 사전 (1897) · Hitchcock 인명 사전 (1869), 공개 도메인, CCEL — 줄여서 실음.</string>
+    <string name="credit_ref_d">관련 구절 OpenBible.info (CC BY, 표 순위). 사람 · 땅과 나오는 절 STEPBible TIPNR, Tyndale House Cambridge (CC BY 4.0). 사전 풀이는 성경 본문을 바탕으로 이 앱이 쓴 글 (참고 Easton 성경 사전 (1897) · Hitchcock 인명 사전 (1869), 공개 도메인, CCEL).</string>
     <string name="dict_source_ko">성경 본문과 Easton 성경 사전 (1897) 을 바탕으로 이 앱이 우리말로 쓴 풀이 · 이름 뜻 Hitchcock (1869) · STEPBible</string>
 </resources>

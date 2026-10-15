@@ -1065,10 +1065,10 @@
   "dict_key": {"en": "Key passages", "ko": "주요 장절"},
   "dict_count": {"en": "Appears in %1$d verses", "ko": "%1$d절에 나와요"},
   "dict_plates": {"en": "In the plates", "ko": "이 이름이 나오는 판화"},
-  "dict_source": {"en": "Easton's Bible Dictionary (1897) · names: Hitchcock (1869), STEPBible", "ko": "Easton 성경 사전 (1897) · 이름 뜻 Hitchcock (1869) · STEPBible"},
+  "dict_source": {"en": "Written for this app from the Bible text, drawing on Easton's Bible Dictionary (1897) · names: Hitchcock (1869), STEPBible", "ko": "성경 본문과 Easton 성경 사전 (1897) 을 바탕으로 이 앱이 쓴 풀이 · 이름 뜻 Hitchcock (1869) · STEPBible"},
   "found_tab_verses": {"en": "Verses · %1$d", "ko": "말씀 · %1$d"},
   "found_tab_dict": {"en": "Dictionary · %1$d", "ko": "사전 · %1$d"},
   "credit_ref": {"en": "Related verses & dictionary", "ko": "관련 구절 · 사전"},
-  "credit_ref_d": {"en": "Related verses from OpenBible.info (CC BY), ranked by votes. Names, places and where they appear from STEPBible TIPNR by Tyndale House, Cambridge (CC BY 4.0). Entries from Easton's Bible Dictionary (1897) and Hitchcock's Bible Names Dictionary (1869), public domain, via CCEL — shortened.", "ko": "관련 구절 OpenBible.info (CC BY, 표 순위). 사람 · 땅과 나오는 절 STEPBible TIPNR, Tyndale House Cambridge (CC BY 4.0). 사전 풀이 Easton 성경 사전 (1897) · Hitchcock 인명 사전 (1869), 공개 도메인, CCEL — 줄여서 실음."},
+  "credit_ref_d": {"en": "Related verses from OpenBible.info (CC BY), ranked by votes. Names, places and where they appear from STEPBible TIPNR by Tyndale House, Cambridge (CC BY 4.0). Entries written for this app from the Bible text, drawing on Easton's Bible Dictionary (1897) and Hitchcock's Bible Names Dictionary (1869), public domain, via CCEL.", "ko": "관련 구절 OpenBible.info (CC BY, 표 순위). 사람 · 땅과 나오는 절 STEPBible TIPNR, Tyndale House Cambridge (CC BY 4.0). 사전 풀이는 성경 본문을 바탕으로 이 앱이 쓴 글 (참고 Easton 성경 사전 (1897) · Hitchcock 인명 사전 (1869), 공개 도메인, CCEL)."},
   "dict_source_ko": {"en": "Written for this app from the Bible text and Easton's Bible Dictionary (1897) · names: Hitchcock (1869), STEPBible", "ko": "성경 본문과 Easton 성경 사전 (1897) 을 바탕으로 이 앱이 우리말로 쓴 풀이 · 이름 뜻 Hitchcock (1869) · STEPBible"}
 }

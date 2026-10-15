@@ -168,7 +168,7 @@ def tipnr():
 
 # 낱말 (VERBVM): 성막 · 제사 · 절기 · 도량형 · 무리 등. Easton 표제어와 WEB 본문에서 찾을 꼴.
 TERMS = {  # Easton 표제어: WEB 에서 찾을 꼴
-    "Ark": ["ark of the covenant", "ark of Yahweh's covenant", "ark of God's covenant", "ark of the testimony", "ark of God", "ark of Yahweh"],
+    "Ark": ["ark of the covenant", "ark of Yahweh's covenant", "ark of God's covenant", "ark of the testimony", "ark of God", "ark of Yahweh", "ark of acacia wood"],
     "Altar": ["altar", "altars"], "Ephod": ["ephod"], "Tabernacle": ["tabernacle"], "Passover": ["passover"], "Sabbath": ["sabbath", "sabbaths"],
     "Tithe": ["tithe", "tithes", "tenth of all"], "Covenant": ["covenant"], "Circumcision": ["circumcision", "circumcised", "circumcise"], "Manna": ["manna"],
     "Mercy-seat": ["mercy seat"], "Atonement": ["atonement"], "Pentecost": ["pentecost"], "Pharisees": ["pharisee", "pharisees"], "Sadducees": ["sadducee", "sadducees"],
@@ -199,6 +199,8 @@ TERMS = {  # Easton 표제어: WEB 에서 찾을 꼴
 }
 # 한 표제어에 여러 이야기가 이어 쓰인 것: 이 글부터 (Ark = 노아의 방주 · 갈대 상자 · 언약궤)
 TERM_FROM = {"Ark": "The sacred ark"}
+# 찾는 꼴을 늘려 처음 나오는 절이 바뀌어도 id 는 그대로 (한국어 · 영어 사전이 id 로 이어져 있어요)
+KEEP_ID = {"Ark": "ark_of_the_covenant_2025022_t"}
 # 절마다 낱말 칩이 너무 흔하면 (몇 백 절) 시끄러워요: 사람 · 땅을 먼저, 낱말은 남는 자리에.
 
 
@@ -221,7 +223,7 @@ def main(check=False):
         for _ in range(2):  # 「same as Zachariah」 → 그 이름의 뜻
             m = re.match(r"(?:the )?same as ([A-Za-z-]+)", meaning)
             if m: meaning = hi.get(m.group(1).lower(), "")
-        rows.append([t["kind"], t["name"], t["orig"], t["brief"] or t["short"], meaning, body or t["short"], sorted(t["refs"])])
+        rows.append([t["kind"], t["name"], t["orig"], t["brief"] or t["short"], meaning, body or t["short"], sorted(t["refs"]), None])
     # 낱말: WEB 본문에서 찾기
     for head, pats in TERMS.items():
         cand = ea.get(head.lower())
@@ -234,16 +236,36 @@ def main(check=False):
                 "Roll": "Scroll", "Fast": "Fasting", "Fig": "Fig tree", "Lot": "Lots", "Cherub": "Cherubim", "Urim": "Urim and Thummim", "Feast": "Feasts"}.get(head, head.split(",")[0].replace("-", " ").replace("’", "'"))
         text = pick(cand, set(refs))[0]
         if head in TERM_FROM: text = text[text.index(TERM_FROM[head]):]
-        rows.append(["T", name, "", "", "", trim(text), refs])
+        rows.append(["T", name, "", "", "", trim(text), refs, KEEP_ID.get(head)])
     # id: 이름_처음 장절 (같은 이름 사람이 여럿이어도 겹치지 않게)
     out, ids = [], set()
-    for kind, name, orig, brief, meaning, body, refs in sorted(rows, key=lambda r: (r[1].lower(), r[6][0])):
-        i = re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_") + "_" + str(refs[0]) + ("_t" if kind == "T" else "")
+    # 영어 풀이 (1.6): 검사한 한국어 사전을 옮긴 data/dict/en.tsv (검사 scripts/check_endict.py) 가 있으면 그것을, 없으면 Easton
+    en = {}
+    src_en = os.path.join(ROOT, "data", "dict", "en.tsv")
+    if os.path.exists(src_en):
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import check_endict as E
+        def link_en(paren):
+            book = [None]
+            def one(m):
+                if m.group(1): book[0] = E.BOOK[m.group(1)]
+                if book[0] is None: return m.group(0)
+                c, v = int(m.group(2)), int(m.group(3)); a = E.key(book[0], c, v)
+                e = E.key(book[0], int(m.group(4)), int(m.group(5))) if m.group(5) else E.key(book[0], c, int(m.group(4))) if m.group(4) else a
+                return f"[[@{a}-{e}|{m.group(0)}]]" if e != a else f"[[@{a}|{m.group(0)}]]"
+            return "(" + E.REF.sub(one, paren.group(1)) + ")"
+        for l in open(src_en, encoding="utf-8"):
+            if not l.strip() or l.startswith("#"): continue
+            r = l.rstrip("\n").split("\t")
+            en[r[0]] = (r[2], r[3], re.sub(r"\(([^()]*)\)", link_en, r[4]))
+    for kind, name, orig, brief, meaning, body, refs, keep in sorted(rows, key=lambda r: (r[1].lower(), r[6][0])):
+        i = keep or re.sub(r"[^a-z0-9]+", "_", name.lower()).strip("_") + "_" + str(refs[0]) + ("_t" if kind == "T" else "")
+        if i in en: meaning, brief, body = en[i]
         assert i not in ids, i; ids.add(i)
         clean = lambda s: s.replace("\t", " ").replace("\n", " ").strip()
         out.append("\t".join([i, kind, clean(name), clean(orig), clean(brief), clean(meaning), clean(body), " ".join(map(str, refs))]))
     files["names.tsv"] = ("# 사전 (영어): id · 갈래 P/L/T · 이름 · 원어 · 한 줄 · 이름 뜻 · 풀이 · 나오는 절 (VerseKey)\n"
-                          "# 풀이 Easton's Bible Dictionary (1897, 공개 도메인) · 이름 뜻 Hitchcock (1869, 공개 도메인) · 사람 · 땅과 나오는 절 STEPBible TIPNR (CC BY 4.0) · scripts/build_refdata.py\n"
+                          "# 풀이 data/dict/en.tsv (한국어 사전을 옮긴 글), 없는 몇 항목만 Easton's Bible Dictionary (1897, 공개 도메인) · 이름 뜻 Hitchcock (1869, 공개 도메인) · 사람 · 땅과 나오는 절 STEPBible TIPNR (CC BY 4.0) · scripts/build_refdata.py\n"
                           + "\n".join(out) + "\n")
 
     # 한국어 사전 (1.6.x): data/dict/ko.tsv (우리가 쓰고 scripts/check_kodict.py 로 검사한 글) → 풀이 속 (창 14:18) 을 링크로
