@@ -109,7 +109,7 @@ CI: Android #182 (455e87f) 통과 · def111a 통과. core 테스트는 로컬에
   12월 (대림 · 성탄): 슈노르 162 수태고지 · 165 목자들 · 166 구유 · 169 동방 박사.
 - 10/14 결정: **만든 세트는 앱 안에도 넣고 (assets), 원격은 업데이트 사이를 채우는 보조.** 앱 안의 세트도 그 달이 되어야 걸려요. 12월 세트는 앱 안 + R2 둘 다.
 
-### C9 ⏳ 관주 · 사전
+### C9 ⏳ 관주 · 사전 — 제안서 [proposal-xref-dictionary.md](proposal-xref-dictionary.md) (10/15)
 - 관주: Treasury of Scripture Knowledge (PD). 읽기 화면에서 절을 길게 눌러 관련 구절.
 - 사전: Easton's Bible Dictionary (PD, 영어만). 한국어 사전은 무료 자료 찾기부터.
 - 출시 뒤 1.5.x 로 가도 됨.
