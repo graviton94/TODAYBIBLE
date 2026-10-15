@@ -5,7 +5,9 @@
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 import numpy as np, os
 R='/home/user/todaybible'; RES=R+'/android/app/src/main/res'; OUT=R+'/docs/store/graphics'
-SRC=R+'/android/app/src/main/assets/plates/creation.jpg'
+import os
+def plate_path(p): return next(R+f'/android/app/src/main/assets/plates/{p}.{e}' for e in ('webp','jpg') if os.path.exists(R+f'/android/app/src/main/assets/plates/{p}.{e}'))
+SRC=plate_path('creation')
 BX,BY=362,256          # 판화에서 빛이 터지는 자리 (원본 픽셀)
 VIS=470                # 보이는 원 (72 단위) 에 들어갈 원본 폭
 U=108; V=72            # 적응형 아이콘 단위
@@ -17,7 +19,7 @@ def cross_pts(k=1.0, cx=54, cy=54):
     top=cy-CH/2; bot=cy+CH/2; y0=top+CH*CA-CT/2; y1=y0+CT; x0=cx-CT/2; x1=cx+CT/2; l=cx-CW/2; r=cx+CW/2
     return [(x*k,y*k) for x,y in [(x0,top),(x1,top),(x1,y0),(r,y0),(r,y1),(x1,y1),(x1,bot),(x0,bot),(x0,y1),(l,y1),(l,y0),(x0,y0)]]
 def background(px, plate='creation', bx=None, by=None, vis=None, gamma=2.2):
-    src=Image.open(R+f'/android/app/src/main/assets/plates/{plate}.jpg').convert('L')
+    src=Image.open(plate_path(plate)).convert('L')
     bx=BX if bx is None else bx; by=BY if by is None else by; vis=VIS if vis is None else vis
     s=vis*U/V; k=s/px   # 출력 1px 당 원본 픽셀
     g=src.transform((px,px),Image.AFFINE,(k,0,bx-s/2,0,k,by-s/2),resample=Image.BICUBIC,fill=0)
@@ -42,7 +44,7 @@ def foreground(px, ss=4):
 DPI={'mdpi':1,'hdpi':1.5,'xhdpi':2,'xxhdpi':3,'xxxhdpi':4}
 # 아이콘 셋: 이름 뒤붙이 · 판화 · 판화에서 가운데 (원본 픽셀) · 보이는 원에 들어갈 폭 · 감마
 def at(plate, fx, fy, fw):
-    w,h=Image.open(R+f'/android/app/src/main/assets/plates/{plate}.jpg').size; return dict(plate=plate,bx=fx*w,by=fy*h,vis=fw*w)
+    w,h=Image.open(plate_path(plate)).size; return dict(plate=plate,bx=fx*w,by=fy*h,vis=fw*w)
 VARIANTS={'':dict(plate='creation'),
           '_tablets':dict(at('radiant',0.40,0.27,0.48),gamma=1.3),
           '_golgotha':dict(at('dark_cross',0.57,0.25,0.42),gamma=1.35),
