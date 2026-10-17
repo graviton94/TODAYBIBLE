@@ -131,6 +131,7 @@ object Tokens {
         val inkFeather = 30.dp
         val pathNode = 18.dp
         val hintDot = 6.dp
+        val plateCard = 56.dp
     }
     object Text {
         val verse = 21.sp
@@ -254,6 +255,9 @@ object Tokens {
         const val pressMs = 90
         const val pressScale = 0.97f
         const val sealDelayMs = 900
+        const val sheenMs = 1600
+        const val sheenRestMs = 5400
+        const val breatheMs = 2600
     }
     object Ratio {
         const val plateAspect = 0.766f
@@ -282,6 +286,7 @@ object Tokens {
         const val purchaseArt = 1.6f
         const val widgetPlate = 0.66f
         const val firstLetter = 1.3f
+        const val sheenWidth = 0.38f
     }
     object Alpha {
         const val aloudAhead = 0.62f
@@ -314,6 +319,10 @@ object Tokens {
         const val foldWash = 0.07f
         const val spineFill = 0.38f
         const val shelfBoard = 0.5f
+        const val sheen = 0.32f
+        const val breatheLo = 0.3f
+        const val tileFill = 0.05f
+        const val plateVeil = 0.62f
     }
     object Leading {
         const val verse = 1.8f

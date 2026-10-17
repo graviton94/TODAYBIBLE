@@ -3,6 +3,7 @@ package io.github.graviton94.todaybible.ui
 import androidx.compose.foundation.background
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -76,13 +78,14 @@ fun RunningHead(left: String, right: String, korean: Boolean, modifier: Modifier
  * quiet = 바탕 없이 밑줄 글자. 비활성 = 옅은 바탕.
  */
 @Composable
-fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = false, enabled: Boolean = true, locked: Boolean = false, onClick: () -> Unit) {
+fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = false, enabled: Boolean = true, locked: Boolean = false, glow: Boolean = false, onClick: () -> Unit) {
     val c = Theme.c
     val source = remember { MutableInteractionSource() }
     val pressed by source.collectIsPressedAsState()
     val fill = when { quiet || !enabled -> Color.Transparent; pressed -> c.leatherDeep; else -> c.leather }
     Box(
         modifier.pressScale(source).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(fill)
+            .sheen(glow && enabled && !quiet && !pressed)
             .then(if (!enabled && !quiet) Modifier.border(Tokens.Stroke.hair, c.hair, RoundedCornerShape(Tokens.Radius.button)) else Modifier)
             .clickable(source, null, enabled = enabled, role = Role.Button, onClick = tap(onClick))
             .padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s3),
@@ -95,6 +98,40 @@ fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = fal
             Text(text, style = (if (quiet) Theme.body().copy(textDecoration = androidx.compose.ui.text.style.TextDecoration.Underline) else Theme.body()).copy(color = ink, textAlign = TextAlign.Center), maxLines = 2)
         }
     }
+}
+
+/** 동작 줄이기 (개발자 옵션 · 접근성의 애니메이션 끄기): 계속 도는 움직임은 두지 않아요. */
+@Composable
+fun calmMotion(): Boolean {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    return remember { android.provider.Settings.Global.getFloat(ctx.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f }
+}
+
+/** 매일 누르는 버튼 (오늘 이어 쓰기 …): 금박 결이 비스듬히 한 번 천천히 지나가고 한참 쉬어요. */
+@Composable
+fun Modifier.sheen(on: Boolean): Modifier {
+    if (!on || calmMotion()) return this
+    val c = Theme.c
+    val total = Tokens.Motion.sheenMs + Tokens.Motion.sheenRestMs
+    val p by androidx.compose.animation.core.rememberInfiniteTransition(label = "sheen").animateFloat(0f, 1f + Tokens.Motion.sheenRestMs.toFloat() / Tokens.Motion.sheenMs,
+        androidx.compose.animation.core.infiniteRepeatable(tween(total, easing = androidx.compose.animation.core.LinearEasing)), label = "sheen")
+    return this.drawWithContent {
+        drawContent()
+        if (p >= 1f) return@drawWithContent
+        val e = androidx.compose.animation.core.FastOutSlowInEasing.transform(p)
+        val w = size.width * Tokens.Ratio.sheenWidth; val x = -w + (size.width + w) * e
+        drawRect(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color.Transparent, c.giltHi.copy(alpha = Tokens.Alpha.sheen), Color.Transparent),
+            start = Offset(x, size.height), end = Offset(x + w, 0f)))
+    }
+}
+
+/** 오늘 아직 안 한 일 (기도 · 이어 듣기 …): 줄 끝의 작은 금빛 점이 숨 쉬듯 밝아졌다 옅어져요. */
+@Composable
+fun FreshDot(modifier: Modifier = Modifier) {
+    val c = Theme.c
+    val a = if (calmMotion()) 1f else androidx.compose.animation.core.rememberInfiniteTransition(label = "fresh").animateFloat(1f, Tokens.Alpha.breatheLo,
+        androidx.compose.animation.core.infiniteRepeatable(tween(Tokens.Motion.breatheMs / 2), androidx.compose.animation.core.RepeatMode.Reverse), label = "fresh").value
+    Box(modifier.size(Tokens.Size.hintDot).graphicsLayer { alpha = a }.background(c.gilt, androidx.compose.foundation.shape.CircleShape).clearAndSetSemantics { })
 }
 
 /** 누름 반응 (하루의 편지): 누르는 동안 3% 작아짐. */
@@ -418,14 +455,15 @@ fun EmptyNote(title: String, body: String, action: String? = null, onAction: () 
 
 /** 줄 목록 한 칸: 왼쪽 이름 · 오른쪽 작은 값 · 아래 가는 선. 상자 없이. */
 @Composable
-fun ListRow(title: String, value: String, leading: (@Composable () -> Unit)? = null, onClick: () -> Unit) {
+fun ListRow(title: String, value: String, leading: (@Composable () -> Unit)? = null, fresh: Boolean = false, onClick: () -> Unit) {
     val c = Theme.c
     val source = remember { MutableInteractionSource() }
     Column(Modifier.fillMaxWidth().pressScale(source).clickable(source, androidx.compose.foundation.LocalIndication.current, role = Role.Button, onClick = tap(onClick))) {
         Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).padding(vertical = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             leading?.invoke()
             Text(title, style = Theme.body(), maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            if (value.isNotEmpty()) Text(value, style = Theme.small(), maxLines = 1)
+            if (value.isNotEmpty()) Text(value, style = Theme.small().copy(color = if (fresh) c.giltText else c.inkSoft), maxLines = 1)
+            if (fresh) FreshDot()
             Text("›", style = Theme.small().copy(color = c.unwritten), maxLines = 1)
         }
         Hair()

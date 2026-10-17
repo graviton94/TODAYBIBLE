@@ -90,6 +90,8 @@ fun HomePage(s: AppState) {
         }
         WeekDots(s)
         Hair()
+        // 읽기 계획: 오늘의 장이 어디서 왔는지 (계획이 고른 장) · 누르면 계획 고르기
+        PlanStrip(s)
         // 오늘의 장: 라틴 머리글 · 제목 · 진행 · 이어 쓸 절 · 버튼 하나
         Column(Modifier.fillMaxWidth().coach("today_card"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             HeadText(s, cb, cc)
@@ -105,9 +107,11 @@ fun HomePage(s: AppState) {
             withStyle(androidx.compose.ui.text.SpanStyle(color = accent)) { append("$v ") }; append(Markup.plain(ct.verse(cc, v)))
         }, Theme.verse(s.bibleKorean), play = remember(today) { s.store.inkDay != today.toEpochDay() }.also { if (it) s.store.inkDay = today.toEpochDay() })
         Column(Modifier.fillMaxWidth()) {
-            BookButton(if (v != null) stringResource(R.string.continue_at_verse, v) else stringResource(R.string.continue_now), Modifier.fillMaxWidth().coach("today_go")) { s.open(cb, cc) }
+            BookButton(if (v != null) stringResource(R.string.continue_at_verse, v) else stringResource(R.string.continue_now), Modifier.fillMaxWidth().coach("today_go"), glow = !met) { s.open(cb, cc) }
             BookButton(stringResource(R.string.read_short), Modifier.fillMaxWidth().coach("today_read"), quiet = true) { s.read(cb, cc) }
         }
+        // 쓰면 드러나는 다음 판화 (오늘 쓰는 일의 보상이라 버튼 바로 아래)
+        NextPlateCard(s)
         // 쓰다 멈춘 곳: 다른 장 · 다른 권에서 쓰다 만 자리 (최근 순, 둘까지)
         val paused = remember(s.fills.size, s.pausedRev, cb, cc) { s.pausedChapters(2, cb to cc) }
         if (paused.isNotEmpty()) Column(Modifier.fillMaxWidth()) {
@@ -124,31 +128,85 @@ fun HomePage(s: AppState) {
             PrayerRow(s)
             ResumeListenRow(s)
             if (today.dayOfWeek == java.time.DayOfWeek.SUNDAY || s.sermonOn(today.toEpochDay()) != null)
-                ListRow(stringResource(R.string.sermon_title), stringResource(if (s.sermonOn(today.toEpochDay()) != null) R.string.sermon_edit_short else R.string.sermon_write_short)) { s.sermonOpen = today.toEpochDay() }
+                ListRow(stringResource(R.string.sermon_title), stringResource(if (s.sermonOn(today.toEpochDay()) != null) R.string.sermon_edit_short else R.string.sermon_write_short), fresh = s.sermonOn(today.toEpochDay()) == null) { s.sermonOpen = today.toEpochDay() }
             s.memory.filter { it.translation == s.translation }.sortedBy { it.key.raw }.takeIf { it.isNotEmpty() }?.let { list ->
                 val m = list[Math.floorMod(today.toEpochDay(), list.size.toLong()).toInt()].key
                 ListRow(stringResource(R.string.memory_title), stringResource(R.string.ref_verse, s.bookName(m.book), m.chapter, m.verse)) { s.memoryOpen = m }
-            }
-            s.plan?.let { pl -> val (total, done) = s.planCounts()
-                ListRow(planName(ctx, pl.id), if (done >= total) stringResource(R.string.plan_done) else stringResource(R.string.plan_day, minOf(s.planDay(), pl.days), pl.days)) { s.planOpen = true } }
-            s.nextPlate()?.let { (pl, _) ->
-                val img = rememberPlate(pl.id, small = true)
-                ListRow(stringResource(R.string.next_plate_short, s.plateName(pl)), "${(s.plateFraction(pl) * 100).toInt()}%",
-                    leading = { if (img != null) Image(img, null, Modifier.size(Tokens.Size.iconMd).clip(androidx.compose.foundation.shape.CircleShape), contentScale = ContentScale.Crop) }) { s.plateView = pl }
             }
             io.github.graviton94.todaybible.core.Plans.seasonal(today)?.takeIf { it.first != s.plan?.id }?.let { (id, start) ->
                 val left = ChronoUnit.DAYS.between(today, start).toInt()
                 ListRow(if (left > 0) stringResource(R.string.season_soon, planName(ctx, id), left) else stringResource(R.string.season_now, planName(ctx, id)), "") { s.choosePlan(id) }
             }
-            Feasts.upcoming(today, korea = k, count = 1).firstOrNull()?.let { (f, d) ->
-                val name = ctx.getString(ctx.resources.getIdentifier("feast_${f.name}", "string", ctx.packageName))
-                val daysLeft = ChronoUnit.DAYS.between(today, d).toInt()
-                ListRow(if (daysLeft == 0) stringResource(R.string.feast_today, name) else stringResource(R.string.feast_soon, name, daysLeft), "") { }
-            }
             if ((today.monthValue == 12 && today.dayOfMonth >= 15) || (today.monthValue == 1 && today.dayOfMonth <= 7))
                 ListRow(stringResource(R.string.year_ready), "") { s.page = AppState.RECORD }
-            if (!s.lifetime.unlocked) ListRow(stringResource(R.string.lifetime_row), stringResource(R.string.lifetime_row_more)) { s.purchaseOpen = true }
         }
+        // 성경 전체 열기: 할 일 목록과 따로, 맨 아래 가는 금테 한 칸
+        if (!s.lifetime.unlocked) LifetimeNote(s)
+    }
+}
+
+/** 오늘 카드 위 한 줄: ITER · 계획 이름 · 며칠째 (없으면 고르기). */
+@Composable
+private fun PlanStrip(s: AppState) {
+    val c = Theme.c; val ctx = LocalContext.current; val pl = s.plan
+    Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).clickable(role = Role.Button, onClick = tap { s.planOpen = true }),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+        Text("ITER", style = Theme.caps().copy(color = c.giltText), maxLines = 1)
+        if (pl != null) {
+            val (total, done) = s.planCounts()
+            Text(planName(ctx, pl.id), style = Theme.small().copy(color = c.ink), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+            Text(if (done >= total) stringResource(R.string.plan_done) else stringResource(R.string.plan_day, minOf(s.planDay(), pl.days), pl.days), style = Theme.small(), maxLines = 1)
+            Box(Modifier.weight(1f).height(Tokens.Stroke.rule).background(c.hair)) {
+                if (total > 0) Box(Modifier.fillMaxWidth(done.toFloat() / total).height(Tokens.Stroke.rule).background(c.gilt))
+            }
+        } else Text(stringResource(R.string.plan) + " · " + stringResource(R.string.plan_choose), style = Theme.small(), maxLines = 1, modifier = Modifier.weight(1f))
+        Text("›", style = Theme.small().copy(color = c.unwritten), maxLines = 1)
+    }
+}
+
+/** 다음 판화: 쓴 만큼 아래에서부터 드러나는 작은 그림 · 이름 · 남은 절 · 진도. 누르면 판화. */
+@Composable
+private fun NextPlateCard(s: AppState) {
+    val (pl, left) = s.nextPlate() ?: return
+    val c = Theme.c; val k = s.korean
+    val img = rememberPlate(pl.id, small = true); val f = s.plateFraction(pl)
+    val shape = RoundedCornerShape(Tokens.Radius.card)
+    Row(Modifier.fillMaxWidth().clip(shape).background(c.gilt.copy(alpha = Tokens.Alpha.tileFill)).clickable(role = Role.Button, onClick = tap { s.plateView = pl })
+        .padding(Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        Box(Modifier.size(Tokens.Size.plateCard).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.hair)) {
+            if (img != null) Image(img, null, Modifier.fillMaxSize().drawWithContent {
+                drawContent()
+                // 아직 안 쓴 만큼 위를 종이색으로 덮어요
+                drawRect(c.leaf.copy(alpha = Tokens.Alpha.plateVeil), size = Size(size.width, size.height * (1f - f)))
+            }, contentScale = ContentScale.Crop)
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+            Text(stringResource(R.string.plate_next_head), style = Theme.small().copy(color = c.giltText), maxLines = 1)
+            Text(s.plateName(pl), style = Theme.title(k, Tokens.Text.label), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(stringResource(R.string.plate_next_left, s.chapterRef(pl.book, pl.chapter), left), style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Box(Modifier.fillMaxWidth().height(Tokens.Size.segment).background(c.hair)) {
+                if (f > 0f) Box(Modifier.fillMaxWidth(f).height(Tokens.Size.segment).background(c.gilt))
+            }
+        }
+        Text("${(f * 100).toInt()}%", style = Theme.lining(Tokens.Text.title).copy(color = c.giltText), maxLines = 1)
+    }
+}
+
+/** 성경 전체 열기 (평생권 · 구독): 오늘 할 일과 섞이지 않게 맨 아래 가는 금테 칸 하나. */
+@Composable
+private fun LifetimeNote(s: AppState) {
+    val c = Theme.c; val shape = RoundedCornerShape(Tokens.Radius.card)
+    Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3).clip(shape).border(Tokens.Stroke.hair, c.gilt, shape).clickable(role = Role.Button, onClick = tap { s.purchaseOpen = true })
+        .padding(Tokens.Space.s3), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        LockMark(c.giltText, Modifier.size(Tokens.Size.lock))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+            Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                Text(stringResource(R.string.lifetime_row), style = Theme.body(), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                Text(stringResource(R.string.lifetime_row_more), style = Theme.small().copy(color = c.giltText), maxLines = 1)
+            }
+            Text(stringResource(R.string.lifetime_card_line), style = Theme.small(), maxLines = 2, overflow = TextOverflow.Ellipsis)
+        }
+        Text("›", style = Theme.small().copy(color = c.unwritten), maxLines = 1)
     }
 }
 
@@ -221,7 +279,17 @@ private fun SeasonHead(s: AppState, today: java.time.LocalDate) {
                 else androidx.compose.ui.graphics.SolidColor(col)))
             // 낮은 머리 (A): 라틴 · 이름 · 제n주 · 남은 날 한 줄, 말씀은 작은 글씨 두 줄까지
             Column(Modifier.fillMaxWidth().padding(horizontal = bleed).padding(top = Tokens.Space.s2, bottom = Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
-                Text(stringResource(ctx.resources.getIdentifier("season_${se.name}_la", "string", ctx.packageName)).uppercase(), style = Theme.caps().copy(color = col), maxLines = 1)
+                // 라틴 머리글 · 오른쪽에 다가오는 절기 날 (추수감사절까지 n일): 알림이라 누르는 줄이 아니에요
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                    Text(stringResource(ctx.resources.getIdentifier("season_${se.name}_la", "string", ctx.packageName)).uppercase(), style = Theme.caps().copy(color = col), maxLines = 1, modifier = Modifier.weight(1f))
+                    Feasts.upcoming(today, korea = k, count = 1).firstOrNull()?.let { (f, d) ->
+                        val n = ChronoUnit.DAYS.between(today, d).toInt()
+                        if (n != now.daysTo) {
+                            val fn = ctx.getString(ctx.resources.getIdentifier("feast_${f.name}", "string", ctx.packageName))
+                            Text(if (n == 0) stringResource(R.string.feast_today, fn) else stringResource(R.string.season_to, fn, n), style = Theme.small().copy(color = c.ink), maxLines = 1)
+                        }
+                    }
+                }
                 Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                     Text(name(se), style = Theme.title(k, Tokens.Text.label), maxLines = 1)
                     Text(stringResource(R.string.season_week, now.week) + if (now.daysTo != null) " ·" else "", style = Theme.small(), maxLines = 1)
@@ -280,7 +348,7 @@ private fun Modifier.bleed(x: androidx.compose.ui.unit.Dp): Modifier = this.layo
 @Composable
 private fun PrayerRow(s: AppState) {
     val p = io.github.graviton94.todaybible.core.Prayers.forHour(io.github.graviton94.todaybible.core.Prayers.hourAt(java.time.LocalTime.now().hour))
-    ListRow("${prayerName(p)} · ${s.prayerRefShort(p)}", stringResource(if (s.prayed(p.id)) R.string.prayer_prayed else R.string.prayer_go_short)) { s.prayerOpen = p.id }
+    ListRow("${prayerName(p)} · ${s.prayerRefShort(p)}", stringResource(if (s.prayed(p.id)) R.string.prayer_prayed else R.string.prayer_go_short), fresh = !s.prayed(p.id)) { s.prayerOpen = p.id }
 }
 
 /** 이어 듣기: 듣다 멈춘 자리 (2주 안, 지금 듣는 중이 아니면). 누르면 그 장을 펼치고 그 절부터 다시. */
@@ -293,7 +361,7 @@ private fun ResumeListenRow(s: AppState) {
     if (p[0] != s.translation.id) return
     val b = p[1].toIntOrNull() ?: return; val ch = p[2].toIntOrNull() ?: return; val v = p[3].toIntOrNull() ?: return; val day = p[4].toLongOrNull() ?: return
     if (s.today().toEpochDay() - day > 14 || s.locked(b)) return
-    ListRow(stringResource(R.string.resume_listen, s.chapterRef(b, ch)), stringResource(R.string.resume_listen_from, v)) {
+    ListRow(stringResource(R.string.resume_listen, s.chapterRef(b, ch)), stringResource(R.string.resume_listen_from, v), fresh = true) {
         s.read(b, ch, v); io.github.graviton94.todaybible.data.ListenService.start(ctx, b, ch, v, s.aloudRate())
     }
 }

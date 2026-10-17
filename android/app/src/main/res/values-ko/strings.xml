@@ -936,6 +936,9 @@
     <string name="prayer_go_short">드리기</string>
     <string name="lifetime_row">성경 전체를 펼쳐요</string>
     <string name="lifetime_row_more">월 · 연 · 평생</string>
+    <string name="plate_next_head">다음 판화</string>
+    <string name="plate_next_left">%1$s · %2$d절 남았어요</string>
+    <string name="tools_marks_none">아직 없어요</string>
     <string name="prayer_row_short">주기도문 · 아침 · 저녁</string>
     <string name="lib_marks_title">책갈피 · 형광펜</string>
     <string name="plan_none_short">고르기</string>

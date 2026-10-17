@@ -48,6 +48,12 @@ class Lifetime(context: Context) {
     /** 잠긴 것이 모두 열려 있음 (평생권이거나 구독 중). */
     val unlocked: Boolean get() = owned || subscribed
     val ready: Boolean get() = details != null || monthly != null || yearly != null
+    /** 한 번이라도 Play 에서 상품을 받아 본 기기 (그 뒤로는 인터넷이 끊겨도 잠긴 권은 잠긴 채로). 산 기록은 따로 남아 있어 산 사람은 그대로 열려요. */
+    var seen by mutableStateOf(prefs.getBoolean("shop_seen", false))
+        private set
+    private fun markSeen() { if (!seen && ready) { seen = true; prefs.edit().putBoolean("shop_seen", true).apply() } }
+    /** 잠금이 걸리는 때: 상품이 있거나, 예전에 받아 본 적이 있거나 (시험용 forceReady 포함). */
+    val gating: Boolean get() = ready || seen || forceReady
     val canSubscribe: Boolean get() = monthly != null
     val canSubscribeYear: Boolean get() = yearly != null
     /** 지금 보여 줄 평생권 가격: 구독 중이면 할인 가격. */
@@ -107,11 +113,13 @@ class Lifetime(context: Context) {
             if (r.responseCode != BillingClient.BillingResponseCode.OK) return@queryProductDetailsAsync
             details = result.productDetailsList.firstOrNull { it.productId == ID }
             price = details?.oneTimePurchaseOfferDetails?.formattedPrice
+            markSeen()
         }
         client.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder().setProductList(listOf(product(MONTHLY, BillingClient.ProductType.SUBS), product(YEARLY, BillingClient.ProductType.SUBS))).build()) { r, result ->
             if (r.responseCode != BillingClient.BillingResponseCode.OK) return@queryProductDetailsAsync
             monthly = result.productDetailsList.firstOrNull { it.productId == MONTHLY }
             yearly = result.productDetailsList.firstOrNull { it.productId == YEARLY }
+            markSeen()
             // 기본 요금 (무료 체험 같은 앞 단계가 있어도 마지막 단계가 매번 내는 값)
             monthlyPrice = monthly?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice
             val yp = yearly?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()

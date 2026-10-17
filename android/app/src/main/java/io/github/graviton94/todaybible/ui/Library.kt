@@ -114,10 +114,12 @@ fun LibraryPage(s: AppState) {
         Column {
             val nb = s.bookmarks.count { it.translation == s.translation }; val nm = s.marks.count { it.translation == s.translation }
             SectionHead("INSTRUMENTA", stringResource(R.string.lib_tools), sec0 + 1)
-            ListRow(stringResource(R.string.prayer_title), stringResource(R.string.prayer_row_short)) { s.prayersOpen = true }
-            Box(Modifier.coach("lib_marks")) { ListRow(stringResource(R.string.lib_marks_title), "$nb · $nm") { s.marksOpen = true } }
+            // 자주 펴는 둘은 나란한 칸으로 (기도문 · 책갈피와 형광펜), 가끔 쓰는 낭독 받기는 아래 한 줄
+            Row(Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s2), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                ToolTile("ORATIO", stringResource(R.string.prayer_title), stringResource(R.string.prayer_row_short), Modifier.weight(1f)) { s.prayersOpen = true }
+                ToolTile("SIGNA", stringResource(R.string.lib_marks_title), if (nb + nm == 0) stringResource(R.string.tools_marks_none) else "$nb · $nm", Modifier.weight(1f).coach("lib_marks")) { s.marksOpen = true }
+            }
             if (s.narrator != io.github.graviton94.todaybible.data.Narration.DEVICE) ListRow(stringResource(R.string.keep_title), stringResource(R.string.keep_row_more)) { s.keepOpen = true }
-            ListRow(stringResource(R.string.plan), s.plan?.let { planName(ctx, it.id) } ?: stringResource(R.string.plan_none_short)) { s.planOpen = true }
         }
         // 구약 · 신약
         SectionHead("CANON", stringResource(R.string.lib_canon), sec0 + 2, Modifier.padding(top = Tokens.Space.s2))
@@ -162,6 +164,18 @@ fun LibraryPage(s: AppState) {
                 }
             }
         }
+    }
+}
+
+/** 곁에 두는 것 한 칸: 옅은 금빛 바탕 · 라틴 머리글 · 이름 · 작은 값. */
+@Composable
+private fun ToolTile(latin: String, title: String, value: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val c = Theme.c; val shape = androidx.compose.foundation.shape.RoundedCornerShape(Tokens.Radius.card)
+    Column(modifier.heightIn(min = Tokens.Size.rowTall).clip(shape).background(c.gilt.copy(alpha = Tokens.Alpha.tileFill))
+        .clickable(role = Role.Button, onClick = tap(onClick)).padding(Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+        Text(latin, style = Theme.caps().copy(color = c.giltText), maxLines = 1)
+        Text(title, style = Theme.body(), maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(value, style = Theme.small(), maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 

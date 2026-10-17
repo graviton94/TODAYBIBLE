@@ -936,6 +936,9 @@
     <string name="prayer_go_short">Pray</string>
     <string name="lifetime_row">Open the whole Bible</string>
     <string name="lifetime_row_more">Monthly · yearly · lifetime</string>
+    <string name="plate_next_head">Next engraving</string>
+    <string name="plate_next_left">%1$s · %2$d verses to go</string>
+    <string name="tools_marks_none">None yet</string>
     <string name="prayer_row_short">Lord\'s Prayer · morning · evening</string>
     <string name="lib_marks_title">Bookmarks · highlights</string>
     <string name="plan_none_short">Choose</string>

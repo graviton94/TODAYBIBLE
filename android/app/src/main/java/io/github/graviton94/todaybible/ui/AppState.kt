@@ -381,7 +381,7 @@ class AppState(val store: Store) {
     fun today(): LocalDate = fixedToday ?: LocalDate.now()
     fun text(b: Int = book) = store.book(translation, b)
     /** 무료 네 권 밖은 평생권이 있어야 열림. Play 에 닿지 않는 곳(직접 설치 등)에서는 잠그지 않음. */
-    fun locked(b: Int) = b !in Canon.free && !lifetime.unlocked && (lifetime.ready || lifetime.forceReady || forceLock)
+    fun locked(b: Int) = b !in Canon.free && !lifetime.unlocked && (lifetime.gating || forceLock)
     fun widgets() {
         val ctx = store.context
         // 목표 계산 (길잡이 책들을 읽음) 과 위젯 그리기는 화면 줄 밖에서
@@ -519,7 +519,7 @@ class AppState(val store: Store) {
     var reflectYear by mutableStateOf<Int?>(null)
     fun requestReflections(y: Int) { if (gated()) purchaseOpen = true else reflectYear = y }
     fun requestNotes(b: Int?) { if (gated()) purchaseOpen = true else notesBook = b ?: -1 }
-    fun requestPdf(b: Int) { if (!lifetime.unlocked && (lifetime.ready || lifetime.forceReady || forceLock)) purchaseOpen = true else pdfBook = b }
+    fun requestPdf(b: Int) { if (!lifetime.unlocked && (lifetime.gating || forceLock)) purchaseOpen = true else pdfBook = b }
     fun setGoal(g: Int) { dailyGoal = g; store.dailyGoal = g; widgets() }
     fun toggleNotebook() { notebook = !notebook; store.notebook = notebook; typeView = if (notebook) 1 else 0; store.typeView = typeView }
     /** 타자 보기: 0 책 · 1 노트 · 2 원고지. */
@@ -584,7 +584,7 @@ class AppState(val store: Store) {
     fun premium(b: Int) = b !in Canon.free && !lifetime.unlocked
     /** 평생권 기능 표시 (붓펜 · 연필 · 표지 · PDF · 녹음 …). */
     val premiumOn: Boolean get() = !lifetime.unlocked
-    fun gated() = !lifetime.unlocked && (lifetime.ready || lifetime.forceReady || forceLock)
+    fun gated() = !lifetime.unlocked && (lifetime.gating || forceLock)
     fun toggleVoice() { if (gated()) { purchaseOpen = true; return }; voiceOn = !voiceOn; store.voiceOn = voiceOn }
     fun setOwner(n: String) { ownerName = n; store.ownerName = n; widgets() }
 
