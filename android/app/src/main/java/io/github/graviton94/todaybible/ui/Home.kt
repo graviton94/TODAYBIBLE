@@ -107,7 +107,7 @@ fun HomePage(s: AppState) {
         }, Theme.verse(s.bibleKorean), play = remember(today) { s.store.inkDay != today.toEpochDay() }.also { if (it) s.store.inkDay = today.toEpochDay() })
         Column(Modifier.fillMaxWidth()) {
             BookButton(if (v != null) stringResource(R.string.continue_at_verse, v) else stringResource(R.string.continue_now), Modifier.fillMaxWidth().coach("today_go"), glow = !met) { s.open(cb, cc) }
-            BookButton(stringResource(R.string.read_short), Modifier.fillMaxWidth().coach("today_read"), quiet = true, glow = !met) { s.read(cb, cc) }
+            BookButton(stringResource(R.string.read_short), Modifier.fillMaxWidth().coach("today_read"), quiet = true) { s.read(cb, cc) }
         }
         // 쓰면 드러나는 다음 판화 (오늘 쓰는 일의 보상이라 버튼 바로 아래)
         NextPlateCard(s)

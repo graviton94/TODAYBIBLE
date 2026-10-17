@@ -252,8 +252,13 @@ class AppState(val store: Store) {
     /** 성경 탭의 읽기 화면으로. */
     fun read(b: Int, ch: Int, v: Int? = null) {
         if (locked(b)) { peekBook = b; purchaseOpen = true; return }
+        readFrom = if (page != BIBLE) page else null
         listenAt = b to ch; readVerse = v; page = BIBLE
     }
+    /** 읽기 화면을 연 탭 (오늘 › 읽기 …). 뒤로 가기는 서재가 아니라 그 탭으로. 서재에서 열었으면 null. */
+    var readFrom: Int? = null
+    /** 읽기 화면 닫기 (뒤로 가기): 다른 탭에서 열었으면 그 탭으로 돌아가요. */
+    fun closeReader() { listenAt = null; readFrom?.let { page = it }; readFrom = null }
     /** 녹음을 지우고 다시 읽을 절 (권, 장, 절). 채운 절이라도 낭독에서 다시 열어요. */
     var reread by mutableStateOf<Triple<Int, Int, Int>?>(null)
     /** 녹음 파일이 바뀌면 올림 (지우기 · 모두 지우기 뒤에 목록을 다시 읽게). */
@@ -476,7 +481,7 @@ class AppState(val store: Store) {
         val n = io.github.graviton94.todaybible.data.ListenService.now.value ?: return
         val o = io.github.graviton94.todaybible.data.ListenService.origin.value
         if (o.startsWith("prayer:")) prayerOpen = o.removePrefix("prayer:")
-        else { listenAt = n.book to n.chapter; page = BIBLE }
+        else { readFrom = if (page != BIBLE) page else null; listenAt = n.book to n.chapter; page = BIBLE }
     }
     /** 하던 일 (듣기 · 소리 내어 읽기) 을 두고 뒤로 갈 때 묻는 창. */
     class LeaveAsk(val recording: Boolean, val onStop: () -> Unit, val onKeep: (() -> Unit)?)

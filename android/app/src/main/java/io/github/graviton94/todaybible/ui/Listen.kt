@@ -68,10 +68,10 @@ import io.github.graviton94.todaybible.design.Tokens
 @Composable
 fun BibleReader(s: AppState, book: Int, chapter: Int) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
-    BackHandler { s.listenAt = null }
+    BackHandler { s.closeReader() }
     val now by ListenService.now.collectAsState()
     val origin by ListenService.origin.collectAsState()
-    LeaveGuard(s, now != null && origin == "read", recording = false, onStop = { ListenService.stop(ctx); s.listenAt = null }, onKeep = { s.listenAt = null })
+    LeaveGuard(s, now != null && origin == "read", recording = false, onStop = { ListenService.stop(ctx); s.closeReader() }, onKeep = { s.closeReader() })
     val count = s.text(book).chapterCount
     val pager = rememberPagerState(initialPage = (chapter - 1).coerceIn(0, count - 1)) { count }
     // 목소리가 다음 장으로 넘어가면 따라가요
@@ -96,7 +96,7 @@ fun BibleReader(s: AppState, book: Int, chapter: Int) {
         // 머리: ‹ 목록 · 권 장 (‹ ›) · 책갈피
         Row(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically) {
             Text(stringResource(R.string.read_back), style = Theme.small().copy(color = c.inkSoft), maxLines = 1,
-                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.listenAt = null }.padding(horizontal = Tokens.Space.s2))
+                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { s.readFrom = null; s.listenAt = null }.padding(horizontal = Tokens.Space.s2))
             Row(Modifier.weight(1f), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
                 Arrow(left = true, enabled = ch > 1) { s.listenAt = book to ch - 1 }
                 Text(stringResource(R.string.listen_head, s.bookName(book), ch), style = Theme.head(k), maxLines = 1,
