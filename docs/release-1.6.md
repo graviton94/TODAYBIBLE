@@ -3,6 +3,7 @@
 ## A. 1.5 를 이미 올렸다면 (1.6 만)
 
 <en-US>
+• Devotions: a passage a day toward Thanksgiving, Christmas or Easter
 • Related verses: tap a verse and read the passages connected to it, right where you are
 • Bible dictionary: tap a person, place or word in the verse for a short entry, in English and Korean
 • Search now has a Dictionary tab
@@ -11,6 +12,7 @@
 • A new app icon and a tidier Today page
 </en-US>
 <ko-KR>
+• 작정: 추수감사절 · 성탄 · 부활절 같은 날을 향해, 정한 말씀을 날마다 옮겨 써요
 • 관련 구절: 절을 누르면 이어지는 말씀을 그 자리에서 읽을 수 있어요
 • 성경 사전: 그 절에 나오는 사람 · 땅 · 낱말을 누르면 짧은 풀이가 떠요
 • 찾기에 「사전」 칸이 생겼어요
@@ -22,17 +24,19 @@
 ## B. 1.5 를 건너뛰고 1.6 으로 바로 올린다면 (합친 판)
 
 <en-US>
+• Devotions: a passage a day toward Thanksgiving, Christmas or Easter
 • Related verses: tap a verse to read connected passages in place
-• Bible dictionary: tap a person, place or word for a short entry
-• Every engraving tells its picture, scene and history
-• Engravings of the month: a new set each month, free
-• A certificate for finishing a book, a Testament or the Bible
+• Bible dictionary: tap a name, place or word
+• Each engraving now tells its story
+• A new set of engravings each month, free
+• A certificate when you finish a book or the Bible
 • New widgets: today's word and your next prayer
 • Restore now merges phone and tablet records
-• Small sounds for a finished verse or chapter (can be off)
+• Small sounds when you finish (can be off)
 • A new app icon and a tidier Today page
 </en-US>
 <ko-KR>
+• 작정: 추수감사절 · 성탄 · 부활절 같은 날을 향해, 정한 말씀을 날마다 옮겨 써요
 • 관련 구절: 절을 누르면 이어지는 말씀을 그 자리에서 읽을 수 있어요
 • 성경 사전: 그 절에 나오는 사람 · 땅 · 낱말을 누르면 짧은 풀이가 떠요
 • 판화마다 그림 · 장면 · 역사 이야기가 생겼어요
