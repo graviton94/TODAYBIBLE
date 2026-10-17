@@ -115,7 +115,7 @@ fun LibraryPage(s: AppState) {
             val nb = s.bookmarks.count { it.translation == s.translation }; val nm = s.marks.count { it.translation == s.translation }
             SectionHead("INSTRUMENTA", stringResource(R.string.lib_tools), sec0 + 1)
             // 자주 펴는 둘은 나란한 칸으로 (기도문 · 책갈피와 형광펜), 가끔 쓰는 낭독 받기는 아래 한 줄
-            Row(Modifier.fillMaxWidth().padding(vertical = Tokens.Space.s2), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Min).padding(vertical = Tokens.Space.s2), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 ToolTile("ORATIO", stringResource(R.string.prayer_title), stringResource(R.string.prayer_row_short), Modifier.weight(1f)) { s.prayersOpen = true }
                 ToolTile("SIGNA", stringResource(R.string.lib_marks_title), if (nb + nm == 0) stringResource(R.string.tools_marks_none) else "$nb · $nm", Modifier.weight(1f).coach("lib_marks")) { s.marksOpen = true }
             }
@@ -171,7 +171,7 @@ fun LibraryPage(s: AppState) {
 @Composable
 private fun ToolTile(latin: String, title: String, value: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val c = Theme.c; val shape = androidx.compose.foundation.shape.RoundedCornerShape(Tokens.Radius.card)
-    Column(modifier.heightIn(min = Tokens.Size.rowTall).clip(shape).background(c.gilt.copy(alpha = Tokens.Alpha.tileFill))
+    Column(modifier.fillMaxHeight().heightIn(min = Tokens.Size.rowTall).clip(shape).background(c.gilt.copy(alpha = Tokens.Alpha.tileFill))
         .clickable(role = Role.Button, onClick = tap(onClick)).padding(Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
         Text(latin, style = Theme.caps().copy(color = c.giltText), maxLines = 1)
         Text(title, style = Theme.body(), maxLines = 2, overflow = TextOverflow.Ellipsis)

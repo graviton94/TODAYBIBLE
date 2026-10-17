@@ -90,10 +90,9 @@ fun HomePage(s: AppState) {
         }
         WeekDots(s)
         Hair()
-        // 읽기 계획: 오늘의 장이 어디서 왔는지 (계획이 고른 장) · 누르면 계획 고르기
-        PlanStrip(s)
-        // 오늘의 장: 라틴 머리글 · 제목 · 진행 · 이어 쓸 절 · 버튼 하나
+        // 오늘의 장: 읽기 계획 한 줄 (이 장이 어디서 왔는지) · 라틴 머리글 · 제목 · 진행 · 이어 쓸 절 · 버튼 하나
         Column(Modifier.fillMaxWidth().coach("today_card"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            PlanStrip(s)
             HeadText(s, cb, cc)
             Text(stringResource(R.string.listen_head, s.bookName(cb), cc), style = Theme.title(k, Tokens.Text.display), maxLines = 1)
             Text(stringResource(R.string.ch_progress, inCh, fill.size) + if (verses > 0) " · " + stringResource(R.string.today_written, verses) else "", style = Theme.small(), maxLines = 1)
