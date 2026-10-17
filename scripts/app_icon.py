@@ -1,6 +1,6 @@
 # 앱 아이콘 (1.2): 도레 「빛이 있으라」 판화 (빛이 한가운데) + 흰 선 라틴 십자 (속은 비어 판화가 비침) · 정중앙.
 # 적응형 아이콘 108 단위 = 바탕 (판화, 가장자리까지) + 앞 (십자 선 · 빛무리, 투명) + 단색 (십자 선 벡터).
-# 스토어 512 아이콘 · 시작 화면도 같은 그림. 꾸미기 › 앱 아이콘의 다른 셋 (돌판 · 골고다 · 승천) 도 같은 십자, 바탕 판화만 달라요.
+# 1.6 부터 기본 아이콘 · 스토어 512 · 시작 화면은 펜촉 (scripts/app_icon_nib.py). 여기서는 꾸미기 › 앱 아이콘의 다른 셋 (돌판 · 골고다 · 승천) 만: 같은 십자, 바탕 판화만 달라요.
 # 다시 만들기: python3 -I scripts/app_icon.py
 from PIL import Image, ImageDraw, ImageFilter, ImageOps
 import numpy as np, os
@@ -54,7 +54,7 @@ for suf,kw in VARIANTS.items():
         d=f'{RES}/mipmap-{name}'; os.makedirs(d,exist_ok=True); px=int(U*m)
         background(px,**kw).save(f'{d}/ic_launcher_art{suf}.png')
         if suf=='': foreground(px).save(f'{d}/ic_launcher_line.png')
-    open(f'{RES}/mipmap-anydpi-v26/ic_launcher{suf}.xml','w').write(f'''<?xml version="1.0" encoding="utf-8"?>
+    if suf: open(f'{RES}/mipmap-anydpi-v26/ic_launcher{suf}.xml','w').write(f'''<?xml version="1.0" encoding="utf-8"?>
 <!-- 판화 위 흰 선 십자 (scripts/app_icon.py 가 만들어요) -->
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@mipmap/ic_launcher_art{suf}" />
@@ -72,7 +72,5 @@ open(f'{RES}/drawable/ic_launcher_cross.xml','w').write(f'''<?xml version="1.0" 
         android:pathData="{path}" />
 </vector>
 ''')
-# 스토어 512: 보이는 원 (72) 영역을 정사각으로
-big=1536; full=background(big).convert('RGBA'); full=Image.alpha_composite(full,foreground(big))
-c=int(big*(U-V)/2/U); full.crop((c,c,big-c,big-c)).resize((512,512),Image.LANCZOS).convert('RGB').save(f'{OUT}/icon_512.png')
+# 스토어 512 는 app_icon_nib.py
 print('ok')

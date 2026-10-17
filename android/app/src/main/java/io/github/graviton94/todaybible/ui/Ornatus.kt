@@ -100,8 +100,8 @@ fun HeadPicker(s: AppState) {
 @Composable
 fun IconPicker(s: AppState) {
     val c = Theme.c
-    // 적응형 아이콘 XML 은 그림으로 못 읽어서, 바탕 판화 · 십자 선 두 장을 겹쳐 가운데 (108 중 72) 만 보여요
-    val icons = listOf("light" to (R.mipmap.ic_launcher_art to R.string.icon_light), "tablets" to (R.mipmap.ic_launcher_art_tablets to R.string.icon_tablets),
+    // 적응형 아이콘 XML 은 그림으로 못 읽어서, 바탕 · 앞 두 장을 겹쳐 가운데 (108 중 72) 만 보여요. 기본 (light) 은 가죽 위 펜촉, 나머지는 판화 위 십자 선
+    val icons = listOf("light" to (R.mipmap.ic_launcher_nib_bg to R.string.icon_light), "tablets" to (R.mipmap.ic_launcher_art_tablets to R.string.icon_tablets),
         "golgotha" to (R.mipmap.ic_launcher_art_golgotha to R.string.icon_golgotha), "ascension" to (R.mipmap.ic_launcher_art_ascension to R.string.icon_ascension))
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         icons.forEach { (id, v) ->
@@ -111,7 +111,7 @@ fun IconPicker(s: AppState) {
                 Box(Modifier.size(Tokens.Size.decoIcon).then(if (on) Modifier.border(Tokens.Stroke.rule * 2, c.gilt, CircleShape) else Modifier).padding(Tokens.Stroke.rule * 2).clip(CircleShape), contentAlignment = Alignment.Center) {
                     val full = Modifier.requiredSize(Tokens.Size.decoIcon * 1.5f)
                     Image(painterResource(res), null, full)
-                    Image(painterResource(R.mipmap.ic_launcher_line), null, full)
+                    Image(painterResource(if (id == "light") R.mipmap.ic_launcher_nib else R.mipmap.ic_launcher_line), null, full)
                 }
                 Text(stringResource(name), style = Theme.small().copy(color = if (on) c.ink else c.inkSoft), maxLines = 1)
                 if (locked) Text(stringResource(R.string.premium_tag), style = Theme.small().copy(color = c.giltText), maxLines = 1)

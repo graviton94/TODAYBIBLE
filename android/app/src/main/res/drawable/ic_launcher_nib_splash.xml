@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 금빛 펜촉 한 색 (시작 화면). scripts/app_icon_nib.py 가 만들어요 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <group android:pivotX="54" android:pivotY="58" android:scaleX="0.5867" android:scaleY="0.5867" android:translateY="-4">
+        <path android:fillColor="#FFC7A35D" android:fillType="evenOdd" android:pathData="M30 20 L78 20 L78 44 Q78 52 64 60 L55.2 94 Q54 97 52.8 94 L44 60 Q30 52 30 44 Z M51.2 29 L56.8 29 L56.8 35 L63.5 35 L63.5 40.6 L56.8 40.6 L56.8 51 L55 51 L55 92 L53 92 L53 51 L51.2 51 L51.2 40.6 L44.5 40.6 L44.5 35 L51.2 35 Z" />
+        <path android:fillColor="#FFC7A35D" android:pathData="M33 12 L75 12 Q77 12 77 14 L77 20 Q77 22 75 22 L33 22 Q31 22 31 20 L31 14 Q31 12 33 12 Z" />
+    </group>
+</vector>

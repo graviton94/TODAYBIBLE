@@ -66,7 +66,7 @@
   "head_native": {"en": "English", "ko": "한글"},
   "deco_icon": {"en": "App icon", "ko": "앱 아이콘"},
   "deco_icon_note": {"en": "The home-screen icon may disappear for a moment, then come back in its new look.", "ko": "홈 화면 아이콘이 잠깐 사라졌다가 새 모습으로 다시 나타나요."},
-  "icon_light": {"en": "Light", "ko": "빛이 있으라"},
+  "icon_light": {"en": "Pen nib", "ko": "펜촉"},
   "icon_tablets": {"en": "Tablets", "ko": "돌판"},
   "icon_golgotha": {"en": "Golgotha", "ko": "골고다"},
   "icon_ascension": {"en": "Ascension", "ko": "승천"},

@@ -65,7 +65,7 @@ object Film {
         val caps = ResourcesCompat.getFont(ctx, R.font.caps)
         val display = ResourcesCompat.getFont(ctx, R.font.display)
         val icon = runCatching {
-            val a = BitmapFactory.decodeResource(ctx.resources, R.mipmap.ic_launcher_art); val l = BitmapFactory.decodeResource(ctx.resources, R.mipmap.ic_launcher_line)
+            val a = BitmapFactory.decodeResource(ctx.resources, R.mipmap.ic_launcher_nib_bg); val l = BitmapFactory.decodeResource(ctx.resources, R.mipmap.ic_launcher_nib)
             Bitmap.createBitmap(a.width, a.height, Bitmap.Config.ARGB_8888).also { b -> Canvas(b).apply { drawBitmap(a, 0f, 0f, null); drawBitmap(l, 0f, 0f, null) } }
         }.getOrNull()
         val gilt = d.gilt.toArgb(); val ink = d.ink.toArgb(); val soft = d.inkSoft.toArgb(); val leaf = d.leaf.toArgb(); val glow = Tokens.dark.giltHi.toArgb()
