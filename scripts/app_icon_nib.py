@@ -12,7 +12,6 @@ NIB = 'M30 20 L78 20 L78 44 Q78 52 64 60 L55.2 94 Q54 97 52.8 94 L44 60 Q30 52 3
 RIGHT = 'M54 20 L78 20 L78 44 Q78 52 64 60 L55.2 94 Q54 97 54 96 Z'
 # 십자 구멍 + 갈라진 홈 (한 덩어리, 끝은 펜촉 안에서 멈춤)
 HOLE = 'M51.2 29 L56.8 29 L56.8 35 L63.5 35 L63.5 40.6 L56.8 40.6 L56.8 51 L55 51 L55 92 L53 92 L53 51 L51.2 51 L51.2 40.6 L44.5 40.6 L44.5 35 L51.2 35 Z'
-GRIP = '<rect x="31" y="12" width="46" height="10" rx="2" fill="#6E5020"/><rect x="31" y="12" width="46" height="2" rx="1" fill="#C7A35D" opacity=".7"/>'
 # 시안 (보이는 원 72 를 108 로 본 그림) → 적응형 108: 72/108 로 줄임. 펜촉 축 (54,58) 을 가운데 (54,54) 로.
 K = 0.88 * V / U
 FIT = f'translate(54 54) scale({K:.4f}) translate(-54 -58)'
@@ -23,7 +22,7 @@ def nib_svg():
 <mask id="m"><rect x="-50" y="-50" width="208" height="208" fill="#fff"/><path d="{HOLE}" fill="#000"/></mask></defs>
 <g transform="{FIT}"><g mask="url(#m)"><path d="{NIB}" fill="url(#g)"/><path d="{RIGHT}" fill="#000" opacity=".14"/>
 <path d="M35 26 Q54 31 73 26" fill="none" stroke="#6E5020" stroke-width="1.1" opacity=".55"/><path d="M37 55 Q54 50 71 55" fill="none" stroke="#6E5020" stroke-width="1" opacity=".45"/>
-<path d="M30 20 L78 20" stroke="#F2DC9B" stroke-width="1.4" opacity=".8"/></g>{GRIP}</g>'''
+<path d="M30 20 L78 20" stroke="#F2DC9B" stroke-width="1.4" opacity=".8"/></g></g>'''
 # 바탕: 시안의 빛무리 (가운데 위쪽이 밝음). 보이는 원 기준 반지름 72% → 108 기준으로 환산
 BG = f'''<defs><radialGradient id="b" gradientUnits="userSpaceOnUse" cx="54" cy="{54 - 0.14 * V:.2f}" r="{0.72 * V:.2f}"><stop offset="0" stop-color="#33291F"/><stop offset="1" stop-color="#141009"/></radialGradient></defs>
 <rect width="108" height="108" fill="url(#b)"/>'''
@@ -59,7 +58,6 @@ def vector(color, note):
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
     <group android:pivotX="54" android:pivotY="58" android:scaleX="{K:.4f}" android:scaleY="{K:.4f}" android:translateY="-4">
         <path android:fillColor="{color}" android:fillType="evenOdd" android:pathData="{NIB} {HOLE}" />
-        <path android:fillColor="{color}" android:pathData="M33 12 L75 12 Q77 12 77 14 L77 20 Q77 22 75 22 L33 22 Q31 22 31 20 L31 14 Q31 12 33 12 Z" />
     </group>
 </vector>
 '''
