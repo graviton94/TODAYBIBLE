@@ -550,8 +550,8 @@ class AppState(val store: Store) {
     fun choosePlan(id: String?) {
         val p = io.github.graviton94.todaybible.core.Plans.byId(id)
         if (p != null && p.books.any { locked(it) }) { peekBook = p.books.first { locked(it) }; purchaseOpen = true; return }
+        // 쓰던 자리 (필사 화면의 권 · 장 · 책갈피) 는 건드리지 않아요. 오늘 화면이 계획의 장을 따로 알려 줘요.
         planId = id; store.planId = id; store.planStart = today().toEpochDay(); planOpen = false; warmPlan()
-        planNext()?.let { (b, c, _) -> book = b; chapter = c; target = null; store.setBookmark(translation, b, c) }
         widgets()
     }
     /** 길잡이 범위의 절 수 · 쓴 절 수. */
@@ -575,6 +575,16 @@ class AppState(val store: Store) {
         val pl = plan ?: return null; val p = progress
         for ((b, c) in pl.chapters) { val t = store.book(translation, b); p.nextVerse(translation, t, c)?.let { return Triple(b, c, it) } }
         return null
+    }
+    /** 오늘 화면의 절기 계획 줄에서 고른 계획: 계획 창이 열리며 바로 「시작할까요?」 로. */
+    var planAsk: String? = null
+    /** 오늘 카드의 장: 계획을 시작한 뒤 계획 밖의 장을 마지막으로 썼으면 그 자리 (쓰던 걸 덮지 않게), 아니면 계획의 다음 장. */
+    fun todayPlace(): Triple<Int, Int, Int?> {
+        val pn = planNext(); val pl = plan
+        val last = fills.filter { it.translation == translation }.maxByOrNull { it.atMillis }
+        val off = pl != null && last != null && last.epochDay >= store.planStart && (last.key.book to last.key.chapter) !in pl.chapters
+        if (pn != null && !off) return Triple(pn.first, pn.second, pn.third)
+        val (b, c) = resumePlace(); return Triple(b, c, null)
     }
     fun planDay(): Int = io.github.graviton94.todaybible.core.Plans.day(store.planStart, today())
     /** 오늘의 분량: 길잡이가 있으면 남은 절 ÷ 남은 날 (오늘 쓴 절은 오늘 몫에 포함). */

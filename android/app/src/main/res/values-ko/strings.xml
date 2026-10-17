@@ -276,7 +276,12 @@
     <string name="feast_reward_on">그날 쓰면 ‘%1$s’ 발자취를 받아요</string>
     <string name="plan">읽기 계획</string>
     <string name="plan_choose">고르기</string>
-    <string name="plan_none">계획 없이 · 내 속도로</string>
+    <string name="plan_none">계획 그만두기 · 내 속도로</string>
+    <string name="plan_ask">%1$s 계획을 시작할까요?</string>
+    <string name="plan_ask_body">오늘 화면에 날마다 계획의 장을 알려 드려요. 지금 쓰던 곳 (%1$s) 은 그대로 남고, 계속 이어 쓸 수 있어요.</string>
+    <string name="plan_ask_go">시작하기</string>
+    <string name="plan_ask_no">그만두기</string>
+    <string name="plan_follow">계획대로 · %1$s</string>
     <string name="plan_mark30">마가복음 한 달</string>
     <string name="plan_prov31">잠언 한 달</string>
     <string name="plan_ps365">시편 한 해</string>

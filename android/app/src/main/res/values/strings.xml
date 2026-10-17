@@ -276,7 +276,12 @@
     <string name="feast_reward_on">Write that day to earn “%1$s”</string>
     <string name="plan">Reading plan</string>
     <string name="plan_choose">Choose</string>
-    <string name="plan_none">No plan · at my own pace</string>
+    <string name="plan_none">Stop the plan · at my own pace</string>
+    <string name="plan_ask">Start %1$s?</string>
+    <string name="plan_ask_body">Today will suggest the plan\'s chapter each day. What you\'re writing now (%1$s) stays as it is, and you can keep writing it.</string>
+    <string name="plan_ask_go">Start</string>
+    <string name="plan_ask_no">Not now</string>
+    <string name="plan_follow">Plan for today · %1$s</string>
     <string name="plan_mark30">Mark in a month</string>
     <string name="plan_prov31">Proverbs in a month</string>
     <string name="plan_ps365">Psalms in a year</string>

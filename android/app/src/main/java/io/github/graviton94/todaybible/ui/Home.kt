@@ -69,12 +69,13 @@ fun HomePage(s: AppState) {
     val run = Presence.streak(days, today)
     val verses = s.todayVerses(); val met = s.goalMet()
     // 오늘의 장: 길잡이가 있으면 길잡이의 다음 장, 없으면 쓰던 장
+    // 오늘의 장: 계획의 장, 단 계획 밖에서 쓰고 있으면 쓰던 자리 (PlanStrip 이 계획의 장을 따로 보여 줘요)
+    val (cb, cc, pv) = s.todayPlace()
     val pn = s.planNext()
-    val (cb, cc) = if (pn != null) pn.first to pn.second else s.resumePlace()
     val ct = s.store.book(s.translation, cb)
     val goal = s.effectiveGoal()
     val fill = ct.fillable(cc); val inCh = fill.count { s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(cb, cc, it)) }
-    val v = pn?.third ?: s.progress.nextVerse(s.translation, ct, cc)
+    val v = pv ?: s.progress.nextVerse(s.translation, ct, cc)
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s3, bottom = Tokens.Space.s5),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         // 절기 머리: 절기색 띠 · 옅은 절기 판화 · 이름 · 몇째 주 · 남은 날 · 절기 말씀
@@ -92,7 +93,7 @@ fun HomePage(s: AppState) {
         Hair()
         // 오늘의 장: 읽기 계획 한 줄 (이 장이 어디서 왔는지) · 라틴 머리글 · 제목 · 진행 · 이어 쓸 절 · 버튼 하나
         Column(Modifier.fillMaxWidth().coach("today_card"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            PlanStrip(s)
+            PlanStrip(s, pn?.takeIf { it.first != cb || it.second != cc })
             HeadText(s, cb, cc)
             Text(stringResource(R.string.listen_head, s.bookName(cb), cc), style = Theme.title(k, Tokens.Text.display), maxLines = 1)
             Text(stringResource(R.string.ch_progress, inCh, fill.size) + if (verses > 0) " · " + stringResource(R.string.today_written, verses) else "", style = Theme.small(), maxLines = 1)
@@ -146,7 +147,7 @@ fun HomePage(s: AppState) {
             }
             io.github.graviton94.todaybible.core.Plans.seasonal(today)?.takeIf { it.first != s.plan?.id }?.let { (id, start) ->
                 val left = ChronoUnit.DAYS.between(today, start).toInt()
-                ListRow(if (left > 0) stringResource(R.string.season_soon, planName(ctx, id), left) else stringResource(R.string.season_now, planName(ctx, id)), "") { s.choosePlan(id) }
+                ListRow(if (left > 0) stringResource(R.string.season_soon, planName(ctx, id), left) else stringResource(R.string.season_now, planName(ctx, id)), "") { s.planAsk = id; s.planOpen = true }
             }
             if ((today.monthValue == 12 && today.dayOfMonth >= 15) || (today.monthValue == 1 && today.dayOfMonth <= 7))
                 ListRow(stringResource(R.string.year_ready), "") { s.page = AppState.RECORD }
@@ -158,8 +159,9 @@ fun HomePage(s: AppState) {
 
 /** 오늘 카드 위 한 줄: ITER · 계획 이름 · 며칠째 (없으면 고르기). */
 @Composable
-private fun PlanStrip(s: AppState) {
+private fun PlanStrip(s: AppState, elsewhere: Triple<Int, Int, Int>?) {
     val c = Theme.c; val ctx = LocalContext.current; val pl = s.plan
+    Column(Modifier.fillMaxWidth()) {
     Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).clickable(role = Role.Button, onClick = tap { s.planOpen = true }),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
         Text("ITER", style = Theme.caps().copy(color = c.giltText), maxLines = 1)
@@ -172,6 +174,12 @@ private fun PlanStrip(s: AppState) {
             }
         } else Text(stringResource(R.string.plan) + " · " + stringResource(R.string.plan_choose), style = Theme.small(), maxLines = 1, modifier = Modifier.weight(1f))
         Text("›", style = Theme.small().copy(color = c.unwritten), maxLines = 1)
+    }
+    // 계획 밖을 쓰고 있을 때: 오늘 카드는 쓰던 자리, 계획의 장은 여기 한 줄로
+    elsewhere?.let { (b, ch, _) ->
+        Text(stringResource(R.string.plan_follow, s.chapterRef(b, ch)) + " ›", style = Theme.small().copy(color = c.giltText), maxLines = 1,
+            modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button, onClick = tap { s.open(b, ch) }))
+    }
     }
 }
 
@@ -412,7 +420,20 @@ fun planName(ctx: android.content.Context, id: String): String = ctx.getString(c
 @Composable
 fun PlanSheet(s: AppState) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
+    var ask by remember { mutableStateOf(s.planAsk.also { s.planAsk = null }) }
     BookSheet({ s.planOpen = false }) {
+        // 고른 계획을 바로 켜지 않고 한 번 물어요 (쓰던 자리는 그대로라는 것까지)
+        ask?.let { id ->
+            Text("ORDO LECTIONIS", style = Theme.caps(), maxLines = 1)
+            Text(stringResource(R.string.plan_ask, planName(ctx, id)), style = Theme.title(k), modifier = Modifier.fillMaxWidth())
+            val (rb, rc) = s.resumePlace()
+            Text(stringResource(R.string.plan_ask_body, s.chapterRef(rb, rc)), style = Theme.body())
+            Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                BookButton(stringResource(R.string.plan_ask_no), Modifier.weight(1f), quiet = true) { ask = null }
+                BookButton(stringResource(R.string.plan_ask_go), Modifier.weight(1f)) { ask = null; s.choosePlan(id) }
+            }
+            return@BookSheet
+        }
         Text("ORDO LECTIONIS", style = Theme.caps(), maxLines = 1)
         Text(stringResource(R.string.plan), style = Theme.title(k, Tokens.Text.display), modifier = Modifier.fillMaxWidth())
         s.plan?.let { pl -> PlanPath(s, pl.days) }
@@ -421,7 +442,7 @@ fun PlanSheet(s: AppState) {
             val on = s.planId == pl.id
             Hair()
             Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch)
-                .chosen(on).clickable(role = Role.RadioButton) { s.choosePlan(pl.id) }.padding(vertical = Tokens.Space.s2),
+                .chosen(on).clickable(role = Role.RadioButton) { if (!on) ask = pl.id }.padding(vertical = Tokens.Space.s2),
                 verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text(planName(ctx, pl.id), style = Theme.body().copy(color = if (on) c.giltText else c.ink), maxLines = 1)
@@ -431,7 +452,7 @@ fun PlanSheet(s: AppState) {
                 else if (on) Text("✓", style = Theme.body().copy(color = c.gilt))
             }
         }
-        BookButton(stringResource(R.string.plan_none), Modifier.fillMaxWidth(), quiet = true) { s.choosePlan(null) }
+        if (s.plan != null) BookButton(stringResource(R.string.plan_none), Modifier.fillMaxWidth(), quiet = true) { s.choosePlan(null) }
     }
 }
 
@@ -442,8 +463,7 @@ fun PlanSheet(s: AppState) {
 @Composable
 private fun SimpleHome(s: AppState) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
-    val pn = s.planNext()
-    val (b, ch) = if (pn != null) pn.first to pn.second else s.book to s.chapter
+    val (b, ch, _) = s.todayPlace()
     val t = s.store.book(s.translation, b)
     val fill = t.fillable(ch); val done = fill.count { s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(b, ch, it)) }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {

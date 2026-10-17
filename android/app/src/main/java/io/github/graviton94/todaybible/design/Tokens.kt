@@ -39,6 +39,7 @@ object Tokens {
     object Size {
         val touch = 56.dp
         val band = 60.dp
+        val bandCompact = 40.dp
         val folioFrame = 3.dp
         val folioFoot = 24.dp
         val folioOrn = 7.dp
