@@ -134,6 +134,13 @@ class Store(val context: Context) {
     var planStart: Long
         get() = prefs.getLong("plan_start", 0)
         set(v) = prefs.edit().putLong("plan_start", v).apply()
+    /** 작정 기도 제목 (한 줄, 없으면 "") · 마침 카드를 이미 본 작정 ("id:시작날"). */
+    var planNote: String
+        get() = prefs.getString("plan_note", "") ?: ""
+        set(v) = prefs.edit().putString("plan_note", v).apply()
+    var votumShown: String
+        get() = prefs.getString("votum_shown", "") ?: ""
+        set(v) = prefs.edit().putString("votum_shown", v).apply()
     /** 표지 가죽 (burgundy · navy · olive · ebony) · 금박 이름. */
     /** 꾸미기 (1.2): 표지 판화 (화첩에서 고른 것, 없으면 ""), 표지 헌사 한 줄, 잉크 색, 머리글 (라틴 · 한글), 앱 아이콘. */
     var coverPlate: String

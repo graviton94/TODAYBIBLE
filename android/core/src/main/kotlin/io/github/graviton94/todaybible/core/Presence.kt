@@ -93,33 +93,56 @@ object Goal {
     fun days(goal: Int, verses: Int, chapters: Int): Int = if (goal < 0) (chapters + chapters(goal) - 1) / chapters(goal) else (verses + goal - 1) / goal
 }
 
-/** 필사 길잡이: 정한 권 · 장을 정한 날 수 안에. 하루 분량은 남은 절을 남은 날로 나눔. */
-data class Plan(val id: String, val chapters: List<Pair<Int, Int>>, val days: Int) {
+/**
+ * 작정 (1.6, 전 「읽기 계획」): 정한 권 · 장을 정한 날 수 안에. 하루 분량은 남은 절을 남은 날로 나눔.
+ * dated = 향하는 날이 있는 작정 (추수감사 · 성탄 · 부활 …): 날짜 창은 [Plans.window]. plate = 목록 · 카드 판화. seal = 마침 인장 (라틴 한 줄).
+ */
+data class Plan(val id: String, val chapters: List<Pair<Int, Int>>, val days: Int, val dated: Boolean = false, val plate: String = "sermon", val seal: String = "VOTUM") {
     val books: Set<Int> get() = chapters.map { it.first }.toSet()
 }
 
 object Plans {
     private fun whole(book: Int) = (1..Canon.books[book].chapters).map { book to it }
+    /** 감사 작정: 감사를 노래한 시편 21편 (하루 한 편). */
+    private val THANKS = listOf(23, 30, 34, 65, 66, 67, 92, 95, 96, 98, 100, 103, 107, 111, 116, 118, 136, 138, 145, 147, 150).map { 18 to it }
     val all = listOf(
-        Plan("mark30", whole(40), 30),
-        Plan("prov31", whole(19), 31),
-        Plan("ps365", whole(18), 365),
-        Plan("nt365", (39..65).flatMap { whole(it) }, 365),
-        Plan("bible365", (0..65).flatMap { whole(it) }, 365),
-        // 교회력 계획: 사순절 40일 (마가복음 · 누가복음 22–24 · 요한복음 12–21), 고난주간 8일, 대림절 24일
-        Plan("lent40", whole(40) + (22..24).map { 41 to it } + (12..21).map { 42 to it }, 40),
-        Plan("holy8", listOf(39 to 21) + (13..17).map { 42 to it } + (26..28).map { 39 to it }, 8),
-        Plan("advent24", listOf(9, 11, 40, 53, 60, 61).map { 22 to it } + listOf(39 to 1, 39 to 2, 41 to 1, 41 to 2, 42 to 1), 24),
+        // 향하는 날이 있는 작정 (목록 위 「다가오는 날」, 시작일 순)
+        Plan("thanks21", THANKS, 21, dated = true, plate = "schnorr_ruth", seal = "PRIMITIAE"),
+        Plan("advent24", listOf(9, 11, 40, 53, 60, 61).map { 22 to it } + listOf(39 to 1, 39 to 2, 41 to 1, 41 to 2, 42 to 1), 24, dated = true, plate = "annunciation", seal = "STELLA"),
+        Plan("newyear21", (1..21).map { 19 to it }, 21, dated = true, plate = "schnorr_light", seal = "ANNUS NOVUS"),
+        Plan("lent40", whole(40) + (22..24).map { 41 to it } + (12..21).map { 42 to it }, 40, dated = true, plate = "gethsemane", seal = "CRUX"),
+        Plan("holy8", listOf(39 to 21) + (13..17).map { 42 to it } + (26..28).map { 39 to it }, 8, dated = true, plate = "entry", seal = "HOSANNA"),
+        Plan("pente50", whole(43), 50, dated = true, plate = "schnorr_pentecost", seal = "IGNIS"),
+        // 언제든
+        Plan("mark30", whole(40), 30, plate = "john_preach", seal = "MARCUS"),
+        Plan("prov31", whole(19), 31, plate = "solomon_judgment", seal = "SAPIENTIA"),
+        Plan("ps365", whole(18), 365, plate = "schnorr_spear", seal = "PSALTERIUM"),
+        Plan("nt365", (39..65).flatMap { whole(it) }, 365, plate = "sermon", seal = "NOVUM"),
+        Plan("bible365", (0..65).flatMap { whole(it) }, 365, plate = "law_read", seal = "BIBLIA TOTA"),
     )
-    /** 절기 계획을 권할 때: 시작 이레 전부터 시작 사흘 뒤까지. (계획 id, 시작 날) */
-    fun seasonal(today: LocalDate): Pair<String, LocalDate>? {
+    /** 향하는 날이 있는 작정의 날짜 창 (첫날, 마지막 날): 올해 창이 끝났으면 다음 해. 날짜가 없는 작정은 null. */
+    fun window(p: Plan, today: LocalDate, korea: Boolean): Pair<LocalDate, LocalDate>? {
+        if (!p.dated) return null
         for (y in listOf(today.year, today.year + 1)) {
-            val easter = ChurchYear.easter(y)
-            val christmas = ChurchYear.christmas(y)
-            val advent = christmas.minusDays((christmas.dayOfWeek.value % 7).toLong() + 21)
-            for ((id, start) in listOf("lent40" to easter.minusDays(46), "holy8" to easter.minusDays(7), "advent24" to advent)) {
-                if (!today.isBefore(start.minusDays(7)) && !today.isAfter(start.plusDays(3))) return id to start
-            }
+            val e = ChurchYear.easter(y)
+            val w = when (p.id) {
+                "thanks21" -> ChurchYear.thanksgiving(y, korea).let { it.minusDays(20) to it }
+                "advent24" -> LocalDate.of(y, 12, 1) to LocalDate.of(y, 12, 24)
+                "newyear21" -> LocalDate.of(y, 1, 1) to LocalDate.of(y, 1, 21)
+                "lent40" -> e.minusDays(46) to e.minusDays(7)
+                "holy8" -> e.minusDays(7) to e
+                "pente50" -> e to e.plusDays(49)
+                else -> null
+            } ?: return null
+            if (!today.isAfter(w.second)) return w
+        }
+        return null
+    }
+    /** 절기 계획을 권할 때: 시작 이레 전부터 시작 사흘 뒤까지. (계획 id, 시작 날) */
+    fun seasonal(today: LocalDate, korea: Boolean = true): Pair<String, LocalDate>? {
+        for (p in all.filter { it.dated }) {
+            val start = window(p, today, korea)?.first ?: continue
+            if (!today.isBefore(start.minusDays(7)) && !today.isAfter(start.plusDays(3))) return p.id to start
         }
         return null
     }

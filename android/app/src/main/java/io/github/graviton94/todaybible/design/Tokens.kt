@@ -133,6 +133,10 @@ object Tokens {
         val pathNode = 18.dp
         val hintDot = 6.dp
         val plateCard = 56.dp
+        val votumRow = 68.dp
+        val votumHero = 150.dp
+        val votumListMax = 520.dp
+        val votumBar = 96.dp
     }
     object Text {
         val verse = 21.sp

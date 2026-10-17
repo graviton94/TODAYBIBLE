@@ -54,6 +54,8 @@ class AppState(val store: Store) {
     var welcomeStep by mutableStateOf(0)
     var planId by mutableStateOf(store.planId)
     var planOpen by mutableStateOf(false)
+    /** 마침 카드 (작정을 다 쓴 날, "id:시작날"). */
+    var votumDone by mutableStateOf<String?>(null)
     // 꾸미기 (1.2)
     var coverPlate by mutableStateOf(store.coverPlate)
     fun chooseCoverPlate(id: String) { coverPlate = id; store.coverPlate = id; widgets() }
@@ -492,7 +494,7 @@ class AppState(val store: Store) {
     fun closeOverlays() {
         keepOpen = false
         settingsOpen = false; purchaseOpen = false; plateView = null; finished = null; picker = null; marksOpen = false; found = null
-        memoryOpen = null; sermonOpen = null; prayersOpen = false; galleryOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; related = null; dictEntry = null; versePeek = null; handBook = null; planOpen = false; pilgrim = null; liber = null; shelfOpen = false; noteOpen = null; award = null; opening = false; leaveAsk = null
+        memoryOpen = null; sermonOpen = null; prayersOpen = false; galleryOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; related = null; dictEntry = null; versePeek = null; handBook = null; planOpen = false; votumDone = null; pilgrim = null; liber = null; shelfOpen = false; noteOpen = null; award = null; opening = false; leaveAsk = null
     }
     /** 앱을 처음부터 다시 (언어처럼 화면 전체가 바뀌는 설정 뒤에). 여는 순간은 이번만 건너뛰어요. */
     fun restartApp(a: android.app.Activity) {
@@ -547,13 +549,23 @@ class AppState(val store: Store) {
 
     // ── 길잡이 ──
     val plan: io.github.graviton94.todaybible.core.Plan? get() = io.github.graviton94.todaybible.core.Plans.byId(planId)
-    fun choosePlan(id: String?) {
+    fun choosePlan(id: String?, note: String = "") {
         val p = io.github.graviton94.todaybible.core.Plans.byId(id)
         if (p != null && p.books.any { locked(it) }) { peekBook = p.books.first { locked(it) }; purchaseOpen = true; return }
-        // 쓰던 자리 (필사 화면의 권 · 장 · 책갈피) 는 건드리지 않아요. 오늘 화면이 계획의 장을 따로 알려 줘요.
-        planId = id; store.planId = id; store.planStart = today().toEpochDay(); planOpen = false; warmPlan()
+        // 쓰던 자리 (필사 화면의 권 · 장 · 책갈피) 는 건드리지 않아요. 오늘 화면이 작정의 장을 따로 알려 줘요.
+        // 향하는 날이 있는 작정은 그 창의 첫날부터 (아직 안 왔으면 미리 걸어 둠)
+        val start = p?.let { io.github.graviton94.todaybible.core.Plans.window(it, today(), korean) }?.first?.toEpochDay() ?: today().toEpochDay()
+        planId = id; store.planId = id; store.planStart = start; planNote = note.trim(); store.planNote = planNote; planOpen = false; warmPlan()
         widgets()
     }
+    /** 작정 기도 제목. */
+    var planNote by mutableStateOf(store.planNote)
+    /** 작정이 아직 시작 전 (향하는 날의 창이 오기 전). */
+    fun planPending(): Boolean = plan != null && store.planStart > today().toEpochDay()
+    /** 작정을 다 썼는가 (마침 카드). */
+    fun planComplete(): Boolean = plan != null && planCounts().let { (t, d) -> t > 0 && d >= t }
+    /** 마침 카드를 보여 줄 작정 ("id:시작날"), 이미 봤으면 null. */
+    fun votumToShow(): String? = plan?.let { "${it.id}:${store.planStart}" }?.takeIf { planComplete() && it != store.votumShown }
     /** 길잡이 범위의 절 수 · 쓴 절 수. */
     @Volatile private var planMemo: Pair<List<Any?>, Pair<Int, Int>>? = null
     fun planCounts(): Pair<Int, Int> {
@@ -583,13 +595,14 @@ class AppState(val store: Store) {
         val pn = planNext(); val pl = plan
         val last = fills.filter { it.translation == translation }.maxByOrNull { it.atMillis }
         val off = pl != null && last != null && last.epochDay >= store.planStart && (last.key.book to last.key.chapter) !in pl.chapters
-        if (pn != null && !off) return Triple(pn.first, pn.second, pn.third)
+        if (pn != null && !off && !planPending()) return Triple(pn.first, pn.second, pn.third)
         val (b, c) = resumePlace(); return Triple(b, c, null)
     }
     fun planDay(): Int = io.github.graviton94.todaybible.core.Plans.day(store.planStart, today())
     /** 오늘의 분량: 길잡이가 있으면 남은 절 ÷ 남은 날 (오늘 쓴 절은 오늘 몫에 포함). */
     fun effectiveGoal(): Int {
         val pl = plan ?: return dailyGoal
+        if (planPending()) return dailyGoal
         val (total, done) = planCounts(); val doneBefore = done - todayVerses()
         val left = (pl.days - planDay() + 1).coerceAtLeast(1)
         return io.github.graviton94.todaybible.core.Plans.perDay(total, doneBefore, left).coerceAtLeast(1)

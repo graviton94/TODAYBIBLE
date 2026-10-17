@@ -122,7 +122,10 @@ class CoreTest {
         // 2026 부활절 4월 5일 → 재의 수요일 2월 18일, 종려주일 3월 29일, 대림절 첫 주일 11월 29일
         assertEquals("lent40" to java.time.LocalDate.of(2026, 2, 18), Plans.seasonal(java.time.LocalDate.of(2026, 2, 14)))
         assertEquals("holy8", Plans.seasonal(java.time.LocalDate.of(2026, 3, 27))?.first)
-        assertEquals("advent24" to java.time.LocalDate.of(2026, 11, 29), Plans.seasonal(java.time.LocalDate.of(2026, 11, 25)))
+        assertEquals("advent24" to java.time.LocalDate.of(2026, 12, 1), Plans.seasonal(java.time.LocalDate.of(2026, 11, 25)))
+        // 감사 작정: 추수감사 주일 (2026-11-15) 앞 21일
+        assertEquals("thanks21" to java.time.LocalDate.of(2026, 10, 25), Plans.seasonal(java.time.LocalDate.of(2026, 10, 20)))
+        assertEquals(java.time.LocalDate.of(2026, 10, 25) to java.time.LocalDate.of(2026, 11, 15), Plans.window(Plans.byId("thanks21")!!, java.time.LocalDate.of(2026, 10, 17), true))
         assertEquals(null, Plans.seasonal(java.time.LocalDate.of(2026, 7, 1)))
     }
 
