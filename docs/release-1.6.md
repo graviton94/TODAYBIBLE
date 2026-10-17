@@ -26,7 +26,7 @@
 • Bible dictionary: tap a person, place or word for a short entry
 • Every engraving tells its picture, scene and history
 • Engravings of the month: a new set each month, free
-• A certificate when you finish a book, a Testament or the Bible
+• A certificate for finishing a book, a Testament or the Bible
 • New widgets: today's word and your next prayer
 • Restore now merges phone and tablet records
 • Small sounds for a finished verse or chapter (can be off)
