@@ -85,7 +85,7 @@ fun BookButton(text: String, modifier: Modifier = Modifier, quiet: Boolean = fal
     val fill = when { quiet || !enabled -> Color.Transparent; pressed -> c.leatherDeep; else -> c.leather }
     Box(
         modifier.pressScale(source).heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.button)).background(fill)
-            .sheen(glow && enabled && !quiet && !pressed)
+            .sheen(glow && enabled && !pressed, quiet)
             .then(if (!enabled && !quiet) Modifier.border(Tokens.Stroke.hair, c.hair, RoundedCornerShape(Tokens.Radius.button)) else Modifier)
             .clickable(source, null, enabled = enabled, role = Role.Button, onClick = tap(onClick))
             .padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s3),
@@ -107,31 +107,25 @@ fun calmMotion(): Boolean {
     return remember { android.provider.Settings.Global.getFloat(ctx.contentResolver, android.provider.Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f }
 }
 
-/** 매일 누르는 버튼 (오늘 이어 쓰기 …): 금박 결이 비스듬히 한 번 천천히 지나가고 한참 쉬어요. */
+/** 매일 누르는 버튼 (오늘 이어 쓰기 …): 금박 심 (H2). 따뜻한 금빛 넓은 띠 가운데 밝은 심 한 줄이 비스듬히 천천히 흘러요. 글자 뒤에 그려요. */
 @Composable
-fun Modifier.sheen(on: Boolean): Modifier {
+fun Modifier.sheen(on: Boolean, quiet: Boolean = false): Modifier {
     if (!on || calmMotion()) return this
     val c = Theme.c
     val total = Tokens.Motion.sheenMs + Tokens.Motion.sheenRestMs
-    val p by androidx.compose.animation.core.rememberInfiniteTransition(label = "sheen").animateFloat(0f, 1f + Tokens.Motion.sheenRestMs.toFloat() / Tokens.Motion.sheenMs,
+    val p by androidx.compose.animation.core.rememberInfiniteTransition(label = "sheen").animateFloat(0f, total.toFloat() / Tokens.Motion.sheenMs,
         androidx.compose.animation.core.infiniteRepeatable(tween(total, easing = androidx.compose.animation.core.LinearEasing)), label = "sheen")
-    return this.drawWithContent {
-        drawContent()
-        if (p >= 1f) return@drawWithContent
-        val e = androidx.compose.animation.core.FastOutSlowInEasing.transform(p)
-        val w = size.width * Tokens.Ratio.sheenWidth; val x = -w + (size.width + w) * e
-        drawRect(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color.Transparent, c.giltHi.copy(alpha = Tokens.Alpha.sheen), Color.Transparent),
-            start = Offset(x, size.height), end = Offset(x + w, 0f)))
+    // 바탕 없는 버튼 (읽기) 은 종이 위라 옅은 금빛만
+    val band = if (quiet) c.gilt.copy(alpha = Tokens.Alpha.sheenQuiet) else androidx.compose.ui.graphics.lerp(c.leather, c.gilt, Tokens.Ratio.sheenBand)
+    val glint = if (quiet) c.gilt.copy(alpha = Tokens.Alpha.sheenQuietCore) else c.giltHi.copy(alpha = Tokens.Alpha.sheen)
+    return this.drawBehind {
+        if (p >= 1f) return@drawBehind
+        val wide = size.width * Tokens.Ratio.sheenWidth; val core = size.width * Tokens.Ratio.sheenCore
+        val x = -wide / 2 + (size.width + wide) * p
+        val slant = size.height * 0.36f
+        drawRect(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color.Transparent, band, Color.Transparent), start = Offset(x - wide / 2, size.height), end = Offset(x + wide / 2 + slant, 0f)))
+        drawRect(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color.Transparent, glint, Color.Transparent), start = Offset(x - core / 2, size.height), end = Offset(x + core / 2 + slant, 0f)))
     }
-}
-
-/** 오늘 아직 안 한 일 (기도 · 이어 듣기 …): 줄 끝의 작은 금빛 점이 숨 쉬듯 밝아졌다 옅어져요. */
-@Composable
-fun FreshDot(modifier: Modifier = Modifier) {
-    val c = Theme.c
-    val a = if (calmMotion()) 1f else androidx.compose.animation.core.rememberInfiniteTransition(label = "fresh").animateFloat(1f, Tokens.Alpha.breatheLo,
-        androidx.compose.animation.core.infiniteRepeatable(tween(Tokens.Motion.breatheMs / 2), androidx.compose.animation.core.RepeatMode.Reverse), label = "fresh").value
-    Box(modifier.size(Tokens.Size.hintDot).graphicsLayer { alpha = a }.background(c.gilt, androidx.compose.foundation.shape.CircleShape).clearAndSetSemantics { })
 }
 
 /** 누름 반응 (하루의 편지): 누르는 동안 3% 작아짐. */
@@ -455,15 +449,17 @@ fun EmptyNote(title: String, body: String, action: String? = null, onAction: () 
 
 /** 줄 목록 한 칸: 왼쪽 이름 · 오른쪽 작은 값 · 아래 가는 선. 상자 없이. */
 @Composable
-fun ListRow(title: String, value: String, leading: (@Composable () -> Unit)? = null, fresh: Boolean = false, onClick: () -> Unit) {
+fun ListRow(title: String, value: String, leading: (@Composable () -> Unit)? = null, pill: Boolean = false, glow: Boolean = false, onClick: () -> Unit) {
     val c = Theme.c
     val source = remember { MutableInteractionSource() }
     Column(Modifier.fillMaxWidth().pressScale(source).clickable(source, androidx.compose.foundation.LocalIndication.current, role = Role.Button, onClick = tap(onClick))) {
         Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.row).padding(vertical = Tokens.Space.s2), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
             leading?.invoke()
             Text(title, style = Theme.body(), maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            if (value.isNotEmpty()) Text(value, style = Theme.small().copy(color = if (fresh) c.giltText else c.inkSoft), maxLines = 1)
-            if (fresh) FreshDot()
+            // pill = 아직 안 한 일: 할 일 말이 작은 가죽 알약 (큰 버튼의 동생), glow 면 그 안에 금박 심이 흘러요
+            if (value.isNotEmpty() && pill) Text(value, style = Theme.small().copy(color = c.leatherInk), maxLines = 1,
+                modifier = Modifier.clip(RoundedCornerShape(Tokens.Radius.pill)).background(c.leather).sheen(glow).padding(horizontal = Tokens.Space.s3, vertical = Tokens.Space.s1))
+            else if (value.isNotEmpty()) Text(value, style = Theme.small(), maxLines = 1)
             Text("›", style = Theme.small().copy(color = c.unwritten), maxLines = 1)
         }
         Hair()
