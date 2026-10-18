@@ -220,6 +220,9 @@ class MainActivity : ComponentActivity() {
         if (i.hasExtra("tb.scale")) s.setTextScale(i.getFloatExtra("tb.scale", 1f))
         i.getStringExtra("tb.stamp")?.let { s.setStampMark(it) }
         if (i.getBooleanExtra("tb.seed", false)) s.seedDemo()
+        // 기록 보관: 내보내기 창 (tb.archive) · 오늘 보관 한 줄 (tb.keepNudge: 40일 전 보관, 그 뒤 다 쓴 장)
+        if (i.getBooleanExtra("tb.archive", false)) s.archiveOpen = true
+        if (i.getBooleanExtra("tb.keepNudge", false)) { s.store.backupAt = System.currentTimeMillis() - 40L * 86_400_000L; s.store.keptChapters = 0; s.store.keepNudgeUntil = 0; s.keepRev++ }
         i.getStringExtra("tb.open")?.split(':')?.let { s.open(it[0].toInt() - 1, it[1].toInt()) }
         if (i.hasExtra("tb.page")) s.page = i.getIntExtra("tb.page", 0)
         s.settingsOpen = i.getBooleanExtra("tb.settings", false)
