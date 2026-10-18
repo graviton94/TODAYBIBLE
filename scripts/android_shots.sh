@@ -45,7 +45,7 @@ adb shell input tap 540 1200; sleep 1.5; snap o07_cover_entered
 # @end
 # 오늘 · 필사 (책 · 노트) · 서재 · 기록
 open --es tb.owner 은혜;                                             shot h01_today 5
-open --ez tb.keepNudge true --es tb.owner "";                      shot kb1_today_keep 5
+open --ez tb.keepNudge true;                    shot kb1_today_keep 5
 open --ez tb.archive true --ez tb.settings true;                    shot kb2_archive 5
 swipe_up;                                                          shot h02_today_more 2
 open --es tb.owner ""
