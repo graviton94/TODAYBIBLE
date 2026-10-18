@@ -772,6 +772,7 @@ class AppState(val store: Store) {
             val at = d.atTime(6 + i % 3, 30).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
             Fill(tr, key, modes[i % modes.size], d.toEpochDay(), at)
         }.filter { it.key.raw !in already }
+        android.util.Log.w("TBSEED", "keys=${keys.size} already=${already.size} new=${new.size}")
         if (new.isEmpty()) return
         if (store.startDay < 0) store.startDay = days.first().toEpochDay()
         store.append(new); fills.addAll(new)
@@ -788,6 +789,7 @@ class AppState(val store: Store) {
         }
         onboarded = true; store.onboarded = true; opening = false
         open(40, 3); page = 0
+        android.util.Log.w("TBSEED", "done onboarded=${store.onboarded}")
     }
 
     fun nextChapter(b: Int = book, ch: Int = chapter): Pair<Int, Int> {
