@@ -149,6 +149,10 @@ ID 는 앱 코드와 같아야 해요 (바꾸면 앱이 못 찾아요). 가격�
 
 - 기본 요금제 둘 다 **활성화**, 혜택(무료 체험) 없음. 유예 기간 · 계정 보류는 기본값.
 - `lifetime_member` 는 만들지 않아요 (예전 기록만 인정하는 코드가 남아 있음).
-- 이름 · 설명: 구독 「오늘성경 구독권」 · 평생권 「오늘성경 평생권」 / 설명 「66권 모두 옮겨 쓰기 · 판화 모두 · 나의 성경 PDF · 내 목소리 오디오북」
+- 평생권 (`lifetime`) 제품 설명
+  - 한국어 이름: 오늘성경 평생권 / 설명: 66권 모두 옮겨 쓰기 · 판화 모두 · 작정 모두 · 나의 성경 PDF · 손글씨 PDF · 내 목소리 오디오북. 한 번 결제로 평생 열려요.
+  - 영어 이름: Today Bible Lifetime / 설명: Write out all 66 books, every engraving and devotion, My Bible PDF, handwriting PDF and your-voice audiobook. Pay once, yours for good.
+  - 아이콘: `docs/store/graphics/iap_lifetime.png` (1024², 32비트 PNG, 「빛이 있으라」 판화 · 글자 없음)
+- 구독 (`sub_all`) 이름: 오늘성경 구독권
 - 라이선스 테스트: 설정 › 라이선스 테스트에 시험 계정 추가 (실제 결제 없이 구매 시험)
 - 결제 프로필 · 세금 정보 (판매자 계정)
