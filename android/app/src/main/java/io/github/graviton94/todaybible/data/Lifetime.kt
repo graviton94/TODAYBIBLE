@@ -17,12 +17,14 @@ import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.QueryPurchasesParams
 
 /**
- * 여는 길 세 가지 (Google Play): 월 구독 (`monthly`) · 연 구독 (`yearly`) · 평생권 (한 번 결제 `lifetime`).
+ * 여는 길 세 가지 (Google Play): 구독 하나 (`sub_all`) 의 기본 요금제 월 (`monthly`) · 연 (`yearly`) · 평생권 (한 번 결제 `lifetime`).
  * 가격은 모두 Play Console 에서 정하고 앱은 Play 가 준 글을 그대로 써요. (예전 할인 평생권 `lifetime_member` 는 팔지 않고, 이미 산 기록만 인정해요.)
  * 결제 정보는 앱이 받지 않음 (Play 가 처리). 산 기록은 기기에 남겨 두어 Play 에 닿지 않을 때도 열려 있게.
  */
 class Lifetime(context: Context) {
-    companion object { const val ID = "lifetime"; const val MEMBER = "lifetime_member"; const val MONTHLY = "monthly"; const val YEARLY = "yearly" }
+    companion object { const val ID = "lifetime"; const val MEMBER = "lifetime_member"; const val SUB = "sub_all"; const val MONTHLY = "monthly"; const val YEARLY = "yearly" }
+    /** 구독 상품 (예전 따로 만든 monthly · yearly 상품 ID 도 산 기록은 인정). */
+    private fun isSub(p: Purchase) = SUB in p.products || MONTHLY in p.products || YEARLY in p.products
     private val prefs = context.getSharedPreferences("today", Context.MODE_PRIVATE)
 
     var owned by mutableStateOf(prefs.getBoolean("lifetime", false))
@@ -60,14 +62,17 @@ class Lifetime(context: Context) {
     val lifetimePrice: String? get() = if (subscribed && memberPrice != null) memberPrice else price
 
     private var details: ProductDetails? = null
-    private var monthly: ProductDetails? = null
-    private var yearly: ProductDetails? = null
+    private var sub: ProductDetails? = null
+    /** 기본 요금제 (혜택이 붙은 것보다 기본 요금제 그대로를 먼저). */
+    private var monthly: ProductDetails.SubscriptionOfferDetails? = null
+    private var yearly: ProductDetails.SubscriptionOfferDetails? = null
+    private fun plan(d: ProductDetails?, id: String) = d?.subscriptionOfferDetails?.filter { it.basePlanId == id }?.let { l -> l.firstOrNull { it.offerId == null } ?: l.firstOrNull() }
     private val client: BillingClient = BillingClient.newBuilder(context.applicationContext)
         .enablePendingPurchases(PendingPurchasesParams.newBuilder().enableOneTimeProducts().build())
         .enableAutoServiceReconnection()
         .setListener { r, list ->
             when (r.responseCode) {
-                BillingClient.BillingResponseCode.OK -> list?.forEach { p -> if (p.purchaseState == Purchase.PurchaseState.PENDING) note(Note.PENDING) else { grant(p); note(if (MONTHLY in p.products || YEARLY in p.products) Note.SUBSCRIBED else Note.BOUGHT) } }
+                BillingClient.BillingResponseCode.OK -> list?.forEach { p -> if (p.purchaseState == Purchase.PurchaseState.PENDING) note(Note.PENDING) else { grant(p); note(if (isSub(p)) Note.SUBSCRIBED else Note.BOUGHT) } }
                 BillingClient.BillingResponseCode.USER_CANCELED -> {}   // 스스로 닫았으면 말없이
                 BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> restore(asked = true)
                 else -> note(Note.FAILED)
@@ -115,14 +120,15 @@ class Lifetime(context: Context) {
             price = details?.oneTimePurchaseOfferDetails?.formattedPrice
             markSeen()
         }
-        client.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder().setProductList(listOf(product(MONTHLY, BillingClient.ProductType.SUBS), product(YEARLY, BillingClient.ProductType.SUBS))).build()) { r, result ->
+        client.queryProductDetailsAsync(QueryProductDetailsParams.newBuilder().setProductList(listOf(product(SUB, BillingClient.ProductType.SUBS))).build()) { r, result ->
             if (r.responseCode != BillingClient.BillingResponseCode.OK) return@queryProductDetailsAsync
-            monthly = result.productDetailsList.firstOrNull { it.productId == MONTHLY }
-            yearly = result.productDetailsList.firstOrNull { it.productId == YEARLY }
+            sub = result.productDetailsList.firstOrNull { it.productId == SUB }
+            monthly = plan(sub, MONTHLY)
+            yearly = plan(sub, YEARLY)
             markSeen()
             // 기본 요금 (무료 체험 같은 앞 단계가 있어도 마지막 단계가 매번 내는 값)
-            monthlyPrice = monthly?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice
-            val yp = yearly?.subscriptionOfferDetails?.firstOrNull()?.pricingPhases?.pricingPhaseList?.lastOrNull()
+            monthlyPrice = monthly?.pricingPhases?.pricingPhaseList?.lastOrNull()?.formattedPrice
+            val yp = yearly?.pricingPhases?.pricingPhaseList?.lastOrNull()
             yearlyPrice = yp?.formattedPrice
             yearlyPerMonth = yp?.let { ph -> runCatching {
                 val f = java.text.NumberFormat.getCurrencyInstance(); f.currency = java.util.Currency.getInstance(ph.priceCurrencyCode)
@@ -150,7 +156,7 @@ class Lifetime(context: Context) {
         client.queryPurchasesAsync(QueryPurchasesParams.newBuilder().setProductType(BillingClient.ProductType.SUBS).build()) { r, list ->
             if (r.responseCode == BillingClient.BillingResponseCode.OK) {
                 // 해지 · 만료된 구독은 Play 가 돌려주지 않아요: 없으면 닫힘
-                val live = list.filter { (MONTHLY in it.products || YEARLY in it.products) && it.purchaseState == Purchase.PurchaseState.PURCHASED }
+                val live = list.filter { isSub(it) && it.purchaseState == Purchase.PurchaseState.PURCHASED }
                 if (live.isNotEmpty()) found.set(true)
                 markSubscribed(live.isNotEmpty()); live.forEach(::acknowledge)
             }
@@ -169,8 +175,8 @@ class Lifetime(context: Context) {
     /** 구독 시작 (yearly = 연 구독). */
     fun subscribe(activity: Activity, yearlyPlan: Boolean = false): Boolean {
         if (!client.isReady) { tries = 0; connect() }
-        val d = (if (yearlyPlan) yearly else monthly) ?: return false
-        val token = d.subscriptionOfferDetails?.firstOrNull()?.offerToken ?: return false
+        val d = sub ?: return false
+        val token = (if (yearlyPlan) yearly else monthly)?.offerToken ?: return false
         val p = BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(d).setOfferToken(token).build()
         return client.launchBillingFlow(activity, BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(p)).build()).responseCode == BillingClient.BillingResponseCode.OK
     }
@@ -185,7 +191,7 @@ class Lifetime(context: Context) {
         if (p.purchaseState != Purchase.PurchaseState.PURCHASED) return
         when {
             ID in p.products || MEMBER in p.products -> markOwned(true)
-            MONTHLY in p.products || YEARLY in p.products -> markSubscribed(true)
+            isSub(p) -> markSubscribed(true)
             else -> return
         }
         acknowledge(p)
