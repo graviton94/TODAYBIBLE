@@ -1253,4 +1253,10 @@
     <string name="keep_later">Later</string>
     <string name="keep_stopped">Auto backup has stopped</string>
     <string name="keep_repick">Choose again ›</string>
+    <string name="thanks_title">The whole Bible is open</string>
+    <string name="thanks_list">All 66 books to write out · every engraving and devotion\nMy Bible PDF · handwriting PDF · your-voice audiobook</string>
+    <string name="thanks_thanks">Thank you for walking with us</string>
+    <string name="thanks_sub">Subscribed · cancel anytime in Manage subscription</string>
+    <string name="thanks_go">Continue %1$s</string>
+    <string name="thanks_close">Close</string>
 </resources>

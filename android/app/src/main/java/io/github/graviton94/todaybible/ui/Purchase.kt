@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import io.github.graviton94.todaybible.design.LocalPalette
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -208,4 +210,40 @@ private fun Cover(modifier: Modifier) {
         drawRoundRect(c.gilt, Offset(inset, inset + gap), Size(w - inset * 2, h - (inset + gap) * 2), CornerRadius(Tokens.Radius.frame.toPx()), style = Stroke(g))
         stamp(STAMP_CROSS, c.gilt, Offset(w / 2, h / 2), w * Tokens.Ratio.veilMark)
     })
+}
+
+/**
+ * 결제 감사 카드 (첫 결제 때 한 번): 「빛이 있으라」 판화 · 금박 인장 TOTA · 열린 것 · 시편 119:105 · 고마움 한 줄 · 바로 갈 곳.
+ * 잠긴 권을 열려다 샀으면 그 권 1장으로, 아니면 오늘 이어 쓸 장으로.
+ */
+@Composable
+fun Thanks(s: AppState, lifetime: Boolean) {
+    val k = s.korean
+    fun close() { s.thanks = null; s.thanksBook = null }
+    androidx.activity.compose.BackHandler { close() }
+    val (gb, gc) = s.thanksBook?.let { it to 1 } ?: s.resumePlace()
+    androidx.compose.runtime.CompositionLocalProvider(LocalPalette provides Tokens.dark) {
+        val c = Theme.c
+        Column(Modifier.fillMaxSize().background(c.leaf).paperGrain(c.ink).verticalScroll(rememberScrollState()).navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally) {
+            val img = rememberPlate("creation")
+            if (img != null) androidx.compose.foundation.Image(img, null, Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.purchaseArt), contentScale = androidx.compose.ui.layout.ContentScale.Crop)
+            Column(Modifier.fillMaxWidth().padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4),
+                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                CompletumSeal("TOTA")
+                Text("GRATIAS", style = Theme.caps(), maxLines = 1)
+                Text(stringResource(R.string.thanks_title), style = Theme.title(k, Tokens.Text.title).copy(textAlign = TextAlign.Center))
+                Text(stringResource(R.string.thanks_list), style = Theme.small().copy(textAlign = TextAlign.Center))
+                // 말씀 한 절 (본문은 번역을 따라요)
+                Hair()
+                val verse = io.github.graviton94.todaybible.core.Markup.plain(s.store.book(s.translation, 18).verse(119, 105))
+                Text(verse, style = Theme.body().copy(textAlign = TextAlign.Center))
+                Text("${s.bookName(18)} 119:105", style = Theme.small().copy(color = c.inkSoft, textAlign = TextAlign.Center), maxLines = 1)
+                Hair()
+                Text(stringResource(if (lifetime) R.string.thanks_thanks else R.string.thanks_sub), style = Theme.small().copy(color = c.giltText, textAlign = TextAlign.Center))
+                BookButton(stringResource(R.string.thanks_go, s.chapterRef(gb, gc)), Modifier.fillMaxWidth()) { close(); s.open(gb, gc) }
+                BookButton(stringResource(R.string.thanks_close), Modifier.fillMaxWidth(), quiet = true) { close() }
+            }
+        }
+    }
 }

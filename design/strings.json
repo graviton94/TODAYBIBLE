@@ -1250,5 +1250,11 @@
   "keep_go": {"en": "Back up ›", "ko": "기록 보관하기 ›"},
   "keep_later": {"en": "Later", "ko": "나중에"},
   "keep_stopped": {"en": "Auto backup has stopped", "ko": "자동 보관이 멈췄어요"},
-  "keep_repick": {"en": "Choose again ›", "ko": "위치 다시 고르기 ›"}
+  "keep_repick": {"en": "Choose again ›", "ko": "위치 다시 고르기 ›"},
+  "thanks_title": {"en": "The whole Bible is open", "ko": "성경 전체가 열렸어요"},
+  "thanks_list": {"en": "All 66 books to write out · every engraving and devotion\nMy Bible PDF · handwriting PDF · your-voice audiobook", "ko": "66권 모두 옮겨 쓰기 · 판화 모두 · 작정 모두\n나의 성경 PDF · 손글씨 PDF · 내 목소리 오디오북"},
+  "thanks_thanks": {"en": "Thank you for walking with us", "ko": "함께해 주셔서 고마워요"},
+  "thanks_sub": {"en": "Subscribed · cancel anytime in Manage subscription", "ko": "구독 중 · 언제든 구독 관리에서 해지할 수 있어요"},
+  "thanks_go": {"en": "Continue %1$s", "ko": "%1$s 이어 쓰기"},
+  "thanks_close": {"en": "Close", "ko": "닫기"}
 }

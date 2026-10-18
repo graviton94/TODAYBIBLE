@@ -1253,4 +1253,10 @@
     <string name="keep_later">나중에</string>
     <string name="keep_stopped">자동 보관이 멈췄어요</string>
     <string name="keep_repick">위치 다시 고르기 ›</string>
+    <string name="thanks_title">성경 전체가 열렸어요</string>
+    <string name="thanks_list">66권 모두 옮겨 쓰기 · 판화 모두 · 작정 모두\n나의 성경 PDF · 손글씨 PDF · 내 목소리 오디오북</string>
+    <string name="thanks_thanks">함께해 주셔서 고마워요</string>
+    <string name="thanks_sub">구독 중 · 언제든 구독 관리에서 해지할 수 있어요</string>
+    <string name="thanks_go">%1$s 이어 쓰기</string>
+    <string name="thanks_close">닫기</string>
 </resources>

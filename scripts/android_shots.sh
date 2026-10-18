@@ -47,6 +47,7 @@ adb shell input tap 540 1200; sleep 1.5; snap o07_cover_entered
 open --es tb.owner 은혜;                                             shot h01_today 5
 open --ez tb.keepNudge true;                    shot kb1_today_keep 5
 open --ez tb.archive true --ez tb.settings true;                    shot kb2_archive 5
+open --es tb.thanks life;                                           shot pt1_thanks 6
 swipe_up;                                                          shot h02_today_more 2
 open --es tb.owner ""
 open --ei tb.page 2;                        shot k01_copy_grid 5

@@ -52,6 +52,9 @@ class AppState(val store: Store) {
     var certMode: Mode? = null
     /** 평생권 화면에서 미리 보여 줄 잠긴 권. */
     var peekBook by mutableStateOf<Int?>(null)
+    /** 결제 감사 카드: true = 평생권 · false = 구독 (첫 결제 때만, 복원 · 갱신은 한 줄). 잠긴 권을 열려다 샀으면 그 권. */
+    var thanks by mutableStateOf<Boolean?>(null)
+    var thanksBook by mutableStateOf<Int?>(null)
     /** 처음 소개의 몇째 장. */
     var welcomeStep by mutableStateOf(0)
     var planId by mutableStateOf(store.planId)
