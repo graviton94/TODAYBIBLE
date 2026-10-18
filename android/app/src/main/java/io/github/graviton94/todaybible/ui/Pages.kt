@@ -230,9 +230,12 @@ fun Root(s: AppState) {
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }
         // 내보내기 창은 그것을 연 화면 (발자취 · 장 마침 …) 보다 위에
         s.exportJob?.let { ExportSheet(s, it) }
+        // 기록 보관: 내보내기 창 · 가져오기 확인 (설정 위에)
+        if (s.archiveOpen) ArchiveSheet(s)
+        s.importPreview?.let { ImportSheet(s, it) }
         // 첫 안내: 덮개 (설정 · 장 마침 · 판화 …) 가 없을 때 지금 화면의 것
         val calm = s.onboarded && !s.opening && !s.settingsOpen && s.finished == null && s.award == null && s.plateView == null && s.handBook == null &&
-            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && !s.prayersOpen && !s.galleryOpen && !s.keepOpen && s.opener == null && s.narrGate == null && s.exportGate == null && !s.news && s.prayerBell == null && s.leaveAsk == null && s.exportJob == null && !s.exporting && s.shareVerse == null && s.related == null && s.dictEntry == null && !s.planOpen && s.votumDone == null && s.modeAsk == null && s.pilgrim == null && s.liber == null && s.ritual == null && !s.shelfOpen && s.noteOpen == null && !typing && !pager.isScrollInProgress
+            !s.purchaseOpen && s.picker == null && !s.marksOpen && s.found == null && s.memoryOpen == null && s.sermonOpen == null && !s.prayersOpen && !s.galleryOpen && !s.keepOpen && s.opener == null && s.narrGate == null && s.exportGate == null && !s.news && s.prayerBell == null && s.leaveAsk == null && s.exportJob == null && !s.archiveOpen && s.importPreview == null && !s.exporting && s.shareVerse == null && s.related == null && s.dictEntry == null && !s.planOpen && s.votumDone == null && s.modeAsk == null && s.pilgrim == null && s.liber == null && s.ritual == null && !s.shelfOpen && s.noteOpen == null && !typing && !pager.isScrollInProgress
         if (calm) CoachOverlay(s, coachScreen(s, pager.currentPage))
         // 넘어가는 화면: 낭독 받기 · 파일 만들기 (확인 → 눌러서 넘어가기)
         if (s.opener == null) s.narrGate?.let { (b, ch) -> NarrationGate(s, b, ch) }

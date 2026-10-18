@@ -265,6 +265,11 @@ object Tokens {
         const val sheenMs = 5000
         const val sheenRestMs = 0
         const val feastSoonDays = 14
+        const val keepFails = 2
+        const val keepAutoDays = 7
+        const val keepDays = 30
+        const val keepChapters = 7
+        const val keepLaterDays = 14
     }
     object Ratio {
         const val plateAspect = 0.766f

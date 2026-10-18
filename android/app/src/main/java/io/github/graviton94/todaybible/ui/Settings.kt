@@ -226,43 +226,25 @@ fun SettingsPage(s: AppState) {
             Group(stringResource(R.string.backup)) {
                 Text(stringResource(R.string.backup_hint), style = Theme.small())
                 val ctx = androidx.compose.ui.platform.LocalContext.current
-                val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-                    if (uri != null) {
-                val r = io.github.graviton94.todaybible.data.Backup.read(ctx, uri)
-                if (r == null) s.toast = ctx.getString(R.string.backup_bad)
-                else {
-                    // 다시 그린 뒤에도 보이게 한 줄을 맡겨 둠
-                    s.store.pendingToast = if (r.merged) ctx.getString(R.string.backup_merged, r.added) else ctx.getString(R.string.backup_done)
-                    (ctx as? android.app.Activity)?.recreate()
-                }
-                    }
-                }
-                var where by remember { mutableStateOf(s.store.backupUri) }
-                var at by remember { mutableStateOf(s.store.backupAt) }
                 val scope = androidx.compose.runtime.rememberCoroutineScope()
-                fun keepNow(u: String) = scope.launch {
-                    val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { io.github.graviton94.todaybible.data.Backup.keep(ctx, android.net.Uri.parse(u)) }
-                    at = s.store.backupAt; s.toast = ctx.getString(if (ok) R.string.backup_saved else R.string.backup_fail)
-                }
-                val create = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
-                    if (uri != null) {
-                        runCatching { ctx.contentResolver.takePersistableUriPermission(uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION or android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION) }
-                        where = uri.toString(); s.store.backupUri = where; keepNow(where)
+                // 가져오기: 먼저 풀어 검사하고 (다른 앱 · 망가진 파일이면 한 줄), 확인 창에서 합쳐요
+                val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                    if (uri != null) scope.launch {
+                        val p = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { io.github.graviton94.todaybible.data.Backup.inspect(ctx, uri) }
+                        if (p == null) s.toast = ctx.getString(R.string.backup_bad) else s.importPreview = p
                     }
                 }
-                if (where.isEmpty()) {
-                    BookButton(stringResource(R.string.backup_drive), Modifier.fillMaxWidth()) { create.launch("harubible_backup.zip") }
-                    Text(stringResource(R.string.backup_drive_note), style = Theme.small())
-                } else {
+                s.keepRev
+                val where = s.store.backupUri; val at = s.store.backupAt
+                if (where.isNotEmpty()) {
                     val last = if (at > 0) java.time.Instant.ofEpochMilli(at).atZone(java.time.ZoneId.systemDefault())
                         .let { Lang.date(ctx0, R.string.fmt_md_time, it) } else "–"
                     Text(stringResource(R.string.backup_on, last), style = Theme.small().copy(color = c.inkSoft))
-                    Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                        BookButton(stringResource(R.string.backup_now), Modifier.weight(1f), quiet = true) { keepNow(where) }
-                        BookButton(stringResource(R.string.backup_off), Modifier.weight(1f), quiet = true) { where = ""; s.store.backupUri = "" }
-                    }
                 }
+                BookButton(stringResource(R.string.archive_open), Modifier.fillMaxWidth()) { s.archiveOpen = true }
                 BookButton(stringResource(R.string.backup_import), Modifier.fillMaxWidth(), quiet = true) { pick.launch(arrayOf("application/zip", "application/octet-stream")) }
+                Text(stringResource(R.string.import_hint), style = Theme.small())
+                if (where.isNotEmpty()) BookButton(stringResource(R.string.backup_off), Modifier.fillMaxWidth(), quiet = true) { s.store.backupUri = ""; s.keepRev++ }
             }
             }
             Fold("set_help", stringResource(R.string.set_help), stringResource(R.string.set_help_sum), openSec, spots, { toggle(it) }) {

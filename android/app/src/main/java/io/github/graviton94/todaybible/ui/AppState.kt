@@ -183,6 +183,27 @@ class AppState(val store: Store) {
     var found by mutableStateOf<Pair<String, List<io.github.graviton94.todaybible.core.Hit>?>?>(null)
     /** 내보내기 창 (저장 · 메일 · 다른 앱). */
     var exportJob by mutableStateOf<ExportJob?>(null)
+    /** 기록 내보내기 창 · 가져오기 확인 (풀어 둔 파일) · 보관 한 줄을 다시 셀 때. */
+    var archiveOpen by mutableStateOf(false)
+    var importPreview by mutableStateOf<io.github.graviton94.todaybible.data.Backup.Preview?>(null)
+    var keepRev by mutableIntStateOf(0)
+    enum class KeepNudge { DUE, STOPPED }
+    /**
+     * 오늘 화면 보관 한 줄 (종류, 지난 보관 뒤 다 쓴 장). 드라이브 자동 보관이 잘 되고 있으면 없음.
+     * 마지막 보관 뒤 30일 · 그 사이 7장 이상, 한 번도 안 했으면 처음 장을 마친 다음 날부터. 「나중에」는 14일.
+     */
+    fun keepNudge(): Pair<KeepNudge, Int>? {
+        keepRev; fills.size
+        val st = store; val day = today().toEpochDay(); val now = System.currentTimeMillis(); val dayMs = 86_400_000L
+        val auto = st.backupUri.isNotEmpty()
+        if (auto && st.backupFails >= io.github.graviton94.todaybible.design.Tokens.Motion.keepFails) return KeepNudge.STOPPED to 0
+        if (day < st.keepNudgeUntil) return null
+        if (auto && now - st.backupAt < io.github.graviton94.todaybible.design.Tokens.Motion.keepAutoDays * dayMs) return null
+        val since = (st.doneChaptersNow - st.keptChapters).coerceAtLeast(0)
+        if (st.backupAt == 0L) return if (st.firstChapterDay in 0 until day) KeepNudge.DUE to since else null
+        return if (now - st.backupAt >= io.github.graviton94.todaybible.design.Tokens.Motion.keepDays * dayMs && since >= io.github.graviton94.todaybible.design.Tokens.Motion.keepChapters) KeepNudge.DUE to since else null
+    }
+    fun keepLater() { store.keepNudgeUntil = today().toEpochDay() + io.github.graviton94.todaybible.design.Tokens.Motion.keepLaterDays; keepRev++ }
     var bookmarks by mutableStateOf(store.loadBookmarks())
     /** 필사의 지금 탭 (첫 안내가 어느 화면인지 알게). */
     var copyTabNow by mutableIntStateOf(store.copyTab)
@@ -716,6 +737,10 @@ class AppState(val store: Store) {
         // 마친 작정은 기억해 둬요 (작정을 바꿔도 남게)
         plan?.let { pl -> if (planComplete() && pl.id !in store.votumsDone) store.votumsDone = store.votumsDone + pl.id }
         // 설교 노트가 이어진 주일 수 (가장 긴 것)
+        // 보관 알림이 세는 다 쓴 장 (필사본마다 센 합) · 처음 장을 마친 날
+        val doneNow = chBy.values.sumOf { it.size }
+        if (store.doneChaptersNow != doneNow) store.doneChaptersNow = doneNow
+        if (doneNow > 0 && store.firstChapterDay < 0) store.firstChapterDay = today().toEpochDay()
         val sundays = notes.filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.SERMON }.map { it.epochDay }.toSortedSet()
         var run = 0; var best = 0; var prev = Long.MIN_VALUE
         sundays.forEach { d -> run = if (d - prev == 7L) run + 1 else 1; best = maxOf(best, run); prev = d }

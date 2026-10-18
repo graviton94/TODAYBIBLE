@@ -82,6 +82,8 @@ fun HomePage(s: AppState) {
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         // 절기 머리: 절기색 띠 · 옅은 절기 판화 · 이름 · 몇째 주 · 남은 날 · 절기 말씀
         SeasonHead(s, today)
+        // 기록 보관 한 줄 (지킬 만한 진도가 쌓였을 때만 · 푸시 없음)
+        KeepStrip(s)
         // 이어 쓰기 날수 · 요일 점 (하루의 편지 R1)
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Text(androidx.compose.ui.text.buildAnnotatedString {

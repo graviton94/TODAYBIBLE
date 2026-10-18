@@ -211,6 +211,25 @@ class Store(val context: Context) {
     var backupAt: Long
         get() = prefs.getLong("backup_at", 0)
         set(v) = prefs.edit().putLong("backup_at", v).apply()
+    /** 자동 보관이 연달아 실패한 횟수 (권한 끊김 · 드라이브 꺼짐). */
+    var backupFails: Int
+        get() = prefs.getInt("backup_fails", 0)
+        set(v) = prefs.edit().putInt("backup_fails", v).apply()
+    /** 마지막 보관 때의 다 쓴 장 수 (필사본마다 센 합) · 지금 수 (앱이 셀 때마다 적어 둠). */
+    var keptChapters: Int
+        get() = prefs.getInt("backup_kept_ch", 0)
+        set(v) = prefs.edit().putInt("backup_kept_ch", v).apply()
+    var doneChaptersNow: Int
+        get() = prefs.getInt("backup_done_ch", 0)
+        set(v) = prefs.edit().putInt("backup_done_ch", v).apply()
+    /** 처음 장 하나를 마친 날 (epochDay, -1 = 아직): 한 번도 보관 안 했을 때 그다음 날부터 알려요. */
+    var firstChapterDay: Long
+        get() = prefs.getLong("backup_first_ch", -1)
+        set(v) = prefs.edit().putLong("backup_first_ch", v).apply()
+    /** 보관 알림 줄 「나중에」: 이 날 (epochDay) 까지 조용히. */
+    var keepNudgeUntil: Long
+        get() = prefs.getLong("keep_nudge_until", 0)
+        set(v) = prefs.edit().putLong("keep_nudge_until", v).apply()
     /** 위젯이 쓰는 오늘의 분량 (길잡이 반영). */
     var lastGoal: Int
         get() = prefs.getInt("last_goal", 0)
