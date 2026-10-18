@@ -12,6 +12,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -67,17 +68,19 @@ private data class BookState(val doneChapters: Int, val verses: Int, val total: 
 fun LibraryPage(s: AppState) {
     s.listenAt?.let { (b, ch) -> androidx.compose.runtime.key(b) { BibleReader(s, b, ch) }; return }
     val c = Theme.c; val k = s.korean; val ctx = androidx.compose.ui.platform.LocalContext.current
-    val p = s.progress; val filled = p.filled(s.translation)
+    // 서재의 진행은 지금 쓰는 필사본 기준 (권을 누르면 세 필사본이 함께)
+    val wm = s.writingMode
+    val p = s.progress; val filled = p.filled(s.translation, wm)
     // 시작한 권만 본문을 읽어 셈 (뒤에서)
-    val states by androidx.compose.runtime.produceState(emptyMap<Int, BookState>(), filled.size, s.translation) {
+    val states by androidx.compose.runtime.produceState(emptyMap<Int, BookState>(), filled.size, s.translation, wm) {
         val tr = s.translation; val fills = s.fills.toList()
         value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
             filled.map { VerseKey(it).book }.toSet().associateWith { b ->
                 val t = s.store.book(tr, b)
-                val chapters = (1..t.chapterCount).map { p.chapterFraction(tr, t, it) }
+                val chapters = (1..t.chapterCount).map { p.chapterFraction(tr, t, it, wm) }
                 BookState(chapters.count { it >= 1f }, filled.count { VerseKey(it).book == b }, t.fillableTotal,
                     chapters.indexOfFirst { it > 0f && it < 1f }.takeIf { it >= 0 }?.plus(1),
-                    fills.filter { it.translation == tr && it.key.book == b }.maxOfOrNull { it.atMillis } ?: 0L)
+                    fills.filter { it.translation == tr && it.key.book == b && it.mode == wm }.maxOfOrNull { it.atMillis } ?: 0L)
             }
         }
     }
@@ -97,8 +100,8 @@ fun LibraryPage(s: AppState) {
         if (going.isNotEmpty()) Column {
             SectionHead("PERGERE", stringResource(R.string.lib_going), 1)
             going.forEach { (b, st) ->
-                val at = st.partial ?: (s.store.book(s.translation, b).let { t -> (1..t.chapterCount).firstOrNull { p.chapterFraction(s.translation, t, it) < 1f } } ?: 1)
-                Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.open(b, at) }.padding(vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+                val at = st.partial ?: (s.store.book(s.translation, b).let { t -> (1..t.chapterCount).firstOrNull { p.chapterFraction(s.translation, t, it, wm) < 1f } } ?: 1)
+                Column(Modifier.fillMaxWidth().clickable(role = Role.Button) { s.openDirect = wm; s.open(b, at) }.padding(vertical = Tokens.Space.s3), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                     Row(verticalAlignment = Alignment.Bottom) {
                         Text(s.bookName(b), style = Theme.title(k), maxLines = 1, modifier = Modifier.weight(1f))
                         Text("${(st.fraction * 100).toInt().coerceAtLeast(1)}%", style = Theme.lining(Tokens.Text.title).copy(color = c.giltText), maxLines = 1)
@@ -264,12 +267,20 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
         Text(io.github.graviton94.todaybible.core.Latin.book(b), style = Theme.caps(), maxLines = 1)
         Text(s.bookName(b), style = Theme.title(s.korean, Tokens.Text.display))
-        // 한 줄 요약: 다 쓴 장 · 쓴 절
-        val doneCh = (1..t.chapterCount).count { p.chapterFraction(s.translation, t, it) >= 1f }
-        val allV = (1..t.chapterCount).sumOf { t.fillable(it).size }
-        val doneV = (1..t.chapterCount).sumOf { ch -> t.fillable(ch).count { p.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(b, ch, it)) } }
-        val nf = java.text.NumberFormat.getIntegerInstance()
-        Text(stringResource(R.string.grid_sum, t.chapterCount, doneCh, nf.format(allV), nf.format(doneV)), style = Theme.small())
+        // 세 필사본 (1.7): 권마다 필사본 세 줄 (다 쓴 장 / 장 수). 지금 쓰는 필사본이 맨 위
+        val modes = listOf(io.github.graviton94.todaybible.core.Mode.TYPE, io.github.graviton94.todaybible.core.Mode.PAPER, io.github.graviton94.todaybible.core.Mode.ALOUD).sortedBy { if (it == s.writingMode) 0 else 1 }
+        val doneBy = remember(b, s.fills.size, s.translation) { modes.associateWith { m -> (1..t.chapterCount).count { p.chapterDone(s.translation, t, it, m) } } }
+        modes.forEach { m ->
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                Text(stringResource(when (m) { io.github.graviton94.todaybible.core.Mode.ALOUD -> R.string.book_aloud; io.github.graviton94.todaybible.core.Mode.PAPER -> R.string.book_paper; else -> R.string.book_type }),
+                    style = Theme.small().copy(color = if (m == s.writingMode) c.ink else c.inkSoft), maxLines = 1, modifier = Modifier.width(Tokens.Size.votumBar))
+                Box(Modifier.weight(1f).height(Tokens.Stroke.rule).background(c.hair)) {
+                    val f = (doneBy[m] ?: 0).toFloat() / t.chapterCount
+                    if (f > 0f) Box(Modifier.fillMaxWidth(f).height(Tokens.Stroke.rule).background(c.gilt))
+                }
+                Text(stringResource(R.string.mode_ask_count, doneBy[m] ?: 0, t.chapterCount), style = Theme.small(), maxLines = 1)
+            }
+        }
         // 나의 순례길: 이 권에서 쓰다 멈춘 장이 있으면 맨 위에
         remember(s.fills.size, s.pausedRev, b) { s.pausedChapters(40).firstOrNull { it.book == b } }?.let { pz ->
             Row(Modifier.fillMaxWidth().background(c.gilt.copy(alpha = Tokens.Alpha.foldWash)).drawBehind { drawRect(c.gilt, Offset.Zero, Size(Tokens.Stroke.rule.toPx() * 1.5f, size.height)) }
@@ -290,12 +301,11 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
             key(stringResource(R.string.legend_part), Modifier.background(c.paper).drawBehind { drawRect(c.gilt, Offset(0f, size.height * 0.7f), Size(size.width, size.height * 0.3f)) })
             key(stringResource(R.string.legend_todo), Modifier.background(c.paper).border(Tokens.Stroke.hair, c.hair))
         }
-        if (p.bookDone(s.translation, t)) BookButton(stringResource(R.string.my_bible_pdf), Modifier.fillMaxWidth(), locked = s.premiumOn, quiet = true) { s.requestPdf(b) }
+        // 결과물은 필사본마다: 타자본 → 나의 성경 PDF (다 쓴 장만), 낭독본 → 오디오북, 손글씨본 → 손글씨 PDF
+        if ((doneBy[io.github.graviton94.todaybible.core.Mode.TYPE] ?: 0) > 0) BookButton(stringResource(R.string.my_bible_pdf) + " · " + stringResource(R.string.book_type), Modifier.fillMaxWidth(), locked = s.premiumOn, quiet = true) { s.requestPdf(b) }
         val ctx = androidx.compose.ui.platform.LocalContext.current
         // 내 목소리로 읽은 장이 있으면: 한 권 오디오북
-        val voiced by androidx.compose.runtime.produceState(0, b, s.voiceRev) {
-            value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { (1..t.chapterCount).count { io.github.graviton94.todaybible.data.Voice.verses(ctx, s.translation.id, b, it).isNotEmpty() } }
-        }
+        val voiced = doneBy[io.github.graviton94.todaybible.core.Mode.ALOUD] ?: 0
         // 낭독 받아 두기: 인터넷 없는 곳에서도 이 권을 들어요 (폰 목소리면 필요 없음)
         if (s.narrator != io.github.graviton94.todaybible.data.Narration.DEVICE) {
             val keepRun = s.keeping?.takeIf { it.first == b }
@@ -318,7 +328,7 @@ fun ChapterGrid(s: AppState, b: Int, onPick: (Int) -> Unit) {
         Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             (1..t.chapterCount).chunked(FOLIO_COLS).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                    row.forEach { ch -> Folio(ch, t.fillable(ch).size, p.chapterFraction(s.translation, t, ch), Modifier.weight(1f)) { onPick(ch) } }
+                    row.forEach { ch -> Folio(ch, t.fillable(ch).size, p.chapterFraction(s.translation, t, ch, s.writingMode), Modifier.weight(1f)) { onPick(ch) } }
                     repeat(FOLIO_COLS - row.size) { Box(Modifier.weight(1f)) }
                 }
             }

@@ -68,6 +68,11 @@ class CoreTest {
         val p = Progress(fills)
         assertTrue(p.chapterDone(Translation.KRV, ps23, 23))
         assertFalse(p.chapterDone(Translation.KJV, ps23, 23))
+        // 세 필사본: 타자본으로 다 쓴 장도 손글씨본은 처음부터
+        assertTrue(p.chapterDone(Translation.KRV, ps23, 23, Mode.TYPE))
+        assertFalse(p.chapterDone(Translation.KRV, ps23, 23, Mode.PAPER))
+        assertEquals(1, p.nextVerse(Translation.KRV, ps23, 23, Mode.PAPER))
+        assertEquals(null, p.nextVerse(Translation.KRV, ps23, 23))
         assertEquals(Pieces.COUNT, Pieces.revealed(1f))
         assertEquals(6, Pieces.revealed(0.5f))
         assertEquals((0 until Pieces.COUNT).toSet(), Pieces.order(7).toSet())
@@ -314,12 +319,14 @@ class SeasonsTest {
 }
 
 class MergeTest {
-    @Test fun fillsKeepEarliestPerVerseAndUnion() {
+    @Test fun fillsKeepEarliestPerVerseModeAndUnion() {
         val phone = listOf("KRV\t1001001\tTYPE\t100\t5000", "KRV\t1001002\tTYPE\t100\t6000")
         val tablet = listOf("KRV\t1001002\tPAPER\t99\t4000", "KRV\t1001003\tPAPER\t101\t7000", "broken line")
         val m = Merge.fills(phone, tablet)
-        assertEquals(listOf("KRV\t1001002\tPAPER\t99\t4000", "KRV\t1001001\tTYPE\t100\t5000", "KRV\t1001003\tPAPER\t101\t7000"), m)
-        assertEquals(1, Merge.added(phone, m))
+        // 세 필사본 (1.7): 같은 절이라도 방식이 다르면 둘 다 남아요
+        assertEquals(listOf("KRV\t1001002\tPAPER\t99\t4000", "KRV\t1001001\tTYPE\t100\t5000", "KRV\t1001002\tTYPE\t100\t6000", "KRV\t1001003\tPAPER\t101\t7000"), m)
+        assertEquals(2, Merge.added(phone, m))
+        assertEquals(1, Merge.fills(listOf("KRV\t1001001\tTYPE\t2\t9"), listOf("KRV\t1001001\tTYPE\t1\t1")).size)
         // 같은 번역이 아니면 다른 기록
         assertEquals(2, Merge.fills(listOf("KRV\t1001001\tTYPE\t1\t1"), listOf("KJV\t1001001\tTYPE\t1\t1")).size)
     }

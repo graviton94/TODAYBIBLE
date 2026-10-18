@@ -48,14 +48,18 @@ class AppState(val store: Store) {
     var pdfBook by mutableStateOf<Int?>(null)
     /** 필사 완성 증서를 만들 것: 권 (0..65) 또는 Certificate.OT · NT · ALL. */
     var certFor by mutableStateOf<Int?>(null)
+    /** 필사본 증서의 방식 (null = 방식 상관없이). */
+    var certMode: Mode? = null
     /** 평생권 화면에서 미리 보여 줄 잠긴 권. */
     var peekBook by mutableStateOf<Int?>(null)
     /** 처음 소개의 몇째 장. */
     var welcomeStep by mutableStateOf(0)
     var planId by mutableStateOf(store.planId)
     var planOpen by mutableStateOf(false)
-    /** 이 장을 다른 방식으로 쓰던 중일 때 묻는 창: 쓰던 방식 (탭 번호) · 방식마다 쓴 절 수 · 모두 쓴 절 · 장의 절. */
-    data class ModeAsk(val last: Int, val counts: List<Int>, val done: Int, val total: Int)
+    /** 장을 열 때 묻는 창: 쓰던 방식 (탭 번호) · 방식마다 쓴 절 수 · 다음 절 · 장의 절. 탭 순서 (낭독 · 타자 · 손글씨). */
+    data class ModeAsk(val last: Int, val counts: List<Int>, val next: List<Int?>, val total: Int)
+    /** 방식을 정해 장을 열 때 (오늘의 이어 쓰기 · 순례길 이어 쓰기): 묻지 않고 그 필사본으로. */
+    var openDirect: Mode? = null
     var modeAsk by mutableStateOf<ModeAsk?>(null)
     /** 이미 물어본 장 (번역:권:장). */
     var modeAsked: String? = null
@@ -407,23 +411,32 @@ class AppState(val store: Store) {
     fun resumePlace(): Pair<Int, Int> {
         // 펼쳐 보기만 한 장 (판화를 보러 7장으로 …) 이 아니라 실제로 마지막에 쓴 절의 장
         val (b, c) = lastWritten()?.let { it.book to it.chapter } ?: store.bookmark(translation)
-        val fill = store.book(translation, b).fillable(c)
-        val done = fill.isNotEmpty() && fill.all { progress.isFilled(translation, io.github.graviton94.todaybible.core.VerseKey(b, c, it)) }
+        // 다 썼는지는 지금 쓰는 필사본 기준 (타자본으로 마친 장이면 다음 장)
+        val done = progress.chapterDone(translation, store.book(translation, b), c, writingMode)
         return if (done) nextChapter(b, c) else b to c
     }
 
     /** 이 번역에서 마지막으로 쓴 절 (쓴 시각 순). 없으면 null. */
     fun lastWritten(): io.github.graviton94.todaybible.core.VerseKey? = fills.filter { it.translation == translation }.maxByOrNull { it.atMillis }?.key
+    /** 세 필사본 (1.7): 탭 번호 ↔ 방식. 0 낭독 · 1 타자 · 2 손글씨. */
+    fun modeOf(tab: Int): Mode = when (tab) { 0 -> Mode.ALOUD; 2 -> Mode.PAPER; else -> Mode.TYPE }
+    fun tabOf(m: Mode): Int = when (m) { Mode.ALOUD -> 0; Mode.PAPER -> 2; Mode.TYPE -> 1 }
+    /** 지금 쓰는 필사본: 마지막으로 쓴 방식 (아직 없으면 필사 탭). 오늘 · 서재 · 순례길의 진도가 이 방식으로 보여요. */
+    val writingMode: Mode get() = fills.lastOrNull { it.translation == translation }?.mode ?: modeOf(store.copyTab)
+    /** 이 장의 마지막 방식 (없으면 null). */
+    fun chapterMode(b: Int, c: Int): Mode? = fills.lastOrNull { it.translation == translation && it.key.book == b && it.key.chapter == c }?.mode
     /** 쓰다 멈춘 장들: 가장 최근에 쓴 순서로, 다 쓰지 않은 장만 (권, 장, 다음 절, 쓴 절 수, 전체 절 수). */
-    data class Paused(val book: Int, val chapter: Int, val next: Int, val done: Int, val total: Int)
+    data class Paused(val book: Int, val chapter: Int, val next: Int, val done: Int, val total: Int, val mode: Mode = Mode.TYPE)
     fun pausedChapters(limit: Int = 3, except: Pair<Int, Int>? = null): List<Paused> {
-        val seen = LinkedHashSet<Pair<Int, Int>>()
-        fills.filter { it.translation == translation }.sortedByDescending { it.atMillis }.forEach { seen.add(it.key.book to it.key.chapter) }
+        // 장마다 마지막에 쓴 방식으로 (그 필사본에서 다 못 쓴 장만)
+        val seen = LinkedHashMap<Pair<Int, Int>, Mode>()
+        fills.filter { it.translation == translation }.sortedByDescending { it.atMillis }.forEach { seen.putIfAbsent(it.key.book to it.key.chapter, it.mode) }
         val hidden = store.hiddenPaused
-        return seen.asSequence().filter { it != except && "${translation.id}:${it.first}:${it.second}" !in hidden }.mapNotNull { (b, c) ->
+        return seen.entries.asSequence().filter { it.key != except && "${translation.id}:${it.key.first}:${it.key.second}" !in hidden }.mapNotNull { (bc, m) ->
+            val (b, c) = bc
             val t = store.book(translation, b); val fill = t.fillable(c)
-            val done = fill.count { progress.isFilled(translation, io.github.graviton94.todaybible.core.VerseKey(b, c, it)) }
-            if (done >= fill.size) null else Paused(b, c, progress.nextVerse(translation, t, c) ?: fill.first(), done, fill.size)
+            val done = fill.count { progress.isFilled(translation, io.github.graviton94.todaybible.core.VerseKey(b, c, it), m) }
+            if (done >= fill.size) null else Paused(b, c, progress.nextVerse(translation, t, c, m) ?: fill.first(), done, fill.size, m)
         }.take(limit).toList()
     }
 
@@ -640,11 +653,17 @@ class AppState(val store: Store) {
     fun setReminder(h: Int, m: Int = reminderMinute) { reminderHour = h; store.reminderHour = h; reminderMinute = m; store.reminderMinute = m; if (h >= 0) { store.lastReminderHour = h; val today = java.time.LocalDate.now().toEpochDay(); store.reminderDay = if (!java.time.LocalTime.now().isBefore(java.time.LocalTime.of(h, m)) || store.postedDay == today) today else -1 }; io.github.graviton94.todaybible.data.Reminder.schedule(store.context, h) }
 
     /** 절(들)을 채움. 장을 다 채우면 finished, 새 발자취가 생기면 award. */
+    /** 방금 마친 장의 방식 · 다른 필사본으로 이미 마친 장인지 (마침 화면을 짧게). */
+    var finishedMode: Mode = Mode.TYPE
+    var finishedAgain = false
     fun fill(verses: List<Int>, mode: Mode) {
         val day = today().toEpochDay(); val now = System.currentTimeMillis()
-        val tr = translation; val already = progress.filled(tr)
+        // 세 필사본: 같은 절도 방식마다 한 번씩
+        val tr = translation; val already = progress.filled(tr, mode)
         val new = verses.map { VerseKey(book, chapter, it) }.filter { it.raw !in already }.map { Fill(tr, it, mode, day, now) }
         if (new.isEmpty()) return
+        val t0 = text(); val otherDone = Mode.entries.any { it != mode && progress.chapterDone(tr, t0, chapter, it) }
+        val bookBefore = progress.bookDone(tr, t0)
         if (store.startDay < 0) store.startDay = day
         // 위젯은 절마다 다시 그리지 않아요 (앱을 떠날 때 · 자정에 한 번)
         store.append(new); fills.addAll(new)
@@ -653,12 +672,13 @@ class AppState(val store: Store) {
         val t = text()
         val wasMet = io.github.graviton94.todaybible.core.Goal.met(effectiveGoal(), todayVerses() - new.size, 0)
         val fx = io.github.graviton94.todaybible.data.Effects
-        if (progress.chapterDone(tr, t, chapter)) {
+        if (progress.chapterDone(tr, t, chapter, mode)) {
+            finishedMode = mode; finishedAgain = otherDone
             // 효과음: 그 장에 판화가 있으면 화첩에 걸리는 종, 없으면 COMPLETUM 인장 (권 다 씀은 의식이 열릴 때)
             fx.play(store.context, if (store.plateFor(book, chapter) != null) io.github.graviton94.todaybible.data.Effects.Fx.PLATE else io.github.graviton94.todaybible.data.Effects.Fx.SEAL)
             finished = book to chapter; store.finishedCount = store.finishedCount + 1
             // 권의 마지막 장까지: 장 마침 다음에 권 다 쓰기 의식 (권마다 한 번)
-            if (progress.bookDone(tr, t) && "${tr.id}:$book" !in store.ritualSeen) pendingRitual = book
+            if (!bookBefore && progress.bookDone(tr, t) && "${tr.id}:$book" !in store.ritualSeen) pendingRitual = book
         }
         else {
             fx.play(store.context, io.github.graviton94.todaybible.data.Effects.Fx.VERSE)

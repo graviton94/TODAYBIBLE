@@ -121,25 +121,30 @@ fun CopyPage(s: AppState) {
     // 기도문 따라 쓰기: 그 범위의 절만 (잠긴 책이어도 무료)
     val pass = s.prayerPassHere()
     val fillable = t.fillable(s.chapter).let { all -> if (pass != null) all.filter { it in pass.from..pass.to } else all }
-    val next = s.target?.takeIf { it in fillable && !p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) }
-        ?: if (pass != null) fillable.firstOrNull { !p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) } else p.nextVerse(s.translation, t, s.chapter)
-    // 기도문 밖으로 잠긴 장에 왔으면 (다른 장 고르기 등) 평생권 안내
-    if (pass == null && s.locked(s.book)) { LaunchedEffect(s.book, s.chapter) { s.peekBook = s.book; s.purchaseOpen = true }; Box(Modifier.fillMaxSize().padding(Tokens.Space.s5)) { LifetimeCard(s) }; return }
-    val doneCount = fillable.count { p.isFilled(s.translation, VerseKey(s.book, s.chapter, it)) }
     // 낭독 · 타자 · 손글씨 (교인 인터뷰: 낭독을 가장 많이 씀). 마지막에 고른 방식으로 열려요.
     var tab by remember { mutableIntStateOf(s.store.copyTab) }
+    // 세 필사본 (1.7): 탭마다 그 필사본의 진도 (다음 절 · 쓴 절)
+    val mode = s.modeOf(tab)
+    val next = s.target?.takeIf { it in fillable && !p.isFilled(s.translation, VerseKey(s.book, s.chapter, it), mode) }
+        ?: if (pass != null) fillable.firstOrNull { !p.isFilled(s.translation, VerseKey(s.book, s.chapter, it), mode) } else p.nextVerse(s.translation, t, s.chapter, mode)
+    // 기도문 밖으로 잠긴 장에 왔으면 (다른 장 고르기 등) 평생권 안내
+    if (pass == null && s.locked(s.book)) { LaunchedEffect(s.book, s.chapter) { s.peekBook = s.book; s.purchaseOpen = true }; Box(Modifier.fillMaxSize().padding(Tokens.Space.s5)) { LifetimeCard(s) }; return }
+    val doneCount = fillable.count { p.isFilled(s.translation, VerseKey(s.book, s.chapter, it), mode) }
     androidx.compose.runtime.SideEffect { s.copyTabNow = tab }
     LaunchedEffect(s.forceTab) { s.forceTab?.let { tab = it; s.store.copyTab = it; s.forceTab = null } }
     LaunchedEffect(s.aloudNow) { if (s.aloudNow) { tab = 0; s.store.copyTab = 0; if (next == null) s.aloudNow = false } }
-    // 이 장을 다른 방식으로 쓰던 중이면 장을 열 때 한 번 물어요 (방식마다 쓴 절 수와 함께, 다른 방식도 고를 수 있게). 창은 Pages 에서 맨 위에.
-    LaunchedEffect(s.book, s.chapter, tab) {
+    // 장을 열 때 (서재 · 장 고르기 · 순례길): 이 장에 쓴 기록이 있으면 어떤 필사본으로 쓸지 한 번 물어요 (방식마다 진도 · 다음 절).
+    // 오늘의 「이어 쓰기」 처럼 방식을 정해 들어온 때 (openDirect) 는 묻지 않고 그 방식으로.
+    LaunchedEffect(s.book, s.chapter) {
         val key = "${s.translation.id}:${s.book}:${s.chapter}"
-        if (s.modeAsked == key || pass != null || next == null || s.aloudNow) return@LaunchedEffect
-        val modeTab = mapOf(io.github.graviton94.todaybible.core.Mode.ALOUD to 0, io.github.graviton94.todaybible.core.Mode.TYPE to 1, io.github.graviton94.todaybible.core.Mode.PAPER to 2)
-        val ch = s.fills.filter { it.translation == s.translation && it.key.book == s.book && it.key.chapter == s.chapter }
-        val last = ch.maxByOrNull { it.atMillis }?.let { modeTab[it.mode] } ?: return@LaunchedEffect
+        if (s.modeAsked == key || pass != null || s.aloudNow) return@LaunchedEffect
         s.modeAsked = key
-        if (last != tab) s.modeAsk = AppState.ModeAsk(last, (0..2).map { i -> ch.count { modeTab[it.mode] == i } }, doneCount, fillable.size)
+        s.openDirect?.let { m -> s.openDirect = null; if (s.tabOf(m) != tab) { tab = s.tabOf(m); s.store.copyTab = tab }; return@LaunchedEffect }
+        val ch = s.fills.filter { it.translation == s.translation && it.key.book == s.book && it.key.chapter == s.chapter }
+        val last = ch.maxByOrNull { it.atMillis }?.mode ?: return@LaunchedEffect
+        val modes = listOf(io.github.graviton94.todaybible.core.Mode.ALOUD, io.github.graviton94.todaybible.core.Mode.TYPE, io.github.graviton94.todaybible.core.Mode.PAPER)
+        s.modeAsk = AppState.ModeAsk(s.tabOf(last), modes.map { m -> fillable.count { p.isFilled(s.translation, VerseKey(s.book, s.chapter, it), m) } },
+            modes.map { m -> p.nextVerse(s.translation, t, s.chapter, m) }, fillable.size)
     }
 
     // 집중: 머리 · 탭 · 아래 이름표를 걷고 지금 쓰는 절만

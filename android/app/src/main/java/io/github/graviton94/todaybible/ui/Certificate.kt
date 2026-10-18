@@ -42,13 +42,14 @@ object Certificate {
     private class Data(val which: Int, val korean: Boolean, val caps: String, val title: String, val lines: List<String>, val modes: List<Pair<String, Int>>,
                        val quote: String, val dedication: String, val date: String, val seal: String, val plates: List<String>, val plateLine: String, val nums: List<Pair<String, String>>)
 
-    private fun data(ctx0: Context, store: Store, tr: Translation, which: Int): Data {
+    private fun data(ctx0: Context, store: Store, tr: Translation, which: Int, mode: Mode? = null): Data {
         // 증서의 글 (이름 · 날짜 · 권 이름 · 판화) 은 앱 언어로, 인용한 말씀만 번역으로. 글꼴은 한글이 섞이면 한글 글꼴
         val ui = Lang.uiKorean(ctx0); val ut = if (ui) Translation.KRV else Translation.KJV
         val korean = tr == Translation.KRV || ui
         val ctx = Lang.content(ctx0, ut)
         val bs = books(which).toSet()
-        val fills = store.loadFills().filter { it.translation == tr && it.key.book in bs }
+        // 필사본 증서 (1.7): 그 방식으로 쓴 기록만
+        val fills = store.loadFills().filter { it.translation == tr && it.key.book in bs && (mode == null || it.mode == mode) }
         val first = fills.minOfOrNull { it.epochDay } ?: LocalDate.now().toEpochDay(); val last = fills.maxOfOrNull { it.epochDay } ?: first
         val fmt = DateTimeFormatter.ofPattern(ctx.getString(R.string.fmt_ymd), Lang.locale(ut))
         val long = DateTimeFormatter.ofPattern(ctx.getString(R.string.cert_date), Lang.locale(ut))
@@ -57,7 +58,8 @@ object Certificate {
         val bookName = { b: Int -> Canon.books[b].let { if (ui) it.ko else it.en } }
         val owner = store.ownerName.trim()
         val single = which >= 0
-        val what = if (single) bookName(which) else ctx.getString(when (which) { OT -> R.string.cert_ot; NT -> R.string.cert_nt; else -> R.string.cert_all })
+        val bookOf = mode?.let { m -> " · " + ctx.getString(when (m) { Mode.ALOUD -> R.string.book_aloud; Mode.PAPER -> R.string.book_paper; else -> R.string.book_type }) }.orEmpty()
+        val what = if (single) bookName(which) + bookOf else ctx.getString(when (which) { OT -> R.string.cert_ot; NT -> R.string.cert_nt; else -> R.string.cert_all })
         val lines = buildList {
             if (owner.isNotEmpty()) add(ctx.getString(R.string.cert_who, owner))
             add(ctx.getString(R.string.cert_what, what, chapters, "%,d".format(verses)))
@@ -183,8 +185,8 @@ object Certificate {
     }
 
     /** PDF (A4) 와 카드 그림을 만들어요. 돌려주는 것: [pdf, png]. */
-    fun make(ctx: Context, store: Store, tr: Translation, which: Int): List<File> {
-        val d = data(ctx, store, tr, which)
+    fun make(ctx: Context, store: Store, tr: Translation, which: Int, mode: Mode? = null): List<File> {
+        val d = data(ctx, store, tr, which, mode)
         val dir = File(ctx.cacheDir, "share").apply { mkdirs() }
         val name = if (which >= 0) Canon.books[which].let { if (d.korean) it.ko else it.en }.replace(' ', '_') else when (which) { OT -> "OT"; NT -> "NT"; else -> "Bible" }
         val pdf = File(dir, "${name}_${ctx.getString(R.string.cert_file)}.pdf")

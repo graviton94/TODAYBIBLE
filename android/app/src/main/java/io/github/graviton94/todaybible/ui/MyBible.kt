@@ -62,7 +62,8 @@ object MyBible {
         val korean = tr == Translation.KRV || ui
         val text = store.book(tr, book)
         val firstDay = HashMap<Int, Long>()
-        store.loadFills().filter { it.translation == tr && it.key.book == book }.forEach { f -> firstDay.merge(f.key.raw, f.epochDay) { a, b -> minOf(a, b) } }
+        // 타자본 (1.7 세 필사본): 타자로 쓴 절만, 다 쓴 장만. 다른 방식의 절은 섞지 않아요 (손글씨 · 낭독은 손글씨 PDF · 오디오북으로)
+        store.loadFills().filter { it.translation == tr && it.key.book == book && it.mode == io.github.graviton94.todaybible.core.Mode.TYPE }.forEach { f -> firstDay.merge(f.key.raw, f.epochDay) { a, b -> minOf(a, b) } }
         val name = if (ui) io.github.graviton94.todaybible.core.Canon.books[book].ko else io.github.graviton94.todaybible.core.Canon.books[book].en
         val c = Tokens.light
         val serif = ResourcesCompat.getFont(ctx, if (korean) R.font.serif_kr_medium else R.font.garamond_medium)
@@ -79,7 +80,7 @@ object MyBible {
             val plate = store.coverPlate.takeIf { it.isNotEmpty() } ?: store.plates.firstOrNull { it.book == book }?.id ?: "creation"
             val who = if (owner.isNotBlank()) ctx.getString(R.string.mybook_named, owner) else ctx.getString(R.string.mybook)
             val chDone = (1..text.chapterCount).count { ch -> text.fillable(ch).let { f -> f.isNotEmpty() && f.all { v -> firstDay.containsKey(VerseKey(book, ch, v).raw) } } }
-            val lines = listOfNotNull(ctx.getString(R.string.pdf_cover_book, name, text.chapterCount, chDone),
+            val lines = listOfNotNull(ctx.getString(R.string.book_type) + " · " + ctx.getString(R.string.pdf_cover_book, name, text.chapterCount, chDone),
                 days.takeIf { it.isNotEmpty() }?.let { "${LocalDate.ofEpochDay(it.min()).format(fmt)} – ${LocalDate.ofEpochDay(it.max()).format(fmt)}" })
             cover(ctx, pg.canvas, plate, "BIBLIA MANU SCRIPTA", who, lines, store.dedication, korean)
             doc.finishPage(pg)
@@ -113,8 +114,9 @@ object MyBible {
             pg.canvas.drawText(left, M.toFloat(), M.toFloat(), head); pg.canvas.drawText(right, (wb - M).toFloat(), M.toFloat(), headRight)
             pg.canvas.drawLine(M.toFloat(), M + 5f, (wb - M).toFloat(), M + 5f, Paint().apply { color = c.hair.toArgb(); strokeWidth = 0.4f })
         }
-        header(1)
-        for (ch in 1..text.chapterCount) {
+        val typed = (1..text.chapterCount).filter { ch -> text.fillable(ch).let { f -> f.isNotEmpty() && f.all { v -> firstDay.containsKey(VerseKey(book, ch, v).raw) } } }
+        if (typed.isNotEmpty()) header(typed.first())
+        for (ch in typed) {
             if (y > H - M - 60) { close(pg); pg = open(); header(ch); y = M + 14f }
             pg.canvas.drawText(if (store.latinHeads) io.github.graviton94.todaybible.core.Latin.roman(ch) else "$ch", M.toFloat(), y + 26f, chap); y += 40f
             for (v in text.fillable(ch)) {
@@ -194,7 +196,7 @@ object MyBible {
         val title = ResourcesCompat.getFont(ctx, if (korean) R.font.title_kr else R.font.garamond_semibold)
         fun name(b: Int) = if (ui) io.github.graviton94.todaybible.core.Canon.books[b].ko else io.github.graviton94.todaybible.core.Canon.books[b].en
         val firstDay = HashMap<Int, Long>()
-        store.loadFills().filter { it.translation == tr }.forEach { f -> firstDay.merge(f.key.raw, f.epochDay) { a, b -> minOf(a, b) } }
+        store.loadFills().filter { it.translation == tr && it.mode == io.github.graviton94.todaybible.core.Mode.PAPER }.forEach { f -> firstDay.merge(f.key.raw, f.epochDay) { a, b -> minOf(a, b) } }
         val doc = PdfDocument(); var no = 0
         fun page(): PdfDocument.Page { no++; return doc.startPage(PdfDocument.PageInfo.Builder(W, H, no).create()).also { it.canvas.drawColor(c.leaf.toArgb()) } }
         run {

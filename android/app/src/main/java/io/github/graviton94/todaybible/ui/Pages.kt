@@ -176,8 +176,8 @@ fun Root(s: AppState) {
             val w = s.certFor ?: return@LaunchedEffect
             val what = if (w >= 0) s.bookName(w) else ctx.getString(when (w) { Certificate.OT -> R.string.cert_ot; Certificate.NT -> R.string.cert_nt; else -> R.string.cert_all })
             val title = ctx.getString(R.string.cert_export, what); s.exportGate = ExportGate(title, eyebrow = "CERTIFICATIO")
-            val files = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { Certificate.make(ctx, s.store, s.translation, w) }.getOrNull() }
-            s.certFor = null; s.gateDone(title, files?.let { ExportJob(it, "*/*", title) })
+            val files = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { Certificate.make(ctx, s.store, s.translation, w, s.certMode) }.getOrNull() }
+            s.certFor = null; s.certMode = null; s.gateDone(title, files?.let { ExportJob(it, "*/*", title) })
         }
         LaunchedEffect(s.reflectYear) {
             val y = s.reflectYear ?: return@LaunchedEffect
@@ -202,7 +202,9 @@ fun Root(s: AppState) {
             s.exporting = true
             val job = try { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching {
                 val V = io.github.graviton94.todaybible.data.Voice
-                val files = (1..s.store.book(s.translation, b).chapterCount).flatMap { ch -> V.verses(ctx, s.translation.id, b, ch).map { it.second } }
+                // 낭독본 (1.7): 낭독으로 다 쓴 장만 (빈 절 없이 이어지게)
+                val bt = s.store.book(s.translation, b)
+                val files = (1..bt.chapterCount).filter { ch -> s.progress.chapterDone(s.translation, bt, ch, io.github.graviton94.todaybible.core.Mode.ALOUD) }.flatMap { ch -> V.verses(ctx, s.translation.id, b, ch).map { it.second } }
                 if (files.isEmpty()) return@runCatching null
                 val name = s.bookName(b)
                 val audio = java.io.File(ctx.cacheDir, "share/${name.replace(' ', '_')}_${ctx.getString(R.string.audiobook_file)}.m4a")

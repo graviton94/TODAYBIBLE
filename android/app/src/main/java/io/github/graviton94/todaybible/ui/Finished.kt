@@ -105,6 +105,9 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
     ) {
         HeadText(s, book, chapter)
         Text(stringResource(R.string.chapter_done, s.bookName(book), chapter), style = Theme.title(k).copy(textAlign = TextAlign.Center))
+        // 세 필사본: 다른 필사본으로 이미 마친 장이면 한 줄로 알려요 (낭독본으로도 마쳤어요)
+        if (s.finishedAgain) Text(stringResource(R.string.finished_again, stringResource(when (s.finishedMode) { io.github.graviton94.todaybible.core.Mode.ALOUD -> R.string.book_aloud; io.github.graviton94.todaybible.core.Mode.PAPER -> R.string.book_paper; else -> R.string.book_type })),
+            style = Theme.small().copy(color = c.giltText, textAlign = TextAlign.Center))
         Text(fmtDate(R.string.fmt_date_day, s.today()), style = Theme.small(), maxLines = 1)
         if (plate != null) {
             // 판화 한 점: 가는 금빛 테 안에 그대로 (천천히 밝아져요)

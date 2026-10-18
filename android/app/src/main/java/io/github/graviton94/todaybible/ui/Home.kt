@@ -74,8 +74,10 @@ fun HomePage(s: AppState) {
     val pn = s.planNext()
     val ct = s.store.book(s.translation, cb)
     val goal = s.effectiveGoal()
-    val fill = ct.fillable(cc); val inCh = fill.count { s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(cb, cc, it)) }
-    val v = pv ?: s.progress.nextVerse(s.translation, ct, cc)
+    // 세 필사본: 오늘 카드는 지금 쓰는 필사본의 진도 (이어 쓰기도 그 방식으로)
+    val wm = s.writingMode
+    val fill = ct.fillable(cc); val inCh = fill.count { s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(cb, cc, it), wm) }
+    val v = s.progress.nextVerse(s.translation, ct, cc, wm) ?: pv
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5).padding(top = Tokens.Space.s3, bottom = Tokens.Space.s5),
         verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         // 절기 머리: 절기색 띠 · 옅은 절기 판화 · 이름 · 몇째 주 · 남은 날 · 절기 말씀
@@ -98,7 +100,10 @@ fun HomePage(s: AppState) {
         androidx.compose.runtime.LaunchedEffect(s.fills.size, s.planId) { s.votumToShow()?.let { s.votumDone = it } }
         Column(Modifier.fillMaxWidth().coach("today_card"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             HeadText(s, cb, cc)
-            Text(stringResource(R.string.listen_head, s.bookName(cb), cc), style = Theme.title(k, Tokens.Text.display), maxLines = 1)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+                Text(stringResource(R.string.listen_head, s.bookName(cb), cc), style = Theme.title(k, Tokens.Text.display), maxLines = 1, modifier = Modifier.weight(1f, fill = false))
+                ModeChip(wm)
+            }
             Text(stringResource(R.string.ch_progress, inCh, fill.size) + if (verses > 0) " · " + stringResource(R.string.today_written, verses) else "", style = Theme.small(), maxLines = 1)
         }
         // 진도 막대 · 이어 쓸 절 번호는 절기색 (성탄 · 부활은 금빛 그대로)
@@ -110,7 +115,7 @@ fun HomePage(s: AppState) {
             withStyle(androidx.compose.ui.text.SpanStyle(color = accent)) { append("$v ") }; append(Markup.plain(ct.verse(cc, v)))
         }, Theme.verse(s.bibleKorean), play = remember(today) { s.store.inkDay != today.toEpochDay() }.also { if (it) s.store.inkDay = today.toEpochDay() })
         Column(Modifier.fillMaxWidth()) {
-            BookButton(if (v != null) stringResource(R.string.continue_at_verse, v) else stringResource(R.string.continue_now), Modifier.fillMaxWidth().coach("today_go"), glow = !met) { s.open(cb, cc) }
+            BookButton(if (v != null) stringResource(R.string.continue_at_verse, v) else stringResource(R.string.continue_now), Modifier.fillMaxWidth().coach("today_go"), glow = !met) { s.openDirect = wm; s.open(cb, cc) }
             BookButton(stringResource(R.string.read_short), Modifier.fillMaxWidth().coach("today_read"), quiet = true) { s.read(cb, cc) }
         }
         // 쓰면 드러나는 다음 판화 (오늘 쓰는 일의 보상이라 버튼 바로 아래)
@@ -121,7 +126,7 @@ fun HomePage(s: AppState) {
             SectionHead("PEREGRINATIO", stringResource(R.string.paused_title), 1)
             // 한 번 누르면: 이어 쓰기 · 새로 쓰기 · 순례길에서 빼기
             paused.forEach { p ->
-                ListRow(stringResource(R.string.paused_row, s.chapterRef(p.book, p.chapter), p.next), "${p.done} / ${p.total}") { s.pilgrim = p }
+                ListRow(stringResource(R.string.paused_row, s.chapterRef(p.book, p.chapter), p.next), stringResource(when (p.mode) { io.github.graviton94.todaybible.core.Mode.ALOUD -> R.string.mode_aloud; io.github.graviton94.todaybible.core.Mode.PAPER -> R.string.mode_paper; else -> R.string.mode_type }) + " · ${p.done} / ${p.total}") { s.pilgrim = p }
             }
         }
         androidx.compose.runtime.LaunchedEffect(paused, s.debugPilgrim) { if (s.debugPilgrim && paused.isNotEmpty()) { s.pilgrim = paused.first(); s.debugPilgrim = false } }
@@ -371,7 +376,7 @@ private fun SimpleHome(s: AppState) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
     val (b, ch, _) = s.todayPlace()
     val t = s.store.book(s.translation, b)
-    val fill = t.fillable(ch); val done = fill.count { s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(b, ch, it)) }
+    val fill = t.fillable(ch); val done = fill.count { s.progress.isFilled(s.translation, io.github.graviton94.todaybible.core.VerseKey(b, ch, it), s.writingMode) }
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s5), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s5)) {
         HeadText(s, b, ch)
         Text(stringResource(R.string.listen_head, s.bookName(b), ch), style = Theme.title(k, Tokens.Text.display))
@@ -410,7 +415,7 @@ fun PilgrimSheet(s: AppState, p: AppState.Paused, onClose: () -> Unit) {
                             Text(title, style = Theme.label().copy(color = if (warn) c.wrong else c.ink, fontWeight = FontWeight.SemiBold), maxLines = 1)
                             Text(sub, style = Theme.small(), maxLines = 2)
                         }
-                    opt(stringResource(R.string.pil_continue), stringResource(R.string.pil_continue_sub, p.next)) { onClose(); s.open(p.book, p.chapter) }
+                    opt(stringResource(R.string.pil_continue), stringResource(R.string.pil_continue_sub, p.next)) { onClose(); s.openDirect = p.mode; s.open(p.book, p.chapter) }
                     opt(stringResource(R.string.pil_restart), stringResource(R.string.pil_restart_sub)) { ask = 1 }
                     opt(stringResource(R.string.pil_remove), stringResource(R.string.pil_remove_sub)) { ask = 2 }
                 }
@@ -434,4 +439,13 @@ fun PilgrimSheet(s: AppState, p: AppState.Paused, onClose: () -> Unit) {
             }
         }
     }
+}
+
+/** 지금 쓰는 필사본 표 (오늘 카드 · 순례길): 작은 금테 칩 하나. */
+@Composable
+fun ModeChip(m: io.github.graviton94.todaybible.core.Mode) {
+    val c = Theme.c
+    val name = stringResource(when (m) { io.github.graviton94.todaybible.core.Mode.ALOUD -> R.string.mode_aloud; io.github.graviton94.todaybible.core.Mode.PAPER -> R.string.mode_paper; else -> R.string.mode_type })
+    Text(name, style = Theme.small().copy(color = c.giltText), maxLines = 1,
+        modifier = Modifier.border(Tokens.Stroke.hair, c.gilt, RoundedCornerShape(Tokens.Radius.pill)).padding(horizontal = Tokens.Space.s2, vertical = Tokens.Space.s1 / 2))
 }

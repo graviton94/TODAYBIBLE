@@ -246,26 +246,33 @@ fun VotumDone(s: AppState, key: String) {
     }
 }
 
-/** 이 장을 다른 방식으로 쓰던 중일 때: 쓰던 방식을 맨 위에, 방식마다 쓴 절 수. 고르면 그 탭으로. */
+/** 장을 열 때: 어떤 필사본으로 쓸지. 쓰던 방식을 맨 위에, 필사본마다 진도 · 다음 절. 고르면 그 탭으로. */
 @Composable
 fun ModeAskSheet(s: AppState, a: AppState.ModeAsk) {
     val c = Theme.c; val k = s.korean
-    val names = listOf(stringResource(R.string.mode_aloud), stringResource(R.string.mode_type), stringResource(R.string.mode_paper))
+    val names = listOf(stringResource(R.string.book_aloud), stringResource(R.string.book_type), stringResource(R.string.book_paper))
     BookSheet({ s.modeAsk = null }) {
         Text(s.chapterRef(s.book, s.chapter), style = Theme.caps(), maxLines = 1)
         Text(stringResource(R.string.mode_ask_title), style = Theme.title(k), modifier = Modifier.fillMaxWidth())
-        (listOf(a.last) + (0..2).filter { it != a.last }).forEach { i ->
-            Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).clickable(role = Role.Button, onClick = tap { s.forceTab = i; s.modeAsk = null }),
+        (listOf(a.last) + listOf(1, 2, 0).filter { it != a.last }).forEach { i ->
+            Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).clickable(role = Role.Button, onClick = tap { s.forceTab = i; s.modeAsk = null }).padding(vertical = Tokens.Space.s2),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
                 Column(Modifier.weight(1f)) {
-                    Text(names[i], style = Theme.body().copy(fontWeight = if (i == a.last) FontWeight.SemiBold else FontWeight.Normal), maxLines = 1)
-                    if (i == a.last) Text(stringResource(R.string.mode_ask_last), style = Theme.small().copy(color = c.giltText), maxLines = 1)
+                    Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2), verticalAlignment = Alignment.Bottom) {
+                        Text(names[i], style = Theme.body().copy(fontWeight = if (i == a.last) FontWeight.SemiBold else FontWeight.Normal), maxLines = 1)
+                        if (i == a.last) Text(stringResource(R.string.mode_ask_last), style = Theme.small().copy(color = c.giltText), maxLines = 1)
+                    }
+                    Text(when { a.next[i] == null -> stringResource(R.string.mode_ask_done); a.counts[i] == 0 -> stringResource(R.string.mode_ask_start); else -> stringResource(R.string.mode_ask_from, a.next[i]!!) },
+                        style = Theme.small(), maxLines = 1)
                 }
-                Text(stringResource(R.string.mode_ask_count, a.counts[i]), style = Theme.small(), maxLines = 1)
-                Text("›", style = Theme.small().copy(color = c.unwritten), maxLines = 1)
+                Column(Modifier.width(Tokens.Size.votumBar), horizontalAlignment = Alignment.End) {
+                    Text(stringResource(R.string.mode_ask_count, a.counts[i], a.total), style = Theme.small(), maxLines = 1)
+                    Box(Modifier.padding(top = Tokens.Space.s1).fillMaxWidth().height(Tokens.Stroke.rule).background(c.hair)) {
+                        if (a.total > 0) Box(Modifier.fillMaxWidth(a.counts[i].toFloat() / a.total).height(Tokens.Stroke.rule).background(c.gilt))
+                    }
+                }
             }
             Hair()
         }
-        Text(stringResource(R.string.mode_ask_note, a.done, a.total), style = Theme.small(), modifier = Modifier.fillMaxWidth())
     }
 }

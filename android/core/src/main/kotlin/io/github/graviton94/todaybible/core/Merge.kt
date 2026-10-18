@@ -7,13 +7,13 @@ package io.github.graviton94.todaybible.core
 object Merge {
     private fun cols(l: String, n: Int = -1) = if (n > 0) l.split('\t', limit = n) else l.split('\t')
 
-    /** 필사 기록 (번역 · 절 · 방식 · 날 · 시각): 같은 (번역 · 절) 이면 먼저 쓴 것 하나. 시각 차례로. */
+    /** 필사 기록 (번역 · 절 · 방식 · 날 · 시각): 같은 (번역 · 절 · 방식) 이면 먼저 쓴 것 하나 (세 필사본은 따로). 시각 차례로. */
     fun fills(mine: List<String>, theirs: List<String>): List<String> {
         val best = LinkedHashMap<String, Pair<Long, String>>()
         for (l in mine + theirs) {
             val p = cols(l); if (p.size < 5) continue
             val at = p[4].toLongOrNull() ?: continue
-            val k = p[0] + "\t" + p[1]
+            val k = p[0] + "\t" + p[1] + "\t" + p[2]
             val old = best[k]
             if (old == null || at < old.first) best[k] = at to l
         }
@@ -54,8 +54,8 @@ object Merge {
 
     /** 몇 절이 새로 더해졌는지 (되살리기 뒤 한 줄 알림용). */
     fun added(mine: List<String>, merged: List<String>): Int {
-        val had = mine.mapNotNull { cols(it).takeIf { p -> p.size >= 2 }?.let { p -> p[0] + "\t" + p[1] } }.toHashSet()
-        return merged.count { l -> cols(l).let { p -> p.size >= 2 && (p[0] + "\t" + p[1]) !in had } }
+        val had = mine.mapNotNull { cols(it).takeIf { p -> p.size >= 3 }?.let { p -> p[0] + "\t" + p[1] + "\t" + p[2] } }.toHashSet()
+        return merged.count { l -> cols(l).let { p -> p.size >= 3 && (p[0] + "\t" + p[1] + "\t" + p[2]) !in had } }
     }
 
     private fun minBy(lines: List<String>, key: (List<String>) -> String, value: (List<String>) -> Long?): List<String> {

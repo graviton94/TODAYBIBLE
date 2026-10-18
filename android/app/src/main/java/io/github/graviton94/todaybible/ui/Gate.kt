@@ -200,7 +200,7 @@ fun PlateIntro(s: AppState, first: Boolean, onEnter: () -> Unit) {
             scope.launch { enter.animateTo(1f, tween(Tokens.Motion.introEnterMs)); onEnter() }
         }
         BackHandler { go() }
-        val t = s.text(); val v = s.progress.nextVerse(s.translation, t, s.chapter) ?: 1
+        val t = s.text(); val v = s.progress.nextVerse(s.translation, t, s.chapter, s.writingMode) ?: 1
         val verse = remember(s.book, s.chapter, v) { io.github.graviton94.todaybible.core.Markup.plain(t.verse(s.chapter, v)) }
         Box(Modifier.fillMaxSize().background(c.leaf).graphicsLayer { alpha = 1f - enter.value }
             .clickable(remember { MutableInteractionSource() }, null) { go() }) {

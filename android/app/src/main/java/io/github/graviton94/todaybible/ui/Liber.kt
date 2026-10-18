@@ -196,7 +196,13 @@ private fun KeepActions(s: AppState, b: Int) {
     val hand = remember(b) { io.github.graviton94.todaybible.data.Ink.chapters(ctx, s.translation.id, b).isNotEmpty() }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
         // 필사 완성 증서 (1.5): 다 쓴 권이면 누구나
-        if (s.progress.bookDone(s.translation, s.store.book(s.translation, b))) BookButton(stringResource(R.string.cert_open), Modifier.fillMaxWidth()) { s.certFor = b }
+        // 필사본마다 증서 (다 쓴 필사본만). 예전처럼 여러 방식이 섞여 다 쓴 권은 방식 없는 증서 하나
+        val bt = s.store.book(s.translation, b)
+        val doneModes = listOf(io.github.graviton94.todaybible.core.Mode.TYPE, io.github.graviton94.todaybible.core.Mode.PAPER, io.github.graviton94.todaybible.core.Mode.ALOUD).filter { s.progress.bookDone(s.translation, bt, it) }
+        doneModes.forEach { m ->
+            BookButton(stringResource(R.string.cert_open) + " · " + stringResource(when (m) { io.github.graviton94.todaybible.core.Mode.ALOUD -> R.string.book_aloud; io.github.graviton94.todaybible.core.Mode.PAPER -> R.string.book_paper; else -> R.string.book_type }), Modifier.fillMaxWidth()) { s.certMode = m; s.certFor = b }
+        }
+        if (doneModes.isEmpty() && s.progress.bookDone(s.translation, bt)) BookButton(stringResource(R.string.cert_open), Modifier.fillMaxWidth()) { s.certFor = b }
         BookButton(stringResource(R.string.liber_pdf), Modifier.fillMaxWidth(), locked = s.premiumOn) { s.requestPdf(b) }
         BookButton(stringResource(R.string.liber_card), Modifier.fillMaxWidth(), quiet = true) {
             val t = tally(s, b)
