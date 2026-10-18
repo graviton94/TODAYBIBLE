@@ -770,7 +770,7 @@ class AppState(val store: Store) {
         val new = keys.mapIndexed { n, key ->
             val i = (n.toLong() * days.size / keys.size).toInt(); val d = days[i]
             val at = d.atTime(6 + i % 3, 30).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
-            Fill(tr, key, modes[i % modes.size], d.toEpochDay(), at)
+            Fill(tr, key, modes[(key.book + key.chapter) % modes.size], d.toEpochDay(), at)
         }.filter { it.key.raw !in already }
         if (new.isEmpty()) return
         if (store.startDay < 0) store.startDay = days.first().toEpochDay()
