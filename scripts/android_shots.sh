@@ -32,7 +32,7 @@ open --ez tb.reset true --es tb.theme LIGHT; sleep 15
 for i in 0 1 2; do open --ez tb.reset true --es tb.theme LIGHT --ei tb.welcomeStep $i; shot w0${i}_welcome 4; done
 # @end
 # 일부 장면만 찍을 때: 앞 장면들이 깔아 두던 기록을 한 번에
-[ -n "${FILTERED:-}" ] && { open --ez tb.reset true --es tb.theme LIGHT; sleep 4; open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT; sleep 4; { adb logcat -d | grep -E "TBSEED|AndroidRuntime|System.err" | tail -n 60; adb shell run-as $P ls -l shared_prefs files; } > "$OUT/seed_diag.txt" 2>&1; }
+[ -n "${FILTERED:-}" ] && { open --ez tb.reset true --es tb.theme LIGHT; sleep 4; open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT; sleep 4; }
 # 여는 순간: A 금박 새김 (매일) · C 표지 넘김 (하루 첫 열기). 눌러야 들어가요
 # @scene o0
 open --ez tb.seed true --es tb.theme LIGHT; sleep 4
