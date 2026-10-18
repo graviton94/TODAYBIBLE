@@ -280,6 +280,8 @@ private fun WritePage(s: AppState, verse: Int?) {
         // 아래 띠 (세 방식 공통): 안내 한 줄 · 쓰기 시작 / 키보드 내리기. 틀린 글자가 있으면 진홍 점 한 줄로 바뀌어요.
         if (shown != null) CopyBand(Modifier.align(Alignment.BottomCenter), compact = focused) {
             val wrong = fixHint && marks.any { it == TypeJudge.Mark.WRONG }
+            // 오타 없이 마친 장 (메달): 이 장에서 한 번이라도 틀렸으면 기억
+            if (marks.any { it == TypeJudge.Mark.WRONG }) LaunchedEffect(s.book, s.chapter) { s.typoIn = "${s.book}:${s.chapter}" }
             if (wrong) Box(Modifier.size(Tokens.Size.hintDot).background(Theme.c.wrong, androidx.compose.foundation.shape.CircleShape))
             Text(stringResource(if (wrong) R.string.type_fix_hint else if (bulkHint) R.string.type_one_by_one else R.string.grid_hint), style = Theme.small().copy(color = if (wrong) Theme.c.wrong else Theme.c.ink), maxLines = if (focused) 1 else 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             if (focused) Text(stringResource(R.string.kb_hide), style = Theme.small().copy(color = Theme.c.giltText, textDecoration = TextDecoration.Underline), maxLines = 1,

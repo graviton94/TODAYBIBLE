@@ -217,13 +217,14 @@ fun Root(s: AppState) {
                 ExportJob(listOf(audio, img), "*/*", title)
             }.getOrNull() } } finally { s.exporting = false }
             s.audiobookBook = null
+            if (job != null) s.bump("audiobook")
             s.gateDone(gateTitle, job)
         }
         LaunchedEffect(s.notesBook) {
             val b = s.notesBook ?: return@LaunchedEffect
             val title = ctx.getString(R.string.export_title_notes); s.exportGate = ExportGate(title)
             val f = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { runCatching { MyBible.notes(ctx, s.store, s.translation, b.takeIf { it >= 0 }) }.getOrNull() }
-            s.notesBook = null; s.gateDone(title, f?.let { ExportJob(listOf(it), "application/pdf", title) })
+            s.notesBook = null; if (f != null) s.bump("notes_pdf"); s.gateDone(title, f?.let { ExportJob(listOf(it), "application/pdf", title) })
         }
         s.picker?.let { b -> BookSheet({ s.picker = null; s.pickToRead = false }) { ChapterGrid(s, b) { ch -> s.picker = null; if (s.pickToRead) s.read(b, ch) else s.open(b, ch); s.pickToRead = false } } }
         s.award?.takeIf { s.finished == null }?.let { AwardCard(s, it) }

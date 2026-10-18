@@ -76,6 +76,7 @@ private fun AppState.spanText(sp: Refs.Span): List<Pair<Int, String>> {
 @Composable
 fun RelatedSheet(s: AppState, key: VerseKey) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
+    androidx.compose.runtime.LaunchedEffect(key) { s.bump("related") }
     val spans = remember(key) { Refs.related(ctx, key) }
     val dict = remember(k) { Refs.hasDictionary(ctx, k) }
     var tab by remember(key) { mutableIntStateOf(if (dict) s.relatedTab else 0) }
@@ -148,6 +149,7 @@ private fun kindLatin(k: Char) = when (k) { 'P' -> "PERSONA"; 'L' -> "LOCVS"; el
 @Composable
 fun DictPage(s: AppState, id: String) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
+    androidx.compose.runtime.LaunchedEffect(id) { s.bump("dict") }
     val e = remember(id, k) { Refs.entry(ctx, id, k) } ?: run { s.dictEntry = null; return }
     BackHandler { s.dictEntry = null }
     val link = SpanStyle(color = c.giltText, textDecoration = TextDecoration.Underline)

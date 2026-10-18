@@ -655,6 +655,8 @@ class AppState(val store: Store) {
     /** 절(들)을 채움. 장을 다 채우면 finished, 새 발자취가 생기면 award. */
     /** 방금 마친 장의 방식 · 다른 필사본으로 이미 마친 장인지 (마침 화면을 짧게). */
     var finishedMode: Mode = Mode.TYPE
+    /** 이 장을 타자로 쓰다 틀린 글자가 있었는지 ("권:장"). 오타 없이 마친 장 메달. */
+    var typoIn: String? = null
     var finishedAgain = false
     fun fill(verses: List<Int>, mode: Mode) {
         val day = today().toEpochDay(); val now = System.currentTimeMillis()
@@ -672,8 +674,18 @@ class AppState(val store: Store) {
         val t = text()
         val wasMet = io.github.graviton94.todaybible.core.Goal.met(effectiveGoal(), todayVerses() - new.size, 0)
         val fx = io.github.graviton94.todaybible.data.Effects
+        // 타자로 쓴 글자 수 (메달): 새로 쓴 절의 글자
+        if (mode == Mode.TYPE && store.typedLetters >= 0) store.typedLetters = store.typedLetters + new.sumOf { f -> io.github.graviton94.todaybible.core.Markup.plain(t0.verse(f.key.chapter, f.key.verse)).count { !it.isWhitespace() } }
+        // 성탄 새벽 (숨은 메달): 성탄절 아침 7시 전 누가복음 2장
+        if (book == 41 && chapter == 2 && today() == io.github.graviton94.todaybible.core.ChurchYear.christmas(today().year) && java.time.LocalTime.now().hour < 7) store.christmasLuke = true
         if (progress.chapterDone(tr, t, chapter, mode)) {
             finishedMode = mode; finishedAgain = otherDone
+            // 기능 메달에 드는 것들: 한밤 (0–4시) 에 마친 장 · 손글씨로 마친 장의 펜 · 오타 없이 마친 장 · 집중 모드로 마친 장
+            if (java.time.LocalTime.now().hour < 4) store.nightChapter = true
+            if (mode == Mode.PAPER) store.pensDone = store.pensDone + pen.toString()
+            if (mode == Mode.TYPE && typoIn != "$book:$chapter") store.bump("typo_free_ch")
+            if (focusMode) store.bump("focus_ch")
+            typoIn = null
             // 효과음: 그 장에 판화가 있으면 화첩에 걸리는 종, 없으면 COMPLETUM 인장 (권 다 씀은 의식이 열릴 때)
             fx.play(store.context, if (store.plateFor(book, chapter) != null) io.github.graviton94.todaybible.data.Effects.Fx.PLATE else io.github.graviton94.todaybible.data.Effects.Fx.SEAL)
             finished = book to chapter; store.finishedCount = store.finishedCount + 1
@@ -688,7 +700,43 @@ class AppState(val store: Store) {
         checkMilestones()
     }
 
-    private fun checkMilestones() {
+    /** 1.7 기능 메달에 드는 기록을 모아요 (필사본별 다 쓴 장 · 권, 글자 수, 기능마다 센 수 …). */
+    fun medalMore(): Milestones.More {
+        val p = progress; val tr = translation
+        val chBy = HashMap<Mode, MutableSet<Int>>(); val bkBy = HashMap<Mode, MutableSet<Int>>()
+        Mode.entries.forEach { m ->
+            p.filled(tr, m).map { VerseKey(it).book }.toSet().forEach { b ->
+                val t = store.book(tr, b)
+                (1..t.chapterCount).forEach { c -> if (p.chapterDone(tr, t, c, m)) chBy.getOrPut(m) { HashSet() } += (b + 1) * 1000 + c }
+                if (p.bookDone(tr, t, m)) bkBy.getOrPut(m) { HashSet() } += b
+            }
+        }
+        // 타자로 쓴 글자: 처음 한 번은 지난 기록으로 셈 (그 뒤로는 쓸 때마다 더함)
+        if (store.typedLetters < 0) store.typedLetters = fills.filter { it.translation == tr && it.mode == Mode.TYPE }.sumOf { f -> io.github.graviton94.todaybible.core.Markup.plain(store.book(tr, f.key.book).verse(f.key.chapter, f.key.verse)).count { !it.isWhitespace() } }
+        // 마친 작정은 기억해 둬요 (작정을 바꿔도 남게)
+        plan?.let { pl -> if (planComplete() && pl.id !in store.votumsDone) store.votumsDone = store.votumsDone + pl.id }
+        // 설교 노트가 이어진 주일 수 (가장 긴 것)
+        val sundays = notes.filter { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.SERMON }.map { it.epochDay }.toSortedSet()
+        var run = 0; var best = 0; var prev = Long.MIN_VALUE
+        sundays.forEach { d -> run = if (d - prev == 7L) run + 1 else 1; best = maxOf(best, run); prev = d }
+        return Milestones.More(chBy, bkBy, store.typedLetters, store.counts(), store.pensDone,
+            hungPlates().count { it.set.isEmpty() }, store.plates.count { it.set.isEmpty() }.coerceAtLeast(1),
+            notes.count { it.kind == io.github.graviton94.todaybible.data.Store.NoteKind.REFLECTION }, best,
+            bookmarks.size, marks.size, store.votumsDone, store.nightChapter, store.christmasLuke)
+    }
+
+    /** 메달 진행을 보여 줄 때 쓰는 상태 (기록이 바뀔 때만 다시 셈). */
+    private var medalMemo: Pair<List<Int>, Milestones.State>? = null
+    var medalRev by mutableIntStateOf(0)
+    fun medalState(): Milestones.State {
+        val key = listOf(fills.size, medalRev, notes.size, bookmarks.size, marks.size)
+        medalMemo?.let { (k, v) -> if (k == key) return v }
+        return Milestones.State(fills.filter { it.translation == translation }, emptySet(), emptySet(), korea = korean, memorized = knownDays(), more = medalMore()).also { medalMemo = key to it }
+    }
+    /** 기능을 한 번 쓸 때마다 세고 메달을 살펴요. */
+    fun bump(k: String) { store.bump(k); medalRev++; checkMilestones() }
+
+    fun checkMilestones() {
         val p = progress
         val doneChapters = HashSet<Int>(); val doneBooks = HashSet<Int>()
         // 기록이 있는 권만 살펴봄 (전체 66권을 매번 열지 않게)
@@ -697,7 +745,7 @@ class AppState(val store: Store) {
             (1..t.chapterCount).forEach { c -> if (p.chapterDone(translation, t, c)) doneChapters += (b + 1) * 1000 + c }
             if (p.bookDone(translation, t)) doneBooks += b
         }
-        val got = Milestones.earned(Milestones.State(fills.filter { it.translation == translation }, doneChapters, doneBooks, korea = korean, memorized = knownDays()))
+        val got = Milestones.earned(Milestones.State(fills.filter { it.translation == translation }, doneChapters, doneBooks, korea = korean, memorized = knownDays(), more = medalMore()))
         val fresh = got.keys - earned.keys
         if (fresh.isNotEmpty()) {
             earned = earned + fresh.associateWith { got[it] ?: today().toEpochDay() }

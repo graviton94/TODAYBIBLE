@@ -188,8 +188,10 @@ private fun PlateUnderVeil(s: AppState, p: Plate, t: Float, modifier: Modifier) 
 @Composable
 fun AwardCard(s: AppState, m: Milestone) {
     val c = Theme.c; val k = s.korean; val ctx = LocalContext.current
-    val name = milestoneName(ctx, m); val rule = milestoneRule(ctx, m)
     val day = s.earned[m]; val fresh = day != null && day == s.today().toEpochDay()
+    // 숨은 메달은 받기 전엔 이름 · 조건을 가려요
+    val veiled = m.hidden && day == null
+    val name = if (veiled) stringResource(R.string.medal_hidden_name) else milestoneName(ctx, m); val rule = if (veiled) stringResource(R.string.medal_hidden_rule) else milestoneRule(ctx, m)
     BookSheet({ s.award = null }) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             Text(if (fresh) stringResource(R.string.new_milestone).uppercase() else "VESTIGIUM · " + io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1), style = Theme.caps(), maxLines = 1)
@@ -201,6 +203,7 @@ fun AwardCard(s: AppState, m: Milestone) {
                 day != null -> stringResource(R.string.medal_got, fmtDate(R.string.fmt_ymd, java.time.LocalDate.ofEpochDay(day)))
                 MILESTONE_DAYS[m] != null -> stringResource(R.string.medal_left, (MILESTONE_DAYS.getValue(m) - s.progress.days().size).coerceAtLeast(0))
                 Milestone.MEMORY[m] != null -> stringResource(R.string.medal_left_verses, (Milestone.MEMORY.getValue(m) - s.knownDays().size).coerceAtLeast(0))
+                !veiled && milestoneCount(s, m) != null -> milestoneCount(s, m)!!.let { (n, g) -> stringResource(R.string.medal_count, "%,d".format(minOf(n, g)), "%,d".format(g)) }
                 else -> stringResource(R.string.medal_not_yet)
             }, style = Theme.small().copy(color = if (day != null) c.giltText else c.inkSoft, textAlign = TextAlign.Center), maxLines = 2)
         }

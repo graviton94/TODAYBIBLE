@@ -162,6 +162,7 @@ object Cards {
 
     /** 그림을 저장해 나누기 창 열기 (FileProvider, 캐시 폴더). */
     fun share(s: AppState, ctx: Context, bmp: Bitmap, name: String) {
+        s.bump("share")
         val dir = File(ctx.cacheDir, "share").apply { mkdirs() }
         val f = File(dir, "$name.png")
         f.outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }

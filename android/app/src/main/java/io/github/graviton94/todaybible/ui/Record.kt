@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -124,6 +125,7 @@ private fun Collection(s: AppState) {
     val got = Milestone.entries.filter { it in s.earned }.sortedByDescending { s.earned[it] }
     val next = Milestone.entries.filter { it !in s.earned }.sortedByDescending { milestoneProgress(s, it) ?: 0f }
     SubHead("MEDALLAE", stringResource(R.string.medals_title), "${s.earned.size} / ${Milestone.entries.size} ›") { allMiles = !allMiles }
+    CopyLevels(s)
     if (allMiles) MilestoneList(s, got + next)
     else Column(Modifier.coach("rec_miles"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
         (got.take(MEDAL_COLS) + next).take(MEDAL_COLS * 2).chunked(MEDAL_COLS).forEach { row ->
@@ -454,23 +456,45 @@ private fun PlateCard(s: AppState, p: Plate, modifier: Modifier) {
     }
 }
 
-/** 발자취: 판화 메달 세 줄 칸. 이름 · 얻은 차례(로마 숫자) 또는 진행. 누르면 큰 메달. */
+/** 세 필사본 단계 (1.7): 방식마다 한 줄 — 이룬 단계 · 다음 단계까지 남은 장. */
 @Composable
-private fun MilestoneList(s: AppState, list: List<Milestone>) {
+private fun CopyLevels(s: AppState) {
+    val c = Theme.c
+    val by = s.medalState().more.chaptersBy
+    Column(Modifier.fillMaxWidth().padding(bottom = Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+        listOf(io.github.graviton94.todaybible.core.Mode.TYPE to R.string.book_type, io.github.graviton94.todaybible.core.Mode.PAPER to R.string.book_paper, io.github.graviton94.todaybible.core.Mode.ALOUD to R.string.book_aloud).forEach { (m, name) ->
+            val n = by[m].orEmpty().size; val lv = io.github.graviton94.todaybible.core.Levels.level(m, n); val left = io.github.graviton94.todaybible.core.Levels.left(m, n)
+            Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                Text(stringResource(name), style = Theme.small().copy(color = c.ink), maxLines = 1, modifier = Modifier.width(Tokens.Size.votumBar))
+                // 여섯 칸: 이룬 단계까지 금빛
+                Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) { repeat(6) { i -> Box(Modifier.size(Tokens.Size.levelCell, Tokens.Size.segment).background(if (i < lv) c.gilt else c.hair)) } }
+                val ctx = LocalContext.current
+                Text(if (left == 0) stringResource(R.string.level_all) else stringResource(R.string.level_left, ctx.getString(ctx.resources.getIdentifier("level_${lv + 1}", "string", ctx.packageName)), left),
+                    style = Theme.small(), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+/** 발자취: 갈래로 골라 보기 · 판화 메달 세 줄 칸. 이름 · 얻은 차례(로마 숫자) 또는 진행. 누르면 큰 메달. 숨은 메달은 받기 전엔 「?」. */
+@Composable
+private fun MilestoneList(s: AppState, all: List<Milestone>) {
     val c = Theme.c; val ctx = LocalContext.current
-    val days = s.progress.days().size
-    Column(Modifier.coach("rec_miles"), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
+    var cat by remember { mutableStateOf<io.github.graviton94.todaybible.core.MedalCat?>(null) }
+    val cats = listOf<io.github.graviton94.todaybible.core.MedalCat?>(null) + io.github.graviton94.todaybible.core.MedalCat.entries.filter { cc -> all.any { it.cat == cc } }
+    Chips(cats.map { ctx.getString(ctx.resources.getIdentifier("medal_cat_${it?.name ?: "ALL"}", "string", ctx.packageName)) }, cats.indexOf(cat), Modifier.horizontalScroll(androidx.compose.foundation.rememberScrollState())) { cat = cats[it] }
+    val list = all.filter { cat == null || it.cat == cat }
+    Column(Modifier.coach("rec_miles").padding(top = Tokens.Space.s2), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s4)) {
         list.chunked(3).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
                 row.forEach { m ->
                     val day = s.earned[m]
-                    val goal = MILESTONE_DAYS[m]
+                    val count = milestoneCount(s, m)
                     Column(Modifier.weight(1f).clickable(role = Role.Button) { s.award = m }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
                         PlateMedal(m, day != null, milestoneProgress(s, m), Tokens.Size.medalGrid)
-                        Text(milestoneName(ctx, m), style = Theme.small().copy(color = if (day != null) c.ink else c.inkSoft, textAlign = TextAlign.Center,
+                        Text(if (m.hidden && day == null) stringResource(R.string.medal_hidden_name) else milestoneName(ctx, m), style = Theme.small().copy(color = if (day != null) c.ink else c.inkSoft, textAlign = TextAlign.Center,
                             fontWeight = if (day != null) androidx.compose.ui.text.font.FontWeight.SemiBold else null), maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        val memo = Milestone.MEMORY[m]
-                        Text(when { day != null -> io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1); goal != null -> "${minOf(days, goal)} / $goal"; memo != null -> "${minOf(s.knownDays().size, memo)} / $memo"; else -> "·" },
+                        Text(when { day != null -> io.github.graviton94.todaybible.core.Latin.roman(m.ordinal + 1); m.hidden -> "·"; count != null -> stringResource(R.string.medal_count, "%,d".format(minOf(count.first, count.second)), "%,d".format(count.second)); else -> "·" },
                             style = Theme.lining(Tokens.Text.small).copy(color = if (day != null) c.giltText else c.unwritten), maxLines = 1)
                     }
                 }

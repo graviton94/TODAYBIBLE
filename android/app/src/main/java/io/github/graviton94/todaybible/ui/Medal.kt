@@ -31,6 +31,15 @@ val MILESTONE_PLATE = mapOf(
     Milestone.FIRE to "cornelius", Milestone.FIRSTFRUITS to "ruth", Milestone.STAR to "nativity", Milestone.LAMP to "law_read",
     Milestone.TABLETS to "sinai", Milestone.EPISTLES to "paul_crowd", Milestone.YEAR to "ladder", Milestone.OMEGA to "three_angels",
     Milestone.VERSE7 to "law_read", Milestone.VERSE30 to "sinai", Milestone.VERSE100 to "sermon",
+    // 1.7 기능 메달
+    Milestone.VOX_PRIMA to "schnorr_samuel", Milestone.PSALTES to "schnorr_spear", Milestone.VOX_CLAMANTIS to "john_preach", Milestone.AURORA to "schnorr_lights", Milestone.LIBER_VOCIS to "schnorr_zechariah",
+    Milestone.LITTERA to "schnorr_writing", Milestone.MILIA1 to "baruch", Milestone.MILIA2 to "ezra", Milestone.MILIA3 to "codex_sinaiticus", Milestone.SINE_MENDO to "tables", Milestone.CUBICULUM to "schnorr_temple_boy",
+    Milestone.PRIMA_LINEA to "schnorr_tables", Milestone.TRES_CALAMI to "jeremiah", Milestone.MANUS_SCRIBAE to "nehemiah", Milestone.CODEX_MANU to "isaiah",
+    Milestone.FUNICULUS to "schnorr_three_visitors",
+    Milestone.MEMORIA1 to "schnorr_well", Milestone.MEMORIA2 to "schnorr_emmaus", Milestone.MEMORIA3 to "schnorr_transfig", Milestone.AURIS to "stephen",
+    Milestone.SIGNA to "schnorr_ladder", Milestone.CATENA to "schnorr_rainbow", Milestone.NOMINA to "schnorr_eden",
+    Milestone.ALBUM1 to "schnorr_good_samaritan", Milestone.ALBUM2 to "prodigal", Milestone.ALBUM3 to "schnorr_resurrection", Milestone.VOTUM_PRIMUM to "schnorr_ruth", Milestone.ANNUS_ECCL to "schnorr_pentecost",
+    Milestone.SEMEN1 to "loaves", Milestone.SEMEN2 to "draught", Milestone.LUCERNA to "darkness", Milestone.NOX_SANCTA to "schnorr_shepherds",
 )
 
 /** 날 수로 얻는 발자취의 목표 (호로 진행을 보여요). */
@@ -39,6 +48,18 @@ val MILESTONE_DAYS = mapOf(Milestone.SEVEN to 7, Milestone.FORTY to 40, Mileston
 /** 아직 얻지 않은 발자취의 진행 (날 수 · 외운 절 수), 셀 수 없는 것은 null. */
 fun milestoneProgress(s: io.github.graviton94.todaybible.ui.AppState, m: Milestone): Float? =
     MILESTONE_DAYS[m]?.let { s.progress.days().size.toFloat() / it } ?: Milestone.MEMORY[m]?.let { s.knownDays().size.toFloat() / it }
+        ?: milestoneCount(s, m)?.let { (n, g) -> n.toFloat() / g }
+
+/** 셀 수 있는 메달의 (지금, 목표): 날 수 · 외운 절 · 기능마다 센 수. */
+fun milestoneCount(s: io.github.graviton94.todaybible.ui.AppState, m: Milestone): Pair<Int, Int>? =
+    MILESTONE_DAYS[m]?.let { s.progress.days().size to it } ?: Milestone.MEMORY[m]?.let { s.knownDays().size to it }
+        ?: io.github.graviton94.todaybible.core.Milestones.progress(m, s.medalState())
+
+/** 등급 테 색: 동 · 은 · 금. */
+@androidx.compose.runtime.Composable
+fun tierColor(t: io.github.graviton94.todaybible.core.Tier): androidx.compose.ui.graphics.Color = Theme.c.let { c ->
+    when (t) { io.github.graviton94.todaybible.core.Tier.BRONZE -> c.tierBronze; io.github.graviton94.todaybible.core.Tier.SILVER -> c.tierSilver; io.github.graviton94.todaybible.core.Tier.GOLD -> c.gilt }
+}
 
 /** 세피아 (판화 톤): 회색으로 바꾼 뒤 따뜻하게. */
 val SEPIA_MATRIX = ColorMatrix(floatArrayOf(
@@ -64,11 +85,13 @@ fun PlateMedal(m: Milestone, earned: Boolean, progress: Float?, size: Dp, modifi
     val c = Theme.c
     val img = rememberPlate(MILESTONE_PLATE.getValue(m), small = size < Tokens.Size.medalLg * 1.5f)
     val ring = Tokens.Size.medalRing
+    val tierC = tierColor(m.tier)
     Box(modifier.size(size).drawWithContent {
         drawContent()
         val r = this.size.minDimension / 2; val ctr = center; val g = Tokens.Stroke.gilt.toPx()
         if (earned) {
-            drawCircle(c.gilt, r - g / 2, ctr, style = Stroke(g))
+            // 바깥 테 = 등급 색 (동 · 은 · 금), 안쪽 테는 금
+            drawCircle(tierC, r - g / 2, ctr, style = Stroke(g * if (m.tier == io.github.graviton94.todaybible.core.Tier.GOLD) 1.4f else 1.2f))
             drawCircle(c.gilt, r - ring.toPx() + g / 2, ctr, style = Stroke(g * 0.7f))
         } else {
             drawCircle(c.hair, r - g / 2, ctr, style = Stroke(g))
@@ -78,7 +101,9 @@ fun PlateMedal(m: Milestone, earned: Boolean, progress: Float?, size: Dp, modifi
             }
         }
     }, contentAlignment = Alignment.Center) {
-        if (img != null) Image(img, null, Modifier.fillMaxSize().padding(ring + Tokens.Stroke.gilt).clip(CircleShape), contentScale = ContentScale.Crop,
+        // 숨은 메달은 받기 전엔 「?」 (판화도 가려요)
+        if (m.hidden && !earned) androidx.compose.material3.Text("?", style = Theme.big(Tokens.Text.title).copy(color = c.unwritten))
+        else if (img != null) Image(img, null, Modifier.fillMaxSize().padding(ring + Tokens.Stroke.gilt).clip(CircleShape), contentScale = ContentScale.Crop,
             colorFilter = ColorFilter.colorMatrix(if (earned) SEPIA_MATRIX else PLASTER), alpha = if (earned) 1f else Tokens.Alpha.plaster)
         else Box(Modifier.fillMaxSize().padding(ring).clip(CircleShape).drawBehind { drawCircle(c.hair) })
     }

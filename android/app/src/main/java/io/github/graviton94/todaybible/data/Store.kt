@@ -70,6 +70,27 @@ class Store(val context: Context) {
         get() = prefs.getStringSet("memo_known", emptySet())!!.toSet()
         set(v) = prefs.edit().putStringSet("memo_known", v).apply()
     /** 나의 순례길에서 뺀 장 ("번역:권:장"). 그 장에 다시 쓰면 돌아와요. */
+    /** 1.7 기능 메달: 기능마다 센 수 (audiobook · notes_pdf · focus_ch · typo_free_ch · related · dict · share). */
+    fun count(k: String): Int = prefs.getInt("cnt_$k", 0)
+    fun bump(k: String) = prefs.edit().putInt("cnt_$k", count(k) + 1).apply()
+    fun counts(): Map<String, Int> = listOf("audiobook", "notes_pdf", "focus_ch", "typo_free_ch", "related", "dict", "share").associateWith { count(it) }
+    /** 타자로 쓴 글자 수 (-1 = 아직 안 셈: 처음 한 번 지난 기록으로 셈). */
+    var typedLetters: Int
+        get() = prefs.getInt("typed_letters", -1)
+        set(v) = prefs.edit().putInt("typed_letters", v).apply()
+    /** 손글씨로 다 쓴 장에 쓴 펜들 · 마친 작정 · 한밤에 마친 장 · 성탄 새벽 누가 2장. */
+    var pensDone: Set<String>
+        get() = prefs.getStringSet("pens_done", emptySet())!!.toSet()
+        set(v) = prefs.edit().putStringSet("pens_done", v).apply()
+    var votumsDone: Set<String>
+        get() = prefs.getStringSet("votums_done", emptySet())!!.toSet()
+        set(v) = prefs.edit().putStringSet("votums_done", v).apply()
+    var nightChapter: Boolean
+        get() = prefs.getBoolean("night_chapter", false)
+        set(v) = prefs.edit().putBoolean("night_chapter", v).apply()
+    var christmasLuke: Boolean
+        get() = prefs.getBoolean("christmas_luke", false)
+        set(v) = prefs.edit().putBoolean("christmas_luke", v).apply()
     var hiddenPaused: Set<String>
         get() = prefs.getStringSet("hidden_paused", emptySet())!!.toSet()
         set(v) = prefs.edit().putStringSet("hidden_paused", v).apply()
