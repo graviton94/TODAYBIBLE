@@ -80,7 +80,8 @@ fun Welcome(s: AppState) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val restore = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) {
-            val r = io.github.graviton94.todaybible.data.Backup.read(ctx, uri)
+            // 처음 화면: 지금 기록이 없어 바로 합쳐요 (검사는 같게)
+            val r = io.github.graviton94.todaybible.data.Backup.let { b -> b.inspect(ctx, uri)?.let { b.apply(ctx) } }
             if (r == null) s.toast = ctx.getString(R.string.backup_bad)
             else {
                 // 다시 그린 뒤에도 보이게 한 줄을 맡겨 둠
