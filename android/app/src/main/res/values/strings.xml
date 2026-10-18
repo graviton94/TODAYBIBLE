@@ -1037,7 +1037,7 @@
     <string name="lifetime_card_sub">Subscribed · Lifetime for %1$s ›</string>
     <string name="plan_month">Monthly</string>
     <string name="plan_month_price">%1$s / month</string>
-    <string name="plan_month_note">About a coffee a month · cancel anytime</string>
+    <string name="plan_month_note">Cancel anytime</string>
     <string name="plan_month_on">Subscribed</string>
     <string name="plan_year">Yearly</string>
     <string name="plan_year_price">%1$s / year</string>
@@ -1056,7 +1056,7 @@
     <string name="pay_none">Nothing to restore · check you\'re on the same Google account</string>
     <string name="pay_pending">Payment is being confirmed. It opens by itself when done.</string>
     <string name="pay_failed">The payment didn\'t go through. Please try again in a moment.</string>
-    <string name="cmp_plans">Reading plans</string>
+    <string name="cmp_plans">Devotions</string>
     <string name="cmp_gift">Send to family</string>
     <string name="cmp_prayers">Prayers</string>
     <string name="tr_web">World English Bible</string>

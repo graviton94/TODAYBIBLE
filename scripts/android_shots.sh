@@ -59,9 +59,9 @@ open --es tb.finished 1:7;                                         shot f01_fini
 adb shell input tap 540 1810;                                      shot f02_finished_lifted 3
 swipe_up;                                                          shot f03_finished_text 2
 open --es tb.award OLIVE;                                          shot a01_award 4
-open --ez tb.lock true --es tb.price ₩9,900 --es tb.monthPrice ₩2,900 --es tb.yearPrice ₩6,900 --es tb.yearMonth ₩575 --ez tb.purchase true; shot e01_purchase_compare 4
-open --ez tb.lock true --es tb.price ₩9,900 --es tb.monthPrice ₩2,900 --es tb.yearPrice ₩6,900 --ez tb.subscribed true --ez tb.purchase true; shot e03_purchase_subscribed 4
-open --ez tb.lock true --es tb.price ₩14,900 --ei tb.peek 43;      shot e02_purchase_peek 4
+open --ez tb.lock true --es tb.price ₩33,000 --es tb.monthPrice ₩2,900 --es tb.yearPrice ₩19,000 --es tb.yearMonth ₩1,583 --ez tb.purchase true; shot e01_purchase_compare 4
+open --ez tb.lock true --es tb.price ₩33,000 --es tb.monthPrice ₩2,900 --es tb.yearPrice ₩19,000 --ez tb.subscribed true --ez tb.purchase true; shot e03_purchase_subscribed 4
+open --ez tb.lock true --es tb.price ₩33,000 --ei tb.peek 43;      shot e02_purchase_peek 4
 open --ez tb.settings true;                                        shot s01_settings 4
 swipe_up;                                                          shot s02_settings_cover 2
 open --ez tb.planSheet true;                                       shot p01_plan_sheet 4
@@ -222,7 +222,7 @@ adb shell input tap 540 1200; sleep 2; adb shell input text "And%she%sgoeth%sup%
 open --ei tb.page 2;                         shot e3_notebook 4
 open --ez tb.reset true --ei tb.welcomeStep 2;                     shot e4_welcome_goal 4
 open --ez tb.seed true --es tb.tr KJV --es tb.plate prodigal;      shot e5_plate 5
-open --ez tb.lock true --es tb.price "'\$6.99'" --es tb.monthPrice "'\$1.99'" --es tb.yearPrice "'\$4.99'" --ez tb.purchase true; shot e6_purchase 4
+open --ez tb.lock true --es tb.price "'\$24.99'" --es tb.monthPrice "'\$1.99'" --es tb.yearPrice "'\$14.99'" --ez tb.purchase true; shot e6_purchase 4
 # 영어 화면 한 바퀴 (en): 오늘 · 성경 · 읽기 · 기도 · 설정 · 기록 · 큰 글씨
 open --ez tb.seed true --es tb.theme LIGHT --es tb.tr WEB --ei tb.page 0;  shot en01_today 5
 swipe_up;                                                          shot en02_today_more 2
@@ -236,7 +236,7 @@ open --ez tb.settings true --es tb.section set_listen;             shot en09_set
 open --ei tb.page 3;                                               shot en10_record 5
 open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 2;         shot en11_aloud 4
 open --ef tb.scale 1.15 --ei tb.page 0;                             shot en12_huge_today 5
-open --ef tb.scale 1.15 --ez tb.lock true --es tb.price "'\$6.99'" --es tb.monthPrice "'\$1.99'" --ez tb.purchase true; shot en13_huge_purchase 4
+open --ef tb.scale 1.15 --ez tb.lock true --es tb.price "'\$24.99'" --es tb.monthPrice "'\$1.99'" --ez tb.purchase true; shot en13_huge_purchase 4
 open --ef tb.scale 1.0
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # 큰 글자 · 작은 화면
@@ -468,7 +468,7 @@ for fs in 1.3 2.0; do
   n=${fs/./}; adb shell settings put system font_scale $fs; sleep 2
   open --ez tb.seed true --es tb.tr KRV --es tb.theme LIGHT --ei tb.page 0; shot fs${n}_today 5
   open --ei tb.page 2 --ei tb.copyTab 1;                              shot fs${n}_type 4
-  open --ez tb.lock true --es tb.price ₩9,900 --es tb.monthPrice ₩2,900 --es tb.memberPrice ₩6,900 --ez tb.purchase true; shot fs${n}_purchase 4
+  open --ez tb.lock true --es tb.price ₩33,000 --es tb.monthPrice ₩2,900 --es tb.yearPrice ₩19,000 --es tb.yearMonth ₩1,583 --ez tb.purchase true; shot fs${n}_purchase 4
   open --es tb.prayerTimes morning=420 --es tb.prayer morning --es tb.prayerBell morning; shot fs${n}_bell 4
   open --ez tb.settings true --es tb.section set_alerts;             shot fs${n}_alerts 4
 done

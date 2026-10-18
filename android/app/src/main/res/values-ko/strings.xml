@@ -1037,7 +1037,7 @@
     <string name="lifetime_card_sub">구독 중 · 평생권으로 바꾸면 %1$s ›</string>
     <string name="plan_month">월 구독</string>
     <string name="plan_month_price">월 %1$s</string>
-    <string name="plan_month_note">한 달 커피 한 잔 값 · 언제든 해지</string>
+    <string name="plan_month_note">언제든 해지</string>
     <string name="plan_month_on">구독 중</string>
     <string name="plan_year">연 구독</string>
     <string name="plan_year_price">연 %1$s</string>
@@ -1056,7 +1056,7 @@
     <string name="pay_none">되찾을 구매가 없어요 · 같은 Google 계정인지 확인해 주세요</string>
     <string name="pay_pending">결제를 확인하는 중이에요. 끝나면 저절로 열려요.</string>
     <string name="pay_failed">결제가 끝나지 않았어요. 잠시 뒤 다시 해 주세요.</string>
-    <string name="cmp_plans">읽기 계획</string>
+    <string name="cmp_plans">작정</string>
     <string name="cmp_gift">가족에게 보내기</string>
     <string name="cmp_prayers">기도문 (듣기 · 쓰기)</string>
     <string name="tr_web">World English Bible</string>
