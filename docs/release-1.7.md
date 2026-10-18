@@ -2,9 +2,9 @@
 
 <en-US>
 • Three copies: your read-aloud, typed and handwritten copies now keep their own progress
-• When you open a chapter, choose which copy to write, with each one's progress
+• Opening a chapter, pick which copy to write, with each one's progress
 • New medals for reading aloud, typing, handwriting, notes, engravings and devotions, in bronze, silver and gold
-• Each copy climbs its own six levels, from First chapter to Whole Bible
+• Each copy climbs six levels, from First chapter to Whole Bible
 • My Bible PDF, handwriting PDF and your-voice audiobook each come from one copy, never mixed
 • Back up records to Drive, your phone or a message; Today reminds you
 </en-US>
