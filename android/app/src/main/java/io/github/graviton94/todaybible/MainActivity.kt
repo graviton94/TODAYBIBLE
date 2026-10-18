@@ -47,6 +47,15 @@ class MainActivity : ComponentActivity() {
         // 업데이트 뒤 처음: 새로 바뀐 것 한 번 (처음 설치면 건너뜀 · 캡처는 tb.news 일 때만)
         if (store.newsSeen != NEWS) { if (store.onboarded && !BuildConfig.DEV_TOOLS) s.news = true else store.newsSeen = NEWS }
         if (BuildConfig.DEV_TOOLS) debugSetup(s, intent)
+        // 캡처 · 시험용: 메인 스레드가 1.5초 넘게 막히면 그때 스택을 로그로 (TBWATCH)
+        if (BuildConfig.DEV_TOOLS) Thread {
+            val h = android.os.Handler(mainLooper); val main = mainLooper.thread
+            while (true) {
+                val beat = java.util.concurrent.atomic.AtomicBoolean(false); h.post { beat.set(true) }
+                Thread.sleep(1500)
+                if (!beat.get()) android.util.Log.w("TBWATCH", main.stackTrace.take(40).joinToString("\n  "))
+            }
+        }.apply { isDaemon = true }.start()
         // 알림 · 위젯으로 열어도 그날 처음이면 여는 순간 (표지) 은 그대로, 그다음에 그 자리로
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; s.opening = s.opening && s.firstOfDay; intent.removeExtra("page") }
         openAloud(s, intent)

@@ -575,5 +575,6 @@ adb pull /sdcard/fgs.mp4 "$OUT/fgs_demo.mp4" >/dev/null 2>&1; ls -la "$OUT/fgs_d
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
 # @end
 adb logcat -d -s AndroidRuntime:E > "$OUT/logcat.txt" || true
+adb logcat -d -s TBWATCH:W > "$OUT/watch.txt" || true
 echo "app ANR: $(adb logcat -d | grep -c "ANR in $P")" > "$OUT/anr.txt"; cat "$OUT/anr.txt"
 ls -la "$OUT"
