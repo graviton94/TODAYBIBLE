@@ -1,7 +1,7 @@
 # 1.7.0 출시 노트 (Play)
 
 <en-US>
-• Three copies: your read-aloud, typed and handwritten copies now keep their own progress
+• Three copies: read-aloud, typed and handwritten now keep their own progress
 • Opening a chapter, pick which copy to write, with each one's progress
 • New medals for reading aloud, typing, handwriting, notes, engravings and devotions, in bronze, silver and gold
 • Each copy climbs six levels, from First chapter to Whole Bible
