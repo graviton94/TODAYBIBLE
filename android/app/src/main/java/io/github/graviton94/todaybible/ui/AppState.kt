@@ -54,6 +54,11 @@ class AppState(val store: Store) {
     var welcomeStep by mutableStateOf(0)
     var planId by mutableStateOf(store.planId)
     var planOpen by mutableStateOf(false)
+    /** 이 장을 다른 방식으로 쓰던 중일 때 묻는 창: 쓰던 방식 (탭 번호) · 방식마다 쓴 절 수 · 모두 쓴 절 · 장의 절. */
+    data class ModeAsk(val last: Int, val counts: List<Int>, val done: Int, val total: Int)
+    var modeAsk by mutableStateOf<ModeAsk?>(null)
+    /** 이미 물어본 장 (번역:권:장). */
+    var modeAsked: String? = null
     /** 마침 카드 (작정을 다 쓴 날, "id:시작날"). */
     var votumDone by mutableStateOf<String?>(null)
     // 꾸미기 (1.2)
@@ -494,7 +499,7 @@ class AppState(val store: Store) {
     fun closeOverlays() {
         keepOpen = false
         settingsOpen = false; purchaseOpen = false; plateView = null; finished = null; picker = null; marksOpen = false; found = null
-        memoryOpen = null; sermonOpen = null; prayersOpen = false; galleryOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; related = null; dictEntry = null; versePeek = null; handBook = null; planOpen = false; votumDone = null; pilgrim = null; liber = null; shelfOpen = false; noteOpen = null; award = null; opening = false; leaveAsk = null
+        memoryOpen = null; sermonOpen = null; prayersOpen = false; galleryOpen = false; prayerOpen = null; prayerBell = null; shareVerse = null; related = null; dictEntry = null; versePeek = null; handBook = null; planOpen = false; modeAsk = null; votumDone = null; pilgrim = null; liber = null; shelfOpen = false; noteOpen = null; award = null; opening = false; leaveAsk = null
     }
     /** 앱을 처음부터 다시 (언어처럼 화면 전체가 바뀌는 설정 뒤에). 여는 순간은 이번만 건너뛰어요. */
     fun restartApp(a: android.app.Activity) {

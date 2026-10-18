@@ -245,3 +245,27 @@ fun VotumDone(s: AppState, key: String) {
         }
     }
 }
+
+/** 이 장을 다른 방식으로 쓰던 중일 때: 쓰던 방식을 맨 위에, 방식마다 쓴 절 수. 고르면 그 탭으로. */
+@Composable
+fun ModeAskSheet(s: AppState, a: AppState.ModeAsk) {
+    val c = Theme.c; val k = s.korean
+    val names = listOf(stringResource(R.string.mode_aloud), stringResource(R.string.mode_type), stringResource(R.string.mode_paper))
+    BookSheet({ s.modeAsk = null }) {
+        Text(s.chapterRef(s.book, s.chapter), style = Theme.caps(), maxLines = 1)
+        Text(stringResource(R.string.mode_ask_title), style = Theme.title(k), modifier = Modifier.fillMaxWidth())
+        (listOf(a.last) + (0..2).filter { it != a.last }).forEach { i ->
+            Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).clickable(role = Role.Button, onClick = tap { s.forceTab = i; s.modeAsk = null }),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                Column(Modifier.weight(1f)) {
+                    Text(names[i], style = Theme.body().copy(fontWeight = if (i == a.last) FontWeight.SemiBold else FontWeight.Normal), maxLines = 1)
+                    if (i == a.last) Text(stringResource(R.string.mode_ask_last), style = Theme.small().copy(color = c.giltText), maxLines = 1)
+                }
+                Text(stringResource(R.string.mode_ask_count, a.counts[i]), style = Theme.small(), maxLines = 1)
+                Text("›", style = Theme.small().copy(color = c.unwritten), maxLines = 1)
+            }
+            Hair()
+        }
+        Text(stringResource(R.string.mode_ask_note, a.done, a.total), style = Theme.small(), modifier = Modifier.fillMaxWidth())
+    }
+}

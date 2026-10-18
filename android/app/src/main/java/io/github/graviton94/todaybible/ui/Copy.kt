@@ -131,6 +131,16 @@ fun CopyPage(s: AppState) {
     androidx.compose.runtime.SideEffect { s.copyTabNow = tab }
     LaunchedEffect(s.forceTab) { s.forceTab?.let { tab = it; s.store.copyTab = it; s.forceTab = null } }
     LaunchedEffect(s.aloudNow) { if (s.aloudNow) { tab = 0; s.store.copyTab = 0; if (next == null) s.aloudNow = false } }
+    // 이 장을 다른 방식으로 쓰던 중이면 장을 열 때 한 번 물어요 (방식마다 쓴 절 수와 함께, 다른 방식도 고를 수 있게). 창은 Pages 에서 맨 위에.
+    LaunchedEffect(s.book, s.chapter, tab) {
+        val key = "${s.translation.id}:${s.book}:${s.chapter}"
+        if (s.modeAsked == key || pass != null || next == null || s.aloudNow) return@LaunchedEffect
+        val modeTab = mapOf(io.github.graviton94.todaybible.core.Mode.ALOUD to 0, io.github.graviton94.todaybible.core.Mode.TYPE to 1, io.github.graviton94.todaybible.core.Mode.PAPER to 2)
+        val ch = s.fills.filter { it.translation == s.translation && it.key.book == s.book && it.key.chapter == s.chapter }
+        val last = ch.maxByOrNull { it.atMillis }?.let { modeTab[it.mode] } ?: return@LaunchedEffect
+        s.modeAsked = key
+        if (last != tab) s.modeAsk = AppState.ModeAsk(last, (0..2).map { i -> ch.count { modeTab[it.mode] == i } }, doneCount, fillable.size)
+    }
 
     // 집중: 머리 · 탭 · 아래 이름표를 걷고 지금 쓰는 절만
     androidx.activity.compose.BackHandler(enabled = s.focusMode) { s.focusMode = false }

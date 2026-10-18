@@ -137,6 +137,7 @@ object Tokens {
         val votumHero = 150.dp
         val votumListMax = 520.dp
         val votumBar = 96.dp
+        val finishedPlate = 260.dp
     }
     object Text {
         val verse = 21.sp

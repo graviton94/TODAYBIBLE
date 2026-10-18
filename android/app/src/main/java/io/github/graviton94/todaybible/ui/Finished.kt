@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -90,6 +91,9 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
     // 적다가 앱이 내려가도 남게: 멈추고 1.5초 뒤 저장 (같으면 그대로)
     LaunchedEffect(line) { kotlinx.coroutines.delay(1500); s.setReflection(book, chapter, line) }
     BackHandler { close() }
+    // 타자로 마친 장: 떠 있던 키보드는 내려요 (마침 화면이 한눈에 보이게, 한 줄을 적을 때만 다시)
+    val kb = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current; val fm = androidx.compose.ui.platform.LocalFocusManager.current
+    LaunchedEffect(book, chapter) { fm.clearFocus(true); kb?.hide() }
     val ctx = LocalContext.current
     val verses = remember(book, chapter) { s.store.book(s.translation, book).fillable(chapter).size }
     val run = io.github.graviton94.todaybible.core.Presence.streak(s.progress.days(), s.today())
@@ -106,7 +110,7 @@ private fun FinishedDark(s: AppState, book: Int, chapter: Int) {
             // 판화 한 점: 가는 금빛 테 안에 그대로 (천천히 밝아져요)
             val img = rememberPlate(plate.id)
             Box(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3).drawBehind { drawRect(c.gilt.copy(alpha = Tokens.Alpha.frame), style = Stroke(Tokens.Stroke.hair.toPx())) }.padding(Tokens.Space.s2)) {
-                if (img != null) Image(img, s.plateName(plate), Modifier.fillMaxWidth().aspectRatio(Tokens.Ratio.plateAspect).graphicsLayer { alpha = shown.value }, contentScale = ContentScale.Crop)
+                if (img != null) Image(img, s.plateName(plate), Modifier.fillMaxWidth().height(Tokens.Size.finishedPlate).graphicsLayer { alpha = shown.value }, contentScale = ContentScale.Crop, alignment = androidx.compose.ui.BiasAlignment(0f, -0.3f))
                 // 그림 오른쪽 위 구석에 작은 인장 (글은 가리지 않게)
                 CompletumSeal(io.github.graviton94.todaybible.core.Latin.roman(chapter) + " · " + io.github.graviton94.todaybible.core.Latin.roman(s.today().year), Modifier.align(Alignment.TopEnd).padding(Tokens.Space.s2))
             }

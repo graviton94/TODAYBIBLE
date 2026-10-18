@@ -335,6 +335,10 @@
     <string name="votum_done_span">%1$s – %2$s · %3$s절</string>
     <string name="votum_keep_btn">간직하기</string>
     <string name="votum_send">보내기</string>
+    <string name="mode_ask_title">어떤 방식으로 이어 쓸까요?</string>
+    <string name="mode_ask_count">%1$d절</string>
+    <string name="mode_ask_last">이 장에서 쓰던 방식</string>
+    <string name="mode_ask_note">모두 합쳐 %2$d절 중 %1$d절 · 어느 방식으로 써도 한 장으로 이어져요</string>
     <string name="plan_rate">하루 %1$d절 · %2$d일</string>
     <string name="plan_day">%2$d일 중 %1$d일째</string>
     <string name="plan_progress">%2$s절 중 %1$s절</string>

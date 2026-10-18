@@ -335,6 +335,10 @@
     <string name="votum_done_span">%1$s – %2$s · %3$s verses</string>
     <string name="votum_keep_btn">Keep</string>
     <string name="votum_send">Send</string>
+    <string name="mode_ask_title">How will you continue?</string>
+    <string name="mode_ask_count">%1$d verses</string>
+    <string name="mode_ask_last">Last used here</string>
+    <string name="mode_ask_note">%1$d of %2$d verses in all · any way you write, it counts toward the chapter</string>
     <string name="plan_rate">%1$d verses a day · %2$d days</string>
     <string name="plan_day">Day %1$d of %2$d</string>
     <string name="plan_progress">%1$s of %2$s verses</string>
