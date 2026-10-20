@@ -239,6 +239,8 @@ class MainActivity : ComponentActivity() {
         if (i.hasExtra("tb.goal")) s.setGoal(i.getIntExtra("tb.goal", 5))
         // 필사 탭: 캡처는 따로 말하지 않으면 타자로 (예전 장면 그대로)
         if (i.extras?.keySet()?.any { it.startsWith("tb.") } == true) s.store.copyTab = i.getIntExtra("tb.copyTab", 1)
+        // 캡처: 고른 필사 탭으로 바로 (필사본 묻는 창 없이)
+        if (i.hasExtra("tb.copyTab")) s.openDirect = s.modeOf(i.getIntExtra("tb.copyTab", 1))
         if (i.hasExtra("tb.notebook")) { if (s.notebook != i.getBooleanExtra("tb.notebook", false)) s.toggleNotebook() }
         s.plateView = i.getStringExtra("tb.plate")?.let { id -> s.store.plates.firstOrNull { it.id == id } }
         s.platePeek = i.getStringExtra("tb.platePeek")?.let { id -> s.store.plates.firstOrNull { it.id == id } }
