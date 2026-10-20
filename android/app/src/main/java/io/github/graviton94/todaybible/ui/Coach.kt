@@ -75,7 +75,7 @@ object Coach {
         "copy2" to listOf("hand_sheet" to R.string.coach_hand_sheet, "hand_buttons" to R.string.coach_hand_buttons),
         "record" to listOf("rec_calendar" to R.string.coach_rec_calendar, "rec_plates" to R.string.coach_rec_plates, "rec_miles" to R.string.coach_rec_miles),
         "listening" to listOf("listen_speed" to R.string.coach_listen_speed, "listen_timer" to R.string.coach_listen_timer, "read_listen" to R.string.coach_listen_stop),
-        "prayer" to listOf("prayer_bell" to R.string.coach_prayer_bell, "prayer_listen" to R.string.coach_prayer_listen, "prayer_write" to R.string.coach_prayer_write, "prayer_amen" to R.string.coach_prayer_amen),
+        "prayer" to listOf("prayer_bell" to R.string.coach_prayer_bell, "prayer_listen" to R.string.coach_prayer_listen, "prayer_amen" to R.string.coach_prayer_amen),
     )
 }
 

@@ -927,8 +927,8 @@
     <string name="scroll_like_km">over a kilometre</string>
     <string name="prayer_title">Prayers</string>
     <string name="prayer_row">Lord\'s Prayer · morning · midday · evening · night</string>
-    <string name="prayer_list_hint">Every prayer here is Scripture, word for word.</string>
-    <string name="prayer_note">Every word here is from Scripture. Pray it slowly, aloud or in your heart.</string>
+    <string name="prayer_list_hint">Every prayer here is prayed from Scripture.</string>
+    <string name="prayer_note">A prayer from Scripture. Pray it slowly, aloud or in your heart.</string>
     <string name="prayer_lords">The Lord\'s Prayer</string>
     <string name="prayer_morning">Morning prayer</string>
     <string name="prayer_noon">Midday prayer</string>
@@ -1072,7 +1072,7 @@
     <string name="coach_listen_timer">Sleep timer: stop after a set time or at the end of the chapter.</string>
     <string name="coach_listen_stop">Stop here. You can also stop from the notification or the bar at the bottom.</string>
     <string name="coach_prayer_bell">Set a reminder time for this prayer.</string>
-    <string name="coach_prayer_listen">Pray along while the verses are read aloud.</string>
+    <string name="coach_prayer_listen">Listen, pray responsively, or read it aloud. Finish one and today\'s prayer is kept.</string>
     <string name="coach_prayer_write">Copy this prayer by typing or by hand.</string>
     <string name="coach_prayer_amen">When you have prayed, tap Amen. It is marked in gold for today.</string>
     <string name="streak_pre">Writing streak</string>
@@ -1259,4 +1259,13 @@
     <string name="thanks_sub">Subscribed · cancel anytime in Manage subscription</string>
     <string name="thanks_go">Continue %1$s</string>
     <string name="thanks_close">Close</string>
+    <string name="prayer_ribbon">All prayers</string>
+    <string name="prayer_from">From %1$s</string>
+    <string name="prayer_mode_alt">Responsive</string>
+    <string name="prayer_mode_self">Read aloud</string>
+    <string name="prayer_alt_hint">Gold lines are yours to read</string>
+    <string name="prayer_self_hint">Read along as each line lights up</string>
+    <string name="prayer_running">Line %1$d of %2$d · Stop</string>
+    <string name="voice_make">Make ›</string>
+    <string name="voice_make_title">Make from my reading</string>
 </resources>

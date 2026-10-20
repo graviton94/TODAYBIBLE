@@ -927,8 +927,8 @@
     <string name="scroll_like_km">1km를 넘었어요</string>
     <string name="prayer_title">기도문</string>
     <string name="prayer_row">주기도문 · 아침 · 낮 · 저녁 · 밤</string>
-    <string name="prayer_list_hint">모두 성경 말씀 그대로예요.</string>
-    <string name="prayer_note">모두 성경 말씀 그대로예요. 천천히, 소리 내어 또는 마음으로 드려요.</string>
+    <string name="prayer_list_hint">모두 성경 말씀으로 드리는 기도예요.</string>
+    <string name="prayer_note">성경 말씀으로 드리는 기도예요. 천천히, 소리 내어 또는 마음으로 드려요.</string>
     <string name="prayer_lords">주기도문</string>
     <string name="prayer_morning">아침 기도</string>
     <string name="prayer_noon">낮 기도</string>
@@ -1072,7 +1072,7 @@
     <string name="coach_listen_timer">잠들기 타이머: 정한 시간이 지나거나 이 장이 끝나면 멈춰요.</string>
     <string name="coach_listen_stop">여기서 멈춰요. 알림이나 아래 재생 띠에서도 멈출 수 있어요.</string>
     <string name="coach_prayer_bell">이 기도를 알려 줄 시각을 정해요.</string>
-    <string name="coach_prayer_listen">말씀을 들으며 함께 기도해요.</string>
+    <string name="coach_prayer_listen">들으며 · 교독으로 · 소리 내어 드려요. 하나를 끝까지 하면 오늘 기도로 남아요.</string>
     <string name="coach_prayer_write">이 기도문을 타자나 손글씨로 옮겨 써요.</string>
     <string name="coach_prayer_amen">기도를 마치면 아멘을 눌러요. 오늘 드린 기도로 금빛 표시가 돼요.</string>
     <string name="streak_pre">이어 쓰기</string>
@@ -1259,4 +1259,13 @@
     <string name="thanks_sub">구독 중 · 언제든 구독 관리에서 해지할 수 있어요</string>
     <string name="thanks_go">%1$s 이어 쓰기</string>
     <string name="thanks_close">닫기</string>
+    <string name="prayer_ribbon">기도문 목록</string>
+    <string name="prayer_from">%1$s 에서</string>
+    <string name="prayer_mode_alt">교독</string>
+    <string name="prayer_mode_self">낭독</string>
+    <string name="prayer_alt_hint">금빛 줄은 내가 읽어요</string>
+    <string name="prayer_self_hint">밝아지는 줄을 따라 읽어요</string>
+    <string name="prayer_running">%2$d줄 중 %1$d · 멈추기</string>
+    <string name="voice_make">만들기 ›</string>
+    <string name="voice_make_title">내 낭독으로 만들기</string>
 </resources>

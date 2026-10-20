@@ -70,8 +70,8 @@ fun prayerHead(p: Prayer): String = when (p.hour) {
 }
 
 /**
- * 기도문 한 편: 위에 기도문 고르는 리본 (누르면 목록 시트), 그 아래 고른 기도. 말씀을 크게, 범위마다 장절. [들으며 기도] [따라 쓰기] [아멘].
- * 모두 성경 본문 그대로예요.
+ * 기도문 한 편: 위에 짙은 리본 「기도문 목록」 (누르면 목록 시트), 제목 · 어느 말씀에서 · 드리는 방법 셋 (들으며 기도 · 교독 · 낭독), 줄마다 기도, [아멘].
+ * 기도문은 그 말씀으로 드리는 기도 (assets/prayers.json). 방법 하나를 끝까지 하면 오늘 드린 것으로 남아요.
  */
 @Composable
 fun PrayerPage(s: AppState, id: String) {
@@ -80,8 +80,33 @@ fun PrayerPage(s: AppState, id: String) {
     BackHandler { s.prayerOpen = null }
     val now by ListenService.now.collectAsState()
     val origin by ListenService.origin.collectAsState()
-    LeaveGuard(s, now != null && origin == "prayer:${p.id}", recording = false, onStop = { ListenService.stop(ctx); s.prayerOpen = null }, onKeep = { s.prayerOpen = null })
-    // 기도문 고르기: 위에 리본 한 줄 (지금 기도 ▾), 누르면 목록 시트. 목록이 화면을 차지하지 않게
+    val heard by ListenService.line.collectAsState()
+    val finished by ListenService.finished.collectAsState()
+    val mine = origin == "prayer:${p.id}"
+    LeaveGuard(s, now != null && mine, recording = false, onStop = { ListenService.stop(ctx); s.prayerOpen = null }, onKeep = { s.prayerOpen = null })
+    val lines = androidx.compose.runtime.remember(p.id, k) { io.github.graviton94.todaybible.data.PrayerText.lines(ctx, p.id, k) }
+    val name = prayerName(p)
+    // 드리는 방법: 0 들으며 기도 · 1 교독 · 2 낭독 (낭독은 소리 없이 줄을 밝히며 기다려요)
+    var mode by androidx.compose.runtime.remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    var selfAt by androidx.compose.runtime.remember(p.id) { androidx.compose.runtime.mutableIntStateOf(-1) }
+    val listening = now != null && mine
+    val at = if (selfAt >= 0) selfAt else if (listening) heard else -1
+    fun stopAll() { if (listening) ListenService.stop(ctx); selfAt = -1 }
+    fun begin(m: Int) {
+        stopAll(); mode = m
+        if (m == 2) { selfAt = 0; return }
+        val male = io.github.graviton94.todaybible.data.Narration.isMale(s.narrator) || s.narrator == io.github.graviton94.todaybible.data.Narration.DEVICE
+        ListenService.startPrayer(ctx, p.id, name, lines, io.github.graviton94.todaybible.data.PrayerText.voices(ctx, p.id, k, male), alternate = m == 1, korean = k, rate = s.aloudRate())
+    }
+    // 낭독: 줄마다 읽을 만큼 밝혀 두고 다음 줄로, 끝까지 가면 드린 것으로
+    androidx.compose.runtime.LaunchedEffect(selfAt) {
+        if (selfAt < 0) return@LaunchedEffect
+        if (selfAt >= lines.size) { selfAt = -1; s.markPrayed(p.id); s.toast = ctx.getString(R.string.prayer_prayed); return@LaunchedEffect }
+        kotlinx.coroutines.delay(io.github.graviton94.todaybible.data.PrayerText.readMs(lines[selfAt], k, s.aloudRate()))
+        selfAt += 1
+    }
+    // 들으며 기도 · 교독을 끝까지 마쳤으면 (화면을 떠나 있었어도 서비스가 오늘 기도로 남겨 둠)
+    androidx.compose.runtime.LaunchedEffect(finished) { if (finished == "prayer:${p.id}") { s.markPrayed(p.id); s.toast = ctx.getString(R.string.prayer_prayed); ListenService.clearFinished() } }
     var choosing by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().background(c.leaf).verticalScroll(rememberScrollState()).padding(horizontal = Tokens.Space.s5, vertical = Tokens.Space.s4),
@@ -92,47 +117,48 @@ fun PrayerPage(s: AppState, id: String) {
             PrayerBell(s, p.id, Modifier.coach("prayer_bell"), big = true)
             HelpButton(s, "prayer")
         }
-        // 리본: 금빛 띠 + ORATIONES · 지금 기도 ▾ · 몇째 / 모두
+        // 리본: 짙은 띠 · ORATIONES · 기도문 목록 · 몇째 / 모두 ▾ (지금 기도 이름은 아래 제목에)
         val idx = Prayers.all.indexOfFirst { it.id == p.id } + 1
-        val pickLabel = stringResource(R.string.prayer_title)
-        Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.paper)
-            .drawBehind { drawRect(c.gilt, size = androidx.compose.ui.geometry.Size(Tokens.Stroke.rule.toPx() * 2, size.height)) }
+        val pickLabel = stringResource(R.string.prayer_ribbon)
+        Row(Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).clip(RoundedCornerShape(Tokens.Radius.chip)).background(c.ebony)
             .clickable(role = Role.Button, onClickLabel = pickLabel) { choosing = true }.padding(horizontal = Tokens.Space.s4),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            Text("ORATIONES", style = Theme.caps(), maxLines = 1)
-            Text(prayerName(p), style = Theme.body(), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-            Text("$idx / ${Prayers.all.size}", style = Theme.small().copy(fontFeatureSettings = "lnum"), maxLines = 1)
-            Text("▾", style = Theme.body().copy(color = c.giltText))
+            Text("ORATIONES", style = Theme.caps().copy(color = c.foil), maxLines = 1)
+            Text(pickLabel, style = Theme.body().copy(color = c.ebonyInk), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+            Text("$idx / ${Prayers.all.size}", style = Theme.small().copy(color = c.ebonyInk, fontFeatureSettings = "lnum"), maxLines = 1)
+            Text("▾", style = Theme.body().copy(color = c.foil))
         }
         Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
             Text(prayerHead(p), style = Theme.caps(), maxLines = 1)
-            Text(prayerName(p), style = Theme.title(k, Tokens.Text.display))
-            Text(s.prayerRefShort(p), style = Theme.small(), maxLines = 1)
+            Text(name, style = Theme.title(k, Tokens.Text.display))
+            Text(stringResource(R.string.prayer_from, s.prayerRefs(p)), style = Theme.small(), maxLines = 2)
         }
-        p.passages.forEach { ps ->
-            val t = s.store.book(s.translation, ps.book)
-            Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                Hair()
-                Text(Lang.passage(s.store.context, s.uiTr, s.bookName(ps.book), ps.chapter, ps.from, ps.to), style = Theme.small().copy(color = c.giltText), modifier = Modifier.padding(top = Tokens.Space.s2))
-                Text(buildAnnotatedString {
-                    for (v in ps.from..ps.to) {
-                        if (ps.to > ps.from) withStyle(SpanStyle(color = c.rubric, fontSize = Theme.small().fontSize)) { append("$v ") }
-                        append(Markup.plain(t.verse(ps.chapter, v))); append(" ")
-                    }
-                }, style = Theme.verse(s.bibleKorean))
+        // 드리는 방법 셋: 한 줄 · 고르면 바로 시작, 하는 중이면 아래에 몇째 줄 · 멈추기
+        val running = at >= 0
+        Row(Modifier.fillMaxWidth().coach("prayer_listen").border(Tokens.Stroke.hair, c.hair)) {
+            listOf(stringResource(R.string.prayer_listen), stringResource(R.string.prayer_mode_alt), stringResource(R.string.prayer_mode_self)).forEachIndexed { i, label ->
+                val on = running && mode == i
+                Box(Modifier.weight(1f).heightIn(min = Tokens.Size.touch).background(if (on) c.leather else androidx.compose.ui.graphics.Color.Transparent)
+                    .clickable(role = Role.Button) { if (on) stopAll() else begin(i) }, contentAlignment = Alignment.Center) {
+                    Text(label, style = Theme.small().copy(color = if (on) c.leatherInk else c.ink), maxLines = 1)
+                }
+            }
+        }
+        if (running) Text(stringResource(R.string.prayer_running, (at + 1).coerceAtMost(lines.size), lines.size) + if (mode == 1) " · " + stringResource(R.string.prayer_alt_hint) else if (mode == 2) " · " + stringResource(R.string.prayer_self_hint) else "",
+            style = Theme.small().copy(color = c.rubric), modifier = Modifier.clickable(role = Role.Button) { stopAll() })
+        Hair()
+        // 줄마다: 지금 줄은 금빛 바탕, 교독이면 내 줄 (짝수째) 금빛 글씨
+        Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
+            lines.forEachIndexed { i, line ->
+                val here = i == at
+                val me = mode == 1 && i % 2 == 1
+                Text(line, style = Theme.body().copy(fontSize = Tokens.Text.verse, color = if (me) c.giltText else c.ink),
+                    modifier = Modifier.fillMaxWidth().then(if (here) Modifier.background(c.mark) else Modifier).padding(horizontal = Tokens.Space.s1))
             }
         }
         Text(stringResource(R.string.prayer_note), style = Theme.small())
-        val playing = now != null
-        Hair()
-        Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-            BookButton(stringResource(if (playing) R.string.listen_stop else R.string.prayer_listen), Modifier.weight(1f).coach("prayer_listen"), quiet = true) {
-                if (playing) ListenService.stop(ctx) else ListenService.startPassages(ctx, p.passages, s.aloudRate(), "prayer:${p.id}")
-            }
-            BookButton(stringResource(R.string.prayer_write), Modifier.weight(1f).coach("prayer_write"), quiet = true) { s.writePrayer(p.id) }
-        }
         BookButton(stringResource(if (s.prayed(p.id)) R.string.prayer_prayed else R.string.prayer_amen), Modifier.fillMaxWidth().coach("prayer_amen"), quiet = s.prayed(p.id)) {
-            s.markPrayed(p.id); s.prayerOpen = null
+            stopAll(); s.markPrayed(p.id); s.prayerOpen = null
         }
     }
     if (choosing) BookSheet({ choosing = false }) {

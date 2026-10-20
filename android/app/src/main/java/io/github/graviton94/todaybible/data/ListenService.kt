@@ -19,6 +19,7 @@ import io.github.graviton94.todaybible.core.Canon
 import io.github.graviton94.todaybible.core.Markup
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import io.github.graviton94.todaybible.design.Tokens
 
 /**
  * 듣기 (다1): 낭독 목소리로 한 장을 이어 들어요. 화면이 꺼져도 계속 (알림에서 멈춤).
@@ -52,6 +53,24 @@ class ListenService : Service() {
             if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i) else ctx.startService(i)
         }
         fun stop(ctx: Context) { ctx.startService(Intent(ctx, ListenService::class.java).setAction("stop")) }
+
+        /** 기도문 듣기: 지금 줄 (-1 = 없음) · 끝까지 마친 기도 ("prayer:아이디", 화면이 받아 지워요). */
+        private val _line = MutableStateFlow(-1)
+        val line: StateFlow<Int> = _line
+        private val _finished = MutableStateFlow<String?>(null)
+        val finished: StateFlow<String?> = _finished
+        fun clearFinished() { _finished.value = null }
+        /**
+         * 기도문을 줄마다 (미리 만든 음원, 없으면 폰 목소리). alternate = 교독: 인도 줄 (홀수째) 만 소리 내고 내 줄은 읽을 만큼 기다려요.
+         * 알림 · 잠금 화면 제목은 기도문 이름.
+         */
+        fun startPrayer(ctx: Context, id: String, title: String, lines: List<String>, files: List<String?>, alternate: Boolean, korean: Boolean, rate: Float) {
+            if (lines.isEmpty()) return
+            _origin.value = "prayer:$id"; _finished.value = null
+            val i = Intent(ctx, ListenService::class.java).putExtra("pid", id).putExtra("ptitle", title).putExtra("plines", lines.toTypedArray())
+                .putExtra("pfiles", files.map { it ?: "" }.toTypedArray()).putExtra("palt", alternate).putExtra("pko", korean).putExtra("r", rate)
+            if (Build.VERSION.SDK_INT >= 26) ctx.startForegroundService(i) else ctx.startService(i)
+        }
         /** 알림 · 화면의 멈춤 / 이어 듣기 / 이전 절 / 다음 절. */
         fun control(ctx: Context, action: String) { if (_now.value != null) ctx.startService(Intent(ctx, ListenService::class.java).setAction(action)) }
 
@@ -73,6 +92,9 @@ class ListenService : Service() {
     /** 범위 듣기: 이 절까지 (0 = 장 끝까지 이어서) · 다음에 들을 범위들. */
     private var to = 0
     private val queue = ArrayDeque<IntArray>()
+    /** 기도문 듣기 (null 이면 성경): 이름 · 줄 · 줄마다 음원 · 교독 · 말 · 지금 줄. */
+    private var prayerId: String? = null; private var pTitle = ""; private var pLines: List<String> = emptyList(); private var pFiles: List<String> = emptyList()
+    private var pAlt = false; private var pKo = true; private var pIndex = 0
     // 화면이 꺼져도 절 사이 쉼 · 다음 장 받기 동안 멈추지 않게
     // 멈춘 동안은 풀어 둬요 (밤새 멈춰 두어도 배터리를 붙잡지 않게)
     private var wake: android.os.PowerManager.WakeLock? = null
@@ -142,6 +164,12 @@ class ListenService : Service() {
         book = intent?.getIntExtra("b", 0) ?: 0; chapter = intent?.getIntExtra("c", 1) ?: 1
         verse = intent?.getIntExtra("v", 1) ?: 1; rate = intent?.getFloatExtra("r", 1f) ?: 1f
         queue.clear(); to = 0
+        prayerId = intent?.getStringExtra("pid")
+        if (prayerId != null) {
+            pTitle = intent?.getStringExtra("ptitle").orEmpty(); pLines = intent?.getStringArrayExtra("plines")?.toList().orEmpty()
+            pFiles = intent?.getStringArrayExtra("pfiles")?.toList().orEmpty(); pAlt = intent?.getBooleanExtra("palt", false) == true
+            pKo = intent?.getBooleanExtra("pko", true) != false; pIndex = 0
+        }
         intent?.getIntArrayExtra("q")?.let { q ->
             q.toList().chunked(4).forEach { queue.addLast(it.toIntArray()) }
             queue.removeFirstOrNull()?.let { book = it[0]; chapter = it[1]; verse = it[2]; to = it[3] }
@@ -170,7 +198,7 @@ class ListenService : Service() {
 
     /** 그 장의 판화 (없으면 표지 판화 · 빛이 있으라) 를 먹빛 정사각으로: 알림 · 잠금 화면 앨범 그림. */
     private fun artwork(): android.graphics.Bitmap? {
-        val id = store.plateFor(book, chapter)?.id ?: store.coverPlate.takeIf { it.isNotEmpty() } ?: "creation"
+        val id = (if (prayerId != null) null else store.plateFor(book, chapter)?.id) ?: store.coverPlate.takeIf { it.isNotEmpty() } ?: "creation"
         if (id == artKey) return art
         artKey = id
         art = runCatching {
@@ -205,9 +233,10 @@ class ListenService : Service() {
         val nm = getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, getString(R.string.listen_channel), NotificationManager.IMPORTANCE_LOW).apply { lockscreenVisibility = Notification.VISIBILITY_PUBLIC })
         val ses = ensureSession()
-        val title = getString(R.string.ref_chapter, chapterName(), chapter)
-        val line = runCatching { Markup.plain(store.book(store.translation, book).verse(chapter, verse)) }.getOrDefault("")
-        val sub = getString(R.string.listen_verse, verse) + if (line.isNotEmpty()) " · $line" else ""
+        // 기도문이면 제목은 기도문 이름, 아래는 지금 줄
+        val title = if (prayerId != null) pTitle else getString(R.string.ref_chapter, chapterName(), chapter)
+        val line = if (prayerId != null) pLines.getOrNull(pIndex).orEmpty() else runCatching { Markup.plain(store.book(store.translation, book).verse(chapter, verse)) }.getOrDefault("")
+        val sub = if (prayerId != null) line else getString(R.string.listen_verse, verse) + if (line.isNotEmpty()) " · $line" else ""
         val pic = artwork()
         ses.setMetadata(android.media.MediaMetadata.Builder()
             .putString(android.media.MediaMetadata.METADATA_KEY_TITLE, title)
@@ -264,6 +293,12 @@ class ListenService : Service() {
     /** 이전 · 다음 절 (장 끝에서 다음이면 다음 장으로). */
     private fun skip(dir: Int) {
         if (_now.value == null) return
+        if (prayerId != null) {
+            token++; val t = token
+            runCatching { player?.release() }; player = null; guide?.stop(); resumeStep = null
+            if (paused) { paused = false; ui.removeCallbacks(idleStop); hold() }
+            pIndex = (pIndex + dir).coerceIn(0, pLines.size - 1); playPrayer(t, pIndex); return
+        }
         val list = store.book(store.translation, book).fillable(chapter).filter { to == 0 || it <= to }
         val i = list.indexOf(verse).let { if (it < 0) 0 else it }
         token++; val t = token
@@ -279,6 +314,7 @@ class ListenService : Service() {
 
     /** 지금 절부터 차례로. 장 음원이 없으면 받아 보고, 끝내 없으면 폰 목소리. */
     private fun play(t: Int) {
+        if (prayerId != null) { playPrayer(t, pIndex); return }
         val tr = store.translation
         val korean = tr == io.github.graviton94.todaybible.core.Translation.KRV
         val voice = store.narratorFor(tr)
@@ -324,6 +360,41 @@ class ListenService : Service() {
         }.start()
     }
 
+    /** 기도문 한 줄씩: 음원 (없으면 폰 목소리) · 교독이면 내 줄은 기다림. 끝까지 마치면 오늘 드린 것으로. */
+    private fun playPrayer(t: Int, from: Int) {
+        val id = prayerId ?: return
+        fun step(i: Int) {
+            if (t != token) return
+            if (i >= pLines.size) {
+                // 끝까지 드렸어요: 오늘 기도로 남기고 화면에 알려요
+                val d = java.time.LocalDate.now().toEpochDay(); store.setPrayed(d, store.prayedOn(d) + id)
+                _finished.value = "prayer:$id"; finish(); return
+            }
+            if (paused) { resumeStep = { step(i) }; return }
+            pIndex = i; _line.value = i
+            _now.value = Now(0, 0, i + 1, true)
+            foreground()
+            val text = pLines[i]
+            val after = { ui.postDelayed({ step(i + 1) }, (Tokens.Motion.prayerGapMs / rate).toLong()) }
+            if (pAlt && i % 2 == 1) { ui.postDelayed({ if (t == token && !paused) step(i + 1) else if (t == token) resumeStep = { step(i + 1) } }, PrayerText.readMs(text, pKo, rate)); return }
+            val f = pFiles.getOrNull(i)?.takeIf { it.isNotEmpty() }
+            val p = f?.let { path -> runCatching {
+                runCatching { player?.release() }
+                Sound.player(lift = true) { assets.openFd(path).use { fd -> setDataSource(fd.fileDescriptor, fd.startOffset, fd.length) } }.apply {
+                    if (rate != 1f) playbackParams = playbackParams.setSpeed(rate)
+                    setOnCompletionListener { after() }
+                    start()
+                }
+            }.getOrNull() }
+            if (p != null) player = p
+            else {
+                val g = guide ?: GuideVoice(this, pKo, store.guideVoice).also { guide = it }
+                g.whenReady { ui.post { if (t == token) { if (!g.ready) after() else g.speak(text, rate, { _, _ -> }, { ui.post { after() } }) } } }
+            }
+        }
+        step(from)
+    }
+
     /** 다음 장으로 (권 끝이면 다음 권 · 요한계시록 끝 · 이 장까지 타이머면 멈춤). */
     private fun next(t: Int) {
         if (t != token) return
@@ -344,6 +415,7 @@ class ListenService : Service() {
         runCatching { player?.release() }; player = null
         guide?.release(); guide = null
         _now.value = null; _timer.value = 0; stopAt = 0L
+        prayerId = null; _line.value = -1
         paused = false; resumeStep = null; resumeOnGain = false
         abandonFocus()
         if (noisyOn) { noisyOn = false; runCatching { unregisterReceiver(noisy) } }

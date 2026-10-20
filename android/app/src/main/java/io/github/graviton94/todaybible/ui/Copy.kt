@@ -1024,28 +1024,20 @@ private fun VoiceRow(s: AppState) {
             s.gateDone(title, if (ok) ExportJob(listOf(out), if (video) "video/mp4" else "audio/mp4", ctx.getString(R.string.export_title_voice, s.bookName(b), chN)) else null)
         }
     }
-    Column(Modifier.fillMaxWidth().padding(top = Tokens.Space.s4).drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(vertical = Tokens.Space.s4),
-        verticalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-        val sec = (total / 1000).toInt()
-        Text(stringResource(R.string.voice_chapter, parts.size, stringResource(R.string.duration_ms, sec / 60, sec % 60)), style = Theme.label(), maxLines = 1)
-        Row(horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-            BookButton(stringResource(if (player != null) R.string.voice_stop else R.string.voice_play), Modifier.weight(1f), quiet = true) {
-                player?.let { it.release(); player = null; return@BookButton }
-                // 절 녹음을 차례로
-                var i = 0
-                fun next() {
-                    if (i >= parts.size) { player?.release(); player = null; return }
-                    val mp = runCatching { io.github.graviton94.todaybible.data.Sound.player { setDataSource(parts[i++].second.path) } }.getOrNull() ?: return next()
-                    mp.setOnCompletionListener { it.release(); next() }; player = mp; mp.start()
-                }
-                next()
-            }
-            BookButton(stringResource(R.string.voice_export_audio), Modifier.weight(1f), locked = s.premiumOn) { export(false) }
-            BookButton(stringResource(R.string.voice_export_video), Modifier.weight(1f), locked = s.premiumOn) { export(true) }
+    fun play() {
+        player?.let { it.release(); player = null; return }
+        // 절 녹음을 차례로
+        var i = 0
+        fun next() {
+            if (i >= parts.size) { player?.release(); player = null; return }
+            val mp = runCatching { io.github.graviton94.todaybible.data.Sound.player { setDataSource(parts[i++].second.path) } }.getOrNull() ?: return next()
+            mp.setOnCompletionListener { it.release(); next() }; player = mp; mp.start()
         }
-        // 가족에게 보내기 (U1): 표지 카드 한 장 + 이 장 낭독을 함께
-        BookButton(stringResource(R.string.gift_send), Modifier.fillMaxWidth(), locked = s.premiumOn, enabled = !s.exporting) {
-            if (s.gated()) { s.purchaseOpen = true; return@BookButton }
+        next()
+    }
+    // 가족에게 보내기 (U1): 표지 카드 한 장 + 이 장 낭독을 함께
+    fun gift() {
+            if (s.gated()) { s.purchaseOpen = true; return }
             s.exporting = true
             scope.launch {
                 val name = "${s.bookName().replace(' ', '_')}_${s.chapter}"
@@ -1060,30 +1052,52 @@ private fun VoiceRow(s: AppState) {
                 val img = java.io.File(ctx.cacheDir, "share/$name.png").also { f -> f.outputStream().use { card.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) } }
                 s.exportJob = ExportJob(listOf(img, audio), "*/*", title)
             }
-        }
-        if (s.exporting) Text(stringResource(R.string.exporting), style = Theme.small())
-        if (s.aloudMode != 2) Text(stringResource(R.string.rec_guide_note), style = Theme.small())
-        // 절마다 녹음: 듣기 · 지우기 (마음에 안 들면 지우고 다시 읽어요)
-        var open by remember { mutableStateOf(false) }
-        Text(stringResource(if (open) R.string.rec_hide else R.string.rec_show), style = Theme.small().copy(color = c.rubric),
-            modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { open = !open })
-        if (open) parts.forEach { (v, f) ->
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
-                val sec = ((lengths[v] ?: 0L) / 1000).toInt()
-                Text(stringResource(R.string.rec_row, v, sec / 60, sec % 60), style = Theme.body(), modifier = Modifier.weight(1f))
-                Text(stringResource(R.string.voice_play), style = Theme.small().copy(color = c.ink), modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
-                    player?.release(); player = runCatching { io.github.graviton94.todaybible.data.Sound.player { setDataSource(f.path) }.apply { setOnCompletionListener { it.release(); player = null }; start() } }.getOrNull()
-                })
-                Text(stringResource(R.string.rec_delete), style = Theme.small().copy(color = c.rubric), modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
-                    player?.release(); player = null; f.delete(); s.voiceRev++; s.toast = ctx.getString(R.string.rec_deleted, v)
-                })
-                // 지우고 그 절을 다시 소리 내어 읽기
-                Text(stringResource(R.string.rec_again), style = Theme.small().copy(color = c.ink), modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
-                    player?.release(); player = null; f.delete(); s.voiceRev++; s.reread = Triple(s.book, s.chapter, v); s.store.copyTab = 0
-                })
+    }
+    val sec = (total / 1000).toInt()
+    val length = stringResource(R.string.duration_ms, sec / 60, sec % 60)
+    // 화면에는 한 줄만 (말씀이 주인공): 내 낭독 n절 · 길이 · 듣기 · 만들기 › — 결과물은 만들기 창에서
+    var making by remember { mutableStateOf(false) }
+    Row(Modifier.fillMaxWidth().padding(top = Tokens.Space.s3).drawBehind { drawLine(c.hair, Offset.Zero, Offset(size.width, 0f), Tokens.Stroke.hair.toPx()) }.padding(top = Tokens.Space.s2),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+        Text(stringResource(R.string.voice_chapter, parts.size, length), style = Theme.small().copy(color = c.ink), maxLines = 1, modifier = Modifier.weight(1f))
+        Text(stringResource(if (player != null) R.string.voice_stop else R.string.voice_play), style = Theme.small().copy(color = c.giltText), maxLines = 1,
+            modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { play() })
+        Text(stringResource(R.string.voice_make), style = Theme.small().copy(color = c.giltText), maxLines = 1,
+            modifier = Modifier.heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { making = true })
+    }
+    // 시트는 스크롤 칸 밖 (창) 에 띄워요
+    if (making) androidx.compose.ui.window.Dialog({ making = false }, androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) { BookSheet({ making = false }) {
+        Column(Modifier.heightIn(max = Tokens.Size.sheetMaxGrid * 2).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            Text("VOX MEA", style = Theme.caps(), maxLines = 1)
+            Text(stringResource(R.string.voice_make_title), style = Theme.title(k))
+            Text(s.chapterRef(s.book, s.chapter) + " · " + stringResource(R.string.voice_chapter, parts.size, length), style = Theme.small(), maxLines = 1)
+            BookButton(stringResource(R.string.voice_export_audio), Modifier.fillMaxWidth(), locked = s.premiumOn) { making = false; export(false) }
+            BookButton(stringResource(R.string.voice_export_video), Modifier.fillMaxWidth(), locked = s.premiumOn) { making = false; export(true) }
+            BookButton(stringResource(R.string.gift_send), Modifier.fillMaxWidth(), locked = s.premiumOn, enabled = !s.exporting) { making = false; gift() }
+            if (s.aloudMode != 2) Text(stringResource(R.string.rec_guide_note), style = Theme.small())
+            // 절마다 녹음: 듣기 · 지우기 (마음에 안 들면 지우고 다시 읽어요)
+            var open by remember { mutableStateOf(false) }
+            Text(stringResource(if (open) R.string.rec_hide else R.string.rec_show), style = Theme.small().copy(color = c.rubric),
+                modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) { open = !open })
+            if (open) parts.forEach { (v, f) ->
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+                    val sec = ((lengths[v] ?: 0L) / 1000).toInt()
+                    Text(stringResource(R.string.rec_row, v, sec / 60, sec % 60), style = Theme.body(), modifier = Modifier.weight(1f))
+                    Text(stringResource(R.string.voice_play), style = Theme.small().copy(color = c.ink), modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
+                        player?.release(); player = runCatching { io.github.graviton94.todaybible.data.Sound.player { setDataSource(f.path) }.apply { setOnCompletionListener { it.release(); player = null }; start() } }.getOrNull()
+                    })
+                    Text(stringResource(R.string.rec_delete), style = Theme.small().copy(color = c.rubric), modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
+                        player?.release(); player = null; f.delete(); s.voiceRev++; s.toast = ctx.getString(R.string.rec_deleted, v)
+                    })
+                    // 지우고 그 절을 다시 소리 내어 읽기
+                    Text(stringResource(R.string.rec_again), style = Theme.small().copy(color = c.ink), modifier = Modifier.heightIn(min = Tokens.Size.tab).wrapContentHeight().clickable(role = Role.Button) {
+                        player?.release(); player = null; f.delete(); s.voiceRev++; s.reread = Triple(s.book, s.chapter, v); s.store.copyTab = 0
+                    })
+                }
             }
         }
-    }
+    } }
+    if (s.exporting) Text(stringResource(R.string.exporting), style = Theme.small())
 }
 
 private fun stringResource0(ctx: android.content.Context, id: Int, vararg a: Any) = ctx.getString(id, *a)
