@@ -98,7 +98,8 @@ class GoalWidget : SmallWidget() {
             val first = p.passages.first()
             val name = runCatching { ctx.getString(ctx.resources.getIdentifier("prayer_$id", "string", ctx.packageName)) }.getOrDefault(id)
             val bookName = io.github.graviton94.todaybible.core.Canon.books[first.book].let { if (io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx)) it.ko else it.en }
-            val verse = runCatching { io.github.graviton94.todaybible.core.Markup.plain(st.book(tr, first.book).verse(first.chapter, first.from)) }.getOrDefault("")
+            // 그 기도의 첫 줄 (앱 언어 · 기도문은 성경 본문이 아니라서)
+            val verse = io.github.graviton94.todaybible.data.PrayerText.lines(ctx, id, io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx)).firstOrNull().orEmpty()
             return Next(id, name, clock(ctx, min), tomorrow, verse, "$bookName ${first.chapter}:${first.from}")
         }
         /** 위젯 고르는 화면 · 캡처의 예시: 저녁 기도 오후 6시. */

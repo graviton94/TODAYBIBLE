@@ -47,8 +47,8 @@ object PrayerReminder {
         val i = Prayers.all.indexOfFirst { it.id == id }.takeIf { it >= 0 } ?: return
         val p = Prayers.all[i]
         if (p.id in store.prayedOn(LocalDate.now().toEpochDay())) return
-        val first = p.passages.first()
-        val body = Markup.plain(store.book(store.translation, first.book).verse(first.chapter, first.from))
+        // 그 기도의 첫 줄 (앱 언어)
+        val body = PrayerText.lines(ctx, p.id, io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx)).firstOrNull().orEmpty()
         val title = ctx.getString(ctx.resources.getIdentifier("prayer_${p.id}", "string", ctx.packageName))
         val nm = ctx.getSystemService(NotificationManager::class.java)
         if (Build.VERSION.SDK_INT >= 26) nm.createNotificationChannel(NotificationChannel(CHANNEL, ctx.getString(R.string.prayer_channel), NotificationManager.IMPORTANCE_DEFAULT))
