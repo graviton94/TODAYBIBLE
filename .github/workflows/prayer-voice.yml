@@ -1,0 +1,28 @@
+name: Prayer voice
+# 기도문 낭독 음원 (assets/prayers.json → ko/en × M5/F5, 줄마다). prayer-voice 가지에 올려요 (앱 assets/prayer 로 옮겨 넣어요).
+on: { workflow_dispatch: {} }
+jobs:
+  voice:
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - uses: actions/cache@v4
+        with: { path: /tmp/st/assets, key: supertonic3-aafc6e3 }
+      - name: Get Supertonic 3
+        run: |
+          git clone -q --depth 1 https://github.com/supertone-oss-archive/supertonic.git /tmp/st-src
+          mkdir -p /tmp/st && cp -r /tmp/st-src/py /tmp/st/
+          pip install -q huggingface_hub -r /tmp/st/py/requirements.txt
+          [ -f /tmp/st/assets/voice_styles/M5.json ] || hf download supertone-oss-archive/supertonic-3 --revision aafc6e32416a594460b32413efc49d7fe4ce6d46 --local-dir /tmp/st/assets
+          sudo apt-get install -y -qq ffmpeg >/dev/null
+      - name: Narrate prayers
+        run: python scripts/narrate_prayers.py /tmp/st/py /tmp/st/assets prayer_out
+      - name: Publish to prayer-voice branch
+        run: |
+          cd prayer_out && du -sh . && find . -name '*.m4a' | wc -l
+          git init -q && git checkout -q -b prayer-voice && git add .
+          git -c user.name=bot -c user.email=bot@users.noreply.github.com commit -qm "Prayer voice for ${GITHUB_SHA}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:prayer-voice
