@@ -794,8 +794,9 @@ class AppState(val store: Store) {
     /** 캡처용 시험 기록: 지난 40여 일 동안 창세기 1–8장 · 시편 23편 · 마가복음 1–2장 등을 나눠 씀. */
     fun seedDemo() {
         val tr = translation; val end = today()
-        val plan = listOf(0 to (1..8).map { it to 1f }, 18 to listOf(23 to 1f), 40 to listOf(1 to 1f, 2 to 1f, 3 to 0.35f),
-            1 to listOf(14 to 0.42f), 41 to listOf(15 to 0.75f), 39 to listOf(5 to 0.17f), 7 to (1..4).map { it to 1f })
+        // 마가복음 1–3장을 마지막에 (가장 최근에 쓴 장 = 마가복음 3장, 오늘 화면 · 필사 탭이 같은 장을 보여요)
+        val plan = listOf(0 to (1..8).map { it to 1f }, 18 to listOf(23 to 1f), 7 to (1..4).map { it to 1f },
+            1 to listOf(14 to 0.42f), 41 to listOf(15 to 0.75f), 39 to listOf(5 to 0.17f), 40 to listOf(1 to 1f, 2 to 1f, 3 to 0.35f))
         val keys = plan.flatMap { (b, chs) -> val t = store.book(tr, b); chs.flatMap { (ch, f) -> val v = t.fillable(ch); v.take((v.size * f).toInt()).map { VerseKey(b, ch, it) } } }
         // 쓴 날: 41일 전부터, 주일 몇 번 · 평일 사흘은 쉼
         val days = (40 downTo 0).map { end.minusDays(it.toLong()) }.filterIndexed { i, d -> !(d.dayOfWeek == java.time.DayOfWeek.SUNDAY && i % 3 != 0) && i !in setOf(5, 17, 26) }
