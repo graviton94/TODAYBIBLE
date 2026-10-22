@@ -34,6 +34,8 @@ class MainActivity : ComponentActivity() {
         // 볼륨 버튼은 언제나 앱 소리 (미디어) 크기를: 낭독 · 펜 · 녹음이 같은 볼륨을 따라요
         volumeControlStream = android.media.AudioManager.STREAM_MUSIC
         val store = Store(applicationContext)
+        // 본문 66권을 뒤에서 미리 (여는 판화가 보이는 동안): 오늘 화면이 처음 그릴 때 멈추지 않게
+        store.warm(store.translation)
         if (BuildConfig.DEV_TOOLS && intent.getBooleanExtra("tb.reset", false)) store.reset()
         // 캡처 · 시험: 이달의 판화를 원격에서 바로 받기 (tb.syncSets) · 그 달인 것처럼 보기 (tb.setsMonth 2026-12)
         if (BuildConfig.DEV_TOOLS) {

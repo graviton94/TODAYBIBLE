@@ -28,6 +28,16 @@ class Store(val context: Context) {
         BookText.parse(index, context.assets.open("bible/${tr.id}/%02d.tsv".format(index + 1)).bufferedReader().use { it.readText() })
     }
 
+    /**
+     * 66권을 뒤에서 미리 읽어 둠 (1.7.x): 오늘 화면 · 장 마침 · 다음 판화가 처음 그릴 때 화면 줄에서 본문을 읽느라 멈추지 않게.
+     * 켤 때 (여는 판화가 보이는 동안) 와 번역을 바꿀 때. 지금 쓰는 권부터.
+     */
+    fun warm(tr: Translation, first: Int = bookmark(tr).first) {
+        Thread {
+            (listOf(first) + (0 until 66).filter { it != first }).forEach { b -> runCatching { book(tr, b) } }
+        }.apply { name = "warm-bible"; priority = Thread.NORM_PRIORITY - 1 }.start()
+    }
+
     val plates: List<Plate> by lazy {
         fun parse(lines: List<String>) = lines.filter { it.isNotBlank() && !it.startsWith("#") }.mapNotNull { l ->
             val p = l.split('\t'); val b = io.github.graviton94.todaybible.core.Canon.byOsis(p.getOrElse(1) { "" }) ?: return@mapNotNull null

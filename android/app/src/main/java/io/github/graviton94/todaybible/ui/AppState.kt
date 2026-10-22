@@ -513,7 +513,7 @@ class AppState(val store: Store) {
         if (!locked(ps.book)) store.setBookmark(translation, ps.book, ps.chapter)
         page = COPY
     }
-    fun chooseTranslation(t: Translation) { translation = t; store.translation = t; narrator = store.narratorFor(t); narration = emptyMap(); val bm = store.bookmark(t); book = bm.first; chapter = bm.second; widgets() }
+    fun chooseTranslation(t: Translation) { translation = t; store.translation = t; store.warm(t); narrator = store.narratorFor(t); narration = emptyMap(); val bm = store.bookmark(t); book = bm.first; chapter = bm.second; widgets() }
     fun setThemeChoice(t: ThemeChoice) { theme = t; store.theme = t; checkNight(); widgets() }
     /** 언어 (시스템 · ko · en): 화면 글 · 성경 번역 · 낭독 목소리를 한 번에. 화면 글은 다시 그릴 때 (recreate) 바뀌어요. */
     var language by mutableStateOf(store.language)
@@ -666,10 +666,17 @@ class AppState(val store: Store) {
         fun left(pl: io.github.graviton94.todaybible.data.Plate): Int { val t = store.book(translation, pl.book); return t.fillable(pl.chapter).count { !p.isFilled(translation, VerseKey(pl.book, pl.chapter, it)) } }
         val open = store.plates.filter { !locked(it.book) && (it.book !in started || left(it) > 0) }
         val here = open.filter { it.book == book && it.chapter >= chapter }.minByOrNull { it.chapter }
-        val pick = here ?: open.filter { it.book in started }.maxByOrNull { plateFraction(it) } ?: open.firstOrNull() ?: return null
+        val pick = here ?: open.filter { it.book in started }.maxByOrNull { plateFraction(it, started) } ?: open.firstOrNull() ?: return null
         return pick to left(pick)
     }
-    fun startedBooks(): Set<Int> = progress.filled(translation).map { VerseKey(it).book }.toSet()
+    // 시작한 권: 기록이 바뀔 때만 다시 셈 (화면마다 판화 수만큼 불려서, 매번 모든 기록을 훑으면 오늘 화면이 멈춰요)
+    private var startedKey: Pair<Progress, Translation>? = null
+    private var startedSet: Set<Int> = emptySet()
+    fun startedBooks(): Set<Int> {
+        val key = progress to translation
+        if (startedKey?.let { it.first === key.first && it.second == key.second } == true) return startedSet
+        return progress.filled(translation).map { VerseKey(it).book }.toSet().also { startedSet = it; startedKey = key }
+    }
     /** 판화 장의 완성도 (시작 안 한 권은 0, 본문을 읽지 않음). */
     fun plateFraction(pl: io.github.graviton94.todaybible.data.Plate, started: Set<Int> = startedBooks()): Float =
         if (pl.book !in started) 0f else progress.chapterFraction(translation, store.book(translation, pl.book), pl.chapter)
