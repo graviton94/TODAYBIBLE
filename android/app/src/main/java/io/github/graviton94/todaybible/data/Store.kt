@@ -32,9 +32,13 @@ class Store(val context: Context) {
      * 66권을 뒤에서 미리 읽어 둠 (1.7.x): 오늘 화면 · 장 마침 · 다음 판화가 처음 그릴 때 화면 줄에서 본문을 읽느라 멈추지 않게.
      * 켤 때 (여는 판화가 보이는 동안) 와 번역을 바꿀 때. 지금 쓰는 권부터.
      */
-    fun warm(tr: Translation, first: Int = bookmark(tr).first) {
+    fun warm(tr: Translation) {
         Thread {
-            (listOf(first) + (0 until 66).filter { it != first }).forEach { b -> runCatching { book(tr, b) } }
+            // 오늘 화면이 먼저 쓰는 권부터: 지금 쓰는 권 · 절기 말씀의 권 · 쓴 적 있는 권 (최근 순, 다음 판화 · 오늘 마친 장) · 나머지
+            val first = runCatching { bookmark(tr).first }.getOrDefault(0)
+            val season = runCatching { io.github.graviton94.todaybible.core.Seasons.verse(io.github.graviton94.todaybible.core.Seasons.at(java.time.LocalDate.now()).season).first }.getOrDefault(first)
+            val written = runCatching { loadFills().filter { it.translation == tr }.sortedByDescending { it.atMillis }.map { it.key.book }.distinct() }.getOrDefault(emptyList())
+            (listOf(first, season) + written + (0 until 66)).distinct().forEach { b -> runCatching { book(tr, b) } }
         }.apply { name = "warm-bible"; priority = Thread.NORM_PRIORITY - 1 }.start()
     }
 
