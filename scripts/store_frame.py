@@ -3,16 +3,17 @@
 # 다시 만들기: python3 -I scripts/store_frame.py <캡처 폴더 (st_ko_1_intro.png …)>
 import sys, os
 from PIL import Image, ImageDraw, ImageFont
-R='/home/user/todaybible'; F=R+'/.cache/'; OUT=R+'/docs/store/graphics'
+R=os.path.dirname(os.path.dirname(os.path.abspath(__file__))); F=R+'/.cache/'; OUT=R+'/docs/store/graphics'
 SRC=sys.argv[1]
 LIGHT=dict(bg=(0xF4,0xEF,0xE6), ink=(0x1F,0x1A,0x15), gilt=(0x9A,0x6B,0x1F), hair=(0xD6,0xCF,0xC2))
 DARK=dict(bg=(0x17,0x11,0x0C), ink=(0xEA,0xDF,0xC8), gilt=(0xC7,0xA3,0x5D), hair=(0x3A,0x32,0x2A))
-NAMES=['intro','today','opener','type','aloud','gallery','story','record']
-DARKS={'intro','opener','gallery','story'}
-CAPS=['BIBLIA · MANU SCRIPTA','HODIE','EXODUS · XIV','SCRIBERE','RESPONSORIUM','COLLECTIO','HISTORIA','BIBLIA MEA']
+# 1.7: 세 필사본 (타자본 · 손글씨본 · 낭독본) · 역사 속의 성경 · 관련 구절 · 새 기도문
+NAMES=['intro','today','type','hand','aloud','story','related','prayer']
+DARKS={'intro','story'}
+CAPS=['BIBLIA · MANU SCRIPTA','HODIE','SCRIBERE','MANU','RESPONSORIUM','HISTORIA','CONCORDANTIA','ORATIO']
 CAP={
- 'ko':["하루 한 장, 판화와 함께 여는 말씀","오늘 쓸 자리와 기도를 한눈에","장을 펼치면 도레의 판화가 먼저","한 글자씩, 타자로 옮겨 쓰기","인도 목소리와 한 절씩 교독","다 쓴 장마다 판화 한 점이 걸려요","판화마다 그림 · 장면 · 역사 이야기","쓸수록 채워지는 나만의 성경"],
- 'en':["One chapter a day, opened with an engraving","Today's place and prayer at a glance","Each chapter opens with a Doré engraving","Type it, letter by letter","Read responsively with a narrator","Finish a chapter, hang an engraving","Every engraving tells its history","Your own Bible, filling up as you write"],
+ 'ko':["하루 한 장, 판화와 함께 여는 말씀","오늘 쓸 자리와 기도를 한눈에","타자본: 한 글자씩 원고지에","손글씨본: 손으로 쓰는 나만의 성경","낭독본: 인도 목소리와 한 절씩 교독","판화마다 그림 · 장면 · 역사 이야기","관련 구절 · 성경 사전을 그 자리에서","기도문마다 낭독, 들으며 기도해요"],
+ 'en':["One chapter a day, opened with an engraving","Today's place and prayer at a glance","Typed copy: letter by letter","Handwritten copy: your Bible in your hand","Read-aloud copy: take turns with a narrator","Every engraving tells its history","Related verses and a dictionary, right there","Every prayer narrated: listen and pray"],
 }
 def var(name, size, w):
     f=ImageFont.truetype(F+name, size)

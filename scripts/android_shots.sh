@@ -523,7 +523,7 @@ adb shell am broadcast -a com.android.systemui.demo -e command battery -e level 
 adb shell am broadcast -a com.android.systemui.demo -e command network -e wifi show -e level 4 >/dev/null
 adb shell am broadcast -a com.android.systemui.demo -e command notifications -e visible false >/dev/null
 stsnap() { sleep "$2"; adb shell cmd statusbar collapse >/dev/null 2>&1; sleep 1; snap "$1"; }
-# 1.5: 여는 판화 · 오늘 · 장 여는 화면 · 타자 · 교독 · 화첩 · 역사 속의 성경 · 나의 성경
+# 1.7: 여는 판화 · 오늘 · 타자본 · 손글씨본 · 낭독본 · 역사 속의 성경 · 관련 구절 · 기도
 for L in ko en; do
   if [ $L = ko ]; then adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null; TR=KRV; OWN=은혜; PR=morning
   else adb shell cmd locale set-app-locales $P --locales en-US 2>/dev/null; TR=WEB; OWN="''"; PR=lords; fi
@@ -531,13 +531,13 @@ for L in ko en; do
   open --ez tb.seed true --es tb.tr $TR --es tb.theme LIGHT --es tb.owner "$OWN" --ei tb.page 0; sleep 3
   open --es tb.intro C;                                              stsnap st_${L}_1_intro 7
   open --ei tb.page 0;                                               stsnap st_${L}_2_today 5
-  open --es tb.open 2:14;                                            stsnap st_${L}_3_opener 6
-  open --ei tb.page 2 --ei tb.copyTab 1;                             stsnap st_${L}_4_type 4
+  open --ei tb.page 2 --ei tb.copyTab 1;                             stsnap st_${L}_3_type 4
+  open --ei tb.page 2 --ei tb.copyTab 2;                             stsnap st_${L}_4_hand 5
   open --ei tb.page 2 --ei tb.copyTab 0 --ei tb.aloudMode 0;         stsnap st_${L}_5_aloud 6
-  open --ez tb.gallery true;                                         stsnap st_${L}_6_gallery 6
-  open --es tb.plate creation; swipe_up;                            stsnap st_${L}_7_story 4
+  open --es tb.plate creation; swipe_up;                            stsnap st_${L}_6_story 4
   open --es tb.plate none
-  open --ei tb.page 3;                                               stsnap st_${L}_8_record 5
+  open --es tb.listen 1:14 --es tb.related 1:14:18;                  stsnap st_${L}_7_related 5
+  open --ez tb.reset false --ei tb.page 0 --es tb.prayer $PR;        stsnap st_${L}_8_prayer 5
 done
 adb shell am broadcast -a com.android.systemui.demo -e command exit >/dev/null
 adb shell cmd locale set-app-locales $P --locales ko-KR 2>/dev/null
