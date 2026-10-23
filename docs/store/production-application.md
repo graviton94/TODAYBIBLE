@@ -31,9 +31,9 @@
 
 > Christians who want a daily Bible habit, especially those who practice copying Scripture by hand (a widespread devotional practice in Korean churches), and older readers who need large text and a simple screen. The app is in Korean and English, rated for everyone, and is not designed for children.
 
-### 사용자에게 주는 가치 (How does your app provide value to users?)
+### 사용자에게 주는 가치 (How does your app provide value to users?) — 300자 이하 (278)
 
-> Bible by Hand turns one chapter a day into something you actually do: read it aloud (speech recognition follows along), type it letter by letter into manuscript squares, or write it by hand over a faint guide. Each copy keeps its own progress, and finished books become a printable PDF, an audiobook in your own voice and a certificate of completion. Around the text are Doré and Schnorr engravings with their history, related verses, a Bible dictionary, narrated prayers, church-year devotions and widgets. Large text and Simple mode suit older readers. There is no account, no ads and no analytics; records stay on the phone, and backups go only where the user chooses.
+> A daily Bible habit you do, not just read: one chapter a day read aloud, typed or handwritten, with separate progress. Finished books become a PDF, your-voice audiobook and certificate. Doré engravings, related verses, narrated prayers, large text. No account, ads or analytics.
 
 ### 첫해 예상 설치 수 (Expected installs in the first year)
 고르기: **[1만 미만 (0–10K)]** 가 현실적 (교회 소개 · 입소문 기준). 광고를 할 계획이면 한 단계 위.
