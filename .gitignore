@@ -5,3 +5,5 @@ local.properties
 *.iml
 .idea/
 .coretest/
+__pycache__/
+*.pyc
