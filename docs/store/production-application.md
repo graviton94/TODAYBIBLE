@@ -42,23 +42,13 @@
 
 ## 3. 프로덕션 준비 (Production readiness)
 
-### 테스트로 배운 것을 바탕으로 바꾼 것 (What changes did you make based on the closed test?)
+### 테스트로 배운 것을 바탕으로 바꾼 것 (What changes did you make based on the closed test?) — 300자 이하 (279)
 
-> - Accessibility: very large text, high contrast, a short guide on every screen, and Simple mode (today's chapter and three big buttons).
-> - Microphone: the wording now says exactly what happens. The phone's own speech recognition service processes speech, and the app sends no audio anywhere. The same wording is in the privacy policy.
-> - Typing explains a rejected letter; sermon notes and reflections save automatically.
-> - Narration downloads only on Wi-Fi (checked during the download), retry once, and say when the phone voice stands in.
-> - Backup and restore now merge records, so a phone and a tablet can share one record and a reinstall loses nothing.
-> - Three separate copies (aloud, typed, handwritten) with their own progress, and new prayers with narration.
-> - Stability: we removed main-thread work found by a watchdog during automated runs, and fixed widgets redrawing on every verse.
+> Added very large text, high contrast and Simple mode; clear mic wording (no audio leaves the app); typing hints; autosaved notes; Wi-Fi-only downloads; backups that merge phone and tablet records; three copies with separate progress; narrated prayers; and fixes for slow screens.
 
-### 프로덕션 준비가 됐다고 판단한 근거 (How did you decide the app is ready?)
+### 프로덕션 준비가 됐다고 판단한 근거 (How did you decide the app is ready?) — 300자 이하 (279)
 
-> - Testers have used every main flow (aloud, typed, handwritten, listening, prayers, backup and restore, widgets, purchases with test accounts) and the issues they raised are fixed.
-> - Every build runs unit tests and automated emulator runs: screenshots of each screen in Korean and English, a release-build smoke test with random input, and a watchdog for stalls. The latest release build had no crashes or ANRs.
-> - [Play Console › Android vitals shows no crash / ANR clusters for the test track.]
-> - Store listing, data safety (no data collected or shared), privacy policy, content rating and foreground service declarations are complete and match the app.
-> - We will roll out in stages (20% → 50% → 100%), watch Android vitals daily in the first week, and keep the in-app feedback channel open.
+> Testers used every main flow and the issues they raised are fixed. Each build passes unit tests and automated emulator runs, and the release build shows no crashes or ANRs. Store listing, data safety and policies are complete. We will roll out in stages and watch Android vitals.
 
 ---
 
