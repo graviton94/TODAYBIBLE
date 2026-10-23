@@ -122,7 +122,7 @@ CI: Android #182 (455e87f) 통과 · def111a 통과. core 테스트는 로컬에
   다시 만들기: 같은 `st_*` 캡처 폴더로 `python3 -I scripts/promo_video.py <폴더> [ko|en] [16x9|9x16]`. Play 에는 16:9 를 YouTube (목록에 없음 공개) 에 올려 링크. 9:16 은 쇼츠 · 릴스용.
 - ✅ 그래픽 이미지 feature_{ko,en}.png (1024×500) · 아이콘 512 는 1.7 에서도 그대로 맞음. 위젯 미리보기는 D2 참고 (10/22 다시 뽑음).
 - 포그라운드 서비스 신고 둘 (미디어 재생 · 데이터 동기화) 확인.
-- 프로덕션 신청서 답 (테스트 동안 받은 의견 → 바꾼 것).
+- ✅ 프로덕션 신청서 답 초안: [store/production-application.md](store/production-application.md) (빈칸은 실제 숫자로).
 - ✅ `design/strings.json` news_body (1.5, 8줄 ko · en), `MainActivity.NEWS = "1.5"` (10/14). Play 출시 노트 1.7 은 [release-1.7.md](release-1.7.md).
 
 ### C11 ⏳ 출시 전 QA (실기기)
