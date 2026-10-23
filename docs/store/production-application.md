@@ -9,11 +9,11 @@
 ## 1. 비공개 테스트 정보 (About your closed test)
 
 ### 테스터 모집이 얼마나 쉬웠나요? (How easy was it to recruit testers?)
-고르기: **[보통 / 약간 어려움]** — 교회 · 지인 중심이면 "Neither easy nor difficult" 가 자연스러움.
+고르기: **쉬움 (Easy)** — 교회 · 지인 중심으로 약 30명 (필요한 12명의 두 배 넘게).
 
 ### 테스트 중 테스터 참여 (Describe the engagement you received from testers)
 
-> We ran the closed test for [14+] days with [N] testers, mostly church members and friends from Korea and a few English speakers, ages [20s–70s], including several older readers. Before the Play test, [N] people used a sideloaded build for a week with a written test sheet (about 30 minutes of tasks) and sent their results back from the app. During the Play test, testers used the daily features: reading a chapter aloud, typing and handwriting it, listening to narration, prayers and widgets. We shipped [N] test updates (1.2 to 1.7) and testers kept the app installed and updated through them.
+> We ran the closed test for about three weeks with around 30 testers, mostly church members and friends from Korea and a few English speakers, of a wide range of ages, including several older readers. Before the Play test, a smaller group used a sideloaded build for a week with a written test sheet (about 30 minutes of tasks) and sent their results back from the app. During the Play test, testers used the daily features: reading a chapter aloud, typing and handwriting it, listening to narration, prayers and widgets. We shipped several test updates (1.2 to 1.7) and testers kept the app installed and updated through them.
 
 ### 받은 의견 요약 · 받은 방법 (Summarize the feedback and how you collected it)
 

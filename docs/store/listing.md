@@ -9,7 +9,7 @@
 
 ## 한국어
 
-**앱 이름 (30자):** 하루의 성경 – 소리 내어 읽고 옮겨 쓰는 성경
+**앱 이름 (30자):** 하루의 성경: 성경 필사 · 낭독  (18자. 짧게 두려면 「하루의 성경」 그대로도 됨)
 
 **짧은 설명 (80자):** 하루 한 장, 소리 내어 읽고 타자 · 손글씨로 옮겨 쓰며 나만의 성경 한 권을 완성해요.
 
@@ -65,7 +65,7 @@
 
 ## English (United States, and other English-speaking countries except the UK)
 
-**App name (30자):** Bible by Hand: Read & Copy
+**App name (30자):** Bible by Hand: Read & Copy  (26자. 짧게 두려면 「Bible by Hand」 그대로도 됨)
 
 **Short description:** Read aloud, type and handwrite one chapter a day, and pray with Scripture.
 
