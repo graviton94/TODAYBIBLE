@@ -11,14 +11,17 @@
 ### 테스터 모집이 얼마나 쉬웠나요? (How easy was it to recruit testers?)
 고르기: **쉬움 (Easy)** — 교회 · 지인 중심으로 약 30명 (필요한 12명의 두 배 넘게).
 
-### 테스트 중 테스터 참여 (Describe the engagement you received from testers)
+### 테스트 중 테스터 참여 (Describe the engagement you received from testers) — 300자 이하 (261)
 
-> We ran the closed test for about three weeks with around 30 testers, mostly church members and friends from Korea and a few English speakers, of a wide range of ages, including several older readers. Before the Play test, a smaller group used a sideloaded build for a week with a written test sheet (about 30 minutes of tasks) and sent their results back from the app. During the Play test, testers used the daily features: reading a chapter aloud, typing and handwriting it, listening to narration, prayers and widgets. We shipped several test updates (1.2 to 1.7) and testers kept the app installed and updated through them.
+> About 30 testers, mostly church members of all ages (several older readers), used the app for about three weeks. They read chapters aloud, typed and handwrote them, listened to narration and prayed, and stayed installed through each test update from 1.2 to 1.7.
 
-### 받은 의견 요약 · 받은 방법 (Summarize the feedback and how you collected it)
+### 받은 의견 요약 (Summary of the feedback) — 300자 이하 (276)
 
-> Feedback came through the in-app "Send feedback" (Settings › Help, which can attach the app's own error log on the tester's choice), the written test sheet, and messages and conversations with testers.
-> Main points: older readers wanted larger text, stronger contrast and fewer buttons; some were unsure whether the microphone recording leaves the phone; typing rejected letters without saying why; a sermon note was lost when the phone went to sleep; narration downloads used mobile data; people using both a phone and a tablet wanted one combined record; reinstalling from Play over the test APK lost records; and testers asked for prayers with narration and a way to pick between reading aloud, typing and handwriting.
+> Older readers wanted larger text and fewer buttons. Some asked if mic audio leaves the phone. Typing gave no reason for rejected letters, a sermon note was lost, narration used mobile data, and phone and tablet users wanted one record. Testers also asked for narrated prayers.
+
+### 의견을 받은 방법 (How you collected feedback) — 300자 이하 (208)
+
+> Through the in-app Send feedback (Settings > Help, with an optional error log), a written test sheet that testers filled in and sent from the app, and direct messages and conversations with testers at church.
 
 ---
 
