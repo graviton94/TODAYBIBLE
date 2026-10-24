@@ -63,6 +63,7 @@ class MainActivity : ComponentActivity() {
         openAloud(s, intent)
         intent.getStringExtra("prayer")?.let { s.prayerOpen = it; s.opening = s.opening && s.firstOfDay; intent.removeExtra("prayer") }
         if (intent.getBooleanExtra("listening", false)) { s.opening = false; s.goToListening(); intent.removeExtra("listening") }
+        if (intent.getBooleanExtra("making", false)) { s.opening = false; s.reopenMaking(); intent.removeExtra("making") }
         // 알림 다시 맞추기 (끈 상태면 남은 알림을 지움) · 위젯 새로 그리기 (되살리기 · 업데이트 뒤에도 맞게)
         io.github.graviton94.todaybible.data.Reminder.schedule(applicationContext, store.reminderHour)
         s.widgets(); s.warmPlan()
@@ -169,6 +170,7 @@ class MainActivity : ComponentActivity() {
         // 알림 · 위젯으로 들어오면 위에 덮인 창들은 닫고 그 자리로
         if (intent.hasExtra("page") || intent.hasExtra("prayer") || intent.hasExtra("at") || intent.hasExtra("aloud") || intent.hasExtra("listening") || intent.hasExtra("season_plan") || intent.hasExtra("season_read")) s.closeOverlays()
         if (intent.getBooleanExtra("listening", false)) { s.goToListening(); intent.removeExtra("listening") }
+        if (intent.getBooleanExtra("making", false)) { s.reopenMaking(); intent.removeExtra("making") }
         intent.getIntExtra("page", -1).takeIf { it >= 0 }?.let { s.page = it; intent.removeExtra("page") }
         openAloud(s, intent); intent.getStringExtra("prayer")?.let { id -> s.prayerOpen = id; intent.removeExtra("prayer") }
     }

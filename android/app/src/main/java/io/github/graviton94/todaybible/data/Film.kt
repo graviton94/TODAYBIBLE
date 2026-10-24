@@ -44,6 +44,8 @@ object Film {
     private const val TITLE_US = 3_000_000L
     private const val END_US = 3_000_000L
     private const val FADE_US = 350_000L
+    /** 그림이 그대로여도 이만큼 (0.5초) 마다는 한 장 보내요 (재생기가 멈춘 줄 알지 않게). */
+    private const val KEEP_US = 500_000L
 
     fun export(ctx: Context, korean: Boolean, plateId: String?, eyebrow: String, title: String, byline: String, endLine: String,
                scenes: List<Scene>, out: File, progress: (Float) -> Unit): Boolean = runCatching {
@@ -53,7 +55,8 @@ object Film {
         val k = W / 1080f
         val d = Tokens.dark
         // 예전에 녹음한 절도 잡음을 줄여서 (한 번만)
-        Voice.cleanAll(scenes.map { it.file })
+        Voice.cleanAll(scenes.map { it.file }) { p -> progress(p * 0.1f) }
+        val prog: (Float) -> Unit = { p -> progress(0.1f + 0.9f * p) }
         // 절마다 시작 시각 (소리를 이어 붙이는 셈과 같게)
         val spans = scenes.map { Voice.spanUs(it.file) }
         val starts = spans.runningFold(TITLE_US) { a, b -> a + b }
@@ -94,6 +97,8 @@ object Film {
         val pad = 84f * k
         val layouts = HashMap<Int, StaticLayout>()
 
+        val topShade = Paint().apply { shader = LinearGradient(0f, 0f, 0f, H * 0.3f, (0x8C shl 24) or (leaf and 0xFFFFFF), leaf and 0xFFFFFF, Shader.TileMode.CLAMP) }
+        val bottomShade = Paint().apply { shader = LinearGradient(0f, H * 0.38f, 0f, H * 0.78f, leaf and 0xFFFFFF, leaf, Shader.TileMode.CLAMP) }
         fun drawArt(t: Long, dim: Float) {
             cv.drawColor(leaf)
             val a = art ?: return
@@ -102,8 +107,8 @@ object Film {
             val m = Matrix().apply { setScale(sc, sc); postTranslate((W - dw) / 2f, (H * 0.74f - dh) * 0.35f) }
             artPaint.alpha = (255 * dim).toInt(); cv.drawBitmap(a, m, artPaint)
             // 위는 살짝, 아래는 어둠으로 녹아들게
-            cv.drawRect(0f, 0f, W.toFloat(), H * 0.3f, Paint().apply { shader = LinearGradient(0f, 0f, 0f, H * 0.3f, (0x8C shl 24) or (leaf and 0xFFFFFF), leaf and 0xFFFFFF, Shader.TileMode.CLAMP) })
-            cv.drawRect(0f, H * 0.38f, W.toFloat(), H.toFloat(), Paint().apply { shader = LinearGradient(0f, H * 0.38f, 0f, H * 0.78f, leaf and 0xFFFFFF, leaf, Shader.TileMode.CLAMP) })
+            cv.drawRect(0f, 0f, W.toFloat(), H * 0.3f, topShade)
+            cv.drawRect(0f, H * 0.38f, W.toFloat(), H.toFloat(), bottomShade)
         }
         fun fade(t: Long, a: Long, b: Long): Float = when { t < a + FADE_US -> ((t - a).toFloat() / FADE_US).coerceIn(0f, 1f); t > b - FADE_US -> ((b - t).toFloat() / FADE_US).coerceIn(0f, 1f); else -> 1f }
 
@@ -184,19 +189,26 @@ object Film {
 
         val frameUs = 1_000_000L / FPS
         val frames = (total / frameUs).toInt()
-        // 같은 그림이면 다시 그리지 않음: 판화 확대는 6장 (0.25초) 마다, 글 · 흐림 · 진행이 바뀔 때만
+        // 그림이 바뀔 때만 새 장면: 흐려지고 밝아지는 동안은 두 장마다 (12fps), 그 밖에는 밝아지는 낱말이 바뀔 때만.
+        // 바뀌지 않는 동안은 장면을 보내지 않아요 (가변 프레임) — 부호기가 할 일이 몇 분의 일로 줄어요
         fun keyOf(f: Int, t: Long): String {
             val i = starts.indexOfLast { it <= t }
             val fading = (t < TITLE_US) || t >= voiceEnd || (i in scenes.indices && (t < starts[i] + FADE_US || t > starts[i + 1] - FADE_US))
-            return if (fading) "f$f" else "z${f / 6}"
+            if (fading) return "f${f / 2}"
+            val sc = scenes[i]; val s0 = starts[i]; val s1 = starts[i + 1]
+            val chars = sc.text.count { it != ' ' }.coerceAtLeast(1)
+            val lead = 150_000L; val span = (s1 - s0 - lead - 200_000L).coerceAtLeast(1)
+            val spoken = ((t - s0 - lead).toFloat() / span * chars).coerceIn(0f, chars.toFloat())
+            // 낱말 경계쯤에서 바뀌게 글자 넷마다
+            return "w$i:${(spoken / 4).toInt()}"
         }
         out.parentFile?.mkdirs()
         val tmp = File(out.path + ".v.mp4")
         // 빠른 길: 그린 그림을 GPU 로 부호기 화면에 바로 (색 바꾸기 · 복사 없음). 안 되는 폰은 예전 길 (YUV 로 바꿔 넣기)
-        val fast = runCatching { encodeSurface(W, H, frames, frameUs, tmp, frame, { f, t -> keyOf(f, t) }, { render(it) }, progress) }
+        val fast = runCatching { encodeSurface(W, H, frames, frameUs, tmp, frame, { f, t -> keyOf(f, t) }, { render(it) }, prog) }
             .onFailure { CrashLog.note(ctx, "film surface path failed · ${it.message}") }.getOrDefault(false)
         lastPath = if (fast) "surface" else "buffers"
-        if (!fast) encodeBuffers(W, H, frames, frameUs, tmp, frame, { f, t -> keyOf(f, t) }, { render(it) }, progress)
+        if (!fast) encodeBuffers(W, H, frames, frameUs, tmp, frame, { f, t -> keyOf(f, t) }, { render(it) }, prog)
         frame.recycle()
         val info = MediaCodec.BufferInfo()
 
@@ -250,12 +262,14 @@ object Film {
         var gl: GlSink? = null
         try {
             gl = GlSink(input, W, H)
-            var lastKey = ""
+            var lastKey = ""; var lastSent = -KEEP_US
             for (f in 0 until frames) {
                 val t = f * frameUs
                 val k = key(f, t)
+                // 그림이 바뀌었거나 0.5초 동안 보낸 장면이 없을 때 · 마지막 장면만 보내요
+                if (k == lastKey && t - lastSent < KEEP_US && f != frames - 1) continue
                 if (k != lastKey) { render(t); gl.upload(frame); lastKey = k }
-                gl.draw(t * 1000L)
+                gl.draw(t * 1000L); lastSent = t
                 drain.run(false)
                 if (f % 12 == 0) progress(f.toFloat() / frames)
             }
@@ -275,10 +289,12 @@ object Film {
         val vm = MediaMuxer(tmp.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
         val drain = Drain(enc, vm)
         val argb = IntArray(W * H); val yA = ByteArray(W * H); val uA = ByteArray(W * H / 4); val vA = ByteArray(W * H / 4)
-        var lastKey = ""
+        var lastKey = ""; var lastSent = -KEEP_US
         for (f in 0 until frames) {
             val t = f * frameUs
             val k = key(f, t)
+            if (k == lastKey && t - lastSent < KEEP_US && f != frames - 1) continue
+            lastSent = t
             if (k != lastKey) { render(t); frame.getPixels(argb, 0, W, 0, 0, W, H); toYuv(argb, W, H, yA, uA, vA); lastKey = k }
             var ii: Int
             do { ii = enc.dequeueInputBuffer(10_000); if (ii < 0) drain.run(false) } while (ii < 0)

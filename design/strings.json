@@ -1278,5 +1278,12 @@
   "import_from_phone_how": {"en": "In Downloads: “TodayBible-records-date.zip”", "ko": "다운로드 폴더의 「오늘성경-기록-날짜.zip」"},
   "import_from_chat": {"en": "A file from a chat or email", "ko": "메신저 · 메일로 받은 파일"},
   "import_from_chat_how": {"en": "Save the file from the chat or email first, then choose it in Downloads", "ko": "카카오톡 · 메일에서 파일을 먼저 ‘저장’한 뒤, 다운로드 폴더에서 골라요"},
-  "import_guide_note": {"en": "After you choose, you'll see what will be added and confirm once more. Nothing here is deleted.", "ko": "고른 뒤에는 무엇이 더해지는지 보여 주고 한 번 더 물어요. 지금 기록은 지워지지 않아요."}
+  "import_guide_note": {"en": "After you choose, you'll see what will be added and confirm once more. Nothing here is deleted.", "ko": "고른 뒤에는 무엇이 더해지는지 보여 주고 한 번 더 물어요. 지금 기록은 지워지지 않아요."},
+  "making_channel": {"en": "Making files", "ko": "파일 만들기"},
+  "making_left_min": {"en": "about %1$d min %2$d s left", "ko": "약 %1$d분 %2$d초 남음"},
+  "making_left_sec": {"en": "about %1$d s left", "ko": "약 %1$d초 남음"},
+  "making_estimating": {"en": "Working out the time left…", "ko": "남은 시간을 재는 중…"},
+  "making_background": {"en": "Keep making in the background", "ko": "뒤에서 이어 만들기"},
+  "making_done": {"en": "Done · tap to save or send", "ko": "다 만들었어요 · 눌러서 저장 · 보내기"},
+  "making_line_done": {"en": "%1$s is ready · save or send", "ko": "%1$s 다 만들었어요 · 저장 · 보내기"}
 }

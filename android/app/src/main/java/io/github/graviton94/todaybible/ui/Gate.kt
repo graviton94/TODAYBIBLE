@@ -31,6 +31,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -46,7 +47,7 @@ import kotlinx.coroutines.launch
 
 /** 파일 만들기 관문의 상태: 0 만드는 중 · 1 다 됨 · -1 못 만듦. */
 /** frac = 만드는 중 진행 (알면), eyebrow · plate · gather = 관문 머리글 · 판화 · 첫 줄 (내 목소리 영상처럼 따로 정할 때). */
-data class ExportGate(val title: String, val state: Int = 0, val job: ExportJob? = null, val frac: Float? = null, val eyebrow: String = "LIBER", val plate: String? = null, val gather: String? = null)
+data class ExportGate(val title: String, val state: Int = 0, val job: ExportJob? = null, val frac: Float? = null, val eyebrow: String = "LIBER", val plate: String? = null, val gather: String? = null, val making: Boolean = false)
 
 /** 관문의 한 줄: 0 하는 중 · 1 다 됨 · -1 안 됨. frac 은 알면 %, detail 은 크기 · 속도 같은 작은 글. */
 data class GateCheck(val label: String, val state: Int, val frac: Float? = null, val detail: String? = null, val onRetry: (() -> Unit)? = null)
@@ -123,7 +124,7 @@ private fun GateBar(frac: Float?) {
         else {
             val t = androidx.compose.animation.core.rememberInfiniteTransition(label = "gate")
             val x by t.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(tween(Tokens.Motion.fadeMs * 4)), label = "x")
-            Box(Modifier.fillMaxWidth().height(Tokens.Stroke.hair).drawWithContent {
+            Box(Modifier.fillMaxWidth().height(Tokens.Stroke.hair).clipToBounds().drawWithContent {
                 drawRect(c.gilt, androidx.compose.ui.geometry.Offset(size.width * (x * 1.3f - 0.3f), 0f), androidx.compose.ui.geometry.Size(size.width * 0.3f, size.height))
             })
         }
@@ -160,16 +161,39 @@ fun NarrationGate(s: AppState, b: Int, ch: Int) {
 
 /** 파일 만들기 관문: 기록 모으기 ✓ · 파일 만들기 → 눌러서 저장 · 보내기. */
 @Composable
-fun ExportGateScreen(s: AppState, g: ExportGate) {
+fun ExportGateScreen(s: AppState, g0: ExportGate) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    // 뒤에서 만드는 것 (내 목소리): 진행 · 남은 시간 · 다 됨을 그쪽에서
+    val m by Making.state.collectAsState()
+    val mk = m?.takeIf { g0.making && it.title == g0.title }
+    val g = if (mk != null) g0.copy(state = when { mk.done -> 1; mk.failed -> -1; else -> 0 }, frac = mk.frac.takeIf { it > 0f }, job = mk.job) else g0
+    val detail = mk?.takeIf { g.state == 0 }?.let { Making.leftText(ctx, it.leftSec) ?: stringResource(R.string.making_estimating) }
     val plate = g.plate?.let { id -> s.store.plates.firstOrNull { it.id == id } } ?: s.dayPlate()
     GateFrame(s, plate, g.eyebrow, stringResource(when (g.state) { 1 -> R.string.gate_file_ready; -1 -> R.string.gate_file_failed; else -> R.string.gate_file_making }, g.title),
         listOf(
             GateCheck(g.gather ?: stringResource(R.string.gate_gather), 1),
-            GateCheck(stringResource(R.string.gate_make), g.state, g.frac),
+            GateCheck(stringResource(R.string.gate_make), g.state, g.frac, detail),
         ),
-        stringResource(R.string.gate_save), { g.job?.let { s.exportJob = it }; s.exportGate = null },
-        stringResource(R.string.close), { s.exportGate = null },
+        stringResource(R.string.gate_save), { g.job?.let { s.exportJob = it }; s.exportGate = null; if (mk != null) Making.clear(ctx) },
+        // 만드는 중에 닫으면: 뒤에서 이어 만들어요 (알림 표시줄 · 낭독 화면 한 줄)
+        stringResource(if (mk != null && g.state == 0) R.string.making_background else R.string.close), { s.exportGate = null; if (mk != null && g.state != 0) Making.clear(ctx) },
         onBack = { s.exportGate = null })
+}
+
+/** 낭독 화면 아래 한 줄: 뒤에서 만드는 중이면 진행 · 남은 시간, 다 됐으면 저장 · 보내기 (누르면 관문). */
+@Composable
+fun MakingLine(s: AppState) {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    val m by Making.state.collectAsState()
+    val st = m ?: return
+    val c = Theme.c
+    val text = when {
+        st.done -> stringResource(R.string.making_line_done, st.title)
+        st.failed -> stringResource(R.string.gate_file_failed, st.title)
+        else -> listOfNotNull(stringResource(R.string.gate_file_making, st.title), "${(st.frac * 100).toInt()}%", Making.leftText(ctx, st.leftSec)).joinToString(" · ")
+    }
+    Text("$text ›", style = Theme.small().copy(color = c.giltText), maxLines = 2,
+        modifier = Modifier.fillMaxWidth().heightIn(min = Tokens.Size.touch).wrapContentHeight().clickable(role = Role.Button) { s.reopenMaking() })
 }
 
 /**

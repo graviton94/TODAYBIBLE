@@ -1281,4 +1281,11 @@
     <string name="import_from_chat">메신저 · 메일로 받은 파일</string>
     <string name="import_from_chat_how">카카오톡 · 메일에서 파일을 먼저 ‘저장’한 뒤, 다운로드 폴더에서 골라요</string>
     <string name="import_guide_note">고른 뒤에는 무엇이 더해지는지 보여 주고 한 번 더 물어요. 지금 기록은 지워지지 않아요.</string>
+    <string name="making_channel">파일 만들기</string>
+    <string name="making_left_min">약 %1$d분 %2$d초 남음</string>
+    <string name="making_left_sec">약 %1$d초 남음</string>
+    <string name="making_estimating">남은 시간을 재는 중…</string>
+    <string name="making_background">뒤에서 이어 만들기</string>
+    <string name="making_done">다 만들었어요 · 눌러서 저장 · 보내기</string>
+    <string name="making_line_done">%1$s 다 만들었어요 · 저장 · 보내기</string>
 </resources>

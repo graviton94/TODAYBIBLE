@@ -1281,4 +1281,11 @@
     <string name="import_from_chat">A file from a chat or email</string>
     <string name="import_from_chat_how">Save the file from the chat or email first, then choose it in Downloads</string>
     <string name="import_guide_note">After you choose, you\'ll see what will be added and confirm once more. Nothing here is deleted.</string>
+    <string name="making_channel">Making files</string>
+    <string name="making_left_min">about %1$d min %2$d s left</string>
+    <string name="making_left_sec">about %1$d s left</string>
+    <string name="making_estimating">Working out the time left…</string>
+    <string name="making_background">Keep making in the background</string>
+    <string name="making_done">Done · tap to save or send</string>
+    <string name="making_line_done">%1$s is ready · save or send</string>
 </resources>

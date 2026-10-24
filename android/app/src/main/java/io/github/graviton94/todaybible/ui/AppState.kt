@@ -268,6 +268,11 @@ class AppState(val store: Store) {
     /** 만들기가 끝났을 때: 관문에 ‘다 됨 · 못 만듦’ (관문을 닫았으면 아무것도). */
     /** 만드는 중 진행 (같은 관문일 때만). */
     fun gateProgress(title: String, f: Float) { val g = exportGate; if (g != null && g.title == title && g.state == 0) exportGate = g.copy(frac = f) }
+    /** 뒤에서 만드는 것 (내 목소리 영상 · 소리) 의 관문을 다시 열어요 (알림 · 낭독 화면 한 줄). */
+    fun reopenMaking() {
+        val m = Making.state.value ?: return
+        exportGate = ExportGate(m.title, eyebrow = m.eyebrow, plate = m.plate, gather = m.gather, making = true)
+    }
     fun gateDone(title: String, job: ExportJob?) {
         val g = exportGate
         if (g == null || g.title != title) return   // 관문을 닫았으면 그만둔 것

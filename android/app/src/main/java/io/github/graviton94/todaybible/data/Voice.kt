@@ -349,7 +349,15 @@ object Voice {
         }.getOrDefault(false)
     }
     /** 내보내기 전에: 아직 안 깨끗한 녹음 (예전 판에서 녹음한 것) 만. */
-    fun cleanAll(parts: List<File>) { parts.forEach { clean(it) } }
+    fun cleanAll(parts: List<File>, progress: (Float) -> Unit = {}) {
+        val todo = parts.filter { !marker(it).exists() }
+        if (todo.isEmpty()) return
+        // 셋씩 나눠 함께 (한 절은 짧아서 금방)
+        val done = java.util.concurrent.atomic.AtomicInteger(0)
+        val pool = java.util.concurrent.Executors.newFixedThreadPool(3)
+        todo.forEach { f -> pool.execute { clean(f); progress(done.incrementAndGet().toFloat() / todo.size) } }
+        pool.shutdown(); pool.awaitTermination(10, java.util.concurrent.TimeUnit.MINUTES)
+    }
 
     fun exportAudio(parts: List<File>, out: File): Boolean = runCatching {
         cleanAll(parts)

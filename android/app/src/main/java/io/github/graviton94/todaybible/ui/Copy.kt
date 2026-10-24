@@ -1000,28 +1000,27 @@ private fun VoiceRow(s: AppState) {
     DisposableEffect(Unit) { onDispose { player?.release() } }
     fun export(video: Boolean) {
         if (s.gated()) { s.purchaseOpen = true; return }
-        if (s.exportGate != null) return
-        // 넘어가는 화면: 절 녹음 모으기 ✓ · 만들기 % → 저장 · 보내기
+        // 이미 만드는 중이면 그 관문을 다시 열어요
+        if (Making.busy) { s.reopenMaking(); return }
+        // 넘어가는 화면: 절 녹음 모으기 ✓ · 만들기 % · 남은 시간 → 저장 · 보내기. 뒤에서 만들어서 관문을 닫아도 이어져요 (알림 표시줄)
         val title = ctx.getString(if (video) R.string.film_title else R.string.voice_audio_title, s.bookName(), s.chapter)
         val plate = s.cardPlate(s.book, s.chapter)
-        s.exportGate = ExportGate(title, eyebrow = "VOX · " + s.head(s.book, s.chapter), plate = plate, gather = ctx.getString(R.string.film_gather, parts.size))
+        val eyebrow = "VOX · " + s.head(s.book, s.chapter); val gather = ctx.getString(R.string.film_gather, parts.size)
         val b = s.book; val chN = s.chapter
-        scope.launch {
-            val name = "${s.bookName(b).replace(' ', '_')}_$chN"
+        val t = s.text(b)
+        val who = if (s.ownerName.isNotBlank()) ctx.getString(R.string.film_by, s.ownerName) else ctx.getString(R.string.film_by_me)
+        val end = Lang.date(ctx, R.string.fmt_ymd, s.today()) + " · " + ctx.getString(R.string.film_end)
+        val head = s.head(b, chN); val ref = s.chapterRef(b, chN); val korean = s.bibleKorean
+        val scenes = parts.map { (v, f) -> io.github.graviton94.todaybible.data.Film.Scene(v, io.github.graviton94.todaybible.core.Markup.plain(t.verse(chN, v)), f) }
+        val files = parts.map { it.second }
+        val shareTitle = ctx.getString(R.string.export_title_voice, s.bookName(b), chN)
+        val name = "${s.bookName(b).replace(' ', '_')}_$chN"
+        s.exportGate = ExportGate(title, eyebrow = eyebrow, plate = plate, gather = gather, making = true)
+        Making.start(ctx, title, eyebrow, plate, gather) { progress ->
             val out = java.io.File(ctx.cacheDir, "share/$name.${if (video) "mp4" else "m4a"}")
-            val ok = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
-                if (!video) Voice.exportAudio(parts.map { it.second }, out)
-                else {
-                    val t = s.text(b)
-                    val who = if (s.ownerName.isNotBlank()) ctx.getString(R.string.film_by, s.ownerName) else ctx.getString(R.string.film_by_me)
-                    val end = Lang.date(ctx, R.string.fmt_ymd, s.today()) + " · " + ctx.getString(R.string.film_end)
-                    io.github.graviton94.todaybible.data.Film.export(ctx, s.bibleKorean, plate, s.head(b, chN), s.chapterRef(b, chN), who, end,
-                        parts.map { (v, f) -> io.github.graviton94.todaybible.data.Film.Scene(v, io.github.graviton94.todaybible.core.Markup.plain(t.verse(chN, v)), f) }, out) { p ->
-                        android.os.Handler(android.os.Looper.getMainLooper()).post { s.gateProgress(title, p) }
-                    }
-                }
-            }
-            s.gateDone(title, if (ok) ExportJob(listOf(out), if (video) "video/mp4" else "audio/mp4", ctx.getString(R.string.export_title_voice, s.bookName(b), chN)) else null)
+            val ok = if (!video) { Voice.cleanAll(files) { progress(it * 0.9f) }; Voice.exportAudio(files, out).also { progress(1f) } }
+                else io.github.graviton94.todaybible.data.Film.export(ctx, korean, plate, head, ref, who, end, scenes, out, progress)
+            if (ok) ExportJob(listOf(out), if (video) "video/mp4" else "audio/mp4", shareTitle) else null
         }
     }
     fun play() {
@@ -1098,6 +1097,7 @@ private fun VoiceRow(s: AppState) {
         }
     } }
     if (s.exporting) Text(stringResource(R.string.exporting), style = Theme.small())
+    MakingLine(s)
 }
 
 private fun stringResource0(ctx: android.content.Context, id: Int, vararg a: Any) = ctx.getString(id, *a)
