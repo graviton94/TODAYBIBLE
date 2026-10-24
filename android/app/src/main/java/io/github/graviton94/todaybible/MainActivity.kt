@@ -101,6 +101,7 @@ class MainActivity : ComponentActivity() {
             val ok = io.github.graviton94.todaybible.data.Film.export(this, s.bibleKorean, "moses_sea", s.head(1, 14), s.chapterRef(1, 14), getString(R.string.film_by, "은혜"),
                 io.github.graviton94.todaybible.ui.Lang.date(this, R.string.fmt_ymd, s.today()) + " · " + getString(R.string.film_end), scenes, out) {}
             if (!ok) error("export failed")
+            java.io.File(dir, "time.txt").writeText("${io.github.graviton94.todaybible.data.Film.lastPath} ${io.github.graviton94.todaybible.data.Film.lastMs}ms")
             val r = android.media.MediaMetadataRetriever(); r.setDataSource(out.path)
             listOf(1_500_000L, 4_600_000L, 7_600_000L, 11_400_000L, 15_000_000L).forEachIndexed { i, us ->
                 r.getFrameAtTime(us, android.media.MediaMetadataRetriever.OPTION_CLOSEST)?.let { b -> java.io.File(dir, "film_${i + 1}.png").outputStream().use { b.compress(android.graphics.Bitmap.CompressFormat.PNG, 90, it) } }

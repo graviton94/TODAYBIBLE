@@ -39,12 +39,15 @@ object Film {
     class Scene(val number: Int, val text: String, val file: File)
 
     private const val FPS = 24
+    /** 마지막으로 만든 길 (surface · buffers) · 걸린 시간 ms (캡처 · 시험용). */
+    @Volatile var lastPath = ""; @Volatile var lastMs = 0L
     private const val TITLE_US = 3_000_000L
     private const val END_US = 3_000_000L
     private const val FADE_US = 350_000L
 
     fun export(ctx: Context, korean: Boolean, plateId: String?, eyebrow: String, title: String, byline: String, endLine: String,
                scenes: List<Scene>, out: File, progress: (Float) -> Unit): Boolean = runCatching {
+        val t0 = System.currentTimeMillis()
         val (W, H) = if (supports(1080, 1920)) 1080 to 1920 else 720 to 1280
         val k = W / 1080f
         val d = Tokens.dark
@@ -184,6 +187,7 @@ object Film {
         // 빠른 길: 그린 그림을 GPU 로 부호기 화면에 바로 (색 바꾸기 · 복사 없음). 안 되는 폰은 예전 길 (YUV 로 바꿔 넣기)
         val fast = runCatching { encodeSurface(W, H, frames, frameUs, tmp, frame, { f, t -> keyOf(f, t) }, { render(it) }, progress) }
             .onFailure { CrashLog.note(ctx, "film surface path failed · ${it.message}") }.getOrDefault(false)
+        lastPath = if (fast) "surface" else "buffers"
         if (!fast) encodeBuffers(W, H, frames, frameUs, tmp, frame, { f, t -> keyOf(f, t) }, { render(it) }, progress)
         frame.recycle()
         val info = MediaCodec.BufferInfo()
@@ -199,7 +203,7 @@ object Film {
             info.set(0, n, vex.sampleTime, if (vex.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) MediaCodec.BUFFER_FLAG_KEY_FRAME else 0)
             mux.writeSampleData(vTrack, buf, info); vex.advance()
         }
-        vex.release(); mux.stop(); mux.release(); tmp.delete(); progress(1f); true
+        vex.release(); mux.stop(); mux.release(); tmp.delete(); lastMs = System.currentTimeMillis() - t0; progress(1f); true
     }.getOrElse { CrashLog.note(ctx, "film failed · ${it.message}"); out.delete(); false }
 
     private fun videoFormat(W: Int, H: Int, color: Int) = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, W, H).apply {
