@@ -46,6 +46,8 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("play") ?: signingConfigs.getByName("sideload")
             buildConfigField("boolean", "DEV_TOOLS", "false")
+            // 라이브러리에 든 네이티브 코드의 기호 표를 번들에 함께 (Play 비정상 종료 · ANR 보고서에서 위치가 보이게)
+            ndk { debugSymbolLevel = "SYMBOL_TABLE" }
         }
     }
 
