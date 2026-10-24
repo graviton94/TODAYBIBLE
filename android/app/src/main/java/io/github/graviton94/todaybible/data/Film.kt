@@ -48,7 +48,8 @@ object Film {
     fun export(ctx: Context, korean: Boolean, plateId: String?, eyebrow: String, title: String, byline: String, endLine: String,
                scenes: List<Scene>, out: File, progress: (Float) -> Unit): Boolean = runCatching {
         val t0 = System.currentTimeMillis()
-        val (W, H) = if (supports(1080, 1920)) 1080 to 1920 else 720 to 1280
+        // 720×1280: 폰에서 보내고 보기에 넉넉하고, 1080 보다 두 배 넘게 빨리 만들어져요
+        val (W, H) = if (supports(720, 1280)) 720 to 1280 else 540 to 960
         val k = W / 1080f
         val d = Tokens.dark
         // 예전에 녹음한 절도 잡음을 줄여서 (한 번만)
@@ -60,9 +61,17 @@ object Film {
         val total = voiceEnd + END_US
 
         // 재료: 판화 (먹빛, 화면보다 조금 크게), 글꼴, 아이콘
-        val art = plateId?.let { id -> runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, id).use { BitmapFactory.decodeStream(it) } }.getOrNull() }
+        val raw = plateId?.let { id -> runCatching { io.github.graviton94.todaybible.data.RemoteSets.open(ctx, id).use { BitmapFactory.decodeStream(it) } }.getOrNull() }
         val sepia = ColorMatrixColorFilter(ColorMatrix(floatArrayOf(0.30f, 0.59f, 0.11f, 0f, 0f, 0.28f, 0.55f, 0.10f, 0f, 0f, 0.24f, 0.47f, 0.09f, 0f, 0f, 0f, 0f, 0f, 1f, 0f)))
-        val artPaint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG).apply { colorFilter = sepia }
+        // 먹빛 판화는 한 번만 만들어 두고 (화면 크기에 맞춰), 장마다는 조금씩 키워 그리기만
+        val art = raw?.let { a ->
+            val base = maxOf(W / a.width.toFloat(), H * 0.78f / a.height)
+            Bitmap.createBitmap((a.width * base).toInt().coerceAtLeast(1), (a.height * base).toInt().coerceAtLeast(1), Bitmap.Config.ARGB_8888).also { b ->
+                Canvas(b).drawBitmap(a, Matrix().apply { setScale(base, base) }, Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG).apply { colorFilter = sepia })
+                a.recycle()
+            }
+        }
+        val artPaint = Paint(Paint.FILTER_BITMAP_FLAG)
         // 제목 · 장절은 앱 언어, 말씀은 번역: 한글이 섞이면 한글 글꼴 (라틴도 들어 있어요)
         val kr = korean || io.github.graviton94.todaybible.ui.Lang.uiKorean(ctx)
         val serif = ResourcesCompat.getFont(ctx, if (kr) R.font.serif_kr_semibold else R.font.garamond_semibold)
@@ -89,8 +98,7 @@ object Film {
             cv.drawColor(leaf)
             val a = art ?: return
             val zoom = 1.04f + 0.12f * (t.toFloat() / total)
-            val base = maxOf(W / a.width.toFloat(), H * 0.78f / a.height)
-            val sc = base * zoom; val dw = a.width * sc; val dh = a.height * sc
+            val sc = zoom; val dw = a.width * sc; val dh = a.height * sc
             val m = Matrix().apply { setScale(sc, sc); postTranslate((W - dw) / 2f, (H * 0.74f - dh) * 0.35f) }
             artPaint.alpha = (255 * dim).toInt(); cv.drawBitmap(a, m, artPaint)
             // 위는 살짝, 아래는 어둠으로 녹아들게
