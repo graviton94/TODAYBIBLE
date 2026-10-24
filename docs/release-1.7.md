@@ -8,6 +8,7 @@
 • Back up records to Drive, your phone or a message
 • New prayers with their own narration: listen, respond or read aloud
 • A cleaner read-aloud screen
+• Clearer voice recordings and faster voice videos
 </en-US>
 <ko-KR>
 • 세 필사본: 낭독본 · 타자본 · 손글씨본의 진도가 따로 가요
@@ -17,4 +18,5 @@
 • 기록 보관: 드라이브 · 휴대폰 · 메신저로 내보내고, 확인 후 합쳐 가져와요
 • 기도문을 새로: 기도문 낭독 음원 · 들으며 기도 · 교독 · 낭독
 • 낭독 화면을 말씀 중심으로 정리했어요
+• 내 목소리 녹음 잡음을 줄이고, 영상은 더 빨리 만들어요
 </ko-KR>
