@@ -1268,4 +1268,17 @@
     <string name="prayer_running">%2$d줄 중 %1$d · 멈추기</string>
     <string name="voice_make">만들기 ›</string>
     <string name="voice_make_title">내 낭독으로 만들기</string>
+    <string name="plan_year_switch">지금 바꾸기 · 남은 날은 Play가 셈해요</string>
+    <string name="archive_drive_how">저장 화면 왼쪽 위 ☰ 를 눌러 ‘드라이브’를 고르고 저장해요. 그 뒤로는 앱을 닫을 때마다 같은 파일이 새로워져요.</string>
+    <string name="archive_drive_on">드라이브에 자동 보관 중 · 마지막 %1$s</string>
+    <string name="archive_phone_how">‘다운로드’ 폴더에 한 번 저장해요. 폰을 바꿀 땐 이 파일을 새 폰으로 옮겨 주세요.</string>
+    <string name="archive_send_how">카카오톡 ‘나와의 채팅’이나 내 메일로 보내 두면, 새 폰에서 받아 가져올 수 있어요.</string>
+    <string name="import_guide_title">어디에 둔 기록을 가져올까요?</string>
+    <string name="import_from_drive">구글 드라이브에서</string>
+    <string name="import_from_drive_how">파일 고르는 화면 왼쪽 위 ☰ › 드라이브 › 「오늘성경-기록-날짜.zip」</string>
+    <string name="import_from_phone">휴대폰에서</string>
+    <string name="import_from_phone_how">다운로드 폴더의 「오늘성경-기록-날짜.zip」</string>
+    <string name="import_from_chat">메신저 · 메일로 받은 파일</string>
+    <string name="import_from_chat_how">카카오톡 · 메일에서 파일을 먼저 ‘저장’한 뒤, 다운로드 폴더에서 골라요</string>
+    <string name="import_guide_note">고른 뒤에는 무엇이 더해지는지 보여 주고 한 번 더 물어요. 지금 기록은 지워지지 않아요.</string>
 </resources>

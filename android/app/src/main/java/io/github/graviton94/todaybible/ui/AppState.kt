@@ -188,6 +188,7 @@ class AppState(val store: Store) {
     var exportJob by mutableStateOf<ExportJob?>(null)
     /** 기록 내보내기 창 · 가져오기 확인 (풀어 둔 파일) · 보관 한 줄을 다시 셀 때. */
     var archiveOpen by mutableStateOf(false)
+    var importGuide by mutableStateOf(false)
     var importPreview by mutableStateOf<io.github.graviton94.todaybible.data.Backup.Preview?>(null)
     var keepRev by mutableIntStateOf(0)
     enum class KeepNudge { DUE, STOPPED }

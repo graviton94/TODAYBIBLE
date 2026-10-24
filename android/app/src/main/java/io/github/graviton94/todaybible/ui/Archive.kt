@@ -74,18 +74,63 @@ fun ArchiveSheet(s: AppState) {
                 Fact(stringResource(R.string.archive_size), stringResource(R.string.archive_size_v, sizeOf(sum.bytes)))
             }
             Hair()
+            // 세 갈래마다 어떻게 되는지 한두 줄
             val on = s.store.backupUri.isNotEmpty()
-            BookButton(stringResource(if (on) R.string.backup_now else R.string.backup_drive), Modifier.fillMaxWidth()) {
+            if (on) Text(stringResource(R.string.archive_drive_on, lastKept(ctx, s.store.backupAt)), style = Theme.small().copy(color = Theme.c.giltText))
+            Way(stringResource(if (on) R.string.backup_now else R.string.backup_drive), stringResource(R.string.archive_drive_how), primary = true) {
                 if (on) keepAt(android.net.Uri.parse(s.store.backupUri)) else drive.launch(Backup.fileName(ctx))
             }
-            Text(stringResource(R.string.backup_drive_note), style = Theme.small())
-            BookButton(stringResource(R.string.archive_phone), Modifier.fillMaxWidth(), quiet = true) { phone.launch(Backup.fileName(ctx)) }
-            BookButton(stringResource(R.string.archive_send), Modifier.fillMaxWidth(), quiet = true) {
+            Way(stringResource(R.string.archive_phone), stringResource(R.string.archive_phone_how)) { phone.launch(Backup.fileName(ctx)) }
+            Way(stringResource(R.string.archive_send), stringResource(R.string.archive_send_how)) {
                 scope.launch {
                     val f = withContext(Dispatchers.IO) { runCatching { Backup.once(ctx) }.getOrNull() }
                     if (f == null) done(false) else { Export.share(ctx, ExportJob(listOf(f), "application/zip", ctx.getString(R.string.archive_mail_title))); Backup.exported(ctx); s.keepRev++; close() }
                 }
             }
+        }
+    }
+}
+
+/** 보관 · 가져오기 한 갈래: 이름 (첫 갈래는 가죽 띠) + 어떻게 하는지 한두 줄 · 누르면 그 길로. */
+@Composable
+private fun Way(title: String, how: String, primary: Boolean = false, go: () -> Unit) {
+    val c = Theme.c
+    Column(Modifier.fillMaxWidth().border(Tokens.Stroke.hair, if (primary) c.gilt else c.hair).clickable(role = Role.Button, onClick = go).padding(Tokens.Space.s3),
+        verticalArrangement = Arrangement.spacedBy(Tokens.Space.s1)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(title, style = Theme.body().copy(color = c.ink, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold), modifier = Modifier.weight(1f), maxLines = 1)
+            Text("›", style = Theme.body().copy(color = c.giltText))
+        }
+        Text(how, style = Theme.small())
+    }
+}
+
+private fun lastKept(ctx: android.content.Context, at: Long): String = if (at > 0) java.time.Instant.ofEpochMilli(at).atZone(java.time.ZoneId.systemDefault()).let { Lang.date(ctx, R.string.fmt_md_time, it) } else "–"
+
+/**
+ * 기록 가져오기 안내: 어디에 두었는지 (드라이브 · 휴대폰 · 메신저/메일) 마다 파일을 찾는 길을 보여 주고, 고르면 파일 고르는 화면으로.
+ * 파일을 고르면 먼저 검사하고 (다른 앱 · 망가진 파일이면 한 줄), 확인 창에서 합쳐요.
+ */
+@Composable
+fun ImportGuideSheet(s: AppState) {
+    val k = s.korean; val ctx = LocalContext.current; val scope = rememberCoroutineScope()
+    fun close() { s.importGuide = false }
+    val pick = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            val p = withContext(Dispatchers.IO) { Backup.inspect(ctx, uri) }
+            close()
+            if (p == null) s.toast = ctx.getString(R.string.backup_bad) else s.importPreview = p
+        }
+    }
+    fun go() = pick.launch(arrayOf("application/zip", "application/octet-stream"))
+    BookSheet({ close() }) {
+        Column(verticalArrangement = Arrangement.spacedBy(Tokens.Space.s3)) {
+            Text("RESTITUTIO", style = Theme.caps(), maxLines = 1)
+            Text(stringResource(R.string.import_guide_title), style = Theme.title(k), maxLines = 2)
+            Way(stringResource(R.string.import_from_drive), stringResource(R.string.import_from_drive_how)) { go() }
+            Way(stringResource(R.string.import_from_phone), stringResource(R.string.import_from_phone_how)) { go() }
+            Way(stringResource(R.string.import_from_chat), stringResource(R.string.import_from_chat_how)) { go() }
+            Text(stringResource(R.string.import_guide_note), style = Theme.small())
         }
     }
 }

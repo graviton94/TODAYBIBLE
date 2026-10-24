@@ -36,6 +36,14 @@ class Lifetime(context: Context) {
         private set
     var monthlyPrice by mutableStateOf<String?>(null)
         private set
+    /** 지금 구독의 요금제 (monthly · yearly, 모르면 ""): 이 폰에서 산 것만 알아요. 월 구독이면 연 구독으로 바꿀 수 있게. */
+    var subPlan by mutableStateOf(prefs.getString("sub_plan", "")!!)
+        private set
+    /** 살아 있는 구독의 영수증 (요금제를 바꿀 때 Play 에 넘겨요). */
+    private var subToken: String? = prefs.getString("sub_token", null)
+    private var pendingPlan = ""
+    private fun keepSub(p: Purchase) { subToken = p.purchaseToken; prefs.edit().putString("sub_token", p.purchaseToken).apply() }
+    private fun setPlan(plan: String) { subPlan = plan; prefs.edit().putString("sub_plan", plan).apply() }
     var memberPrice by mutableStateOf<String?>(null)
         private set
     var yearlyPrice by mutableStateOf<String?>(null)
@@ -72,7 +80,9 @@ class Lifetime(context: Context) {
         .enableAutoServiceReconnection()
         .setListener { r, list ->
             when (r.responseCode) {
-                BillingClient.BillingResponseCode.OK -> list?.forEach { p -> if (p.purchaseState == Purchase.PurchaseState.PENDING) note(Note.PENDING) else { grant(p); note(if (isSub(p)) Note.SUBSCRIBED else Note.BOUGHT) } }
+                BillingClient.BillingResponseCode.OK -> list?.forEach { p -> if (p.purchaseState == Purchase.PurchaseState.PENDING) note(Note.PENDING) else {
+                    grant(p); if (isSub(p) && pendingPlan.isNotEmpty()) setPlan(pendingPlan)
+                    note(if (isSub(p)) Note.SUBSCRIBED else Note.BOUGHT) } }
                 BillingClient.BillingResponseCode.USER_CANCELED -> {}   // 스스로 닫았으면 말없이
                 BillingClient.BillingResponseCode.ITEM_ALREADY_OWNED -> restore(asked = true)
                 else -> note(Note.FAILED)
@@ -159,6 +169,7 @@ class Lifetime(context: Context) {
                 val live = list.filter { isSub(it) && it.purchaseState == Purchase.PurchaseState.PURCHASED }
                 if (live.isNotEmpty()) found.set(true)
                 markSubscribed(live.isNotEmpty()); live.forEach(::acknowledge)
+                live.firstOrNull()?.let(::keepSub) ?: run { if (subPlan.isNotEmpty()) setPlan("") }
             }
             done()
         }
@@ -178,7 +189,13 @@ class Lifetime(context: Context) {
         val d = sub ?: return false
         val token = (if (yearlyPlan) yearly else monthly)?.offerToken ?: return false
         val p = BillingFlowParams.ProductDetailsParams.newBuilder().setProductDetails(d).setOfferToken(token).build()
-        return client.launchBillingFlow(activity, BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(p)).build()).responseCode == BillingClient.BillingResponseCode.OK
+        val flow = BillingFlowParams.newBuilder().setProductDetailsParamsList(listOf(p))
+        // 구독 중에 요금제를 바꾸면 (월 → 연): 지금 구독을 넘겨 남은 날을 셈해서 바로 바꿔요
+        val old = subToken
+        if (subscribed && old != null) flow.setSubscriptionUpdateParams(BillingFlowParams.SubscriptionUpdateParams.newBuilder().setOldPurchaseToken(old)
+            .setSubscriptionReplacementMode(BillingFlowParams.SubscriptionUpdateParams.ReplacementMode.WITH_TIME_PRORATION).build())
+        pendingPlan = if (yearlyPlan) YEARLY else MONTHLY
+        return client.launchBillingFlow(activity, flow.build()).responseCode == BillingClient.BillingResponseCode.OK
     }
 
     private fun markOwned(on: Boolean) { owned = on; prefs.edit().putBoolean("lifetime", on).apply() }
@@ -191,7 +208,7 @@ class Lifetime(context: Context) {
         if (p.purchaseState != Purchase.PurchaseState.PURCHASED) return
         when {
             ID in p.products || MEMBER in p.products -> markOwned(true)
-            isSub(p) -> markSubscribed(true)
+            isSub(p) -> { markSubscribed(true); keepSub(p) }
             else -> return
         }
         acknowledge(p)

@@ -242,7 +242,7 @@ fun SettingsPage(s: AppState) {
                     Text(stringResource(R.string.backup_on, last), style = Theme.small().copy(color = c.inkSoft))
                 }
                 BookButton(stringResource(R.string.archive_open), Modifier.fillMaxWidth()) { s.archiveOpen = true }
-                BookButton(stringResource(R.string.backup_import), Modifier.fillMaxWidth(), quiet = true) { pick.launch(arrayOf("application/zip", "application/octet-stream")) }
+                BookButton(stringResource(R.string.backup_import), Modifier.fillMaxWidth(), quiet = true) { s.importGuide = true }
                 Text(stringResource(R.string.import_hint), style = Theme.small())
                 if (where.isNotEmpty()) BookButton(stringResource(R.string.backup_off), Modifier.fillMaxWidth(), quiet = true) { s.store.backupUri = ""; s.keepRev++ }
             }

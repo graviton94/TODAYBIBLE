@@ -90,6 +90,8 @@ object Voice {
             thread = Thread {
                 val minBuf = AudioRecord.getMinBufferSize(RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT)
                 val rec = AudioRecord(MediaRecorder.AudioSource.VOICE_RECOGNITION, RATE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, maxOf(minBuf, 8192))
+                // 폰에 잡음 줄이기가 있으면 켜요 (없으면 저장한 뒤 clean 이 맡아요)
+                val ns = runCatching { if (android.media.audiofx.NoiseSuppressor.isAvailable()) android.media.audiofx.NoiseSuppressor.create(rec.audioSessionId)?.apply { enabled = true } else null }.getOrNull()
                 val fmt = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, RATE, 1).apply {
                     setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
                     setInteger(MediaFormat.KEY_BIT_RATE, BITRATE)
@@ -152,12 +154,12 @@ object Voice {
                     if (ii >= 0) enc.queueInputBuffer(ii, 0, 0, samples * 1_000_000L / RATE, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                     drain(true)
                 }
-                runCatching { rec.stop() }; rec.release()
+                runCatching { rec.stop() }; runCatching { ns?.release() }; rec.release()
                 runCatching { enc.stop() }; enc.release()
                 runCatching { if (started) mux.stop() }; runCatching { mux.release() }
                 toRecognizer.clear(); toRecognizer.offer(ByteArray(0)); runCatching { pipeOut?.close() }; pipeOut = null
                 val ok = keep && started && samples > RATE / 2
-                if (ok) tmp.renameTo(out) else { tmp.delete(); if (!keep) out.delete() }
+                if (ok) { tmp.renameTo(out); clean(out) } else { tmp.delete(); if (!keep) out.delete() }
                 onSaved?.invoke(ok)
             }.apply { name = "voice"; start() }
         }
@@ -202,7 +204,7 @@ object Voice {
             val a = mono[k].toInt(); val c = mono[minOf(k + 1, mono.size - 1)].toInt()
             pcm.putShort((a + (c - a) * f).toInt().toShort())
         }
-        encodePcm(pcm.array(), out)
+        encodePcm(pcm.array(), out).also { if (it) markClean(out) }
     }.getOrDefault(false)
 
     /**
@@ -235,8 +237,8 @@ object Voice {
             val y = if (kotlin.math.abs(x) <= 0.7f) x else kotlin.math.sign(x) * (0.7f + 0.3f * kotlin.math.tanh((kotlin.math.abs(x) - 0.7f) / 0.3f))
             pcm.putShort((y * 32767f).toInt().coerceIn(-32768, 32767).toShort())
         }
-        encodePcm(pcm.array(), out)
-    }.getOrElse { runCatching { src.copyTo(out, overwrite = true); true }.getOrDefault(false) }
+        encodePcm(pcm.array(), out).also { if (it) markClean(out) }
+    }.getOrElse { runCatching { src.copyTo(out, overwrite = true); markClean(out); true }.getOrDefault(false) }
 
     /** 32kHz 모노 16비트 PCM → 내 녹음과 같은 결의 AAC (m4a). */
     internal fun encodePcm(bytes: ByteArray, out: File): Boolean = runCatching {
@@ -278,7 +280,79 @@ object Voice {
         if (started) tmp.renameTo(out) else { tmp.delete(); false }
     }.getOrDefault(false)
 
+    // ── 잡음 줄이기 (2.x): 낮은 웅웅거림을 거르고, 말이 없는 틈의 잡음을 눌러요 ──
+    private fun marker(f: File) = File(f.path + ".clean")
+    private fun markClean(f: File) { runCatching { marker(f).createNewFile() } }
+
+    /** 녹음 하나를 풀어 (모노 표본, 표본률). */
+    private fun decodeMono(src: File): Pair<ShortArray, Int> {
+        val ex = MediaExtractor(); ex.setDataSource(src.path)
+        val ti = (0 until ex.trackCount).first { ex.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true }
+        ex.selectTrack(ti); val inFmt = ex.getTrackFormat(ti)
+        val rate = inFmt.getInteger(MediaFormat.KEY_SAMPLE_RATE); val ch = inFmt.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+        val dec = MediaCodec.createDecoderByType(inFmt.getString(MediaFormat.KEY_MIME)!!)
+        dec.configure(inFmt, null, null, 0); dec.start()
+        val o = java.io.ByteArrayOutputStream(); val info = MediaCodec.BufferInfo(); var inDone = false
+        try {
+            while (true) {
+                if (!inDone) { val ii = dec.dequeueInputBuffer(10_000); if (ii >= 0) { val n = ex.readSampleData(dec.getInputBuffer(ii)!!, 0); if (n < 0) { dec.queueInputBuffer(ii, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM); inDone = true } else { dec.queueInputBuffer(ii, 0, n, ex.sampleTime, 0); ex.advance() } } }
+                val i = dec.dequeueOutputBuffer(info, 10_000)
+                if (i >= 0) { val bb = dec.getOutputBuffer(i)!!; val arr = ByteArray(info.size); bb.position(info.offset); bb.get(arr); o.write(arr); dec.releaseOutputBuffer(i, false); if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) break }
+            }
+        } finally { runCatching { dec.stop() }; dec.release(); ex.release() }
+        val sh = ByteBuffer.wrap(o.toByteArray()).order(ByteOrder.LITTLE_ENDIAN).asShortBuffer()
+        val all = ShortArray(sh.remaining()).also { sh.get(it) }
+        return (if (ch == 1) all else ShortArray(all.size / ch) { i -> (0 until ch).sumOf { all[i * ch + it].toInt() }.div(ch).toShort() }) to rate
+    }
+
+    /**
+     * 잡음 줄이기: 90Hz 아래 (웅웅 · 바람 · 손 떨림) 를 거르고, 10ms 마다 소리 크기를 재어 말이 없는 틈은 부드럽게 눌러요.
+     * 바닥 잡음은 그 녹음의 조용한 곳 (아래 15%) 으로 어림해요. 말 앞뒤는 조금 일찍 열고 늦게 닫아 첫소리 · 끝소리를 자르지 않게.
+     */
+    internal fun denoise(src: ShortArray, rate: Int): ShortArray {
+        val n = src.size; if (n < rate / 10) return src
+        // 1) 고역 통과 (버터워스 2차, 90Hz)
+        val w0 = 2.0 * Math.PI * 90.0 / rate; val cs = kotlin.math.cos(w0); val al = kotlin.math.sin(w0) / (2 * 0.7071)
+        val a0 = 1 + al; val b0 = (1 + cs) / 2 / a0; val b1 = -(1 + cs) / a0; val b2 = b0; val a1 = -2 * cs / a0; val a2 = (1 - al) / a0
+        val y = FloatArray(n); var x1 = 0.0; var x2 = 0.0; var y1 = 0.0; var y2 = 0.0
+        for (i in 0 until n) { val x0 = src[i] / 32768.0; val v = b0 * x0 + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2; x2 = x1; x1 = x0; y2 = y1; y1 = v; y[i] = v.toFloat() }
+        // 2) 10ms 마다 크기 · 바닥 잡음 · 문턱
+        val fl = rate / 100; val frames = (n + fl - 1) / fl
+        val rms = FloatArray(frames) { f -> var s = 0.0; val a = f * fl; val b = minOf(n, a + fl); for (i in a until b) s += y[i] * y[i]; kotlin.math.sqrt(s / (b - a)).toFloat() }
+        val floor = rms.sorted()[(frames * 0.15).toInt().coerceIn(0, frames - 1)].coerceAtLeast(3e-4f)
+        val thr = maxOf(floor * 3.5f, 0.006f)
+        val want = FloatArray(frames) { f -> if (rms[f] >= thr) 1f else maxOf(0.1f, (rms[f] / thr).let { it * it }) }
+        // 3) 말 앞 2칸 일찍 열고 뒤 6칸 늦게 닫기, 닫힐 땐 천천히
+        val g = FloatArray(frames); var prev = 0.1f
+        for (f in 0 until frames) {
+            var t = 0f; for (j in maxOf(0, f - 6)..minOf(frames - 1, f + 2)) t = maxOf(t, want[j])
+            prev = if (t > prev) t else prev * 0.85f + t * 0.15f; g[f] = prev
+        }
+        return ShortArray(n) { i ->
+            val f = i / fl; val fr = (i % fl).toFloat() / fl
+            val gain = g[f] + (g[minOf(f + 1, frames - 1)] - g[f]) * fr
+            (y[i] * gain * 32767f).toInt().coerceIn(-32768, 32767).toShort()
+        }
+    }
+
+    /** 녹음 하나를 그 자리에서 깨끗하게 (한 번만 · 표시 파일). 실패하면 그대로 둬요. */
+    fun clean(f: File): Boolean {
+        if (marker(f).exists()) return true
+        return runCatching {
+            val (mono, rate) = decodeMono(f)
+            if (rate != RATE) return@runCatching false
+            val bytes = ByteBuffer.allocate(mono.size * 2).order(ByteOrder.LITTLE_ENDIAN).also { b -> denoise(mono, rate).forEach { b.putShort(it) } }.array()
+            val tmp = File(f.path + ".tmp.m4a")
+            if (!encodePcm(bytes, tmp)) return@runCatching false
+            if (!tmp.renameTo(f)) { tmp.copyTo(f, overwrite = true); tmp.delete() }
+            markClean(f); true
+        }.getOrDefault(false)
+    }
+    /** 내보내기 전에: 아직 안 깨끗한 녹음 (예전 판에서 녹음한 것) 만. */
+    fun cleanAll(parts: List<File>) { parts.forEach { clean(it) } }
+
     fun exportAudio(parts: List<File>, out: File): Boolean = runCatching {
+        cleanAll(parts)
         out.parentFile?.mkdirs()
         val mux = MediaMuxer(out.path, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
         appendAudio(mux, parts, startMux = true); mux.stop(); mux.release(); true

@@ -1268,4 +1268,17 @@
     <string name="prayer_running">Line %1$d of %2$d · Stop</string>
     <string name="voice_make">Make ›</string>
     <string name="voice_make_title">Make from my reading</string>
+    <string name="plan_year_switch">Switch now · Play credits the days left</string>
+    <string name="archive_drive_how">On the save screen, open ☰ at the top left, choose Drive and save. After that, the same file updates whenever you close the app.</string>
+    <string name="archive_drive_on">Backing up to Drive · last %1$s</string>
+    <string name="archive_phone_how">Saves once to your Downloads folder. When you change phones, move this file to the new one.</string>
+    <string name="archive_send_how">Send it to yourself, in a chat with yourself or to your own email. On a new phone, save it and import.</string>
+    <string name="import_guide_title">Where did you keep your records?</string>
+    <string name="import_from_drive">From Google Drive</string>
+    <string name="import_from_drive_how">On the file screen, open ☰ at the top left › Drive › “TodayBible-records-date.zip”</string>
+    <string name="import_from_phone">From this phone</string>
+    <string name="import_from_phone_how">In Downloads: “TodayBible-records-date.zip”</string>
+    <string name="import_from_chat">A file from a chat or email</string>
+    <string name="import_from_chat_how">Save the file from the chat or email first, then choose it in Downloads</string>
+    <string name="import_guide_note">After you choose, you\'ll see what will be added and confirm once more. Nothing here is deleted.</string>
 </resources>

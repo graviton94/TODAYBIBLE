@@ -1265,5 +1265,18 @@
   "prayer_self_hint": {"en": "Read along as each line lights up", "ko": "밝아지는 줄을 따라 읽어요"},
   "prayer_running": {"en": "Line %1$d of %2$d · Stop", "ko": "%2$d줄 중 %1$d · 멈추기"},
   "voice_make": {"en": "Make ›", "ko": "만들기 ›"},
-  "voice_make_title": {"en": "Make from my reading", "ko": "내 낭독으로 만들기"}
+  "voice_make_title": {"en": "Make from my reading", "ko": "내 낭독으로 만들기"},
+  "plan_year_switch": {"en": "Switch now · Play credits the days left", "ko": "지금 바꾸기 · 남은 날은 Play가 셈해요"},
+  "archive_drive_how": {"en": "On the save screen, open ☰ at the top left, choose Drive and save. After that, the same file updates whenever you close the app.", "ko": "저장 화면 왼쪽 위 ☰ 를 눌러 ‘드라이브’를 고르고 저장해요. 그 뒤로는 앱을 닫을 때마다 같은 파일이 새로워져요."},
+  "archive_drive_on": {"en": "Backing up to Drive · last %1$s", "ko": "드라이브에 자동 보관 중 · 마지막 %1$s"},
+  "archive_phone_how": {"en": "Saves once to your Downloads folder. When you change phones, move this file to the new one.", "ko": "‘다운로드’ 폴더에 한 번 저장해요. 폰을 바꿀 땐 이 파일을 새 폰으로 옮겨 주세요."},
+  "archive_send_how": {"en": "Send it to yourself, in a chat with yourself or to your own email. On a new phone, save it and import.", "ko": "카카오톡 ‘나와의 채팅’이나 내 메일로 보내 두면, 새 폰에서 받아 가져올 수 있어요."},
+  "import_guide_title": {"en": "Where did you keep your records?", "ko": "어디에 둔 기록을 가져올까요?"},
+  "import_from_drive": {"en": "From Google Drive", "ko": "구글 드라이브에서"},
+  "import_from_drive_how": {"en": "On the file screen, open ☰ at the top left › Drive › “TodayBible-records-date.zip”", "ko": "파일 고르는 화면 왼쪽 위 ☰ › 드라이브 › 「오늘성경-기록-날짜.zip」"},
+  "import_from_phone": {"en": "From this phone", "ko": "휴대폰에서"},
+  "import_from_phone_how": {"en": "In Downloads: “TodayBible-records-date.zip”", "ko": "다운로드 폴더의 「오늘성경-기록-날짜.zip」"},
+  "import_from_chat": {"en": "A file from a chat or email", "ko": "메신저 · 메일로 받은 파일"},
+  "import_from_chat_how": {"en": "Save the file from the chat or email first, then choose it in Downloads", "ko": "카카오톡 · 메일에서 파일을 먼저 ‘저장’한 뒤, 다운로드 폴더에서 골라요"},
+  "import_guide_note": {"en": "After you choose, you'll see what will be added and confirm once more. Nothing here is deleted.", "ko": "고른 뒤에는 무엇이 더해지는지 보여 주고 한 번 더 물어요. 지금 기록은 지워지지 않아요."}
 }

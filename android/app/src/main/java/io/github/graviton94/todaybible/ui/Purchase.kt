@@ -81,11 +81,15 @@ fun PurchasePage(s: AppState) {
                     val subs = life.canSubscribe || life.monthlyPrice != null || life.subscribed
                     val years = life.canSubscribeYear || life.yearlyPrice != null
                     Row(Modifier.fillMaxWidth().height(androidx.compose.foundation.layout.IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(Tokens.Space.s2)) {
-                        if (subs) PlanCard(Modifier.weight(1f), stringResource(R.string.plan_month),
+                        // 연 구독 중이면 월 칸은 빼고 연 칸이 「구독 중」, 월 구독 중이면 연 칸은 「연 구독으로 바꾸기」 (남은 날은 Play 가 셈)
+                        val onYear = life.subscribed && life.subPlan == io.github.graviton94.todaybible.data.Lifetime.YEARLY
+                        if (subs && !onYear) PlanCard(Modifier.weight(1f), stringResource(R.string.plan_month),
                             if (life.subscribed) stringResource(R.string.plan_month_on) else stringResource(R.string.plan_month_price, life.monthlyPrice ?: ""),
                             null, stringResource(R.string.plan_month_note), primary = false, enabled = !life.subscribed) { (ctx as? Activity)?.let { life.subscribe(it) } }
-                        if (years && !life.subscribed) PlanCard(Modifier.weight(1f), stringResource(R.string.plan_year), stringResource(R.string.plan_year_price, life.yearlyPrice ?: ""), null,
-                            life.yearlyPerMonth?.let { stringResource(R.string.plan_year_note, it) } ?: stringResource(R.string.plan_year_note_plain), primary = true) { (ctx as? Activity)?.let { life.subscribe(it, yearlyPlan = true) } }
+                        if (years) PlanCard(Modifier.weight(1f), stringResource(R.string.plan_year),
+                            if (onYear) stringResource(R.string.plan_month_on) else stringResource(R.string.plan_year_price, life.yearlyPrice ?: ""), null,
+                            when { onYear -> stringResource(R.string.plan_month_note); life.subscribed -> stringResource(R.string.plan_year_switch); else -> life.yearlyPerMonth?.let { stringResource(R.string.plan_year_note, it) } ?: stringResource(R.string.plan_year_note_plain) },
+                            primary = !life.subscribed, enabled = !onYear) { (ctx as? Activity)?.let { life.subscribe(it, yearlyPlan = true) } }
                         val member = life.subscribed && life.memberPrice != null
                         PlanCard(Modifier.weight(1f), stringResource(R.string.plan_life), life.lifetimePrice ?: "",
                             if (member) life.price else null,
